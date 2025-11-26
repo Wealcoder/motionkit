@@ -1,7 +1,7 @@
 import { useContentStep, useDeviceConfig } from "@/hooks/app.hooks";
 import { Input } from "../ui/input";
 import EditorAnimation from "./animation/EditorAnimation";
-import EditorScrollTrigger from "./ScrollTrigger/EditorScrollTrigger";
+import EditorScrollTrigger from "./scrollTrigger/EditorScrollTrigger";
 import EditorTimeline from "./timeline/EditorTimeline";
 
 import AllResponsiveControl from "../common/AllResponsiveControl";
