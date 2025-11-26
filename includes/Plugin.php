@@ -276,7 +276,11 @@ final class Plugin
     {
         // Set default options
         $this->set_default_options();
-        
+        error_log('rewrite rules added before');	
+       
+        AnimationBuilderCore::instance()->custom_rewrite_rules();	
+        error_log('rewrite rules added');		
+		
         // Flush rewrite rules
         flush_rewrite_rules();
         update_option('wcf_animation_builder_version', self::VERSION);
