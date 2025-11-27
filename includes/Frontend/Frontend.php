@@ -33,6 +33,13 @@ final class Frontend
     private AssetLoader $asset_loader;
 
     /**
+     * Smoother loader instance
+     *
+     * @var ScrollSmoother
+     */
+    private ScrollSmoother $smoother;
+
+    /**
      * Initialize frontend functionality
      *
      * @return void
@@ -40,7 +47,9 @@ final class Frontend
     public function init(): void
     {
         $this->asset_loader = ComponentFactory::create_asset_loader();
+        $this->smoother = new ScrollSmoother();
         $this->init_hooks();
+ 
     }
 
     /**
@@ -55,6 +64,12 @@ final class Frontend
         
         // Template handling      
         add_filter('body_class', [$this, 'add_body_classes']);
+        // Scroll smoother wrapper
+        if(defined( 'WCF_ADDONS_PRO_VERSION' )){
+            return;
+        }
+        add_action('wp_body_open', [$this->smoother, 'start_wrapper'], 1);
+        add_action('wp_footer', [$this->smoother, 'end_wrapper'], -1);
     }
 
     /**
@@ -65,23 +80,13 @@ final class Frontend
     public function enqueue_scripts(): void
     {
         // Enqueue frontend JavaScript
-        $this->asset_loader->enqueue_style(
+        $this->asset_loader->register_style(
             'wcf-animbuilder-class-selector',
             'assets/css/animbuilder-copy.css',
-            [],
-            true
-        );
+            []
+           
+        );      
        
-        // // Localize script with data
-        // $this->asset_loader->localize_script(
-        //     'wcf-frontend-script',
-        //     'wcfAnimationBuilder',
-        //     [
-        //         'ajaxUrl' => admin_url('admin-ajax.php'),
-        //         'nonce' => Helper::create_nonce(),
-        //         'version' => Helper::get_plugin_version(),
-        //     ]
-        // );
     }
     
     /**

@@ -276,10 +276,8 @@ final class Plugin
     {
         // Set default options
         $this->set_default_options();
-        error_log('rewrite rules added before');	
        
-        AnimationBuilderCore::instance()->custom_rewrite_rules();	
-        error_log('rewrite rules added');		
+        AnimationBuilderCore::instance()->custom_rewrite_rules();	      		
 		
         // Flush rewrite rules
         flush_rewrite_rules();

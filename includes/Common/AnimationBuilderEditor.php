@@ -200,11 +200,8 @@ class AnimationBuilderEditor
 	public function admin_scripts()
 	{
 
-		if (
-			isset($_GET['page']) &&
-			$_GET['page'] === 'aae-anim-builder' &&
-			strpos($_SERVER['PHP_SELF'], 'admin.php') !== false
-		) {
+		if (isset( $_GET['page'] ) && isset($_SERVER['PHP_SELF']) && sanitize_text_field( wp_unslash( $_GET['page'] ) ) === 'aae-anim-builder' && strpos( esc_url_raw( wp_unslash( $_SERVER['PHP_SELF'] ) ), 'admin.php' ) !== false) {
+		
 			wp_enqueue_style(
 				'aae-animation-builder-settings',
 				WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder-settings/main.css'
@@ -363,11 +360,12 @@ class AnimationBuilderEditor
 
 	public function remove_notice_for_setting_page()
 	{
-		if (
-			isset($_GET['page']) &&
-			($_GET['page'] === 'aae-anim-builder' || 'aae-page-importer' == $_GET['page']) &&
-			strpos($_SERVER['PHP_SELF'], 'admin.php') !== false
-		) {
+	
+		$page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
+
+		$php_self = isset( $_SERVER['PHP_SELF'] ) ?  wp_unslash( $_SERVER['PHP_SELF'] ) : '';
+
+		if (( $page === 'aae-anim-builder' || $page === 'aae-page-importer' ) && strpos( $php_self, 'admin.php' ) !== false ) {
 
 			remove_all_actions('admin_notices');
 			remove_all_actions('all_admin_notices');
@@ -481,7 +479,7 @@ class AnimationBuilderEditor
 	public function is_edit_mode()
 	{
 
-		if (isset($_GET['action']) && $_GET['action'] == 'animation-builder') {
+		if (isset($_GET['action']) && sanitize_text_field( wp_unslash($_GET['action']) ) == 'animation-builder') {
 			return true;
 		}
 
@@ -521,11 +519,11 @@ class AnimationBuilderEditor
 			}
 		}
 
-		$url = isset($_GET['builder_url']) ? $_GET['builder_url'] : home_url('/');
+		$url = isset($_GET['builder_url']) ?  wp_unslash($_GET['builder_url']) : home_url('/');
 
 		$final_url = add_query_arg(
 			array(
-				'action' => 'animation-builder',
+				'action' => 'animation-builder',				
 			),
 			$url
 		);
@@ -551,7 +549,7 @@ class AnimationBuilderEditor
 				'ajaxurl'       => admin_url('admin-ajax.php'),
 				'nonce'         => wp_create_nonce('wcf_admin_nonce'),
 				'id'            => get_the_id(),
-				'iframe_url'    => esc_url($final_url),
+				'iframe_url'    => $final_url,
 				'debug'         => defined('WP_DEBUG') && WP_DEBUG ? true : false,
 				'device_config' => $devices,
 			)

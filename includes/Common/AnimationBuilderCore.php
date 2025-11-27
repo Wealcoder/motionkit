@@ -8,7 +8,6 @@ if (! defined('ABSPATH')) {
 	exit; // Exit if accessed directly
 }
 
-
 class AnimationBuilderCore
 {
 	use AnimationBuilderTrait;
@@ -85,6 +84,9 @@ class AnimationBuilderCore
 
 	function add_custom_quick_link($actions, $post)
 	{
+		if ( ! ( current_user_can( 'manage_options' ) ) ){
+			return $actions;	
+		}
 		// Ensure this only applies to pages , posts
 		if ($post->post_type === 'page' || $post->post_type === 'post') {
 			$permalink_structure = get_option('permalink_structure');
@@ -118,8 +120,8 @@ class AnimationBuilderCore
 		}
 
 		// Get and sanitize the JSON data
-		$pageTypeConfigs = isset($_POST['pageTypeConfigs']) ? wp_unslash($_POST['pageTypeConfigs']) : '';
-		$animationConfigs = isset($_POST['animationConfigs']) ? wp_unslash($_POST['animationConfigs']) : '';
+		$pageTypeConfigs = isset($_POST['pageTypeConfigs']) ? sanitize_text_field( wp_unslash($_POST['pageTypeConfigs']) ) : '';
+		$animationConfigs = isset($_POST['animationConfigs']) ? sanitize_text_field( wp_unslash($_POST['animationConfigs']) ): '';
 
 		// Validate JSON structure
 		if (empty($pageTypeConfigs) || empty($animationConfigs)) {
@@ -154,7 +156,7 @@ class AnimationBuilderCore
 		}
 
 		// Get and sanitize the JSON data
-		$pageTypeConfigs = isset($_POST['pageTypeConfigs']) ? wp_unslash($_POST['pageTypeConfigs']) : '';
+		$pageTypeConfigs = isset($_POST['pageTypeConfigs']) ? sanitize_text_field( wp_unslash($_POST['pageTypeConfigs']) ): '';
 
 		// Validate JSON structure
 		if (empty($pageTypeConfigs)) {
@@ -165,7 +167,7 @@ class AnimationBuilderCore
 		$pageTypeConfigs = json_decode($pageTypeConfigs, true);
 
 		if (json_last_error() !== JSON_ERROR_NONE) {
-			wp_send_json_error(['msg' => esc_html__('Invalid JSON format', 'gsap-animation-builder-for-wordpress')], 400);
+			wp_send_json_error(['msg' => esc_html__('Invalid Json Format', 'gsap-animation-builder-for-wordpress')], 400);
 		}
 
 		// Further validation on the decoded data
@@ -181,11 +183,11 @@ class AnimationBuilderCore
 	public function config_enqueue_script()
 	{
 
-		if (isset($_GET['action']) && $_GET['action'] == 'animation-builder') {
+		if (isset($_GET['action']) && sanitize_text_field( wp_unslash($_GET['action']) ) == 'animation-builder') {
 			wp_enqueue_style('wcf-animbuilder-class-selector');
 		}
 	
-		if (isset($_GET['action']) && $_GET['action'] == 'animation-builder') {
+		if (isset($_GET['action']) && sanitize_text_field( wp_unslash($_GET['action']) ) == 'animation-builder') {
 
 			$deps = $this->register_builder_dependency();
 
@@ -367,27 +369,50 @@ class AnimationBuilderCore
 			exit; // Prevent WordPress from loading other templates
 		}
 	}
-	function wp_get_current_url()
-	{
+	function wp_get_current_url() {
 
-		$scheme = is_ssl() ? 'https' : 'http'; // Check if the site is using HTTPS
-		$host = $_SERVER['HTTP_HOST'];         // Get the domain name
-		$request_uri = $_SERVER['REQUEST_URI']; // Get the path and query string	
-		// 2. Remove unwanted args.
+		// Detect HTTPS
+		$scheme = is_ssl() ? 'https' : 'http';
+	
+		// Raw host
+		$host = isset( $_SERVER['HTTP_HOST'] )
+			? wp_unslash( $_SERVER['HTTP_HOST'] )
+			: '';
+	
+		// Sanitize as plain text, not as URL
+		$host = sanitize_text_field( $host );
+	
+		// Just in case the host contains a protocol, strip it
+		$host = preg_replace( '#^https?://#i', '', $host );
+	
+		// Sanitize request URI as URL part
+		$request_uri = isset( $_SERVER['REQUEST_URI'] )
+			? wp_unslash( $_SERVER['REQUEST_URI'] )
+			: '';
+	
+		$request_uri = esc_url_raw( $request_uri );
+	
+		// Remove unwanted query args
 		$strip = array(
 			'preview',
 			'preview_id',
 			'preview_nonce',
-			'aaeid',          // ← add any others you’d like nuked
+			'aaeid',
 		);
-
-		$request_uri = remove_query_arg($strip, $request_uri);
-		return esc_url("{$scheme}://{$host}{$request_uri}");
+	
+		$request_uri = remove_query_arg( $strip, $request_uri );
+	
+		// Final URL
+		$url = "{$scheme}://{$host}{$request_uri}";
+	
+		// esc_url() only when outputting in HTML
+		return $url;
 	}
+		
 	public function html_selector()
 	{
 
-		if (isset($_GET['action']) && $_GET['action'] == 'animation-builder') {
+		if (isset($_GET['action']) && sanitize_text_field( wp_unslash($_GET['action']) ) == 'animation-builder') {
 			wp_enqueue_style('wcf-animbuilder-class-selector');
 ?>
 			<div class="wcfanimb-skip-selector" id="wcf-anim-builder-structure"></div>
@@ -443,7 +468,7 @@ class AnimationBuilderCore
 			'builder_url' => $this->wp_get_current_url(),
 		), $animation_builder_url));
 
-		if (current_user_can('administrator')) {
+		if (current_user_can('manage_options')) {
 			$args = array(
 				'id'    => 'wcf--admin--animation--builder--button', // Unique ID for the button
 				'title' => '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">

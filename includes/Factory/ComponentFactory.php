@@ -65,5 +65,6 @@ final class ComponentFactory
     {
         return new AssetLoader();
     }
+   
 }
 
