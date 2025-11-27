@@ -68,47 +68,17 @@ class AnimationBuilderCore
 		add_filter('query_vars', [$this, 'custom_query_vars']);
 		add_action('template_redirect', [$this, 'animation_builder_template_redirect']);
 		add_action('wp_enqueue_scripts', [$this, 'config_enqueue_script'], 60);
-		add_action('wp_footer', [$this, 'html_selector']);
+		
 		add_action('wp_ajax_wcf_anim_builder_configs_store', [$this, 'configs_store']);
 		add_action('wp_ajax_wcf_anim_builder_configs_delete', [$this, 'configs_delete']);
-		add_filter('page_row_actions', [$this, 'add_custom_quick_link'], 10, 2);
-		add_filter('post_row_actions', [$this, 'add_custom_quick_link'], 10, 2);
+		
 		//editor 
 		 $this->page_type = AnimationBuilderPageType::instance();
 		 $builder = AnimationBuilderEditor::instance();
 		 $builder->setPageType($this->page_type);  
+	}
+
 	
-		
-		
-	}
-
-	function add_custom_quick_link($actions, $post)
-	{
-		if ( ! ( current_user_can( 'manage_options' ) ) ){
-			return $actions;	
-		}
-		// Ensure this only applies to pages , posts
-		if ($post->post_type === 'page' || $post->post_type === 'post') {
-			$permalink_structure = get_option('permalink_structure');
-
-			if ($permalink_structure) {
-				$animation_builder_url = home_url('/aae-animation-builder/');
-			} else {
-				$animation_builder_url = home_url('/');
-				$animation_builder_url = add_query_arg(array(
-					'aae_builder' => 1,
-				), $animation_builder_url);
-			}
-
-			$editor_url            = apply_filters('wcfanimationbuilder/editor/url', add_query_arg(array(
-				'builder_url' => get_the_permalink($post->ID),
-			), $animation_builder_url));
-
-			$actions['wcfanimb_action'] = '<a target="_blank" href="' . esc_url($editor_url) . '">' . esc_html__('Build Animation', 'gsap-animation-builder-for-wordpress') . '</a>';
-		}
-
-		return $actions;
-	}
 	public function configs_store()
 	{
 		// Verify nonce
@@ -404,43 +374,7 @@ class AnimationBuilderCore
 		return $url;
 	}
 		
-	public function html_selector()
-	{
-
-		if (isset($_GET['action']) && sanitize_text_field( wp_unslash($_GET['action']) ) == 'animation-builder') {
-			wp_enqueue_style('wcf-animbuilder-class-selector');
-?>
-			<div class="wcfanimb-skip-selector" id="wcf-anim-builder-structure"></div>
-			<div id="wcfanim-selectorPopup" class="wcfanimb-popup wcfanimb-skip-selector" style="display: none;">
-				<div class="wcfanimb-wrapper wcfanimb-skip-selector">
-					<div class="wcfanimb-close-btn wcfanimb-skip-selector">
-						<svg xmlns="http://www.w3.org/2000/svg" class="wcfanimb-skip-selector" width="12" height="12" viewBox="0 0 12 12" fill="none">
-							<g clip-path="url(#clip0_4401_4730)">
-								<path fill-rule="evenodd" clip-rule="evenodd" d="M10.9948 1.00483C11.2681 1.2782 11.2681 1.72141 10.9948 1.99478L1.99478 10.9948C1.72141 11.2681 1.2782 11.2681 1.00483 10.9948C0.731463 10.7214 0.731463 10.2782 1.00483 10.0048L10.0048 1.00483C10.2782 0.731463 10.7214 0.731463 10.9948 1.00483Z" fill="#94979B" class="wcfanimb-skip-selector" />
-								<path fill-rule="evenodd" clip-rule="evenodd" d="M1.00483 1.00483C1.2782 0.731463 1.72141 0.731463 1.99478 1.00483L10.9948 10.0048C11.2681 10.2782 11.2681 10.7214 10.9948 10.9948C10.7214 11.2681 10.2782 11.2681 10.0048 10.9948L1.00483 1.99478C0.731463 1.72141 0.731463 1.2782 1.00483 1.00483Z" fill="#94979B" class="wcfanimb-skip-selector" />
-							</g>
-							<defs>
-								<clipPath id="clip0_4401_4730">
-									<rect width="12" height="12" fill="white" />
-								</clipPath>
-							</defs>
-						</svg>
-					</div>
-					<div class="wcfanimb-skip-selector">
-						<p class="wcfanimb-label wcfanimb-skip-selector"><?php echo esc_html__('Selected class', 'gsap-animation-builder-for-wordpress') ?></p>
-						<div class="wcfanimb-classes wcfanimb-skip-selector">
-							<p id="wcfanim-popupContent" class="wcfanimb-popupContent close wcfanimb-skip-selector"></p>
-						</div>
-					</div>
-					<div class="wcfanim-btn-group wcfanimb-skip-selector">
-						<button id="wcfanim-copySelector" class="wcfanimb-copy-btn wcfanimb-skip-selector" data-clipboard-target="#wcfanim-popupContent"><?php echo esc_html__('Copy', 'gsap-animation-builder-for-wordpress') ?></button>
-						<button id="wcfanim-expendSelector" class="wcfanimb-select-btn expend-false wcfanimb-skip-selector"><?php echo esc_html__('Expend', 'gsap-animation-builder-for-wordpress') ?></button>
-					</div>
-				</div>
-			</div>
-<?php
-		}
-	}
+	
 	public function button_interface($wp_admin_bar)
 	{
 

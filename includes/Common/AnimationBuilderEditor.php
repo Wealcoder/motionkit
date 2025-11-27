@@ -43,12 +43,9 @@ class AnimationBuilderEditor
 	public function __construct()
 	{
 		// dashboard settings
-		add_action('admin_menu', array($this, 'register_sub_menu'), 30);
-		add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
-
-		add_action('wp_ajax_aae_save_anim_builder_settings', array($this, 'save_dashboard_settings'));
-		add_action('admin_head', array($this, 'remove_notice_for_setting_page'));
-		add_filter('show_admin_bar', array($this, 'hide_admin_bar_for_iframe'));
+		
+		add_action('admin_enqueue_scripts', array($this, 'admin_scripts'), 999);
+				
 		add_action('wp', array($this, 'init'));
 		add_action('wcfanimationbuilder_before_enqueue_scripts', array($this, 'editor_script'));
 		add_action('wcfanimationbuilder_before_enqueue_styles', array($this, 'editor_style'));
@@ -58,60 +55,7 @@ class AnimationBuilderEditor
 	public function setPageType($obj)
 	{
 		$this->page_type = $obj;
-	}
-	/**
-	 * Register submenu
-	 *
-	 * Adds a submenu under a parent menu.
-	 */
-	public function register_sub_menu()
-	{
-		//add menu page	
-		add_menu_page(
-			esc_html__('Animation Builder', 'gsap-animation-builder-for-wordpress'),
-			esc_html__('Animation Builder', 'gsap-animation-builder-for-wordpress'),
-			'manage_options',
-			'aae-anim-builder',
-			array($this, 'setting_render'),
-			'dashicons-admin-generic', // icon
-			59 // position
-		);
-		
-	}
-
-	public function save_dashboard_settings()
-	{
-
-		check_ajax_referer('wcf_admin_nonce', 'nonce');
-
-		if (! current_user_can('manage_options')) {
-			wp_send_json_error(esc_html__('you are not allowed to do this action', 'gsap-animation-builder-for-wordpress'));
-		}
-
-		if (! isset($_POST['form_fields'])) {
-			return;
-		}
-
-		if (! isset($_POST['setting_name'])) {
-			return;
-		}
-
-		$form_data    = sanitize_text_field(wp_unslash($_POST['form_fields']));
-		$setting_name = sanitize_text_field(wp_unslash($_POST['setting_name']));
-		update_option($setting_name, $form_data);
-
-		$data   = json_decode($form_data, true);
-		$counts = $this->count_total_and_active_elements($data);
-
-		$return_message = array(
-			'message' => 'Settings Updated',
-			'count'   => array(
-				'total'  => $counts['total'],
-				'active' => $counts['active'],
-			),
-		);
-		wp_send_json($return_message);
-	}
+	}	
 
 	/**
 	 * Count total and active elements in the animation builder data.
@@ -176,21 +120,7 @@ class AnimationBuilderEditor
 		remove_all_actions('after_wp_tiny_mce');
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'), 999999);
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_styles'), 999999);
-	}
-
-	/**
-	 * Render submenu
-	 *
-	 * Outputs the submenu content.
-	 */
-	public function setting_render()
-	{
-
-		echo '<div class="wrap">';
-		echo '<div id="aae-anim-builder">Loading...</div>';
-		echo '<div id="aae-anim-builder--toast"></div>';
-		echo '</div>';
-	}
+	}	
 
 	/**
 	 * Enqueue admin scripts
@@ -200,7 +130,43 @@ class AnimationBuilderEditor
 	public function admin_scripts()
 	{
 
-		if (isset( $_GET['page'] ) && isset($_SERVER['PHP_SELF']) && sanitize_text_field( wp_unslash( $_GET['page'] ) ) === 'aae-anim-builder' && strpos( esc_url_raw( wp_unslash( $_SERVER['PHP_SELF'] ) ), 'admin.php' ) !== false) {
+		$page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
+		$php_self = isset($_SERVER['PHP_SELF']) ? sanitize_text_field(wp_unslash($_SERVER['PHP_SELF'])) : '';
+
+		$is_builder_screen = (
+			in_array($page, ['aae-anim-builder', 'aae-page-importer'], true)
+			&& strpos($php_self, 'admin.php') !== false
+		);
+
+		if (! $is_builder_screen) {
+			return;
+		}
+		global $wp_styles;
+
+		if ( empty( $wp_styles->registered ) ) {
+			return;
+		}
+	
+		$theme_dir = basename( get_template_directory() ); // e.g. "astra" or "hello-elementor"
+		$theme_dir = sanitize_text_field( $theme_dir );
+	
+	
+		foreach ( $wp_styles->registered as $handle => $style ) {
+
+			if ( ! empty( $style->src ) ) {
+				$style->src = sanitize_text_field( $style->src );
+			}			
+			
+			if ( ! empty( $style->src ) && strpos( $style->src, "/{$theme_dir}/" ) !== false ) {
+			
+				// Remove only theme styles
+				wp_dequeue_style( $handle );
+				wp_deregister_style( $handle );
+			}
+		}
+
+
+		if ($is_builder_screen) {
 		
 			wp_enqueue_style(
 				'aae-animation-builder-settings',
@@ -356,24 +322,7 @@ class AnimationBuilderEditor
 		}
 
 		return $result;
-	}
-
-	public function remove_notice_for_setting_page()
-	{
-	
-		$page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
-
-		$php_self = isset( $_SERVER['PHP_SELF'] ) ? sanitize_text_field( wp_unslash( $_SERVER['PHP_SELF'] ) ) : '';
-
-		if (( $page === 'aae-anim-builder' || $page === 'aae-page-importer' ) && strpos( $php_self, 'admin.php' ) !== false ) {
-
-			remove_all_actions('admin_notices');
-			remove_all_actions('all_admin_notices');
-			remove_all_actions('network_admin_notices');
-			remove_all_actions('user_admin_notices');
-			remove_all_actions('update_nag');
-		}
-	}
+	}	
 
 	function editor_classes($classes)
 	{
@@ -466,14 +415,7 @@ class AnimationBuilderEditor
 		 */
 		do_action('wcfanimationbuilder/editor/wp_head');
 	}
-	function hide_admin_bar_for_iframe($show_admin_bar)
-	{
-		// Check if the 'iframe' query parameter is set
-		if ($this->is_edit_mode()) {
-			return false; // Disable admin bar
-		}
-		return $show_admin_bar;
-	}
+	
 
 
 	public function is_edit_mode()

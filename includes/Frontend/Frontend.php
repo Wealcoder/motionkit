@@ -64,6 +64,7 @@ final class Frontend
         
         // Template handling      
         add_filter('body_class', [$this, 'add_body_classes']);
+        add_action('wp_footer', [$this, 'html_selector']);
         // Scroll smoother wrapper
         if(defined( 'WCF_ADDONS_PRO_VERSION' )){
             return;
@@ -88,6 +89,44 @@ final class Frontend
         );      
        
     }
+
+    public function html_selector()
+	{
+
+		if (isset($_GET['action']) && sanitize_text_field( wp_unslash($_GET['action']) ) == 'animation-builder') {
+			wp_enqueue_style('wcf-animbuilder-class-selector');
+    ?>
+			<div class="wcfanimb-skip-selector" id="wcf-anim-builder-structure"></div>
+			<div id="wcfanim-selectorPopup" class="wcfanimb-popup wcfanimb-skip-selector" style="display: none;">
+				<div class="wcfanimb-wrapper wcfanimb-skip-selector">
+					<div class="wcfanimb-close-btn wcfanimb-skip-selector">
+						<svg xmlns="http://www.w3.org/2000/svg" class="wcfanimb-skip-selector" width="12" height="12" viewBox="0 0 12 12" fill="none">
+							<g clip-path="url(#clip0_4401_4730)">
+								<path fill-rule="evenodd" clip-rule="evenodd" d="M10.9948 1.00483C11.2681 1.2782 11.2681 1.72141 10.9948 1.99478L1.99478 10.9948C1.72141 11.2681 1.2782 11.2681 1.00483 10.9948C0.731463 10.7214 0.731463 10.2782 1.00483 10.0048L10.0048 1.00483C10.2782 0.731463 10.7214 0.731463 10.9948 1.00483Z" fill="#94979B" class="wcfanimb-skip-selector" />
+								<path fill-rule="evenodd" clip-rule="evenodd" d="M1.00483 1.00483C1.2782 0.731463 1.72141 0.731463 1.99478 1.00483L10.9948 10.0048C11.2681 10.2782 11.2681 10.7214 10.9948 10.9948C10.7214 11.2681 10.2782 11.2681 10.0048 10.9948L1.00483 1.99478C0.731463 1.72141 0.731463 1.2782 1.00483 1.00483Z" fill="#94979B" class="wcfanimb-skip-selector" />
+							</g>
+							<defs>
+								<clipPath id="clip0_4401_4730">
+									<rect width="12" height="12" fill="white" />
+								</clipPath>
+							</defs>
+						</svg>
+					</div>
+					<div class="wcfanimb-skip-selector">
+						<p class="wcfanimb-label wcfanimb-skip-selector"><?php echo esc_html__('Selected class', 'gsap-animation-builder-for-wordpress') ?></p>
+						<div class="wcfanimb-classes wcfanimb-skip-selector">
+							<p id="wcfanim-popupContent" class="wcfanimb-popupContent close wcfanimb-skip-selector"></p>
+						</div>
+					</div>
+					<div class="wcfanim-btn-group wcfanimb-skip-selector">
+						<button id="wcfanim-copySelector" class="wcfanimb-copy-btn wcfanimb-skip-selector" data-clipboard-target="#wcfanim-popupContent"><?php echo esc_html__('Copy', 'gsap-animation-builder-for-wordpress') ?></button>
+						<button id="wcfanim-expendSelector" class="wcfanimb-select-btn expend-false wcfanimb-skip-selector"><?php echo esc_html__('Expend', 'gsap-animation-builder-for-wordpress') ?></button>
+					</div>
+				</div>
+			</div>
+    <?php
+		}
+	}
     
     /**
      * Get asset loader instance

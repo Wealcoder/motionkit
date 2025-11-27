@@ -311,9 +311,9 @@ No filters are currently defined. You can add them as needed.
 // Use WordPress native sanitization functions
 sanitize_text_field($data)          // For strings
 wp_unslash($data)                   // Remove slashes
-sanitize_array($data)               // Custom recursive sanitization (if needed)
-Helper::get_allowed_html()          // Allowed HTML tags
-Helper::esc_output($value)          // Escape output
+sanitize_array($data)              // Custom recursive sanitization (if needed)
+       // Allowed HTML tags
+       // Escape output
 ```
 
 #### Options Management

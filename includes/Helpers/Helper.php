@@ -21,25 +21,7 @@ if (!defined('ABSPATH')) {
  */
 final class Helper
 {
-    /**
-     * Plugin nonce action
-     */
-    private const NONCE_ACTION = 'wcf_animation_builder_nonce';
-
-    /**
-     * Plugin nonce field name
-     */
-    private const NONCE_FIELD = 'wcf_animation_builder_nonce';
-
-    /**
-     * Create nonce for forms
-     *
-     * @return string The nonce value
-     */
-    public static function create_nonce(): string
-    {
-        return wp_create_nonce(self::NONCE_ACTION);
-    }
+  
 
     /**
      * Cached options to avoid duplicate queries
@@ -100,95 +82,8 @@ final class Helper
     {
         self::$cached_options = null;
         Cache::delete('wcf_animation_builder_options');
-    }
-
-    /**
-     * Get allowed HTML tags for content
-     *
-     * @return array Allowed HTML tags
-     */
-    public static function get_allowed_html(): array
-    {
-        return [
-            'a' => [
-                'href' => true,
-                'title' => true,
-                'target' => true,
-                'rel' => true,
-                'class' => true,
-            ],
-            'p' => [
-                'class' => true,
-                'style' => true,
-            ],
-            'div' => [
-                'class' => true,
-                'style' => true,
-                'id' => true,
-            ],
-            'span' => [
-                'class' => true,
-                'style' => true,
-            ],
-            'img' => [
-                'src' => true,
-                'alt' => true,
-                'title' => true,
-                'class' => true,
-                'width' => true,
-                'height' => true,
-            ],
-            'input' => [
-                'type' => true,
-                'name' => true,
-                'value' => true,
-                'id' => true,
-                'class' => true,
-                'placeholder' => true,
-                'checked' => true,
-                'disabled' => true,
-            ],
-            'textarea' => [
-                'name' => true,
-                'rows' => true,
-                'cols' => true,
-                'id' => true,
-                'class' => true,
-                'placeholder' => true,
-            ],
-            'select' => [
-                'name' => true,
-                'id' => true,
-                'class' => true,
-            ],
-            'option' => [
-                'value' => true,
-                'selected' => true,
-            ],
-            'button' => [
-                'type' => true,
-                'name' => true,
-                'value' => true,
-                'id' => true,
-                'class' => true,
-            ],
-        ];
-    }
-
-    /**
-     * Escape output for display
-     *
-     * @param mixed $value Value to escape
-     * @return string Escaped value
-     */
-    public static function esc_output($value): string
-    {
-        if (is_array($value)) {
-            return esc_html(print_r($value, true));
-        }
-
-        return esc_html($value);
-    }
+    }  
+   
 
     /**
      * Get plugin version

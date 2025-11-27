@@ -76,61 +76,6 @@ class Tools
 		return \WcfAnimationBuilder\Helpers\Helper::get_option($key, $default);
 	}
 
-	/**
-     * Retrieves all registered image sizes.
-     *
-     * @return array List of image sizes by name.
-     */
-	public static function get_all_image_sizes() {
-		global $_wp_additional_image_sizes;
-	
-		$default_image_sizes = get_intermediate_image_sizes();
-	
-		foreach ( $default_image_sizes as $size ) {
-			$image_sizes[ $size ][ 'width' ] = intval( get_option( "{$size}_size_w" ) );
-			$image_sizes[ $size ][ 'height' ] = intval( get_option( "{$size}_size_h" ) );
-			$image_sizes[ $size ][ 'crop' ] = get_option( "{$size}_crop" ) ? get_option( "{$size}_crop" ) : false;
-		}
-	
-		return array_keys( $image_sizes );
-	}
-
-	public static function isValidDomainName(string $domain): bool
-	{
-		return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domain)
-			&& preg_match("/^.{1,253}$/", $domain)
-			&& preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $domain));
-	}
-
-	public static function getVariablesFromFile(string $filePath, array $extractVariables, array $setVariables = []): array
-	{
-		extract($setVariables, EXTR_REFS);
-		unset($setVariables);
-		require $filePath;
-		foreach ($extractVariables as $variableName => $defaultValue) {
-			if (isset($$variableName)) {
-				$extractVariables[$variableName] = $$variableName; // @phpstan-ignore-line dynamic
-			}
-		}
-		return $extractVariables;
-	}
-
-	public static function renderView(string $filePath, array $viewVariables = [], bool $return = true): string
-	{
-		if (!is_file($filePath)) {
-			return '';
-		}
-		extract($viewVariables, EXTR_REFS);
-		unset($viewVariables);
-		if ($return) {
-			ob_start();
-			require $filePath;
-			return ob_get_clean();
-		}
-		require $filePath;
-		return '';
-	}
-
 	public static function htmlTag(string $tag, array $attr = [], $end = false): string
 	{
 		$html = '<' . $tag . ' ' . self::attrToHtml($attr);
@@ -155,23 +100,6 @@ class Tools
 			$fixed = '//' . ltrim($fixed, '/');
 		}
 		return $fixed;
-	}
-
-	public static function htmlspecialcharsUtf8(string $string): string
-	{
-		return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
-	}
-
-	public static function attrToHtml(array $attrs): string
-	{
-		$html = '';
-		foreach ($attrs as $name => $val) {
-			if ($val === false) {
-				continue;
-			}
-			$html .= $name . '="' . self::htmlspecialcharsUtf8((string) $val) . '" ';
-		}
-		return $html;
 	}
 
 	public static function getDirFileList(string $dir, string $ext = 'php'): array
@@ -237,33 +165,6 @@ class Tools
 		$filePath = $path . $fileName;
 		$urlPath = $urlBase . $fileName;
 		return $wp_filesystem->exists($filePath) ? $urlPath : false;
-	}
-
-	public static function allowedHtml(): array
-	{
-		return [
-			'a' => ['href' => true, 'title' => true, 'target' => true, 'rel' => true, 'class' => true, 'data-*' => true],
-			'table' => ['id' => true, 'class' => true, 'style' => true, 'border' => true],
-			'thead' => ['class' => true, 'style' => true],
-			'tbody' => ['class' => true, 'style' => true],
-			'tr' => ['class' => true, 'style' => true],
-			'th' => ['scope' => true, 'class' => true, 'style' => true, 'colspan' => true, 'rowspan' => true],
-			'td' => ['class' => true, 'style' => true, 'colspan' => true, 'rowspan' => true],
-			'br' => [], 'em' => [], 'strong' => [],
-			'p' => ['class' => true, 'style' => true, 'id' => true],
-			'span' => ['class' => true, 'style' => true],
-			'div' => ['class' => true, 'style' => true, 'id' => true],
-			'ul' => ['class' => true], 'ol' => ['class' => true], 'li' => ['class' => true],
-			'img' => ['src' => true, 'alt' => true, 'title' => true, 'class' => true, 'id' => true, 'width' => true, 'height' => true],
-			'form' => ['action' => true, 'method' => true, 'enctype' => true, 'id' => true, 'class' => true],
-			'input' => ['type' => true, 'name' => true, 'value' => true, 'id' => true, 'class' => true, 'placeholder' => true, 'checked' => true, 'disabled' => true, 'data-*' => true, 'style' => true],
-			'textarea' => ['name' => true, 'rows' => true, 'cols' => true, 'id' => true, 'class' => true, 'placeholder' => true],
-			'select' => ['name' => true, 'id' => true, 'class' => true],
-			'option' => ['value' => true, 'selected' => true],
-			'h1' => ['class' => true, 'style' => true], 'h2' => ['class' => true, 'style' => true], 'h3' => ['class' => true, 'style' => true], 'h4' => ['class' => true, 'style' => true], 'h5' => ['class' => true, 'style' => true], 'h6' => ['class' => true, 'style' => true],
-			'button' => ['type' => true, 'name' => true, 'value' => true, 'id' => true, 'class' => true],
-			'label' => ['for' => true, 'style' => ['display' => true, 'margin-right' => true], 'id' => true, 'class' => true],
-		];
 	}
 
 	public static function isValidCssContainerMaxWidth($value)
