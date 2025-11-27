@@ -1,4 +1,4 @@
-import CursorHoverRevealPreset from "@/components/editor/preset/cursorHoverRevealPrest";
+import CursorHoverRevealPreset from "@/components/editor/preset/CursorHoverRevealPrest";
 
 AAEAnimBuilder.presets.register({
   groupName: "cursor",
