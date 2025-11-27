@@ -376,21 +376,16 @@ class AnimationBuilderCore
 	
 		// Raw host
 		$host = isset( $_SERVER['HTTP_HOST'] )
-			? wp_unslash( $_SERVER['HTTP_HOST'] )
+			? esc_url_raw( wp_unslash( $_SERVER['HTTP_HOST'] ) )
 			: '';
-	
-		// Sanitize as plain text, not as URL
-		$host = sanitize_text_field( $host );
 	
 		// Just in case the host contains a protocol, strip it
 		$host = preg_replace( '#^https?://#i', '', $host );
 	
 		// Sanitize request URI as URL part
 		$request_uri = isset( $_SERVER['REQUEST_URI'] )
-			? wp_unslash( $_SERVER['REQUEST_URI'] )
-			: '';
-	
-		$request_uri = esc_url_raw( $request_uri );
+			? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) )
+			: '';		
 	
 		// Remove unwanted query args
 		$strip = array(

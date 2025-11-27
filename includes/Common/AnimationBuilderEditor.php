@@ -363,7 +363,7 @@ class AnimationBuilderEditor
 	
 		$page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
 
-		$php_self = isset( $_SERVER['PHP_SELF'] ) ?  wp_unslash( $_SERVER['PHP_SELF'] ) : '';
+		$php_self = isset( $_SERVER['PHP_SELF'] ) ? sanitize_text_field( wp_unslash( $_SERVER['PHP_SELF'] ) ) : '';
 
 		if (( $page === 'aae-anim-builder' || $page === 'aae-page-importer' ) && strpos( $php_self, 'admin.php' ) !== false ) {
 
@@ -519,7 +519,7 @@ class AnimationBuilderEditor
 			}
 		}
 
-		$url = isset($_GET['builder_url']) ?  wp_unslash($_GET['builder_url']) : home_url('/');
+		$url = isset($_GET['builder_url']) ? sanitize_text_field( wp_unslash($_GET['builder_url']) ) : home_url('/');
 
 		$final_url = add_query_arg(
 			array(
