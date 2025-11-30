@@ -34,9 +34,9 @@
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-/*!***************************************************************************************!*\
-  !*** ./src/modules/animation-builder/frontend/animation-type/preset/textSplitAnim.js ***!
-  \***************************************************************************************/
+/*!*******************************************************************************************!*\
+  !*** ./src/modules/animation-builder/frontend/animation-type/preset/containerFadeAnim.js ***!
+  \*******************************************************************************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   textSplitAnim: function() { return /* binding */ textSplitAnim; }
@@ -44,13 +44,17 @@ __webpack_require__.r(__webpack_exports__);
 function textSplitAnim() {
   let sContainerClass = [];
   let sItemClass = [];
-  let activeTweens = new Map(); // Track active tweens
-  let splitTextInstances = new Map(); // Track split text instances for proper cleanup
-
+  let activeTweens = new Map();
   const handler = e => {
-    (e.detail["wcf-text-split-animation"] || []).forEach(section => {
+    (e.detail["wcf-container-fade-animation"] || []).forEach(section => {
       const {
         id,
+        title,
+        type,
+        enable,
+        presetGroup,
+        preset,
+        method,
         triggerClass,
         triggerType,
         itemClass,
@@ -58,14 +62,13 @@ function textSplitAnim() {
         startCustom,
         end,
         endCustom,
-        splitType,
+        fadeOffset,
         delay,
         duration,
         stagger,
-        x,
-        y,
-        markers,
+        fadeDirection,
         ease,
+        markers,
         timeout = 0 // Add timeout parameter for page_load
       } = section || {};
       if (!itemClass) {
@@ -78,33 +81,40 @@ function textSplitAnim() {
 
       // Split text
       try {
-        const splitInstance = new SplitText(itemClass, {
-          type: "chars, words, lines"
-        });
-
-        // Store the split instance for later cleanup
-        splitTextInstances.set(id, splitInstance);
-        const target = splitInstance[splitType];
-        if (!target || target.length === 0) {
-          console.warn("No split targets found for", splitType);
-          return;
-        }
-
+        //
         // Clear any existing tweens for this target
-        gsap.killTweensOf(target);
-        if (activeTweens.has(id)) {
-          activeTweens.get(id).kill();
-          activeTweens.delete(id);
-        }
+        // gsap.killTweensOf(target);
+        // if (activeTweens.has(id)) {
+        //   activeTweens.get(id).kill();
+        //   activeTweens.delete(id);
+        // }
+
         const animationConfig = {
-          x: x || 0,
-          y: y || 0,
           autoAlpha: 0,
           delay: delay || 0,
           stagger: stagger || 0.05,
           duration: duration || 1,
           ease
         };
+
+        // calculating translate x and translate y
+        const {
+          x,
+          y
+        } = calculateFadeAxis(fadeDirection, fadeOffset);
+        animationConfig.x = x;
+        animationConfig.y = y;
+
+        //  adding scale properties when fadeDirection is zoom
+        if (fadeDirection == "zoom") {
+          animationConfig.scale = 1.2;
+        }
+        console.log("final Config Obj", {
+          animationConfig
+        });
+
+        // TODO : Check start trigger and end trigger and start and end functionality.
+
         const runAnimation = () => {
           // Kill any existing animation for this ID
           if (activeTweens.has(id)) {
@@ -327,6 +337,38 @@ function textSplitAnim() {
       }
     });
   };
+  function calculateFadeAxis(direction, offset) {
+    // gettings fade direction and fading ofset
+    switch (direction) {
+      case "top":
+        return {
+          x: 0,
+          y: -offset
+        };
+      case "right":
+        return {
+          x: offset,
+          y: 0
+        };
+      case "bottom":
+        return {
+          x: 0,
+          y: offset
+        };
+      case "left":
+        return {
+          x: -offset,
+          y: 0
+        };
+      case "in":
+      case "zoom":
+      default:
+        return {
+          x: 0,
+          y: -offset
+        };
+    }
+  }
   function removeAnimation() {
     // Kill all active tweens first
     activeTweens.forEach(tween => {
@@ -341,18 +383,6 @@ function textSplitAnim() {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     }
 
-    // Revert all SplitText instances to restore original DOM
-    splitTextInstances.forEach((splitInstance, id) => {
-      try {
-        if (splitInstance && splitInstance.revert) {
-          splitInstance.revert();
-        }
-      } catch (e) {
-        console.warn(`Could not revert split text instance for ${id}:`, e);
-      }
-    });
-    splitTextInstances.clear();
-
     // Reset all container and item elements
     [...sContainerClass, ...sItemClass].forEach(className => {
       if (className) {
@@ -365,10 +395,10 @@ function textSplitAnim() {
 
           // Reset any inline styles that might have been set
           if (el.style) {
-            el.style.transform = '';
-            el.style.opacity = '';
-            el.style.visibility = '';
-            el.style.display = '';
+            el.style.transform = "";
+            el.style.opacity = "";
+            el.style.visibility = "";
+            el.style.display = "";
           }
         });
       }
@@ -379,7 +409,7 @@ function textSplitAnim() {
     sItemClass.length = 0;
 
     // Also clean up any remaining event listeners on trigger elements
-    document.querySelectorAll('[data-split-animation]').forEach(el => {
+    document.querySelectorAll("[data-split-animation]").forEach(el => {
       const newEl = el.cloneNode(true);
       if (el.parentNode) {
         el.parentNode.replaceChild(newEl, el);
@@ -401,4 +431,4 @@ function textSplitAnim() {
 textSplitAnim();
 /******/ })()
 ;
-//# sourceMappingURL=textSplitAnim.js.map
+//# sourceMappingURL=containerFadeAnim.js.map

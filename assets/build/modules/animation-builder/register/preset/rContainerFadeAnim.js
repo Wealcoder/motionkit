@@ -12207,10 +12207,10 @@ const ToolTipWrapper = ({
 
 /***/ }),
 
-/***/ "./src/modules/animation-builder/components/editor/preset/TextSplitPrest.jsx":
-/*!***********************************************************************************!*\
-  !*** ./src/modules/animation-builder/components/editor/preset/TextSplitPrest.jsx ***!
-  \***********************************************************************************/
+/***/ "./src/modules/animation-builder/components/editor/preset/ContainerFadePreset.jsx":
+/*!****************************************************************************************!*\
+  !*** ./src/modules/animation-builder/components/editor/preset/ContainerFadePreset.jsx ***!
+  \****************************************************************************************/
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
@@ -12225,7 +12225,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const easeConfig = ["power2.out", "power2.in", "power2.inOut", "power3.out", "power3.in", "power3.inOut", "power4.out", "power4.in", "power4.inOut", "back", "bounce", "circ", "elastic", "expo", "sine", "steps", "rough", "slow", "none"];
-const TextSplitPrest = ({
+const ContainerFadePreset = ({
   contentStep,
   updateContentData
 }) => {
@@ -12233,6 +12233,7 @@ const TextSplitPrest = ({
     data
   } = contentStep;
   const [fullConfig, setFullConfig] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({
+    method: "from",
     triggerClass: data?.triggerClass || "",
     triggerType: data?.triggerType || "on_scroll",
     itemClass: data?.itemClass || "",
@@ -12240,12 +12241,11 @@ const TextSplitPrest = ({
     startCustom: data?.startCustom || "",
     end: data?.end || "bottom bottom",
     endCustom: data?.endCustom || "",
-    splitType: data?.splitType || "chars",
+    fadeOffset: data?.fadeOffset || 50,
     delay: data?.delay || 0,
     duration: data?.duration || 1,
     stagger: data?.stagger || 0.02,
-    x: data?.x || "",
-    y: data?.y || "",
+    fadeDirection: data?.fadeDirection || "top",
     ease: data?.ease || "power2.out",
     markers: data?.markers || "false"
   });
@@ -12260,7 +12260,7 @@ const TextSplitPrest = ({
     updateContentData(result);
   }, [fullConfig]);
   const checkOptionEnable = () => {
-    if (fullConfig.triggerType === "on_scroll" || fullConfig.triggerType === "play_with_scroll") {
+    if (fullConfig?.triggerType === "on_scroll" || fullConfig?.triggerType === "play_with_scroll") {
       return true;
     } else {
       return false;
@@ -12274,6 +12274,35 @@ const TextSplitPrest = ({
     className: "flex items-center gap-1"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
     className: "text-xs text-text-2 capitalize"
+  }, "Method"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
+    text: "Select the trigger type"
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center gap-1.5"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex-1"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.Select, {
+    value: fullConfig?.method,
+    onValueChange: value => setFullConfig(prev => ({
+      ...prev,
+      method: value
+    }))
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectTrigger, {
+    className: "min-w-[90px]"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectValue, {
+    placeholder: "Select animation method",
+    className: "line-clamp-1"
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectContent, {
+    className: "min-w-[90px]"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectGroup, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
+    value: "from"
+  }, "From"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
+    value: "to"
+  }, "To"))))))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "grid grid-cols-2 gap-2 justify-between items-center"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center gap-1"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
+    className: "text-xs text-text-2 capitalize"
   }, "Trigger Type"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
     text: "Select the trigger type"
   })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -12281,7 +12310,7 @@ const TextSplitPrest = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex-1"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.Select, {
-    value: fullConfig.triggerType,
+    value: fullConfig?.triggerType,
     onValueChange: value => setFullConfig(prev => ({
       ...prev,
       triggerType: value
@@ -12303,7 +12332,7 @@ const TextSplitPrest = ({
     value: "hover"
   }, "Hover"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
     value: "click"
-  }, "Click"))))))), fullConfig.triggerType !== "page_load" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, "Click"))))))), fullConfig?.triggerType !== "page_load" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-2 gap-2 justify-between items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-1"
@@ -12351,74 +12380,38 @@ const TextSplitPrest = ({
     className: "flex items-center gap-1"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
     className: "text-xs text-text-2 capitalize"
-  }, "Split Type"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
-    text: "Select the split type"
+  }, "Fade From"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
+    text: "Select fading direction"
   })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-1.5"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex-1"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.Select, {
-    value: fullConfig.splitType,
+    value: fullConfig?.fadeDirection,
     onValueChange: value => setFullConfig(prev => ({
       ...prev,
-      splitType: value
+      fadeDirection: value
     }))
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectTrigger, {
     className: "min-w-[90px]"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectValue, {
-    placeholder: "Select split",
+    placeholder: "Select animation method",
     className: "line-clamp-1"
   })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectContent, {
     className: "min-w-[90px]"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectGroup, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
-    value: "chars"
-  }, "Chars"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
-    value: "words"
-  }, "Words"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
-    value: "lines"
-  }, "Lines"))))))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "grid grid-cols-2 gap-2 justify-between items-center"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
-    className: "text-xs text-text-2 capitalize"
-  }, "Transform X"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
-    text: "Transform X value"
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1.5"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_input__WEBPACK_IMPORTED_MODULE_2__.Input, {
-    value: fullConfig?.x,
-    onChange: e => {
-      setFullConfig(prev => ({
-        ...prev,
-        x: e.target.value
-      }));
-    },
-    placeholder: "add value"
-  })))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "grid grid-cols-2 gap-2 justify-between items-center"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
-    className: "text-xs text-text-2 capitalize"
-  }, "Transform Y"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
-    text: "Transform Y value"
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1.5"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_input__WEBPACK_IMPORTED_MODULE_2__.Input, {
-    value: fullConfig?.y,
-    onChange: e => {
-      setFullConfig(prev => ({
-        ...prev,
-        y: e.target.value
-      }));
-    },
-    placeholder: "add value"
-  })))), checkOptionEnable() ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    value: "top"
+  }, "Top"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
+    value: "right"
+  }, "Right"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
+    value: "bottom"
+  }, "Bottom"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
+    value: "left"
+  }, "Left"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
+    value: "in"
+  }, "In"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
+    value: "zoom"
+  }, "Zoom"))))))), checkOptionEnable() ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-2 gap-2 justify-between items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-1"
@@ -12431,7 +12424,7 @@ const TextSplitPrest = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex-1"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.Select, {
-    value: fullConfig.start,
+    value: fullConfig?.start,
     onValueChange: value => setFullConfig(prev => ({
       ...prev,
       start: value
@@ -12463,7 +12456,7 @@ const TextSplitPrest = ({
     value: "bottom bottom"
   }, "Bottom Bottom"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
     value: "custom"
-  }, "Custom"))))))) : "", checkOptionEnable() && fullConfig.start === "custom" && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, "Custom"))))))) : "", checkOptionEnable() && fullConfig?.start === "custom" && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-2 gap-2 justify-between items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-1"
@@ -12497,7 +12490,7 @@ const TextSplitPrest = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex-1"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.Select, {
-    value: fullConfig.end,
+    value: fullConfig?.end,
     onValueChange: value => setFullConfig(prev => ({
       ...prev,
       end: value
@@ -12529,7 +12522,7 @@ const TextSplitPrest = ({
     value: "bottom bottom"
   }, "Bottom Bottom"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
     value: "custom"
-  }, "Custom"))))))) : "", checkOptionEnable() && fullConfig.end === "custom" && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, "Custom"))))))) : "", checkOptionEnable() && fullConfig?.end === "custom" && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-2 gap-2 justify-between items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-1"
@@ -12550,6 +12543,27 @@ const TextSplitPrest = ({
       }));
     },
     placeholder: "e.g., 80% 20%"
+  })))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "grid grid-cols-2 gap-2 justify-between items-center"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center gap-1"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
+    className: "text-xs text-text-2 capitalize"
+  }, "Fade offset"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
+    text: "Add the class name of the video element"
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center gap-1.5"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex-1"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_input__WEBPACK_IMPORTED_MODULE_2__.Input, {
+    value: fullConfig?.fadeOffset,
+    onChange: e => {
+      setFullConfig(prev => ({
+        ...prev,
+        fadeOffset: e.target.value
+      }));
+    },
+    placeholder: "add value"
   })))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-2 gap-2 justify-between items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -12635,7 +12649,7 @@ const TextSplitPrest = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex-1"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.Select, {
-    value: fullConfig.ease,
+    value: fullConfig?.ease,
     onValueChange: value => setFullConfig(prev => ({
       ...prev,
       ease: value
@@ -12663,7 +12677,7 @@ const TextSplitPrest = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex-1"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.Select, {
-    value: fullConfig.markers,
+    value: fullConfig?.markers,
     onValueChange: value => setFullConfig(prev => ({
       ...prev,
       markers: value
@@ -12681,7 +12695,7 @@ const TextSplitPrest = ({
     value: "false"
   }, "False"))))))));
 };
-/* harmony default export */ __webpack_exports__["default"] = (TextSplitPrest);
+/* harmony default export */ __webpack_exports__["default"] = (ContainerFadePreset);
 
 /***/ }),
 
@@ -13475,19 +13489,19 @@ module.exports = window["ReactDOM"];
 var __webpack_exports__ = {};
 // This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
 !function() {
-/*!*************************************************************************!*\
-  !*** ./src/modules/animation-builder/register/preset/rTextSplitAnim.js ***!
-  \*************************************************************************/
+/*!*****************************************************************************!*\
+  !*** ./src/modules/animation-builder/register/preset/rContainerFadeAnim.js ***!
+  \*****************************************************************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _components_editor_preset_TextSplitPrest__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/components/editor/preset/TextSplitPrest */ "./src/modules/animation-builder/components/editor/preset/TextSplitPrest.jsx");
+/* harmony import */ var _components_editor_preset_ContainerFadePreset__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/components/editor/preset/ContainerFadePreset */ "./src/modules/animation-builder/components/editor/preset/ContainerFadePreset.jsx");
 
 AAEAnimBuilder.presets.register({
-  groupName: "text",
-  presetKey: "wcf-text-split-animation",
-  name: "Split",
-  component: _components_editor_preset_TextSplitPrest__WEBPACK_IMPORTED_MODULE_0__["default"]
+  groupName: "container",
+  presetKey: "wcf-container-fade-animation",
+  name: "Fade",
+  component: _components_editor_preset_ContainerFadePreset__WEBPACK_IMPORTED_MODULE_0__["default"]
 });
 }();
 /******/ })()
 ;
-//# sourceMappingURL=rTextSplitAnim.js.map
+//# sourceMappingURL=rContainerFadeAnim.js.map
