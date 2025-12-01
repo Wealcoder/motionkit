@@ -56,7 +56,7 @@ const GetStart = () => {
   }, []);
 
   const getScreenSize = (value) => {
-    let result = WCF_ADDONS_ANIMATION_BUILDER?.device_config.find(
+    let result = WCF_ANIMATION_BUILDER?.device_config.find(
       (el) => el.key === value
     );
     if (result) {
@@ -80,7 +80,7 @@ const GetStart = () => {
             style={{
               width: getScreenSize(selectedDevice),
             }}
-            src={WCF_ADDONS_ANIMATION_BUILDER.iframe_url}
+            src={WCF_ANIMATION_BUILDER.iframe_url}
           ></iframe>
         </ResizablePanel>
         <ResizableHandle withHandle />

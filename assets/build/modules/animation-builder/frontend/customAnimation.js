@@ -267,7 +267,7 @@ function customAnimation() {
             console.warn(`Target not found for animation: ${animation.title}`);
             return;
           }
-
+          targetElement.style.transition = "none";
           // 👉 If drawSVG exists
           if (findDrawSVG) {
             let container = null;

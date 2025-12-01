@@ -19233,7 +19233,7 @@ const ShowPresets = ({
 
   // Save settings
   const savePresets = async () => {
-    await fetch(WCF_ADDONS_ADMIN.ajaxurl, {
+    await fetch(WCF_ANIMATION_BUILDER_ADMIN.ajaxurl, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -19243,7 +19243,7 @@ const ShowPresets = ({
         action: "aae_save_anim_builder_settings",
         setting_name: "aae_anim_builder_settings",
         form_fields: JSON.stringify(allPresets),
-        nonce: WCF_ADDONS_ADMIN.nonce
+        nonce: WCF_ANIMATION_BUILDER_ADMIN.nonce
       })
     }).then(response => response.json()).then(data => {
       console.log("r", data);
@@ -19816,7 +19816,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const initialState = {
-  allPresets: JSON.parse(JSON.stringify(WCF_ADDONS_ADMIN?.config?.settings)) || {}
+  allPresets: JSON.parse(JSON.stringify(WCF_ANIMATION_BUILDER_ADMIN?.config?.settings)) || {}
 };
 const reducer = (state, action) => {
   switch (action.type) {
@@ -20101,7 +20101,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const MainPage = () => {
   const [searchKey, setSearchKey] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
-  const [presetCount, setPresetCount] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(WCF_ADDONS_ADMIN.config.count);
+  const [presetCount, setPresetCount] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(WCF_ANIMATION_BUILDER_ADMIN.config.count);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "wcfabs2025-wrapper"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -20179,9 +20179,9 @@ const validateStringFormat = input => {
   return pattern.test(input);
 };
 const getResponsiveAndBelow = configKey => {
-  const startIndex = WCF_ADDONS_ANIMATION_BUILDER?.device_config.findIndex(item => item.key === configKey);
+  const startIndex = WCF_ANIMATION_BUILDER?.device_config.findIndex(item => item.key === configKey);
   if (startIndex === -1) return [];
-  return WCF_ADDONS_ANIMATION_BUILDER?.device_config.slice(startIndex).map(item => item.key);
+  return WCF_ANIMATION_BUILDER?.device_config.slice(startIndex).map(item => item.key);
 };
 function deepSmartMerge(source, target, base = {}) {
   if (typeof source !== "object" || source === null) return source;

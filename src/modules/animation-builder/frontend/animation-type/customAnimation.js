@@ -41,6 +41,7 @@ export function customAnimation() {
             return;
           }
 
+          targetElement.style.transition = "none";
           // 👉 If drawSVG exists
           if (findDrawSVG) {
             let container = null;
@@ -202,13 +203,13 @@ export function customAnimation() {
 
               animation?.splitText?.propIndex
                 ? (config.propIndex = toBoolean(
-                  animation?.splitText?.propIndex
-                ))
+                    animation?.splitText?.propIndex
+                  ))
                 : "";
               animation?.splitText?.autoSplit
                 ? (config.autoSplit = toBoolean(
-                  animation?.splitText?.autoSplit
-                ))
+                    animation?.splitText?.autoSplit
+                  ))
                 : "";
               animation?.splitText?.charsClass
                 ? (config.charsClass = animation?.splitText?.charsClass)
@@ -221,8 +222,8 @@ export function customAnimation() {
                 : "";
               animation?.splitText?.smartWrap
                 ? (config.smartWrap = toBoolean(
-                  animation?.splitText?.smartWrap
-                ))
+                    animation?.splitText?.smartWrap
+                  ))
                 : "";
               animation?.splitText?.ignore
                 ? (config.ignore = animation?.splitText?.ignore)
@@ -288,8 +289,8 @@ export function customAnimation() {
               scrollConfig.scrub === "true"
                 ? true
                 : scrollConfig.scrub === "false"
-                  ? false
-                  : scrollConfig.customScrub;
+                ? false
+                : scrollConfig.customScrub;
           }
 
           if (scrollConfig.pin || scrollConfig.customPin) {
@@ -297,8 +298,8 @@ export function customAnimation() {
               scrollConfig.pin === "true"
                 ? true
                 : scrollConfig.pin === "false"
-                  ? false
-                  : scrollConfig.customPin;
+                ? false
+                : scrollConfig.customPin;
           }
 
           if (scrollConfig.pinSpacing) {

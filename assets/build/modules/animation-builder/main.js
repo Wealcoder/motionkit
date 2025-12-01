@@ -39032,7 +39032,7 @@ const GetStart = () => {
     disableIframeLinks();
   }, []);
   const getScreenSize = value => {
-    let result = WCF_ADDONS_ANIMATION_BUILDER?.device_config.find(el => el.key === value);
+    let result = WCF_ANIMATION_BUILDER?.device_config.find(el => el.key === value);
     if (result) {
       return result.viewWidth;
     } else {
@@ -39051,7 +39051,7 @@ const GetStart = () => {
     style: {
       width: getScreenSize(selectedDevice)
     },
-    src: WCF_ADDONS_ANIMATION_BUILDER.iframe_url
+    src: WCF_ANIMATION_BUILDER.iframe_url
   })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_resizable__WEBPACK_IMPORTED_MODULE_1__.ResizableHandle, {
     withHandle: true
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_resizable__WEBPACK_IMPORTED_MODULE_1__.ResizablePanel, {
@@ -39834,7 +39834,7 @@ const EditorHeader = () => {
     selectedDevice,
     setSelectedDevice
   } = (0,_hooks_app_hooks__WEBPACK_IMPORTED_MODULE_5__.useDeviceConfig)();
-  const previewUrl = new URL(WCF_ADDONS_ANIMATION_BUILDER.iframe_url);
+  const previewUrl = new URL(WCF_ANIMATION_BUILDER.iframe_url);
   previewUrl.searchParams.delete("action");
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const structure = localStorage.getItem("aae_selected_structure");
@@ -39948,7 +39948,7 @@ const EditorHeader = () => {
     fill: "white"
   })))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center justify-center gap-4"
-  }, WCF_ADDONS_ANIMATION_BUILDER?.device_config?.map(device => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tooltip__WEBPACK_IMPORTED_MODULE_6__.TooltipProvider, {
+  }, WCF_ANIMATION_BUILDER?.device_config?.map(device => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tooltip__WEBPACK_IMPORTED_MODULE_6__.TooltipProvider, {
     delayDuration: 100,
     key: device.key
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tooltip__WEBPACK_IMPORTED_MODULE_6__.Tooltip, {
@@ -44149,7 +44149,7 @@ class RegisterPreset {
   }
   register(preset) {
     if (!preset) {
-      if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+      if (WCF_ANIMATION_BUILDER.debug) {
         console.error("Preset cannot be empty");
       }
       return;
@@ -44159,7 +44159,7 @@ class RegisterPreset {
     const presetArray = Array.isArray(preset) ? preset : [preset];
     const validPresets = presetArray.filter(item => item && typeof item === "object" && "presetKey" in item && "groupName" in item);
     if (validPresets.length === 0) {
-      if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+      if (WCF_ANIMATION_BUILDER.debug) {
         console.error("Invalid preset format");
       }
       return;
@@ -44175,7 +44175,7 @@ class RegisterPreset {
       // Check if presetKey already exists in group
       const exists = this.#preset[group].some(item => item.presetKey === newPreset.presetKey);
       if (exists) {
-        if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+        if (WCF_ANIMATION_BUILDER.debug) {
           console.warn(`Preset with presetKey "${newPreset.presetKey}" already exists in group "${group}". Use updatePreset() to modify it.`);
         }
       } else {
@@ -44185,21 +44185,21 @@ class RegisterPreset {
   }
   updatePreset(preset) {
     if (!preset || typeof preset !== "object" || !("presetKey" in preset) || !("groupName" in preset)) {
-      if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+      if (WCF_ANIMATION_BUILDER.debug) {
         console.error("Invalid preset format for update");
       }
       return;
     }
     const group = preset.groupName;
     if (!this.#preset[group]) {
-      if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+      if (WCF_ANIMATION_BUILDER.debug) {
         console.warn(`Group "${group}" does not exist. Use register() to add it.`);
       }
       return;
     }
     const index = this.#preset[group].findIndex(item => item.presetKey === preset.presetKey);
     if (index === -1) {
-      if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+      if (WCF_ANIMATION_BUILDER.debug) {
         console.warn(`Preset "${preset.presetKey}" does not exist in group "${group}". Use register() to add it.`);
       }
       return;
@@ -44231,7 +44231,7 @@ class RegisterPreset {
   removePreset(groupName, presetKey) {
     if (!this.#preset[groupName]) return;
     this.#preset[groupName] = this.#preset[groupName].filter(item => item.presetKey !== presetKey);
-    if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+    if (WCF_ANIMATION_BUILDER.debug) {
       console.log(`Preset "${presetKey}" removed from group "${groupName}" (if it existed).`);
     }
   }
@@ -44301,9 +44301,9 @@ const validateStringFormat = input => {
   return pattern.test(input);
 };
 const getResponsiveAndBelow = configKey => {
-  const startIndex = WCF_ADDONS_ANIMATION_BUILDER?.device_config.findIndex(item => item.key === configKey);
+  const startIndex = WCF_ANIMATION_BUILDER?.device_config.findIndex(item => item.key === configKey);
   if (startIndex === -1) return [];
-  return WCF_ADDONS_ANIMATION_BUILDER?.device_config.slice(startIndex).map(item => item.key);
+  return WCF_ANIMATION_BUILDER?.device_config.slice(startIndex).map(item => item.key);
 };
 function deepSmartMerge(source, target, base = {}) {
   if (typeof source !== "object" || source === null) return source;

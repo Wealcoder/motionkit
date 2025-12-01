@@ -13197,9 +13197,9 @@ const validateStringFormat = input => {
   return pattern.test(input);
 };
 const getResponsiveAndBelow = configKey => {
-  const startIndex = WCF_ADDONS_ANIMATION_BUILDER?.device_config.findIndex(item => item.key === configKey);
+  const startIndex = WCF_ANIMATION_BUILDER?.device_config.findIndex(item => item.key === configKey);
   if (startIndex === -1) return [];
-  return WCF_ADDONS_ANIMATION_BUILDER?.device_config.slice(startIndex).map(item => item.key);
+  return WCF_ANIMATION_BUILDER?.device_config.slice(startIndex).map(item => item.key);
 };
 function deepSmartMerge(source, target, base = {}) {
   if (typeof source !== "object" || source === null) return source;

@@ -36,14 +36,11 @@ const ContainerFadePreset = ({ contentStep, updateContentData }) => {
   const { data } = contentStep;
 
   const [fullConfig, setFullConfig] = useState({
-    method: "from",
     triggerClass: data?.triggerClass || "",
     triggerType: data?.triggerType || "on_scroll",
     itemClass: data?.itemClass || "",
     start: data?.start || "top top",
-    startCustom: data?.startCustom || "",
     end: data?.end || "bottom bottom",
-    endCustom: data?.endCustom || "",
     fadeOffset: data?.fadeOffset || 50,
     delay: data?.delay || 0,
     duration: data?.duration || 1,
@@ -71,39 +68,6 @@ const ContainerFadePreset = ({ contentStep, updateContentData }) => {
 
   return (
     <div className="flex flex-col gap-2 border-b border-border-2 w-full p-3">
-      {/* method */}
-      <div className="grid grid-cols-2 gap-2 justify-between items-center">
-        <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Method</h3>
-          <ToolTipWrapper text={"Select the trigger type"} />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="flex-1">
-            <Select
-              value={fullConfig?.method}
-              onValueChange={(value) =>
-                setFullConfig((prev) => ({
-                  ...prev,
-                  method: value,
-                }))
-              }
-            >
-              <SelectTrigger className="min-w-[90px]">
-                <SelectValue
-                  placeholder="Select animation method"
-                  className="line-clamp-1"
-                />
-              </SelectTrigger>
-              <SelectContent className="min-w-[90px]">
-                <SelectGroup>
-                  <SelectItem value="from">From</SelectItem>
-                  <SelectItem value="to">To</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
       {/* trigger type  */}
       <div className="grid grid-cols-2 gap-2 justify-between items-center">
         <div className="flex items-center gap-1">
@@ -143,6 +107,28 @@ const ContainerFadePreset = ({ contentStep, updateContentData }) => {
         </div>
       </div>
 
+      {/* item class  */}
+      <div className="grid grid-cols-2 gap-2 justify-between items-center">
+        <div className="flex items-center gap-1">
+          <h3 className="text-xs text-text-2 capitalize">Item Class</h3>
+          <ToolTipWrapper text={"Add the class name of the video element"} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1">
+            <Input
+              value={fullConfig?.itemClass}
+              onChange={(e) => {
+                setFullConfig((prev) => ({
+                  ...prev,
+                  itemClass: e.target.value,
+                }));
+              }}
+              placeholder="add value"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* trigger class  */}
       {fullConfig?.triggerType !== "page_load" ? (
         <div className="grid grid-cols-2 gap-2 justify-between items-center">
@@ -168,28 +154,6 @@ const ContainerFadePreset = ({ contentStep, updateContentData }) => {
       ) : (
         ""
       )}
-
-      {/* item class  */}
-      <div className="grid grid-cols-2 gap-2 justify-between items-center">
-        <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Item Class</h3>
-          <ToolTipWrapper text={"Add the class name of the video element"} />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="flex-1">
-            <Input
-              value={fullConfig?.itemClass}
-              onChange={(e) => {
-                setFullConfig((prev) => ({
-                  ...prev,
-                  itemClass: e.target.value,
-                }));
-              }}
-              placeholder="add value"
-            />
-          </div>
-        </div>
-      </div>
 
       {/* fade from */}
       <div className="grid grid-cols-2 gap-2 justify-between items-center">
@@ -264,7 +228,6 @@ const ContainerFadePreset = ({ contentStep, updateContentData }) => {
                     <SelectItem value="bottom top">Bottom Top</SelectItem>
                     <SelectItem value="bottom center">Bottom Center</SelectItem>
                     <SelectItem value="bottom bottom">Bottom Bottom</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -273,30 +236,6 @@ const ContainerFadePreset = ({ contentStep, updateContentData }) => {
         </div>
       ) : (
         ""
-      )}
-
-      {/* start custom field */}
-      {checkOptionEnable() && fullConfig?.start === "custom" && (
-        <div className="grid grid-cols-2 gap-2 justify-between items-center">
-          <div className="flex items-center gap-1">
-            <h3 className="text-xs text-text-2 capitalize">Custom Start</h3>
-            <ToolTipWrapper text={"Add custom start value"} />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="flex-1">
-              <Input
-                value={fullConfig?.startCustom}
-                onChange={(e) => {
-                  setFullConfig((prev) => ({
-                    ...prev,
-                    startCustom: e.target.value,
-                  }));
-                }}
-                placeholder="e.g., 20% 80%"
-              />
-            </div>
-          </div>
-        </div>
       )}
 
       {/* end  */}
@@ -334,7 +273,6 @@ const ContainerFadePreset = ({ contentStep, updateContentData }) => {
                     <SelectItem value="bottom top">Bottom Top</SelectItem>
                     <SelectItem value="bottom center">Bottom Center</SelectItem>
                     <SelectItem value="bottom bottom">Bottom Bottom</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -343,30 +281,6 @@ const ContainerFadePreset = ({ contentStep, updateContentData }) => {
         </div>
       ) : (
         ""
-      )}
-
-      {/* end custom field */}
-      {checkOptionEnable() && fullConfig?.end === "custom" && (
-        <div className="grid grid-cols-2 gap-2 justify-between items-center">
-          <div className="flex items-center gap-1">
-            <h3 className="text-xs text-text-2 capitalize">Custom End</h3>
-            <ToolTipWrapper text={"Add custom end value"} />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="flex-1">
-              <Input
-                value={fullConfig?.endCustom}
-                onChange={(e) => {
-                  setFullConfig((prev) => ({
-                    ...prev,
-                    endCustom: e.target.value,
-                  }));
-                }}
-                placeholder="e.g., 80% 20%"
-              />
-            </div>
-          </div>
-        </div>
       )}
 
       {/* fade ofset */}
@@ -382,7 +296,7 @@ const ContainerFadePreset = ({ contentStep, updateContentData }) => {
               onChange={(e) => {
                 setFullConfig((prev) => ({
                   ...prev,
-                  fadeOffset: e.target.value,
+                  fadeOffset: +e.target.value,
                 }));
               }}
               placeholder="add value"

@@ -12233,14 +12233,11 @@ const ContainerFadePreset = ({
     data
   } = contentStep;
   const [fullConfig, setFullConfig] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({
-    method: "from",
     triggerClass: data?.triggerClass || "",
     triggerType: data?.triggerType || "on_scroll",
     itemClass: data?.itemClass || "",
     start: data?.start || "top top",
-    startCustom: data?.startCustom || "",
     end: data?.end || "bottom bottom",
-    endCustom: data?.endCustom || "",
     fadeOffset: data?.fadeOffset || 50,
     delay: data?.delay || 0,
     duration: data?.duration || 1,
@@ -12269,35 +12266,6 @@ const ContainerFadePreset = ({
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex flex-col gap-2 border-b border-border-2 w-full p-3"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "grid grid-cols-2 gap-2 justify-between items-center"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
-    className: "text-xs text-text-2 capitalize"
-  }, "Method"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
-    text: "Select the trigger type"
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1.5"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.Select, {
-    value: fullConfig?.method,
-    onValueChange: value => setFullConfig(prev => ({
-      ...prev,
-      method: value
-    }))
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectTrigger, {
-    className: "min-w-[90px]"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectValue, {
-    placeholder: "Select animation method",
-    className: "line-clamp-1"
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectContent, {
-    className: "min-w-[90px]"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectGroup, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
-    value: "from"
-  }, "From"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
-    value: "to"
-  }, "To"))))))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-2 gap-2 justify-between items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-1"
@@ -12332,7 +12300,28 @@ const ContainerFadePreset = ({
     value: "hover"
   }, "Hover"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
     value: "click"
-  }, "Click"))))))), fullConfig?.triggerType !== "page_load" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, "Click"))))))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "grid grid-cols-2 gap-2 justify-between items-center"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center gap-1"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
+    className: "text-xs text-text-2 capitalize"
+  }, "Item Class"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
+    text: "Add the class name of the video element"
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center gap-1.5"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex-1"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_input__WEBPACK_IMPORTED_MODULE_2__.Input, {
+    value: fullConfig?.itemClass,
+    onChange: e => {
+      setFullConfig(prev => ({
+        ...prev,
+        itemClass: e.target.value
+      }));
+    },
+    placeholder: "add value"
+  })))), fullConfig?.triggerType !== "page_load" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-2 gap-2 justify-between items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-1"
@@ -12354,27 +12343,6 @@ const ContainerFadePreset = ({
     },
     placeholder: "add value"
   })))) : "", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "grid grid-cols-2 gap-2 justify-between items-center"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
-    className: "text-xs text-text-2 capitalize"
-  }, "Item Class"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
-    text: "Add the class name of the video element"
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1.5"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_input__WEBPACK_IMPORTED_MODULE_2__.Input, {
-    value: fullConfig?.itemClass,
-    onChange: e => {
-      setFullConfig(prev => ({
-        ...prev,
-        itemClass: e.target.value
-      }));
-    },
-    placeholder: "add value"
-  })))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-2 gap-2 justify-between items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-1"
@@ -12454,30 +12422,7 @@ const ContainerFadePreset = ({
     value: "bottom center"
   }, "Bottom Center"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
     value: "bottom bottom"
-  }, "Bottom Bottom"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
-    value: "custom"
-  }, "Custom"))))))) : "", checkOptionEnable() && fullConfig?.start === "custom" && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "grid grid-cols-2 gap-2 justify-between items-center"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
-    className: "text-xs text-text-2 capitalize"
-  }, "Custom Start"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
-    text: "Add custom start value"
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1.5"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_input__WEBPACK_IMPORTED_MODULE_2__.Input, {
-    value: fullConfig?.startCustom,
-    onChange: e => {
-      setFullConfig(prev => ({
-        ...prev,
-        startCustom: e.target.value
-      }));
-    },
-    placeholder: "e.g., 20% 80%"
-  })))), checkOptionEnable() ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, "Bottom Bottom"))))))) : "", checkOptionEnable() ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-2 gap-2 justify-between items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-1"
@@ -12520,30 +12465,7 @@ const ContainerFadePreset = ({
     value: "bottom center"
   }, "Bottom Center"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
     value: "bottom bottom"
-  }, "Bottom Bottom"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_select__WEBPACK_IMPORTED_MODULE_3__.SelectItem, {
-    value: "custom"
-  }, "Custom"))))))) : "", checkOptionEnable() && fullConfig?.end === "custom" && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "grid grid-cols-2 gap-2 justify-between items-center"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
-    className: "text-xs text-text-2 capitalize"
-  }, "Custom End"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_common_ToolTipWrapper__WEBPACK_IMPORTED_MODULE_1__["default"], {
-    text: "Add custom end value"
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex items-center gap-1.5"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex-1"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_input__WEBPACK_IMPORTED_MODULE_2__.Input, {
-    value: fullConfig?.endCustom,
-    onChange: e => {
-      setFullConfig(prev => ({
-        ...prev,
-        endCustom: e.target.value
-      }));
-    },
-    placeholder: "e.g., 80% 20%"
-  })))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, "Bottom Bottom"))))))) : "", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-2 gap-2 justify-between items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-1"
@@ -12560,7 +12482,7 @@ const ContainerFadePreset = ({
     onChange: e => {
       setFullConfig(prev => ({
         ...prev,
-        fadeOffset: e.target.value
+        fadeOffset: +e.target.value
       }));
     },
     placeholder: "add value"
@@ -13243,9 +13165,9 @@ const validateStringFormat = input => {
   return pattern.test(input);
 };
 const getResponsiveAndBelow = configKey => {
-  const startIndex = WCF_ADDONS_ANIMATION_BUILDER?.device_config.findIndex(item => item.key === configKey);
+  const startIndex = WCF_ANIMATION_BUILDER?.device_config.findIndex(item => item.key === configKey);
   if (startIndex === -1) return [];
-  return WCF_ADDONS_ANIMATION_BUILDER?.device_config.slice(startIndex).map(item => item.key);
+  return WCF_ANIMATION_BUILDER?.device_config.slice(startIndex).map(item => item.key);
 };
 function deepSmartMerge(source, target, base = {}) {
   if (typeof source !== "object" || source === null) return source;
