@@ -4,7 +4,9 @@ import ShowPresets from "../components/ShowPresets";
 
 const MainPage = () => {
   const [searchKey, setSearchKey] = useState("");
-  const [presetCount, setPresetCount] = useState(WCF_ADDONS_ADMIN.config.count);
+  const [presetCount, setPresetCount] = useState(
+    WCF_ANIMATION_BUILDER_ADMIN.config.count
+  );
 
   return (
     <div className="wcfabs2025-wrapper">

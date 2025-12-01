@@ -43,9 +43,9 @@ class AnimationBuilderEditor
 	public function __construct()
 	{
 		// dashboard settings
-		
+
 		add_action('admin_enqueue_scripts', array($this, 'admin_scripts'), 999);
-				
+
 		add_action('wp', array($this, 'init'));
 		add_action('wcfanimationbuilder_before_enqueue_scripts', array($this, 'editor_script'));
 		add_action('wcfanimationbuilder_before_enqueue_styles', array($this, 'editor_style'));
@@ -55,7 +55,7 @@ class AnimationBuilderEditor
 	public function setPageType($obj)
 	{
 		$this->page_type = $obj;
-	}	
+	}
 
 	/**
 	 * Count total and active elements in the animation builder data.
@@ -120,7 +120,7 @@ class AnimationBuilderEditor
 		remove_all_actions('after_wp_tiny_mce');
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'), 999999);
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_styles'), 999999);
-	}	
+	}
 
 	/**
 	 * Enqueue admin scripts
@@ -146,19 +146,19 @@ class AnimationBuilderEditor
 		if ( empty( $wp_styles->registered ) ) {
 			return;
 		}
-	
+
 		$theme_dir = basename( get_template_directory() ); // e.g. "astra" or "hello-elementor"
 		$theme_dir = sanitize_text_field( $theme_dir );
-	
-	
+
+
 		foreach ( $wp_styles->registered as $handle => $style ) {
 
 			if ( ! empty( $style->src ) ) {
 				$style->src = sanitize_text_field( $style->src );
-			}			
-			
+			}
+
 			if ( ! empty( $style->src ) && strpos( $style->src, "/{$theme_dir}/" ) !== false ) {
-			
+
 				// Remove only theme styles
 				wp_dequeue_style( $handle );
 				wp_deregister_style( $handle );
@@ -167,7 +167,7 @@ class AnimationBuilderEditor
 
 
 		if ($is_builder_screen) {
-		
+
 			wp_enqueue_style(
 				'aae-animation-builder-settings',
 				WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder-settings/main.css'
@@ -198,7 +198,7 @@ class AnimationBuilderEditor
 
 			wp_localize_script(
 				'aae-animation-builder-settings',
-				'WCF_ADDONS_ADMIN',
+				'WCF_ANIMATION_BUILDER_ADMIN',
 				array(
 					'ajaxurl' => admin_url('admin-ajax.php'),
 					'nonce'   => wp_create_nonce('wcf_admin_nonce'),
@@ -322,7 +322,7 @@ class AnimationBuilderEditor
 		}
 
 		return $result;
-	}	
+	}
 
 	function editor_classes($classes)
 	{
@@ -415,7 +415,7 @@ class AnimationBuilderEditor
 		 */
 		do_action('wcfanimationbuilder/editor/wp_head');
 	}
-	
+
 
 
 	public function is_edit_mode()
@@ -465,7 +465,7 @@ class AnimationBuilderEditor
 
 		$final_url = add_query_arg(
 			array(
-				'action' => 'animation-builder',				
+				'action' => 'animation-builder',
 			),
 			$url
 		);
@@ -497,6 +497,6 @@ class AnimationBuilderEditor
 			)
 		);
 
-		wp_localize_script('wcf-pro-animation-builder', 'WCF_ADDONS_ANIMATION_BUILDER', $localize_data);
+		wp_localize_script('wcf-pro-animation-builder', 'WCF_ANIMATION_BUILDER', $localize_data);
 	}
 }

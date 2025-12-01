@@ -24,7 +24,7 @@ class RegisterPreset {
 
   register(preset) {
     if (!preset) {
-      if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+      if (WCF_ANIMATION_BUILDER.debug) {
         console.error("Preset cannot be empty");
       }
       return;
@@ -42,7 +42,7 @@ class RegisterPreset {
     );
 
     if (validPresets.length === 0) {
-      if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+      if (WCF_ANIMATION_BUILDER.debug) {
         console.error("Invalid preset format");
       }
       return;
@@ -62,7 +62,7 @@ class RegisterPreset {
       );
 
       if (exists) {
-        if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+        if (WCF_ANIMATION_BUILDER.debug) {
           console.warn(
             `Preset with presetKey "${newPreset.presetKey}" already exists in group "${group}". Use updatePreset() to modify it.`
           );
@@ -80,7 +80,7 @@ class RegisterPreset {
       !("presetKey" in preset) ||
       !("groupName" in preset)
     ) {
-      if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+      if (WCF_ANIMATION_BUILDER.debug) {
         console.error("Invalid preset format for update");
       }
       return;
@@ -88,7 +88,7 @@ class RegisterPreset {
 
     const group = preset.groupName;
     if (!this.#preset[group]) {
-      if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+      if (WCF_ANIMATION_BUILDER.debug) {
         console.warn(
           `Group "${group}" does not exist. Use register() to add it.`
         );
@@ -100,7 +100,7 @@ class RegisterPreset {
       (item) => item.presetKey === preset.presetKey
     );
     if (index === -1) {
-      if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+      if (WCF_ANIMATION_BUILDER.debug) {
         console.warn(
           `Preset "${preset.presetKey}" does not exist in group "${group}". Use register() to add it.`
         );
@@ -150,7 +150,7 @@ class RegisterPreset {
     this.#preset[groupName] = this.#preset[groupName].filter(
       (item) => item.presetKey !== presetKey
     );
-    if (WCF_ADDONS_ANIMATION_BUILDER.debug) {
+    if (WCF_ANIMATION_BUILDER.debug) {
       console.log(
         `Preset "${presetKey}" removed from group "${groupName}" (if it existed).`
       );
@@ -163,7 +163,7 @@ class RegisterPreset {
 
   findGroupByPresetKey(presetKey) {
     for (const group in this.#preset) {
-      if (this.#preset[group].some(item => item.presetKey === presetKey)) {
+      if (this.#preset[group].some((item) => item.presetKey === presetKey)) {
         return group;
       }
     }

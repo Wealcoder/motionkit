@@ -72,7 +72,7 @@ const ShowPresets = ({ searchKey, setPresetCount }) => {
 
   // Save settings
   const savePresets = async () => {
-    await fetch(WCF_ADDONS_ADMIN.ajaxurl, {
+    await fetch(WCF_ANIMATION_BUILDER_ADMIN.ajaxurl, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -83,7 +83,7 @@ const ShowPresets = ({ searchKey, setPresetCount }) => {
         action: "aae_save_anim_builder_settings",
         setting_name: "aae_anim_builder_settings",
         form_fields: JSON.stringify(allPresets),
-        nonce: WCF_ADDONS_ADMIN.nonce,
+        nonce: WCF_ANIMATION_BUILDER_ADMIN.nonce,
       }),
     })
       .then((response) => response.json())

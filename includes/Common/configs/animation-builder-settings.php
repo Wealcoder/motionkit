@@ -193,7 +193,22 @@ return array(
 					),
 				),
 			),
-
+      'container' => array(
+				'title'     => 'Container',
+				'is_active' => false,
+				'elements'  => array(
+					'wcf-container-fade-animation' => array(
+						'label'       => 'Fade',
+						'is_active'   => false,
+						'is_upcoming' => false,
+						'icon'        => 'wcf-icon-Image-Box',
+						'demo_url'    => '',
+						'doc_url'     => '',
+						'youtube_url' => '',
+						'description' => 'Perfectly timed fade animations powered by GSAP give your content a premium, modern feel.',
+					),
+				),
+			),
 		),
 	),
 );

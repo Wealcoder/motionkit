@@ -36,7 +36,7 @@ const EditorHeader = () => {
   const { updateAnimation } = useAnimationControl();
   const { selectedDevice, setSelectedDevice } = useDeviceConfig();
 
-  const previewUrl = new URL(WCF_ADDONS_ANIMATION_BUILDER.iframe_url);
+  const previewUrl = new URL(WCF_ANIMATION_BUILDER.iframe_url);
   previewUrl.searchParams.delete("action");
 
   useEffect(() => {
@@ -180,7 +180,7 @@ const EditorHeader = () => {
       </div>
 
       <div className="flex items-center justify-center gap-4">
-        {WCF_ADDONS_ANIMATION_BUILDER?.device_config?.map((device) => (
+        {WCF_ANIMATION_BUILDER?.device_config?.map((device) => (
           <TooltipProvider delayDuration={100} key={device.key}>
             <Tooltip delayDuration={100}>
               <TooltipTrigger asChild>

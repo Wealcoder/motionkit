@@ -1,18 +1,20 @@
-
-
 import { createContext, useCallback, useReducer } from "react";
-import { activeFullPresetFn, activeGroupPresetFn, activePresetFn } from "@@/lib/presetService";
+import {
+  activeFullPresetFn,
+  activeGroupPresetFn,
+  activePresetFn,
+} from "@@/lib/presetService";
 
 const initialState = {
   allPresets:
-    JSON.parse(JSON.stringify(WCF_ADDONS_ADMIN?.config?.settings)) || {},
+    JSON.parse(JSON.stringify(WCF_ANIMATION_BUILDER_ADMIN?.config?.settings)) ||
+    {},
 };
 
 const reducer = (state, action) => {
   switch (action.type) {
     case "setAllPresets":
       return { ...state, allPresets: action.value };
-    
 
     default:
       throw new Error();
@@ -29,13 +31,12 @@ const useMainContext = (state) => {
     });
   }, []);
 
-
   const updateActivePreset = useCallback(
     (data) => {
       activePresetFn(mainState.allPresets, data, dispatch);
     },
     [mainState.allPresets]
-  ); 
+  );
 
   const updateActiveGroupPreset = useCallback(
     (data) => {
