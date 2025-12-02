@@ -32,25 +32,20 @@ export function horizontalScrollAnim() {
       const containerEl = document.querySelector(containerClass);
       if (!containerEl) return;
 
-      // find children inside container
       const items = Array.from(containerEl.querySelectorAll(itemClass));
       const itemCount = items.length;
-      if (!itemCount) return; // nothing to animate
+      if (!itemCount) return;
 
-      // build an array of pixel widths
       let widthsPx;
       if (itemWidthType === "custom" && itemsWidth.length) {
-        // use only as many custom widths as there are items
         widthsPx = itemsWidth
           .slice(0, itemCount)
           .map((w) => convertToPixels(w));
       } else {
-        // default: one width for all
         const def = convertToPixels(itemWidth);
         widthsPx = new Array(itemCount).fill(def);
       }
 
-      // compute total scrollable width
       const totalWidth = widthsPx.reduce((sum, w) => sum + w, 0);
       const totalScrollPx = totalWidth - containerEl.offsetWidth;
 

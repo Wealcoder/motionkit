@@ -1,8 +1,8 @@
 export function textSplitAnim() {
   let sContainerClass = [];
   let sItemClass = [];
-  let activeTweens = new Map(); // Track active tweens
-  let splitTextInstances = new Map(); // Track split text instances for proper cleanup
+  let activeTweens = new Map();
+  let splitTextInstances = new Map();
 
   const handler = (e) => {
     (e.detail["wcf-text-split-animation"] || []).forEach((section) => {
@@ -23,7 +23,7 @@ export function textSplitAnim() {
         y,
         markers,
         ease,
-        timeout = 0, // Add timeout parameter for page_load
+        timeout = 0,
       } = section || {};
 
       if (!itemClass) {
@@ -35,11 +35,19 @@ export function textSplitAnim() {
         return;
       }
 
-      // Split text
       try {
+        gsap.set(itemClass, {
+          transition: "none"
+        })
+
+        if (triggerClass) {
+          gsap.set(triggerClass, {
+            transition: "none"
+          })
+        }
+
         const splitInstance = new SplitText(itemClass, { type: "chars, words, lines" });
 
-        // Store the split instance for later cleanup
         splitTextInstances.set(id, splitInstance);
 
         const target = splitInstance[splitType];
@@ -49,7 +57,8 @@ export function textSplitAnim() {
           return;
         }
 
-        // Clear any existing tweens for this target
+
+
         gsap.killTweensOf(target);
         if (activeTweens.has(id)) {
           activeTweens.get(id).kill();
@@ -67,7 +76,6 @@ export function textSplitAnim() {
         };
 
         const runAnimation = () => {
-          // Kill any existing animation for this ID
           if (activeTweens.has(id)) {
             activeTweens.get(id).kill();
           }
@@ -83,13 +91,11 @@ export function textSplitAnim() {
 
             if (markers) scrollTriggerConfig.markers = markers === "true" ? true : false;
 
-            // Kill existing ScrollTrigger
             if (window.ScrollTrigger) {
               const existing = ScrollTrigger.getById(id);
               if (existing) existing.kill();
             }
 
-            // Set initial state
             gsap.set(target, {
               x: animationConfig.x,
               y: animationConfig.y,
@@ -116,12 +122,11 @@ export function textSplitAnim() {
               trigger: triggerClass || itemClass,
               start: start === "custom" ? startCustom : start || "top bottom",
               end: end === "custom" ? endCustom : end || "bottom top",
-              scrub: 1, // Smooth scrub
+              scrub: 1,
             };
 
             if (markers) scrollTriggerConfig.markers = markers === "true" ? true : false;
 
-            // Kill existing ScrollTrigger
             if (window.ScrollTrigger) {
               const existing = ScrollTrigger.getById(id);
               if (existing) existing.kill();
@@ -138,8 +143,8 @@ export function textSplitAnim() {
                 y: 0,
                 autoAlpha: 1,
                 stagger: animationConfig.stagger,
-                duration: 1, // Duration is less important with scrub
-                ease: "none", // Use "none" for scrub animations
+                duration: 1,
+                ease: "none",
                 scrollTrigger: scrollTriggerConfig
               }
             );
@@ -147,14 +152,12 @@ export function textSplitAnim() {
             activeTweens.set(id, tween);
 
           } else if (triggerType === "page_load") {
-            // Set initial state
             gsap.set(target, {
               x: animationConfig.x,
               y: animationConfig.y,
               autoAlpha: 0
             });
 
-            // Add timeout for page load
             setTimeout(() => {
               const tween = gsap.to(target, {
                 x: 0,
@@ -169,7 +172,6 @@ export function textSplitAnim() {
             }, timeout);
 
           } else if (triggerType === "hover" || triggerType === "click") {
-            // Set initial state for interactive triggers - but don't animate yet
             gsap.set(target, {
               x: animationConfig.x,
               y: animationConfig.y,
@@ -178,10 +180,8 @@ export function textSplitAnim() {
           }
         };
 
-        // Handle different trigger types
         if (triggerType === "hover") {
           if (triggerClass) {
-            // Set initial state for the target elements
             gsap.set(target, {
               x: animationConfig.x,
               y: animationConfig.y,
@@ -194,14 +194,12 @@ export function textSplitAnim() {
               const uniqueId = `${id}_${index}`;
 
               const handleMouseEnter = () => {
-                // Kill any existing animation for this target
                 gsap.killTweensOf(target);
                 if (activeTweens.has(uniqueId)) {
                   activeTweens.get(uniqueId).kill();
                   activeTweens.delete(uniqueId);
                 }
 
-                // Play forward animation
                 const tween = gsap.to(target, {
                   x: 0,
                   y: 0,
@@ -216,14 +214,12 @@ export function textSplitAnim() {
               };
 
               const handleMouseLeave = () => {
-                // Kill any existing animation for this target
                 gsap.killTweensOf(target);
                 if (activeTweens.has(uniqueId)) {
                   activeTweens.get(uniqueId).kill();
                   activeTweens.delete(uniqueId);
                 }
 
-                // Play reverse animation
                 const tween = gsap.to(target, {
                   x: animationConfig.x,
                   y: animationConfig.y,
@@ -236,15 +232,12 @@ export function textSplitAnim() {
                 activeTweens.set(uniqueId, tween);
               };
 
-              // Clean up existing event listeners by cloning the element
               const newTriggerElement = triggerElement.cloneNode(true);
               triggerElement.parentNode.replaceChild(newTriggerElement, triggerElement);
 
-              // Add fresh event listeners to the new element
               newTriggerElement.addEventListener("mouseenter", handleMouseEnter);
               newTriggerElement.addEventListener("mouseleave", handleMouseLeave);
 
-              // Also add backup events for better browser compatibility
               newTriggerElement.addEventListener("hover", handleMouseEnter);
               newTriggerElement.addEventListener("mouseout", handleMouseLeave);
             });
@@ -257,7 +250,6 @@ export function textSplitAnim() {
             triggerElements.forEach((triggerElement, index) => {
               const uniqueId = `${id}_click_${index}`;
 
-              // Set initial state
               gsap.set(target, {
                 x: animationConfig.x,
                 y: animationConfig.y,
@@ -265,19 +257,16 @@ export function textSplitAnim() {
               });
 
               const handleClick = () => {
-                // Kill any existing animation
                 if (activeTweens.has(uniqueId)) {
                   activeTweens.get(uniqueId).kill();
                 }
 
-                // Reset to initial state first
                 gsap.set(target, {
                   x: animationConfig.x,
                   y: animationConfig.y,
                   autoAlpha: 0
                 });
 
-                // Play animation from start
                 const tween = gsap.to(target, {
                   x: 0,
                   y: 0,
@@ -291,16 +280,13 @@ export function textSplitAnim() {
                 activeTweens.set(uniqueId, tween);
               };
 
-              // Remove existing event listener
               triggerElement.removeEventListener("click", handleClick);
 
-              // Add new event listener
               triggerElement.addEventListener("click", handleClick);
             });
           }
 
         } else {
-          // Auto-run for scroll triggers and page load
           runAnimation();
         }
 
@@ -314,7 +300,6 @@ export function textSplitAnim() {
   };
 
   function removeAnimation() {
-    // Kill all active tweens first
     activeTweens.forEach((tween) => {
       if (tween && tween.kill) {
         tween.kill();
@@ -322,12 +307,10 @@ export function textSplitAnim() {
     });
     activeTweens.clear();
 
-    // Kill all ScrollTriggers
     if (window.ScrollTrigger) {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     }
 
-    // Revert all SplitText instances to restore original DOM
     splitTextInstances.forEach((splitInstance, id) => {
       try {
         if (splitInstance && splitInstance.revert) {
@@ -339,15 +322,12 @@ export function textSplitAnim() {
     });
     splitTextInstances.clear();
 
-    // Reset all container and item elements
     [...sContainerClass, ...sItemClass].forEach((className) => {
       if (className) {
         const elements = document.querySelectorAll(className);
         elements.forEach(el => {
-          // Clear all GSAP properties
           gsap.set(el, { clearProps: "all" });
 
-          // Reset any inline styles that might have been set
           if (el.style) {
             el.style.transform = '';
             el.style.opacity = '';
@@ -358,11 +338,9 @@ export function textSplitAnim() {
       }
     });
 
-    // Clear the arrays
     sContainerClass.length = 0;
     sItemClass.length = 0;
 
-    // Also clean up any remaining event listeners on trigger elements
     document.querySelectorAll('[data-split-animation]').forEach(el => {
       const newEl = el.cloneNode(true);
       if (el.parentNode) {
@@ -371,11 +349,9 @@ export function textSplitAnim() {
     });
   }
 
-  // Event listeners
   document.addEventListener("aae-animation-event", handler);
   document.addEventListener("aae-reset-animation", removeAnimation);
 
-  // Return cleanup function for manual cleanup if needed
   return {
     destroy: removeAnimation
   };

@@ -16,13 +16,11 @@ export function imageRevealAnim() {
 
       if (!itemClass) return;
 
-      // Query all matching items
       document.querySelectorAll(itemClass).forEach((itemEl) => {
-        const containerEl = itemEl.parentElement; // first parent
+        const containerEl = itemEl.parentElement;
 
         if (!containerEl) return;
 
-        // Store selectors for reset
         sContainerClass.push(containerEl);
         sItemClass.push(itemEl);
 

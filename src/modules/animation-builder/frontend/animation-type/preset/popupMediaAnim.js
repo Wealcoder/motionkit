@@ -170,7 +170,6 @@ style.textContent = `
 document.head.appendChild(style);
 
 export function popupMediaAnim() {
-  // Global variables to store animation settings
   let currentSettings = {
     mediaType: '',
     mediaUrl: '',
@@ -183,7 +182,6 @@ export function popupMediaAnim() {
   const scrollTriggers = new Map();
   let scrollPosition = 0;
 
-  // Function to extract YouTube video ID from various URL formats
   function getYouTubeId(url) {
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/,
@@ -202,7 +200,6 @@ export function popupMediaAnim() {
     return null;
   }
 
-  // Get animation properties based on animateFrom value
   function getAnimationProperties(animateFrom) {
     const properties = {
       from: { scale: 0.7, opacity: 0 },
@@ -260,19 +257,16 @@ export function popupMediaAnim() {
         properties.to.rotationZ = 0;
         properties.to.rotationX = 0;
         break;
-      default: // center
-        // No additional properties needed for center
+      default:
         break;
     }
 
     return properties;
   }
 
-  // Main event handler
   const handler = (e) => {
     const sections = e.detail["wcf-popup-media-animation"] || [];
 
-    // Process only the first section to avoid loops
     const section = sections[0];
     if (!section) return;
 
@@ -282,24 +276,20 @@ export function popupMediaAnim() {
       triggerType,
       mediaType,
       mediaUrl,
-      animateFrom = 'center' // Default to center
+      animateFrom = 'center'
     } = section;
 
-    // Don't proceed if required parameters are missing
     if (!triggerClass || !mediaType || !mediaUrl) {
       console.warn('Popup media animation: Missing required parameters (triggerClass, mediaType, or mediaUrl)');
       return;
     }
 
-    // Skip if this trigger class is already registered
     if (registeredTriggerClasses.has(triggerClass)) {
       return;
     }
 
-    // Store the trigger class for cleanup
     registeredTriggerClasses.add(triggerClass);
 
-    // Set up event listeners based on trigger type
     const elements = document.querySelectorAll(triggerClass);
 
     if (elements.length === 0) {
@@ -308,17 +298,14 @@ export function popupMediaAnim() {
     }
 
     elements.forEach(element => {
-      // Remove any existing event listeners to prevent duplicates
       element.removeEventListener('click', handleElementClick);
       element.removeEventListener('mouseenter', handleElementHover);
 
-      // Remove any existing scroll trigger
       if (scrollTriggers.has(triggerClass)) {
         scrollTriggers.get(triggerClass).kill();
         scrollTriggers.delete(triggerClass);
       }
 
-      // Store settings in global variable
       currentSettings = {
         mediaType,
         mediaUrl,
@@ -326,7 +313,6 @@ export function popupMediaAnim() {
         animateFrom
       };
 
-      // Add event listener based on trigger type
       switch (triggerType) {
         case 'hover':
           element.addEventListener('mouseenter', handleElementHover);
@@ -335,97 +321,77 @@ export function popupMediaAnim() {
           setupScrollTrigger(element);
           break;
         case 'page_load':
-          // Open popup immediately on page load
-          setTimeout(openPopup, 500); // Small delay to ensure page is fully loaded
+          setTimeout(openPopup, 500);
           break;
         default:
-          // Default to click for any other trigger type
           element.addEventListener('click', handleElementClick);
       }
     });
   };
 
-  // Setup scroll trigger using GSAP ScrollTrigger
   function setupScrollTrigger(element) {
-    // Create a marker to track if this element has already triggered
     if (element.dataset.popupTriggered) return;
 
     const scrollTrigger = ScrollTrigger.create({
       trigger: element,
-      start: "top 80%", // When the top of the element hits 80% down from the top of the viewport
+      start: "top 80%",
       onEnter: () => {
-        // Mark as triggered to prevent multiple triggers
         element.dataset.popupTriggered = true;
         openPopup();
 
-        // Optional: kill the trigger after it's been activated
         scrollTrigger.kill();
         scrollTriggers.delete(element.classList.contains(triggerClass) ? triggerClass : '');
       },
-      once: true // Only trigger once
+      once: true
     });
 
-    // Store the scroll trigger for cleanup
     scrollTriggers.set(element.classList.contains(triggerClass) ? triggerClass : '', scrollTrigger);
   }
 
-  // Handle element click
   function handleElementClick() {
     openPopup();
   }
 
-  // Handle element hover
   function handleElementHover() {
     openPopup();
   }
 
-  // Prevent scroll on background
   function preventScroll(e) {
     e.preventDefault();
     e.stopPropagation();
     return false;
   }
 
-  // Open popup function
   function openPopup() {
-    // Don't proceed if mediaType or mediaUrl is missing
     if (!currentSettings.mediaType || !currentSettings.mediaUrl) {
       console.warn('Popup media animation: Cannot open popup without mediaType and mediaUrl');
       return;
     }
 
-    // Generate ID if not provided
     const popupId = currentSettings.id || `popup-${Date.now()}`;
 
-    // Close any existing popup
     const existingPopup = document.querySelector('.popup-overlay');
     if (existingPopup) {
       closePopup(existingPopup);
     }
 
-    // Prevent background scrolling
     scrollPosition = window.pageYOffset;
     document.body.classList.add('popup-open');
     document.body.style.top = `-${scrollPosition}px`;
 
-    // Add touchmove event listener to prevent scrolling
     document.addEventListener('touchmove', preventScroll, { passive: false });
     document.addEventListener('wheel', preventScroll, { passive: false });
 
-    // Create overlay
     const overlay = document.createElement('div');
     overlay.className = 'popup-overlay';
     overlay.dataset.popupId = popupId;
 
-    // Create content container
     const content = document.createElement('div');
     content.className = 'popup-content';
 
-    // Create close button
     const closeBtn = document.createElement('button');
     closeBtn.className = 'popup-close';
 
-    // Create media based on type
     let mediaElement;
 
     switch (currentSettings.mediaType) {
@@ -440,7 +406,6 @@ export function popupMediaAnim() {
         const youtubeContainer = document.createElement('div');
         youtubeContainer.className = 'youtube-container';
 
-        // Extract YouTube video ID from URL
         const videoId = getYouTubeId(currentSettings.mediaUrl);
 
         if (!videoId) {
@@ -448,11 +413,9 @@ export function popupMediaAnim() {
           return;
         }
 
-        // Create YouTube iframe with proper parameters for autoplay
         const youtubeIframe = document.createElement('iframe');
         youtubeIframe.className = 'youtube-video';
 
-        // Build embed URL with autoplay
         const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
 
         youtubeIframe.src = embedUrl;
@@ -480,11 +443,9 @@ export function popupMediaAnim() {
 
         videoEl.appendChild(source);
 
-        // Add play button overlay for local videos
         const playButton = document.createElement('button');
         playButton.className = 'popup-play-btn';
 
-        // Play/Pause functionality
         const togglePlay = () => {
           if (videoEl.paused) {
             const playPromise = videoEl.play();
@@ -503,12 +464,10 @@ export function popupMediaAnim() {
           }
         };
 
-        // Click video to play/pause
         videoEl.addEventListener('click', togglePlay);
 
-        // Click play button to play/pause
         playButton.addEventListener('click', (e) => {
-          e.stopPropagation(); // Prevent triggering video click event
+          e.stopPropagation();
           togglePlay();
         });
 
@@ -539,28 +498,22 @@ export function popupMediaAnim() {
         return;
     }
 
-    // Assemble the popup
     content.appendChild(mediaElement);
     content.appendChild(closeBtn);
     overlay.appendChild(content);
 
-    // Add to DOM
     document.body.appendChild(overlay);
 
-    // Get animation properties based on animateFrom value
     const animationProps = getAnimationProperties(currentSettings.animateFrom);
 
-    // Create GSAP timeline for animation
     const timeline = gsap.timeline();
     timeline
       .set(overlay, { visibility: 'visible' })
       .to(overlay, { opacity: 1, duration: 0.3 })
       .fromTo(content, animationProps.from, animationProps.to, '-=0.2');
 
-    // Store timeline reference with ID as key
     activeTimelines.set(popupId, { timeline, overlay });
 
-    // Add event listeners for closing
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay || e.target.classList.contains('popup-close')) {
         closePopup(overlay);
@@ -568,29 +521,24 @@ export function popupMediaAnim() {
     });
   }
 
-  // Close popup function
   function closePopup(overlay) {
     const id = overlay.dataset.popupId;
     const popupData = activeTimelines.get(id);
 
-    // Pause any video that's playing
     const video = overlay.querySelector('video');
     if (video) {
       video.pause();
     }
 
-    // Remove YouTube iframe to stop playback
     const youtubeIframe = overlay.querySelector('iframe');
     if (youtubeIframe && youtubeIframe.parentNode) {
       youtubeIframe.parentNode.removeChild(youtubeIframe);
     }
 
-    // Allow background scrolling again
     document.body.classList.remove('popup-open');
     document.body.style.top = '';
     window.scrollTo(0, scrollPosition);
 
-    // Remove event listeners that prevent scrolling
     document.removeEventListener('touchmove', preventScroll);
     document.removeEventListener('wheel', preventScroll);
 
@@ -609,9 +557,7 @@ export function popupMediaAnim() {
     }
   }
 
-  // Cleanup function
   function removeAnimation() {
-    // Kill all timelines
     activeTimelines.forEach((popupData, id) => {
       if (popupData.timeline) {
         popupData.timeline.kill();
@@ -621,25 +567,20 @@ export function popupMediaAnim() {
       }
     });
 
-    // Clear the map
     activeTimelines.clear();
 
-    // Kill all scroll triggers
     scrollTriggers.forEach((trigger, id) => {
       trigger.kill();
     });
     scrollTriggers.clear();
 
-    // Allow background scrolling
     document.body.classList.remove('popup-open');
     document.body.style.top = '';
     window.scrollTo(0, scrollPosition);
 
-    // Remove event listeners that prevent scrolling
     document.removeEventListener('touchmove', preventScroll);
     document.removeEventListener('wheel', preventScroll);
 
-    // Remove all event listeners from trigger elements using registered classes
     registeredTriggerClasses.forEach(triggerClass => {
       const triggers = document.querySelectorAll(triggerClass);
       triggers.forEach(trigger => {
@@ -649,11 +590,9 @@ export function popupMediaAnim() {
       });
     });
 
-    // Clear registered classes
     registeredTriggerClasses.clear();
   }
 
-  // Event listeners
   document.addEventListener("aae-animation-event", handler);
   document.addEventListener("aae-reset-animation", removeAnimation);
 

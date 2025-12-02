@@ -2,7 +2,6 @@ export function textSpinAnim() {
   const activeTimelines = new Map();
   const splitTextInstances = new Map();
 
-  // Main event handler
   const handler = (e) => {
     (e.detail["wcf-text-spin-animation"] || []).forEach((section) => {
       const {
@@ -24,16 +23,24 @@ export function textSpinAnim() {
 
       if (!itemClass) return;
 
+      gsap.set(itemClass, {
+        transition: "none"
+      })
+
+      if (triggerClass) {
+        gsap.set(triggerClass, {
+          transition: "none"
+        })
+      }
+
       const elements = Array.from(document.querySelectorAll(itemClass));
       if (!elements.length) return;
 
       elements.forEach((originalItem, index) => {
         const key = `${id || "aae"}_${index}`;
 
-        // Skip if already processed
         if (splitTextInstances.has(key)) return;
 
-        // Create wrapper and clone
         const cs = getComputedStyle(originalItem);
         const wrapper = document.createElement(cs.display && cs.display.includes("inline") ? "span" : "div");
         wrapper.className = "aae-text-spin-wrapper";
@@ -43,11 +50,9 @@ export function textSpinAnim() {
         wrapper.style.lineHeight = cs.lineHeight || "normal";
         wrapper.style.perspective = cs.perspective || "600px";
 
-        // Insert wrapper and move original element into it
         originalItem.parentNode.insertBefore(wrapper, originalItem);
         wrapper.appendChild(originalItem);
 
-        // Create clone for animation
         const clonedItem = originalItem.cloneNode(true);
         clonedItem.classList.add("aae-text-spin-clone");
         clonedItem.style.cssText = `
@@ -65,20 +70,18 @@ export function textSpinAnim() {
 
         wrapper.appendChild(clonedItem);
 
-        // Split text into characters
         let originalSplit, cloneSplit;
         try {
           originalSplit = new SplitText(originalItem, { type: "chars" });
           cloneSplit = new SplitText(clonedItem, { type: "chars" });
 
-          // Set initial states - original visible, clone hidden and rotated
           gsap.set(originalSplit.chars, {
             opacity: 1,
             rotationX: 0,
             transformPerspective: 600
           });
           gsap.set(cloneSplit.chars, {
-            opacity: 0,  // GSAP controls opacity
+            opacity: 0,
             rotationX: -90,
             transformPerspective: 600
           });
@@ -91,7 +94,6 @@ export function textSpinAnim() {
           return;
         }
 
-        // Store for cleanup
         splitTextInstances.set(key, {
           originalSplit,
           cloneSplit,
@@ -100,10 +102,8 @@ export function textSpinAnim() {
           clonedItem,
         });
 
-        // Setup after DOM is ready
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            // Position characters
             const wrapperRect = wrapper.getBoundingClientRect();
             originalSplit.chars.forEach((char, i) => {
               const cloneChar = cloneSplit.chars[i];
@@ -139,7 +139,6 @@ export function textSpinAnim() {
               });
             });
 
-            // Create animation based on trigger type
             const animConfig = {
               delay: Number(delay) || 0,
               stagger: Number(stagger) || 0.03,
@@ -147,14 +146,12 @@ export function textSpinAnim() {
               ease: ease || "power2.out",
             };
 
-            // Remove existing timeline
             if (activeTimelines.has(key)) {
               const old = activeTimelines.get(key);
               if (old && old.kill) old.kill();
               activeTimelines.delete(key);
             }
 
-            // Handle different trigger types
             switch (triggerType) {
               case "on_scroll":
                 createScrollTriggerAnimation(originalSplit, cloneSplit);
@@ -178,7 +175,6 @@ export function textSpinAnim() {
             function createScrollTriggerAnimation(originalSplit, cloneSplit) {
               const tl = gsap.timeline({ paused: true });
 
-              // Animate original chars out (rotate and fade out)
               tl.to(originalSplit.chars, {
                 duration: animConfig.duration / 2,
                 rotationX: 90,
@@ -187,7 +183,6 @@ export function textSpinAnim() {
                 ease: "power2.in",
               }, 0);
 
-              // Animate clone chars in (rotate and fade in)
               tl.to(cloneSplit.chars, {
                 duration: animConfig.duration / 2,
                 rotationX: 0,
@@ -216,13 +211,11 @@ export function textSpinAnim() {
             }
 
             function createScrubbedAnimation(originalSplit, cloneSplit) {
-              // Reset transformations
               gsap.set(originalSplit.chars, { rotationX: 0, opacity: 1 });
               gsap.set(cloneSplit.chars, { rotationX: -90, opacity: 0 });
 
               const tl = gsap.timeline();
 
-              // Animate original chars out
               tl.to(originalSplit.chars, {
                 rotationX: 90,
                 opacity: 0,
@@ -231,7 +224,6 @@ export function textSpinAnim() {
                 duration: 1,
               }, 0);
 
-              // Animate clone chars in
               tl.to(cloneSplit.chars, {
                 rotationX: 0,
                 opacity: 1,
@@ -266,7 +258,6 @@ export function textSpinAnim() {
               setTimeout(() => {
                 const tl = gsap.timeline();
 
-                // Animate original chars out (rotate and fade out)
                 tl.to(originalSplit.chars, {
                   duration: animConfig.duration / 2,
                   rotationX: 90,
@@ -275,7 +266,6 @@ export function textSpinAnim() {
                   ease: "power2.in",
                 }, animConfig.delay);
 
-                // Animate clone chars in (rotate and fade in)
                 tl.to(cloneSplit.chars, {
                   duration: animConfig.duration / 2,
                   rotationX: 0,
@@ -296,16 +286,13 @@ export function textSpinAnim() {
                 let tl = null;
 
                 const enter = () => {
-                  // Kill any existing timeline
                   if (activeTimelines.has(hoverId)) {
                     const old = activeTimelines.get(hoverId);
                     if (old && old.kill) old.kill();
                   }
 
-                  // Create forward animation timeline
                   tl = gsap.timeline();
 
-                  // Animate original chars out (rotate and fade out)
                   tl.to(originalSplit.chars, {
                     duration: animConfig.duration / 2,
                     rotationX: 90,
@@ -314,7 +301,6 @@ export function textSpinAnim() {
                     ease: "power2.in",
                   }, animConfig.delay);
 
-                  // Animate clone chars in (rotate and fade in)
                   tl.to(cloneSplit.chars, {
                     duration: animConfig.duration / 2,
                     rotationX: 0,
@@ -328,7 +314,6 @@ export function textSpinAnim() {
 
                 const leave = () => {
                   if (tl) {
-                    // Reverse the timeline instead of creating a new one
                     tl.reverse();
                   }
                 };
@@ -350,13 +335,11 @@ export function textSpinAnim() {
                     if (old && old.kill) old.kill();
                   }
 
-                  // Reset to initial state
                   gsap.set(originalSplit.chars, { rotationX: 0, opacity: 1 });
                   gsap.set(cloneSplit.chars, { rotationX: -90, opacity: 0 });
 
                   const tl = gsap.timeline();
 
-                  // Animate original chars out (rotate and fade out)
                   tl.to(originalSplit.chars, {
                     duration: animConfig.duration / 2,
                     rotationX: 90,
@@ -365,7 +348,6 @@ export function textSpinAnim() {
                     ease: "power2.in",
                   }, animConfig.delay);
 
-                  // Animate clone chars in (rotate and fade in)
                   tl.to(cloneSplit.chars, {
                     duration: animConfig.duration / 2,
                     rotationX: 0,
@@ -384,7 +366,6 @@ export function textSpinAnim() {
             function createAutoAnimation(originalSplit, cloneSplit) {
               const tl = gsap.timeline();
 
-              // Animate original chars out (rotate and fade out)
               tl.to(originalSplit.chars, {
                 duration: animConfig.duration / 2,
                 rotationX: 90,
@@ -393,7 +374,6 @@ export function textSpinAnim() {
                 ease: "power2.in",
               }, animConfig.delay);
 
-              // Animate clone chars in (rotate and fade in)
               tl.to(cloneSplit.chars, {
                 duration: animConfig.duration / 2,
                 rotationX: 0,
@@ -410,9 +390,7 @@ export function textSpinAnim() {
     });
   };
 
-  // Cleanup function
   function removeAnimation() {
-    // Kill all timelines
     activeTimelines.forEach((tl) => {
       try {
         if (tl && tl.kill) tl.kill();
@@ -420,28 +398,23 @@ export function textSpinAnim() {
     });
     activeTimelines.clear();
 
-    // Kill all ScrollTriggers
     if (window.ScrollTrigger) {
       try {
         ScrollTrigger.getAll().forEach((t) => t.kill());
       } catch (e) { }
     }
 
-    // Revert all SplitText instances and DOM changes
     splitTextInstances.forEach((meta, key) => {
       try {
         const { originalSplit, cloneSplit, wrapper, originalItem, clonedItem } = meta || {};
 
-        // Revert splits
         if (originalSplit && originalSplit.revert) originalSplit.revert();
         if (cloneSplit && cloneSplit.revert) cloneSplit.revert();
 
-        // Remove cloned element
         if (clonedItem && clonedItem.parentNode) {
           clonedItem.parentNode.removeChild(clonedItem);
         }
 
-        // Restore original element position
         if (wrapper && wrapper.parentNode && wrapper.contains(originalItem)) {
           wrapper.parentNode.insertBefore(originalItem, wrapper);
           wrapper.parentNode.removeChild(wrapper);
@@ -454,7 +427,6 @@ export function textSpinAnim() {
     splitTextInstances.clear();
   }
 
-  // Event listeners
   document.addEventListener("aae-animation-event", handler);
   document.addEventListener("aae-reset-animation", removeAnimation);
 
