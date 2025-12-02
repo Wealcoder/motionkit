@@ -1,1 +1,117 @@
-!function(){"use strict";(function(){let t={},e=[],i=[];document.addEventListener("aae-animation-event",(n=>{(n.detail["wcf-image-stretch-animation"]||[]).forEach((n=>{const{containerClass:a,containerHeight:r,itemClass:s,itemMaxWidth:o,itemMinWidth:c,itemHeight:m,start:l,startCustom:u,end:d,endCustom:h,objectFit:g,markers:p}=n||{};if(!(a&&r&&s))return;if(!document.querySelector(a))return;gsap.set(a,{height:r,transition:"none"}),gsap.set(s,{objectFit:g,width:c,height:m});const f=gsap.timeline({scrollTrigger:{trigger:a,pin:!0,start:"custom"===l?u:l||"top top",end:"custom"===d?h:d||"bottom bottom",scrub:!0,pinSpacing:!1,markers:"true"===p}});f.to(s,{width:null!=o?o:"100%"}),t[n.id]=f,e.push(a),i.push(s)}))})),document.addEventListener("aae-reset-animation",(function(){for(let e in t)t[e].revert(),t[e].kill();e?.forEach((t=>{gsap.set(t,{clearProps:"all"})})),i?.forEach((t=>{gsap.set(t,{clearProps:"all"})}))}))})()}();
+/******/ (function() { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	// The require scope
+/******/ 	var __webpack_require__ = {};
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	!function() {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = function(exports, definition) {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	!function() {
+/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	!function() {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = function(exports) {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+/*!******************************************************************************************!*\
+  !*** ./src/modules/animation-builder/frontend/animation-type/preset/imageStretchAnim.js ***!
+  \******************************************************************************************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   imageStretchAnim: function() { return /* binding */ imageStretchAnim; }
+/* harmony export */ });
+function imageStretchAnim() {
+  let sTimeline = {};
+  let sContainerClass = [];
+  let sItemClass = [];
+  const handler = e => {
+    (e.detail["wcf-image-stretch-animation"] || []).forEach(section => {
+      const {
+        containerClass,
+        containerHeight,
+        itemClass,
+        itemMaxWidth,
+        itemMinWidth,
+        itemHeight,
+        start,
+        startCustom,
+        end,
+        endCustom,
+        objectFit,
+        markers
+      } = section || {};
+      if (!(containerClass && containerHeight && itemClass)) return;
+      const containerEl = document.querySelector(containerClass);
+      if (!containerEl) return;
+      gsap.set(containerClass, {
+        height: containerHeight,
+        transition: "none"
+      });
+      gsap.set(itemClass, {
+        objectFit,
+        width: itemMinWidth,
+        height: itemHeight
+      });
+      const istTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: containerClass,
+          pin: true,
+          start: start === "custom" ? startCustom : start || "top top",
+          end: end === "custom" ? endCustom : end || "bottom bottom",
+          scrub: true,
+          pinSpacing: false,
+          markers: markers === "true" ? true : false
+        }
+      });
+      istTimeline.to(itemClass, {
+        width: itemMaxWidth !== null && itemMaxWidth !== void 0 ? itemMaxWidth : '100%'
+      });
+      sTimeline[section.id] = istTimeline;
+      sContainerClass.push(containerClass);
+      sItemClass.push(itemClass);
+    });
+  };
+  function removeAnimation() {
+    for (let x in sTimeline) {
+      sTimeline[x].revert();
+      sTimeline[x].kill();
+    }
+    sContainerClass?.forEach(containerEl => {
+      gsap.set(containerEl, {
+        clearProps: "all"
+      });
+    });
+    sItemClass?.forEach(itemEl => {
+      gsap.set(itemEl, {
+        clearProps: "all"
+      });
+    });
+  }
+  document.addEventListener("aae-animation-event", handler);
+  document.addEventListener("aae-reset-animation", removeAnimation);
+}
+imageStretchAnim();
+/******/ })()
+;
+//# sourceMappingURL=imageStretchAnim.js.map

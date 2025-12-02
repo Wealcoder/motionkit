@@ -21,7 +21,10 @@ const MainPage = () => {
       );
     } else {
       setPresetCount(
-        WCF_ANIMATION_BUILDER_ADMIN.config.count ?? { total: 0, active: 0 }
+        WCF_ANIMATION_BUILDER_ADMIN.config.preset_count ?? {
+          total: 0,
+          active: 0,
+        }
       );
     }
   }, [activeTab]);

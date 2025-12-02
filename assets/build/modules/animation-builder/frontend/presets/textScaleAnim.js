@@ -1,1 +1,341 @@
-!function(){"use strict";(function(){let e=[],t=[],a=new Map,s=new Map;document.addEventListener("aae-animation-event",(r=>{(r.detail["wcf-text-scale-animation"]||[]).forEach((r=>{const{id:l,triggerClass:o,triggerType:n,itemClass:i,start:c,startCustom:g,end:d,endCustom:u,delay:p,duration:h,stagger:m,scale:f,transformOrigin:y,markers:k,ease:A,timeout:v=0}=r||{};if(i&&document.querySelectorAll(i).length)try{gsap.set(i,{transition:"none"}),o&&gsap.set(o,{transition:"none"});const e=new SplitText(i,{type:"lines"});s.set(l,e);const t=e.lines;if(!t||0===t.length)return void console.warn("No split targets found for","chars");gsap.killTweensOf(t),a.has(l)&&(a.get(l).kill(),a.delete(l));const r={scale:f,transformOrigin:y,autoAlpha:0,delay:p||0,stagger:m||.05,duration:h||1,ease:A},E=()=>{if(a.has(l)&&a.get(l).kill(),"on_scroll"===n){const e={id:l,trigger:o||i,start:"custom"===c?g:c||"top 80%",end:"custom"===d?u:d||"bottom 20%",once:!1};if(k&&(e.markers="true"===k),window.ScrollTrigger){const e=ScrollTrigger.getById(l);e&&e.kill()}gsap.set(t,{scale:r.scale,autoAlpha:0});const s=gsap.to(t,{scale:1,transformOrigin:y,autoAlpha:1,delay:r.delay,stagger:r.stagger,duration:r.duration,ease:r.ease,scrollTrigger:e});a.set(l,s)}else if("play_with_scroll"===n){const e={id:l,trigger:o||i,start:"custom"===c?g:c||"top bottom",end:"custom"===d?u:d||"bottom top",scrub:1};if(k&&(e.markers="true"===k),window.ScrollTrigger){const e=ScrollTrigger.getById(l);e&&e.kill()}const s=gsap.fromTo(t,{scale:r.scale,autoAlpha:0},{scale:1,autoAlpha:1,transformOrigin:y,stagger:r.stagger,duration:1,ease:"none",scrollTrigger:e});a.set(l,s)}else"page_load"===n?(gsap.set(t,{scale:r.scale,autoAlpha:0}),setTimeout((()=>{const e=gsap.to(t,{scale:1,autoAlpha:1,transformOrigin:y,delay:r.delay,stagger:r.stagger,duration:r.duration,ease:r.ease});a.set(l,e)}),v)):"hover"!==n&&"click"!==n||gsap.set(t,{scale:r.scale,autoAlpha:0})};"hover"===n?o&&(gsap.set(t,{scale:r.scale,autoAlpha:0}),document.querySelectorAll(o).forEach(((e,s)=>{const o=`${l}_${s}`,n=()=>{gsap.killTweensOf(t),a.has(o)&&(a.get(o).kill(),a.delete(o));const e=gsap.to(t,{scale:1,autoAlpha:1,transformOrigin:y,delay:r.delay,stagger:r.stagger,duration:r.duration,ease:r.ease});a.set(o,e)},i=()=>{gsap.killTweensOf(t),a.has(o)&&(a.get(o).kill(),a.delete(o));const e=gsap.to(t,{scale:r.scale,autoAlpha:0,transformOrigin:y,duration:.6*r.duration,stagger:.5*r.stagger,ease:r.ease});a.set(o,e)},c=e.cloneNode(!0);e.parentNode.replaceChild(c,e),c.addEventListener("mouseenter",n),c.addEventListener("mouseleave",i),c.addEventListener("hover",n),c.addEventListener("mouseout",i)}))):"click"===n?o&&document.querySelectorAll(o).forEach(((e,s)=>{const o=`${l}_click_${s}`;gsap.set(t,{scale:r.scale,autoAlpha:0});const n=()=>{a.has(o)&&a.get(o).kill(),gsap.set(t,{scale:r.scale,autoAlpha:0});const e=gsap.to(t,{scale:1,autoAlpha:1,transformOrigin:y,delay:r.delay,stagger:r.stagger,duration:r.duration,ease:r.ease});a.set(o,e)};e.removeEventListener("click",n),e.addEventListener("click",n)})):E()}catch(e){console.error("Text Split Animation: Error splitting text",e)}finally{e.push(o),t.push(i)}}))})),document.addEventListener("aae-reset-animation",(function(){a.forEach((e=>{e&&e.kill&&e.kill()})),a.clear(),window.ScrollTrigger&&ScrollTrigger.getAll().forEach((e=>e.kill())),s.forEach(((e,t)=>{try{e&&e.revert&&e.revert()}catch(e){console.warn(`Could not revert split text instance for ${t}:`,e)}})),s.clear(),[...e,...t].forEach((e=>{e&&document.querySelectorAll(e).forEach((e=>{gsap.set(e,{clearProps:"all"}),e.style&&(e.style.transform="",e.style.opacity="",e.style.visibility="",e.style.display="")}))})),e.length=0,t.length=0,document.querySelectorAll("[data-split-animation]").forEach((e=>{const t=e.cloneNode(!0);e.parentNode&&e.parentNode.replaceChild(t,e)}))}))})()}();
+/******/ (function() { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	// The require scope
+/******/ 	var __webpack_require__ = {};
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	!function() {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = function(exports, definition) {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	!function() {
+/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	!function() {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = function(exports) {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+/*!***************************************************************************************!*\
+  !*** ./src/modules/animation-builder/frontend/animation-type/preset/textScaleAnim.js ***!
+  \***************************************************************************************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   textScaleAnim: function() { return /* binding */ textScaleAnim; }
+/* harmony export */ });
+function textScaleAnim() {
+  let sContainerClass = [];
+  let sItemClass = [];
+  let activeTweens = new Map();
+  let splitTextInstances = new Map();
+  const handler = e => {
+    (e.detail["wcf-text-scale-animation"] || []).forEach(section => {
+      const {
+        id,
+        triggerClass,
+        triggerType,
+        itemClass,
+        start,
+        startCustom,
+        end,
+        endCustom,
+        delay,
+        duration,
+        stagger,
+        scale,
+        transformOrigin,
+        markers,
+        ease,
+        timeout = 0
+      } = section || {};
+      if (!itemClass) {
+        return;
+      }
+      const itemElements = document.querySelectorAll(itemClass);
+      if (!itemElements.length) {
+        return;
+      }
+      try {
+        gsap.set(itemClass, {
+          transition: "none"
+        });
+        if (triggerClass) {
+          gsap.set(triggerClass, {
+            transition: "none"
+          });
+        }
+        const splitInstance = new SplitText(itemClass, {
+          type: "lines"
+        });
+        splitTextInstances.set(id, splitInstance);
+        const target = splitInstance["lines"];
+        if (!target || target.length === 0) {
+          console.warn("No split targets found for", "chars");
+          return;
+        }
+        gsap.killTweensOf(target);
+        if (activeTweens.has(id)) {
+          activeTweens.get(id).kill();
+          activeTweens.delete(id);
+        }
+        const animationConfig = {
+          scale: scale,
+          transformOrigin: transformOrigin,
+          autoAlpha: 0,
+          delay: delay || 0,
+          stagger: stagger || 0.05,
+          duration: duration || 1,
+          ease
+        };
+        const runAnimation = () => {
+          if (activeTweens.has(id)) {
+            activeTweens.get(id).kill();
+          }
+          if (triggerType === "on_scroll") {
+            const scrollTriggerConfig = {
+              id: id,
+              trigger: triggerClass || itemClass,
+              start: start === "custom" ? startCustom : start || "top 80%",
+              end: end === "custom" ? endCustom : end || "bottom 20%",
+              once: false
+            };
+            if (markers) scrollTriggerConfig.markers = markers === "true" ? true : false;
+            if (window.ScrollTrigger) {
+              const existing = ScrollTrigger.getById(id);
+              if (existing) existing.kill();
+            }
+            gsap.set(target, {
+              scale: animationConfig.scale,
+              autoAlpha: 0
+            });
+            const tween = gsap.to(target, {
+              scale: 1,
+              transformOrigin: transformOrigin,
+              autoAlpha: 1,
+              delay: animationConfig.delay,
+              stagger: animationConfig.stagger,
+              duration: animationConfig.duration,
+              ease: animationConfig.ease,
+              scrollTrigger: scrollTriggerConfig
+            });
+            activeTweens.set(id, tween);
+          } else if (triggerType === "play_with_scroll") {
+            const scrollTriggerConfig = {
+              id: id,
+              trigger: triggerClass || itemClass,
+              start: start === "custom" ? startCustom : start || "top bottom",
+              end: end === "custom" ? endCustom : end || "bottom top",
+              scrub: 1
+            };
+            if (markers) scrollTriggerConfig.markers = markers === "true" ? true : false;
+            if (window.ScrollTrigger) {
+              const existing = ScrollTrigger.getById(id);
+              if (existing) existing.kill();
+            }
+            const tween = gsap.fromTo(target, {
+              scale: animationConfig.scale,
+              autoAlpha: 0
+            }, {
+              scale: 1,
+              autoAlpha: 1,
+              transformOrigin: transformOrigin,
+              stagger: animationConfig.stagger,
+              duration: 1,
+              ease: "none",
+              scrollTrigger: scrollTriggerConfig
+            });
+            activeTweens.set(id, tween);
+          } else if (triggerType === "page_load") {
+            gsap.set(target, {
+              scale: animationConfig.scale,
+              autoAlpha: 0
+            });
+            setTimeout(() => {
+              const tween = gsap.to(target, {
+                scale: 1,
+                autoAlpha: 1,
+                transformOrigin: transformOrigin,
+                delay: animationConfig.delay,
+                stagger: animationConfig.stagger,
+                duration: animationConfig.duration,
+                ease: animationConfig.ease
+              });
+              activeTweens.set(id, tween);
+            }, timeout);
+          } else if (triggerType === "hover" || triggerType === "click") {
+            gsap.set(target, {
+              scale: animationConfig.scale,
+              autoAlpha: 0
+            });
+          }
+        };
+        if (triggerType === "hover") {
+          if (triggerClass) {
+            gsap.set(target, {
+              scale: animationConfig.scale,
+              autoAlpha: 0
+            });
+            const triggerElements = document.querySelectorAll(triggerClass);
+            triggerElements.forEach((triggerElement, index) => {
+              const uniqueId = `${id}_${index}`;
+              const handleMouseEnter = () => {
+                gsap.killTweensOf(target);
+                if (activeTweens.has(uniqueId)) {
+                  activeTweens.get(uniqueId).kill();
+                  activeTweens.delete(uniqueId);
+                }
+                const tween = gsap.to(target, {
+                  scale: 1,
+                  autoAlpha: 1,
+                  transformOrigin: transformOrigin,
+                  delay: animationConfig.delay,
+                  stagger: animationConfig.stagger,
+                  duration: animationConfig.duration,
+                  ease: animationConfig.ease
+                });
+                activeTweens.set(uniqueId, tween);
+              };
+              const handleMouseLeave = () => {
+                gsap.killTweensOf(target);
+                if (activeTweens.has(uniqueId)) {
+                  activeTweens.get(uniqueId).kill();
+                  activeTweens.delete(uniqueId);
+                }
+
+                // Play reverse animation
+                const tween = gsap.to(target, {
+                  scale: animationConfig.scale,
+                  autoAlpha: 0,
+                  transformOrigin: transformOrigin,
+                  duration: animationConfig.duration * 0.6,
+                  stagger: animationConfig.stagger * 0.5,
+                  ease: animationConfig.ease
+                });
+                activeTweens.set(uniqueId, tween);
+              };
+              const newTriggerElement = triggerElement.cloneNode(true);
+              triggerElement.parentNode.replaceChild(newTriggerElement, triggerElement);
+              newTriggerElement.addEventListener("mouseenter", handleMouseEnter);
+              newTriggerElement.addEventListener("mouseleave", handleMouseLeave);
+              newTriggerElement.addEventListener("hover", handleMouseEnter);
+              newTriggerElement.addEventListener("mouseout", handleMouseLeave);
+            });
+          }
+        } else if (triggerType === "click") {
+          if (triggerClass) {
+            const triggerElements = document.querySelectorAll(triggerClass);
+            triggerElements.forEach((triggerElement, index) => {
+              const uniqueId = `${id}_click_${index}`;
+              gsap.set(target, {
+                scale: animationConfig.scale,
+                autoAlpha: 0
+              });
+              const handleClick = () => {
+                if (activeTweens.has(uniqueId)) {
+                  activeTweens.get(uniqueId).kill();
+                }
+                gsap.set(target, {
+                  scale: animationConfig.scale,
+                  autoAlpha: 0
+                });
+                const tween = gsap.to(target, {
+                  scale: 1,
+                  autoAlpha: 1,
+                  transformOrigin: transformOrigin,
+                  delay: animationConfig.delay,
+                  stagger: animationConfig.stagger,
+                  duration: animationConfig.duration,
+                  ease: animationConfig.ease
+                });
+                activeTweens.set(uniqueId, tween);
+              };
+              triggerElement.removeEventListener("click", handleClick);
+              triggerElement.addEventListener("click", handleClick);
+            });
+          }
+        } else {
+          runAnimation();
+        }
+      } catch (err) {
+        console.error("Text Split Animation: Error splitting text", err);
+      } finally {
+        sContainerClass.push(triggerClass);
+        sItemClass.push(itemClass);
+      }
+    });
+  };
+  function removeAnimation() {
+    activeTweens.forEach(tween => {
+      if (tween && tween.kill) {
+        tween.kill();
+      }
+    });
+    activeTweens.clear();
+    if (window.ScrollTrigger) {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    }
+    splitTextInstances.forEach((splitInstance, id) => {
+      try {
+        if (splitInstance && splitInstance.revert) {
+          splitInstance.revert();
+        }
+      } catch (e) {
+        console.warn(`Could not revert split text instance for ${id}:`, e);
+      }
+    });
+    splitTextInstances.clear();
+    [...sContainerClass, ...sItemClass].forEach(className => {
+      if (className) {
+        const elements = document.querySelectorAll(className);
+        elements.forEach(el => {
+          gsap.set(el, {
+            clearProps: "all"
+          });
+          if (el.style) {
+            el.style.transform = '';
+            el.style.opacity = '';
+            el.style.visibility = '';
+            el.style.display = '';
+          }
+        });
+      }
+    });
+    sContainerClass.length = 0;
+    sItemClass.length = 0;
+    document.querySelectorAll('[data-split-animation]').forEach(el => {
+      const newEl = el.cloneNode(true);
+      if (el.parentNode) {
+        el.parentNode.replaceChild(newEl, el);
+      }
+    });
+  }
+  document.addEventListener("aae-animation-event", handler);
+  document.addEventListener("aae-reset-animation", removeAnimation);
+  return {
+    destroy: removeAnimation
+  };
+}
+
+// Initialize
+textScaleAnim();
+/******/ })()
+;
+//# sourceMappingURL=textScaleAnim.js.map

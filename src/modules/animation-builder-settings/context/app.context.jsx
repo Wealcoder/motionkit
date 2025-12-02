@@ -8,7 +8,7 @@ import {
 const initialState = {
   allPresets:
     JSON.parse(
-      JSON.stringify(WCF_ANIMATION_BUILDER_ADMIN?.config?.settings ?? {})
+      JSON.stringify(WCF_ANIMATION_BUILDER_ADMIN?.config?.preset_settings ?? {})
     ) || {},
   allFreeAnimations:
     JSON.parse(

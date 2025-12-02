@@ -54,7 +54,7 @@ class AnimationBuilderEditor
 	}
 	function hide_admin_bar_for_iframe($show_admin_bar)
 	{
-		
+
 		// Check if the 'iframe' query parameter is set
 		if ($this->is_edit_mode()) {
 			return false; // Disable admin bar
@@ -193,17 +193,27 @@ class AnimationBuilderEditor
 
 			// Your updated code implementation.
 			$config       = include plugin_dir_path(__FILE__) . '/configs/animation-builder-settings.php';
-			$merge_config = array();
-			$form_data    = get_option('aae_anim_builder_settings');
-			$db_data      = json_decode($form_data, true);
 
-			if (is_array($db_data)) {
-				$merge_config['settings'] = $this->sync_with_config_structure($config['settings'], $db_data);
-				$config                   = $merge_config;
+			$merge_config = array();
+			$preset_settings    = get_option('aae_anim_builder_settings');
+			$free_animation_settings    = get_option('wcf_anim_builder_free_animation_settings');
+			$preset_db_data      = json_decode($preset_settings, true);
+			$free_animation_db_data      = json_decode($free_animation_settings, true) ?? array();
+
+
+			if (is_array($preset_db_data)) {
+				$merge_config['preset_settings'] = $this->sync_with_config_structure($config['preset_settings'], $preset_db_data);
+
+			}
+			if (is_array($free_animation_db_data)) {
+				$merge_config['free_animations'] = $this->sync_with_config_structure($config['free_animations'], $free_animation_db_data);
 			}
 
-			$config['count']          = $this->count_total_and_active_elements($db_data);
-			$config['count']['total'] = $this->count_total_and_active_elements($config['settings'])['total'];
+			$merge_config['preset_count']          = $this->count_total_and_active_elements($preset_db_data);
+			$merge_config['preset_count']['total'] = $this->count_total_and_active_elements($config['preset_settings'])['total'];
+
+      $merge_config['free_animation_count']          = $this->count_total_and_active_elements($free_animation_db_data);
+			$merge_config['free_animation_count']['total'] = $this->count_total_and_active_elements($config['free_animations'])['total'];
 
 			wp_localize_script(
 				'aae-animation-builder-settings',
@@ -211,7 +221,7 @@ class AnimationBuilderEditor
 				array(
 					'ajaxurl' => admin_url('admin-ajax.php'),
 					'nonce'   => wp_create_nonce('wcf_admin_nonce'),
-					'config'  => apply_filters('wcfanimationbuilder-admin-setting-config', $config),
+					'config'  => apply_filters('wcfanimationbuilder-admin-setting-config', $merge_config),
 				)
 			);
 		}
@@ -459,7 +469,7 @@ class AnimationBuilderEditor
 			WCF_ANIMATION_BUILDER_VERSION,
 			true
 		);
-		
+
 		do_action('wcf_animation_builder/editor/presets/enqueue_element_scripts');
 
 		$url = isset($_GET['builder_url']) ? sanitize_text_field( wp_unslash($_GET['builder_url']) ) : home_url('/');
