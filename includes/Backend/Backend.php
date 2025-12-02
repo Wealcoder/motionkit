@@ -53,7 +53,7 @@ final class Backend
         // Add admin hooks here
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('admin_menu', [$this, 'add_admin_menu'],30);
-        add_filter('show_admin_bar', array($this, 'hide_admin_bar_for_iframe'));
+       
         add_action('admin_head', array($this, 'remove_notice_for_setting_page'));	
         add_action('wp_ajax_aae_save_anim_builder_settings', array($this, 'save_dashboard_settings'));	
         add_filter('page_row_actions', [$this, 'add_custom_quick_link'], 10, 2);
@@ -132,15 +132,6 @@ final class Backend
     {         
      
     }
-
-    function hide_admin_bar_for_iframe($show_admin_bar)
-	{
-		// Check if the 'iframe' query parameter is set
-		if ($this->is_edit_mode()) {
-			return false; // Disable admin bar
-		}
-		return $show_admin_bar;
-	}     
     
     /**
      * Get asset loader instance

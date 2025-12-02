@@ -45,12 +45,21 @@ class AnimationBuilderEditor
 		// dashboard settings
 
 		add_action('admin_enqueue_scripts', array($this, 'admin_scripts'), 999);
-
+ 		add_filter('show_admin_bar', array($this, 'hide_admin_bar_for_iframe'));
 		add_action('wp', array($this, 'init'));
 		add_action('wcfanimationbuilder_before_enqueue_scripts', array($this, 'editor_script'));
 		add_action('wcfanimationbuilder_before_enqueue_styles', array($this, 'editor_style'));
 		add_action('wcfanimationbuilder_editor_footer', array($this, 'loader_footer_style'));
 		add_filter('wcf_animation_builder_body_class', array($this, 'editor_classes'));
+	}
+	function hide_admin_bar_for_iframe($show_admin_bar)
+	{
+		
+		// Check if the 'iframe' query parameter is set
+		if ($this->is_edit_mode()) {
+			return false; // Disable admin bar
+		}
+		return $show_admin_bar;
 	}
 	public function setPageType($obj)
 	{
