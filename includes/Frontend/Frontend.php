@@ -32,12 +32,7 @@ final class Frontend
      */
     private AssetLoader $asset_loader;
 
-    /**
-     * Smoother loader instance
-     *
-     * @var ScrollSmoother
-     */
-    private ScrollSmoother $smoother;
+ 
 
     /**
      * Initialize frontend functionality
@@ -47,7 +42,7 @@ final class Frontend
     public function init(): void
     {
         $this->asset_loader = ComponentFactory::create_asset_loader();
-        $this->smoother = new ScrollSmoother();
+   
         $this->init_hooks();
  
     }
@@ -64,13 +59,7 @@ final class Frontend
         
         // Template handling      
         add_filter('body_class', [$this, 'add_body_classes']);
-        add_action('wp_footer', [$this, 'html_selector']);
-        // Scroll smoother wrapper
-        if(defined( 'WCF_ADDONS_PRO_VERSION' )){
-            return;
-        }
-        add_action('wp_body_open', [$this->smoother, 'start_wrapper'], 1);
-        add_action('wp_footer', [$this->smoother, 'end_wrapper'], -1);
+        add_action('wp_footer', [$this, 'html_selector']);     
     }
 
     /**

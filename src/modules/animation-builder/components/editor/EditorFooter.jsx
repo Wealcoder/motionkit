@@ -28,7 +28,7 @@ const EditorFooter = () => {
     );
     if (iframe) {
       const win = iframe.contentWindow;
-      //win.location.reload();
+      //win.location.reload();    
       win.postMessage({ "wcf-animation-config": allAnimation });
     }
   };

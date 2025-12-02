@@ -169,19 +169,9 @@ class AnimationBuilderCore
 			wp_enqueue_script('wcf-animation-builder-preview');
 
 			wp_register_script('wcf-custom-animation', WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/customAnimation.js', $deps, time(), true);
-			wp_enqueue_script('wcf-custom-animation');
-
-			$config = include plugin_dir_path(__FILE__) . 'configs/animation-builder-assets.php'; // adjust path
-			$active_elements = $this->get_active_element_keys();
-			if (is_array($active_elements) && is_array($config)) {
-				foreach ($active_elements as $key) {
-					if (isset($config['js'][$key])) {
-						$element = $config['js'][$key];
-						wp_enqueue_script($key, $element['src'], $element['deps'], WCF_ANIMATION_BUILDER_VERSION, true);
-					}
-				}
-			}
-
+			wp_enqueue_script('wcf-custom-animation');			
+			
+			do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts');
 
 
 			$config = include plugin_dir_path(__FILE__) . 'configs/animation-builder-device.php'; // adjust path
@@ -230,7 +220,7 @@ class AnimationBuilderCore
 
 			if ($pageConfigs = $this->page_type->getConfig()) {
 				$is_custom = false;
-				$activePreset = $this->getActivePresets($pageConfigs, $is_custom);
+				$this->getActivePresets($pageConfigs, $is_custom);
 				
 				$deps = $this->register_builder_dependency();
 				wp_register_script('wcf-anim-builder-frontend', WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend.js', $deps, time(), true);
@@ -240,17 +230,8 @@ class AnimationBuilderCore
 				if ($is_custom) {
 					wp_enqueue_script('wcf-custom-animation');
 				}
-
-				$config = include plugin_dir_path(__FILE__) . 'configs/animation-builder-assets.php'; // adjust path
-				$active_elements = $this->get_active_element_keys();
-				if (is_array($active_elements) && is_array($config)) {
-					foreach ($active_elements as $key) {
-						if (isset($config['js'][$key]) && in_array($key, $activePreset, true)) {
-							$element = $config['js'][$key];
-							wp_enqueue_script($key, $element['src'], $element['deps'], WCF_ANIMATION_BUILDER_VERSION, true);
-						}
-					}
-				}
+				
+				do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts');
 
 				$config = include plugin_dir_path(__FILE__) . 'configs/animation-builder-device.php'; // adjust path
 
@@ -279,13 +260,8 @@ class AnimationBuilderCore
 
 	public function register_builder_dependency()
 	{
-		wp_register_script('gsap', WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/lib/gsap.min.js', [], WCF_ANIMATION_BUILDER_VERSION, true);
-		wp_register_script('ScrollTrigger', WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/lib/ScrollTrigger.min.js', ['gsap'], WCF_ANIMATION_BUILDER_VERSION, true);
-		wp_register_script('MotionPathPlugin', WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/lib/MotionPathPlugin.min.js', ['gsap'], WCF_ANIMATION_BUILDER_VERSION, true);
-		wp_register_script('DrawSVGPlugin', WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/lib/DrawSVGPlugin.min.js', ['gsap'], WCF_ANIMATION_BUILDER_VERSION, true);
-		wp_register_script('SplitText', WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/lib/SplitText.min.js', ['gsap'], WCF_ANIMATION_BUILDER_VERSION, true);
-		wp_register_script('TextPlugin', WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/lib/TextPlugin.min.js', ['gsap'], WCF_ANIMATION_BUILDER_VERSION, true);
-		return ['gsap', 'ScrollTrigger', 'DrawSVGPlugin', 'MotionPathPlugin', 'SplitText', 'TextPlugin', 'wp-element'];
+		
+		return  apply_filters('wcf_animation_builder_core_lib_deps', ['wp-element']); // 
 	}
 	public function register_editor_scripts()
 	{

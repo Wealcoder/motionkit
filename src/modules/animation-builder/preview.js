@@ -38,31 +38,33 @@ function receivePageConfig() {
         disableHover();
         storeAnimation = {};
         let mm;
+        
+        if(window.gsap){
+          mm?.revert?.();
+          mm = gsap.matchMedia();
 
-        mm?.revert?.();
-        mm = gsap.matchMedia();
-
-        wcf_anim_preview_object?.device_config?.map((device) => {
-          mm.add(device.mediaQuery, () => {
-            event.data["wcf-animation-config"]?.[device?.key].forEach(
-              (section) => {
-                if (section.enable) {
-                  if (section.type === "preset") {
-                    storeAnimation[section?.preset] = [
-                      ...(storeAnimation[section?.preset] || []),
-                      section,
-                    ];
-                  } else {
-                    storeAnimation["custom"] = [
-                      ...(storeAnimation["custom"] || []),
-                      section,
-                    ];
+          wcf_anim_preview_object?.device_config?.map((device) => {
+            mm.add(device.mediaQuery, () => {
+              event.data["wcf-animation-config"]?.[device?.key].forEach(
+                (section) => {
+                  if (section.enable) {
+                    if (section.type === "preset") {
+                      storeAnimation[section?.preset] = [
+                        ...(storeAnimation[section?.preset] || []),
+                        section,
+                      ];
+                    } else {
+                      storeAnimation["custom"] = [
+                        ...(storeAnimation["custom"] || []),
+                        section,
+                      ];
+                    }
                   }
                 }
-              }
-            );
+              );
+            });
           });
-        });
+        }
 
         const cEvent = new CustomEvent("aae-animation-event", {
           detail: storeAnimation, // payload

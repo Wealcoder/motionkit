@@ -11,6 +11,8 @@ window.AAEAnimBuilder = {};
 AAEAnimBuilder.presets = new RegisterPreset();
 AAEAnimBuilder.hooks = wp.hooks.createHooks();
 
+console.log("AAE Animation Builder Preset Loaded");
+
 domReady(function () {
   const editor_panel = document.getElementById(
     "wcf--animation-builder--editor"
