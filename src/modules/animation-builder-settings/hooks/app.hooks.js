@@ -5,6 +5,7 @@ export const usePresets = () => {
   const {
     mainState: { allPresets },
     setAllPresets,
+    setAllFreeAnimations,
     updateActivePreset,
     updateActiveGroupPreset,
     updateActiveFullPreset,
@@ -12,6 +13,7 @@ export const usePresets = () => {
   return {
     allPresets,
     setAllPresets,
+    setAllFreeAnimations,
     updateActivePreset,
     updateActiveGroupPreset,
     updateActiveFullPreset,

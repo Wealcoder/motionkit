@@ -5,8 +5,8 @@ import { Label } from "@@/components/ui/label";
 import { Input } from "@@/components/ui/input";
 import { usePresets } from "@@/hooks/app.hooks";
 
-const TopBar = ({ searchKey, setSearchKey, presetCount }) => {
-  const { allPresets, updateActiveFullPreset } = usePresets();
+const FreeAnimationTopbar = ({ searchKey, setSearchKey, presetCount }) => {
+  const { allFreeAnimations, updateActiveFullPreset } = usePresets();
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 xl:gap-11 justify-between items-center">
@@ -16,7 +16,7 @@ const TopBar = ({ searchKey, setSearchKey, presetCount }) => {
         </div>
         <div className="flex flex-col gap-1">
           <div className="flex items-center">
-            <h2 className="text-[18px] font-medium ">Presets Animations</h2>
+            <h2 className="text-[18px] font-medium ">Free Animations</h2>
           </div>
           <div className="flex items-center">
             <p className="text-sm text-label ">
@@ -34,7 +34,7 @@ const TopBar = ({ searchKey, setSearchKey, presetCount }) => {
           <Switch
             id="global-enable-all"
             disabled={presetCount?.total == 0}
-            checked={allPresets?.is_active}
+            checked={allFreeAnimations?.is_active}
             onCheckedChange={(value) => updateActiveFullPreset({ value })}
           />
           <Label htmlFor="global-enable-all">Enable All</Label>
@@ -63,4 +63,4 @@ const TopBar = ({ searchKey, setSearchKey, presetCount }) => {
   );
 };
 
-export default TopBar;
+export default FreeAnimationTopbar;

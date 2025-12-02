@@ -63,6 +63,9 @@ const MainEditor = ({ isLoading }) => {
               >
                 Custom Animation
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => console.log("hi")}>
+                Free Animation Presets
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
