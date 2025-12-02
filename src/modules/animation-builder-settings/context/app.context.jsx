@@ -7,14 +7,23 @@ import {
 
 const initialState = {
   allPresets:
-    JSON.parse(JSON.stringify(WCF_ANIMATION_BUILDER_ADMIN?.config?.settings)) ||
-    {},
+    JSON.parse(
+      JSON.stringify(WCF_ANIMATION_BUILDER_ADMIN?.config?.settings ?? {})
+    ) || {},
+  allFreeAnimations:
+    JSON.parse(
+      JSON.stringify(WCF_ANIMATION_BUILDER_ADMIN?.config?.free_animations ?? {})
+    ) || {},
 };
+
+console.log("Initial State:", initialState);
 
 const reducer = (state, action) => {
   switch (action.type) {
     case "setAllPresets":
       return { ...state, allPresets: action.value };
+    case "setAllFreeAnimations":
+      return { ...state, allFreeAnimations: action.value };
 
     default:
       throw new Error();
@@ -27,6 +36,13 @@ const useMainContext = (state) => {
   const setAllPresets = useCallback((data) => {
     dispatch({
       type: "setAllPresets",
+      value: data,
+    });
+  }, []);
+
+  const setAllFreeAnimations = useCallback((data) => {
+    dispatch({
+      type: "setAllFreeAnimations",
       value: data,
     });
   }, []);
@@ -55,6 +71,7 @@ const useMainContext = (state) => {
   return {
     mainState,
     setAllPresets,
+    setAllFreeAnimations,
     updateActivePreset,
     updateActiveGroupPreset,
     updateActiveFullPreset,
@@ -64,6 +81,7 @@ const useMainContext = (state) => {
 export const AppContext = createContext({
   mainState: initialState,
   setAllPresets: () => {},
+  setAllFreeAnimations: () => {},
   updateActivePreset: () => {},
 });
 

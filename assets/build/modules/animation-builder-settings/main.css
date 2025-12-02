@@ -221,6 +221,9 @@
 .wcfabs2025 .flex {
   display: flex;
 }
+.wcfabs2025 .\!inline-flex {
+  display: inline-flex !important;
+}
 .wcfabs2025 .inline-flex {
   display: inline-flex;
 }
@@ -256,6 +259,9 @@
 }
 .wcfabs2025 .h-8 {
   height: 2rem;
+}
+.wcfabs2025 .h-9 {
+  height: 2.25rem;
 }
 .wcfabs2025 .h-\[18px\] {
   height: 18px;
@@ -302,6 +308,10 @@
 .wcfabs2025 .w-full {
   width: 100%;
 }
+.wcfabs2025 .w-max {
+  width: -moz-max-content;
+  width: max-content;
+}
 .wcfabs2025 .max-w-\[900px\] {
   max-width: 900px;
 }
@@ -310,6 +320,9 @@
 }
 .wcfabs2025 .shrink-0 {
   flex-shrink: 0;
+}
+.wcfabs2025 .cursor-not-allowed {
+  cursor: not-allowed;
 }
 .wcfabs2025 .cursor-pointer {
   cursor: pointer;
@@ -414,6 +427,9 @@
 .wcfabs2025 .border-solid {
   border-style: solid;
 }
+.wcfabs2025 .border-none {
+  border-style: none;
+}
 .wcfabs2025 .border-background {
   border-color: hsl(var(--gray-00));
 }
@@ -425,6 +441,10 @@
 }
 .wcfabs2025 .border-transparent {
   border-color: transparent;
+}
+.wcfabs2025 .border-b-\[\#f2f5f8\] {
+  --tw-border-opacity: 1;
+  border-bottom-color: rgb(242 245 248 / var(--tw-border-opacity, 1));
 }
 .wcfabs2025 .border-l-transparent {
   border-left-color: transparent;
@@ -506,6 +526,10 @@
   padding-left: 1rem;
   padding-right: 1rem;
 }
+.wcfabs2025 .px-5 {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
 .wcfabs2025 .px-8 {
   padding-left: 2rem;
   padding-right: 2rem;
@@ -542,6 +566,10 @@
   padding-top: 0.625rem;
   padding-bottom: 0.625rem;
 }
+.wcfabs2025 .py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
 .wcfabs2025 .py-6 {
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
@@ -559,6 +587,12 @@
 }
 .wcfabs2025 .pe-2\.5 {
   padding-inline-end: 0.625rem;
+}
+.wcfabs2025 .pe-3 {
+  padding-inline-end: 0.75rem;
+}
+.wcfabs2025 .ps-2\.5 {
+  padding-inline-start: 0.625rem;
 }
 .wcfabs2025 .text-\[11px\] {
   font-size: 11px;
@@ -632,6 +666,9 @@
 }
 .wcfabs2025 .text-text {
   color: hsl(var(--gray-900));
+}
+.wcfabs2025 .text-text-hover {
+  color: hsl(var(--brand-500));
 }
 .wcfabs2025 .text-text-secondary {
   color: hsl(var(--gray-600));
@@ -982,6 +1019,10 @@
   background-color: rgb(255 243 240 / var(--tw-bg-opacity, 1));
 }
 
+.wcfabs2025 .hover\:bg-background-secondary:hover {
+  background-color: hsl(var(--gray-50));
+}
+
 .wcfabs2025 .hover\:bg-button-hover:hover {
   background-color: hsl(var(--brand-600));
 }
@@ -1019,6 +1060,10 @@
   color: hsl(var(--brand-500));
 }
 
+.wcfabs2025 .hover\:text-text-secondary-hover:hover {
+  color: hsl(var(--gray-900));
+}
+
 .wcfabs2025 .hover\:shadow-general-btn:hover {
   --tw-shadow: 0px 2px 6px 0px rgba(10, 13, 20, 0.04), 0px 6px 16px 0px rgba(10, 13, 20, 0.12), 0px 0px 0px 2px rgba(10, 13, 20, 0.08);
   --tw-shadow-colored: 0px 2px 6px 0px var(--tw-shadow-color), 0px 6px 16px 0px var(--tw-shadow-color), 0px 0px 0px 2px var(--tw-shadow-color);
@@ -1035,6 +1080,19 @@
   --tw-shadow: 0px 4px 12px 0px rgba(10, 13, 20, 0.06);
   --tw-shadow-colored: 0px 4px 12px 0px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.wcfabs2025 .focus\:bg-background-secondary:focus {
+  background-color: hsl(var(--gray-50));
+}
+
+.wcfabs2025 .focus\:text-text-secondary-hover:focus {
+  color: hsl(var(--gray-900));
+}
+
+.wcfabs2025 .focus\:outline-none:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }
 
 .wcfabs2025 .focus-visible\:border:focus-visible {
@@ -1105,12 +1163,20 @@
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
+.wcfabs2025 .data-\[active\]\:bg-background-secondary[data-active] {
+  background-color: hsl(var(--gray-50));
+}
+
 .wcfabs2025 .data-\[state\=active\]\:bg-background[data-state="active"] {
   background-color: hsl(var(--gray-00));
 }
 
 .wcfabs2025 .data-\[state\=checked\]\:bg-brand[data-state="checked"] {
   background-color: hsl(var(--brand-500));
+}
+
+.wcfabs2025 .data-\[state\=open\]\:bg-background-secondary[data-state="open"] {
+  background-color: hsl(var(--gray-50));
 }
 
 .wcfabs2025 .data-\[state\=unchecked\]\:bg-border-secondary[data-state="unchecked"] {
@@ -1148,8 +1214,14 @@
 
 @media (min-width: 1536px) {
 
-  .wcfabs2025 .\32xl\:p-16 {
-    padding: 4rem;
+  .wcfabs2025 .\32xl\:px-8 {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .wcfabs2025 .\32xl\:py-5 {
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
   }
 }
 

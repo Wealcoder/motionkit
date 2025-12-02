@@ -19060,6 +19060,95 @@ const twMerge = /*#__PURE__*/createTailwindMerge(getDefaultConfig);
 
 /***/ }),
 
+/***/ "./src/modules/animation-builder-settings/components/FreeAnimationTopbar.jsx":
+/*!***********************************************************************************!*\
+  !*** ./src/modules/animation-builder-settings/components/FreeAnimationTopbar.jsx ***!
+  \***********************************************************************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_icons_ri__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! react-icons/ri */ "./node_modules/react-icons/ri/index.mjs");
+/* harmony import */ var lucide_react__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! lucide-react */ "./node_modules/lucide-react/dist/esm/icons/dot.js");
+/* harmony import */ var _components_ui_switch__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @@/components/ui/switch */ "./src/modules/animation-builder-settings/components/ui/switch.jsx");
+/* harmony import */ var _components_ui_label__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @@/components/ui/label */ "./src/modules/animation-builder-settings/components/ui/label.jsx");
+/* harmony import */ var _components_ui_input__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @@/components/ui/input */ "./src/modules/animation-builder-settings/components/ui/input.jsx");
+/* harmony import */ var _hooks_app_hooks__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @@/hooks/app.hooks */ "./src/modules/animation-builder-settings/hooks/app.hooks.js");
+
+
+
+
+
+
+
+const FreeAnimationTopbar = ({
+  searchKey,
+  setSearchKey,
+  presetCount
+}) => {
+  var _presetCount$total, _presetCount$active;
+  const {
+    allFreeAnimations,
+    updateActiveFullPreset
+  } = (0,_hooks_app_hooks__WEBPACK_IMPORTED_MODULE_4__.usePresets)();
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "grid grid-cols-1 xl:grid-cols-2 gap-6 xl:gap-11 justify-between items-center"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center gap-3"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "border rounded-full h-[52px] w-[52px] flex justify-center items-center shadow-common"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_ri__WEBPACK_IMPORTED_MODULE_5__.RiCommandLine, {
+    size: 24,
+    color: "#FC6848"
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex flex-col gap-1"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+    className: "text-[18px] font-medium "
+  }, "Free Animations")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: "text-sm text-label "
+  }, (_presetCount$total = presetCount?.total) !== null && _presetCount$total !== void 0 ? _presetCount$total : 0, " Total Presets"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(lucide_react__WEBPACK_IMPORTED_MODULE_6__["default"], {
+    className: "w-4 h-4 text-icon-secondary",
+    strokeWidth: 4
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: "text-sm text-label "
+  }, (_presetCount$active = presetCount?.active) !== null && _presetCount$active !== void 0 ? _presetCount$active : 0, " Active Presets")))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex justify-between xl:justify-end items-center"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center space-x-2"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_switch__WEBPACK_IMPORTED_MODULE_1__.Switch, {
+    id: "global-enable-all",
+    disabled: presetCount?.total == 0,
+    checked: allFreeAnimations?.is_active,
+    onCheckedChange: value => updateActiveFullPreset({
+      value
+    })
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_label__WEBPACK_IMPORTED_MODULE_2__.Label, {
+    htmlFor: "global-enable-all"
+  }, "Enable All")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "ml-6 mr-2"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "relative"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_ri__WEBPACK_IMPORTED_MODULE_5__.RiSearchLine, {
+    className: "absolute left-3 top-2.5 h-5 w-5 text-icon-secondary"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_input__WEBPACK_IMPORTED_MODULE_3__.Input, {
+    value: searchKey,
+    onChange: e => setSearchKey(e.target.value),
+    placeholder: "Search Presets",
+    className: "px-9"
+  }), searchKey ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_ri__WEBPACK_IMPORTED_MODULE_5__.RiCloseLine, {
+    onClick: () => setSearchKey(""),
+    className: "absolute right-3 top-2.5 h-5 w-5 cursor-pointer text-icon-secondary"
+  }) : ""))));
+};
+/* harmony default export */ __webpack_exports__["default"] = (FreeAnimationTopbar);
+
+/***/ }),
+
 /***/ "./src/modules/animation-builder-settings/components/PresetCard.jsx":
 /*!**************************************************************************!*\
   !*** ./src/modules/animation-builder-settings/components/PresetCard.jsx ***!
@@ -19145,6 +19234,223 @@ const PresetCard = ({
   })))) : ""));
 };
 /* harmony default export */ __webpack_exports__["default"] = (PresetCard);
+
+/***/ }),
+
+/***/ "./src/modules/animation-builder-settings/components/ShowFreeAnimations.jsx":
+/*!**********************************************************************************!*\
+  !*** ./src/modules/animation-builder-settings/components/ShowFreeAnimations.jsx ***!
+  \**********************************************************************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _components_ui_tabs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @@/components/ui/tabs */ "./src/modules/animation-builder-settings/components/ui/tabs.jsx");
+/* harmony import */ var _components_ui_button__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @@/components/ui/button */ "./src/modules/animation-builder-settings/components/ui/button.jsx");
+/* harmony import */ var _components_ui_switch__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @@/components/ui/switch */ "./src/modules/animation-builder-settings/components/ui/switch.jsx");
+/* harmony import */ var _components_ui_label__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @@/components/ui/label */ "./src/modules/animation-builder-settings/components/ui/label.jsx");
+/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @@/lib/utils */ "./src/modules/animation-builder-settings/lib/utils.js");
+/* harmony import */ var sonner__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! sonner */ "./node_modules/sonner/dist/index.mjs");
+/* harmony import */ var _components_ui_scroll_area__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @@/components/ui/scroll-area */ "./src/modules/animation-builder-settings/components/ui/scroll-area.jsx");
+/* harmony import */ var _PresetCard__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./PresetCard */ "./src/modules/animation-builder-settings/components/PresetCard.jsx");
+/* harmony import */ var _hooks_app_hooks__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @@/hooks/app.hooks */ "./src/modules/animation-builder-settings/hooks/app.hooks.js");
+
+
+
+
+
+
+
+
+
+
+
+const ShowFreeAnimations = ({
+  searchKey,
+  setPresetCount,
+  presetCount
+}) => {
+  const {
+    allFreeAnimations,
+    updateActivePreset,
+    updateActiveGroupPreset
+  } = (0,_hooks_app_hooks__WEBPACK_IMPORTED_MODULE_9__.usePresets)();
+  const [tabValue, setTabValue] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("all");
+  const [categoryPresets, setCategoryPresets] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({});
+  const [noResult, setNoResult] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [presetTabList, setPresetTabList] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
+  console.log("ShowFreeAnimations", {
+    searchKey,
+    presetCount,
+    allFreeAnimations,
+    tabValue,
+    categoryPresets,
+    noResult,
+    presetTabList
+  });
+
+  // Build tab list from all presets
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (allFreeAnimations) {
+      const result = Object.entries(allFreeAnimations?.elements).map(([key, value]) => ({
+        title: value?.title,
+        value: key
+      }));
+      setPresetTabList(result);
+    }
+  }, [allFreeAnimations]);
+
+  // Filter presets based on search and tab
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (!allFreeAnimations) return;
+    let filtered = allFreeAnimations.elements;
+    if (searchKey) {
+      filtered = findSearchResult();
+      setNoResult(!Object.keys(filtered).length);
+    } else {
+      setNoResult(false);
+    }
+    setCategoryPresets(filtered);
+  }, [allFreeAnimations, searchKey]);
+
+  // Reset tab on search
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (searchKey) setTabValue("all");
+  }, [searchKey]);
+
+  // Search helper
+  const findSearchResult = () => {
+    return Object.fromEntries(Object.entries(allFreeAnimations.elements).map(([key, value]) => {
+      const filteredElements = Object.fromEntries(Object.entries(value.elements || {}).filter(([, v]) => v.label.toLowerCase().includes(searchKey.toLowerCase())));
+      return [key, {
+        ...value,
+        elements: filteredElements
+      }];
+    }).filter(([, value]) => Object.keys(value.elements).length > 0));
+  };
+
+  // Save settings
+  const savePresets = async () => {
+    await fetch(WCF_ANIMATION_BUILDER_ADMIN.ajaxurl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json"
+      },
+      body: new URLSearchParams({
+        action: "aae_save_anim_builder_settings",
+        setting_name: "aae_anim_builder_settings",
+        form_fields: JSON.stringify(allFreeAnimations),
+        nonce: WCF_ANIMATION_BUILDER_ADMIN.nonce
+      })
+    }).then(response => response.json()).then(data => {
+      console.log("r", data);
+      setPresetCount?.(data.count);
+      sonner__WEBPACK_IMPORTED_MODULE_6__.toast.success("Presets saved successfully!", {
+        position: "top-right"
+      });
+    });
+  };
+
+  // Render
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_1__.Tabs, {
+    defaultValue: "all",
+    value: tabValue,
+    onValueChange: setTabValue
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex justify-between items-center mb-4"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_scroll_area__WEBPACK_IMPORTED_MODULE_7__.ScrollArea, {
+    className: "max-w-[900px] rounded-lg bg-background-secondary"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_1__.TabsList, {
+    className: "h-11"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_1__.TabsTrigger, {
+    value: "all",
+    className: "px-4"
+  }, "All"), presetTabList.map(tab => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_1__.TabsTrigger, {
+    key: tab.value,
+    value: tab.value
+  }, tab.title))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_scroll_area__WEBPACK_IMPORTED_MODULE_7__.ScrollBar, {
+    orientation: "horizontal"
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_button__WEBPACK_IMPORTED_MODULE_2__.Button
+  // TODO: need validation for search both classname and disabled
+  , {
+    className: `${presetCount?.total == 0 ? "cursor-not-allowed" : "cursor-pointer"}`,
+    disabled: presetCount?.total == 0,
+    onClick: savePresets
+  }, "Save Preset Settings")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_1__.TabsContent, {
+    value: "all",
+    className: "bg-background-secondary p-3 rounded-lg"
+  }, noResult ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "bg-background flex justify-center items-center p-5 rounded"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
+    className: "text-base font-medium"
+  }, "No Result Found")) : Object.keys(categoryPresets).map(cat => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    key: cat,
+    className: "mt-3 first:mt-0"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "bg-background flex justify-between items-center p-5 rounded"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
+    className: "text-base font-medium"
+  }, categoryPresets[cat].title), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center space-x-2"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_switch__WEBPACK_IMPORTED_MODULE_3__.Switch, {
+    id: cat,
+    checked: categoryPresets[cat].is_active,
+    onCheckedChange: value => updateActiveGroupPreset({
+      value,
+      slug: cat
+    })
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_label__WEBPACK_IMPORTED_MODULE_4__.Label, {
+    htmlFor: cat
+  }, "Enable All"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "grid grid-cols-2 xl:grid-cols-3 gap-1 mt-1"
+  }, Object.keys(categoryPresets[cat].elements).map((preset, i) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_PresetCard__WEBPACK_IMPORTED_MODULE_8__["default"], {
+    key: `preset-${i}`,
+    preset: categoryPresets[cat].elements[preset],
+    slug: preset,
+    updateActiveItem: updateActivePreset,
+    className: "rounded p-5"
+  })), Array.from({
+    length: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)() - (Object.keys(categoryPresets[cat].elements).length % (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)() || (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)())
+  }).map((_, idx) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_PresetCard__WEBPACK_IMPORTED_MODULE_8__["default"], {
+    key: `empty-${idx}`,
+    className: "rounded"
+  })))))), Object.keys(categoryPresets).map(cat => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_1__.TabsContent, {
+    key: cat,
+    value: cat,
+    className: "bg-background-secondary p-3 rounded-lg"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "bg-background flex justify-between items-center p-5 rounded"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", {
+    className: "text-base font-medium"
+  }, categoryPresets[cat].title), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center space-x-2"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_switch__WEBPACK_IMPORTED_MODULE_3__.Switch, {
+    id: cat,
+    checked: categoryPresets[cat].is_active,
+    onCheckedChange: value => updateActiveGroupPreset({
+      value,
+      slug: cat
+    })
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_label__WEBPACK_IMPORTED_MODULE_4__.Label, {
+    htmlFor: cat
+  }, "Enable All"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "grid grid-cols-2 xl:grid-cols-3 gap-1 mt-1"
+  }, Object.keys(categoryPresets[cat].elements).map((preset, i) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_PresetCard__WEBPACK_IMPORTED_MODULE_8__["default"], {
+    key: `preset-${i}`,
+    preset: categoryPresets[cat].elements[preset],
+    slug: preset,
+    updateActiveItem: updateActivePreset,
+    className: "rounded p-5"
+  })), Array.from({
+    length: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)() - (Object.keys(categoryPresets[cat].elements).length % (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)() || (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)())
+  }).map((_, idx) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_PresetCard__WEBPACK_IMPORTED_MODULE_8__["default"], {
+    key: `empty-${idx}`,
+    className: "rounded"
+  })))))));
+};
+/* harmony default export */ __webpack_exports__["default"] = (ShowFreeAnimations);
 
 /***/ }),
 
@@ -19378,6 +19684,7 @@ const TopBar = ({
   setSearchKey,
   presetCount
 }) => {
+  var _presetCount$total, _presetCount$active;
   const {
     allPresets,
     updateActiveFullPreset
@@ -19397,21 +19704,22 @@ const TopBar = ({
     className: "flex items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
     className: "text-[18px] font-medium "
-  }, "Presets")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, "Presets Animations")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: "text-sm text-label "
-  }, presetCount?.total, " Total Presets"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(lucide_react__WEBPACK_IMPORTED_MODULE_6__["default"], {
+  }, (_presetCount$total = presetCount?.total) !== null && _presetCount$total !== void 0 ? _presetCount$total : 0, " Total Presets"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(lucide_react__WEBPACK_IMPORTED_MODULE_6__["default"], {
     className: "w-4 h-4 text-icon-secondary",
     strokeWidth: 4
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: "text-sm text-label "
-  }, presetCount?.active, " Active Presets")))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, (_presetCount$active = presetCount?.active) !== null && _presetCount$active !== void 0 ? _presetCount$active : 0, " Active Presets")))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex justify-between xl:justify-end items-center"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center space-x-2"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_switch__WEBPACK_IMPORTED_MODULE_1__.Switch, {
     id: "global-enable-all",
+    disabled: presetCount?.total == 0,
     checked: allPresets?.is_active,
     onCheckedChange: value => updateActiveFullPreset({
       value
@@ -19812,18 +20120,26 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _lib_presetService__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @@/lib/presetService */ "./src/modules/animation-builder-settings/lib/presetService.js");
+var _WCF_ANIMATION_BUILDE, _WCF_ANIMATION_BUILDE2;
 
 
 
 const initialState = {
-  allPresets: JSON.parse(JSON.stringify(WCF_ANIMATION_BUILDER_ADMIN?.config?.settings)) || {}
+  allPresets: JSON.parse(JSON.stringify((_WCF_ANIMATION_BUILDE = WCF_ANIMATION_BUILDER_ADMIN?.config?.settings) !== null && _WCF_ANIMATION_BUILDE !== void 0 ? _WCF_ANIMATION_BUILDE : {})) || {},
+  allFreeAnimations: JSON.parse(JSON.stringify((_WCF_ANIMATION_BUILDE2 = WCF_ANIMATION_BUILDER_ADMIN?.config?.free_animations) !== null && _WCF_ANIMATION_BUILDE2 !== void 0 ? _WCF_ANIMATION_BUILDE2 : {})) || {}
 };
+console.log("Initial State:", initialState);
 const reducer = (state, action) => {
   switch (action.type) {
     case "setAllPresets":
       return {
         ...state,
         allPresets: action.value
+      };
+    case "setAllFreeAnimations":
+      return {
+        ...state,
+        allFreeAnimations: action.value
       };
     default:
       throw new Error();
@@ -19834,6 +20150,12 @@ const useMainContext = state => {
   const setAllPresets = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(data => {
     dispatch({
       type: "setAllPresets",
+      value: data
+    });
+  }, []);
+  const setAllFreeAnimations = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(data => {
+    dispatch({
+      type: "setAllFreeAnimations",
       value: data
     });
   }, []);
@@ -19849,6 +20171,7 @@ const useMainContext = state => {
   return {
     mainState,
     setAllPresets,
+    setAllFreeAnimations,
     updateActivePreset,
     updateActiveGroupPreset,
     updateActiveFullPreset
@@ -19857,6 +20180,7 @@ const useMainContext = state => {
 const AppContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)({
   mainState: initialState,
   setAllPresets: () => {},
+  setAllFreeAnimations: () => {},
   updateActivePreset: () => {}
 });
 const AppContextProvider = ({
@@ -19890,6 +20214,7 @@ const usePresets = () => {
       allPresets
     },
     setAllPresets,
+    setAllFreeAnimations,
     updateActivePreset,
     updateActiveGroupPreset,
     updateActiveFullPreset
@@ -19897,6 +20222,7 @@ const usePresets = () => {
   return {
     allPresets,
     setAllPresets,
+    setAllFreeAnimations,
     updateActivePreset,
     updateActiveGroupPreset,
     updateActiveFullPreset
@@ -20095,25 +20421,84 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _components_TopBar__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/TopBar */ "./src/modules/animation-builder-settings/components/TopBar.jsx");
 /* harmony import */ var _components_ShowPresets__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/ShowPresets */ "./src/modules/animation-builder-settings/components/ShowPresets.jsx");
+/* harmony import */ var _components_ui_tabs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/components/ui/tabs */ "./src/modules/animation-builder/components/ui/tabs.jsx");
+/* harmony import */ var _menus__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./menus */ "./src/modules/animation-builder-settings/pages/menus.js");
+/* harmony import */ var _components_FreeAnimationTopbar__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../components/FreeAnimationTopbar */ "./src/modules/animation-builder-settings/components/FreeAnimationTopbar.jsx");
+/* harmony import */ var _components_ShowFreeAnimations__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../components/ShowFreeAnimations */ "./src/modules/animation-builder-settings/components/ShowFreeAnimations.jsx");
+
+
+
+
 
 
 
 
 const MainPage = () => {
   const [searchKey, setSearchKey] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
-  const [presetCount, setPresetCount] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(WCF_ANIMATION_BUILDER_ADMIN.config.count);
+  const [activeTab, setActiveTab] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("preset_animaitons");
+  const [presetCount, setPresetCount] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({});
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (activeTab === "free_animations") {
+      var _WCF_ANIMATION_BUILDE;
+      setPresetCount((_WCF_ANIMATION_BUILDE = WCF_ANIMATION_BUILDER_ADMIN.config.free_animation_count) !== null && _WCF_ANIMATION_BUILDE !== void 0 ? _WCF_ANIMATION_BUILDE : {
+        total: 0,
+        active: 0
+      });
+    } else {
+      var _WCF_ANIMATION_BUILDE2;
+      setPresetCount((_WCF_ANIMATION_BUILDE2 = WCF_ANIMATION_BUILDER_ADMIN.config.count) !== null && _WCF_ANIMATION_BUILDE2 !== void 0 ? _WCF_ANIMATION_BUILDE2 : {
+        total: 0,
+        active: 0
+      });
+    }
+  }, [activeTab]);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "wcfabs2025-wrapper"
+    className: "wcfabs2025-wrapper  "
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "wcfabs2025-style"
+    className: "wcfabs2025-style "
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "container overflow-x-hidden bg-background rounded-[10px]"
+    className: "container overflow-x-hidden bg-background rounded-[10px] "
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_3__.Tabs, {
+    defaultValue: "preset_animaitons",
+    onValueChange: value => {
+      console.log(value);
+      setActiveTab(value);
+    }
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "p-5 2xl:p-16"
+    className: "px-5 2xl:px-8 py-3 2xl:py-5 border-b border-b-[#f2f5f8]"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_3__.TabsList, {
+    className: "border-none gap-1"
+  }, _menus__WEBPACK_IMPORTED_MODULE_4__.mainNavData?.map((tab, idx) => {
+    const value = tab?.name?.replace(/\s+/g, "_").toLowerCase();
+    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_3__.TabsTrigger, {
+      value: value,
+      key: idx,
+      className: "group/item !inline-flex h-9 w-max items-center justify-center bg-background ps-2.5 pe-3 py-2 font-medium transition-colors hover:bg-background-secondary hover:text-text-secondary-hover focus:bg-background-secondary focus:text-text-secondary-hover focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-background-secondary data-[active]:text-text-primary-hover data-[state=open]:bg-background-secondary cursor-pointer rounded-lg gap-2 text-base text-text-secondary"
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+      className: `${activeTab == value ? "text-text-hover" : ""}`
+    }, tab?.icon), tab?.name);
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_3__.TabsContent, {
+    value: "free_animations"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "min-h-[80vh] px-8 py-6 border rounded-2xl"
+    className: "min-h-[80vh] px-8 py-6 "
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "pb-6 border-b"
+    className: "pb-6"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_FreeAnimationTopbar__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    searchKey: searchKey,
+    setSearchKey: setSearchKey,
+    presetCount: presetCount
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "mt-4"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ShowFreeAnimations__WEBPACK_IMPORTED_MODULE_6__["default"], {
+    searchKey: searchKey,
+    setPresetCount: setPresetCount,
+    presetCount: presetCount
+  })))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_3__.TabsContent, {
+    value: "preset_animaitons"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "min-h-[80vh] px-8 py-6 rounded-2xl"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "pb-6"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_TopBar__WEBPACK_IMPORTED_MODULE_1__["default"], {
     searchKey: searchKey,
     setSearchKey: setSearchKey,
@@ -20122,10 +20507,93 @@ const MainPage = () => {
     className: "mt-4"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ShowPresets__WEBPACK_IMPORTED_MODULE_2__["default"], {
     searchKey: searchKey,
-    setPresetCount: setPresetCount
-  })))))));
+    setPresetCount: setPresetCount,
+    presetCount: presetCount
+  }))))))));
 };
 /* harmony default export */ __webpack_exports__["default"] = (MainPage);
+
+/***/ }),
+
+/***/ "./src/modules/animation-builder-settings/pages/menus.js":
+/*!***************************************************************!*\
+  !*** ./src/modules/animation-builder-settings/pages/menus.js ***!
+  \***************************************************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   mainNavData: function() { return /* binding */ mainNavData; }
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_icons_ri__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-icons/ri */ "./node_modules/react-icons/ri/index.mjs");
+
+
+const mainNavData = [{
+  name: "Free Animations",
+  icon: (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_ri__WEBPACK_IMPORTED_MODULE_1__.RiApps2AddLine, {
+    size: 20
+  })
+}, {
+  name: "Preset Animaitons",
+  icon: (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_ri__WEBPACK_IMPORTED_MODULE_1__.RiVipCrown2Line, {
+    size: 20
+  })
+}];
+
+/***/ }),
+
+/***/ "./src/modules/animation-builder/components/ui/tabs.jsx":
+/*!**************************************************************!*\
+  !*** ./src/modules/animation-builder/components/ui/tabs.jsx ***!
+  \**************************************************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Tabs: function() { return /* binding */ Tabs; },
+/* harmony export */   TabsContent: function() { return /* binding */ TabsContent; },
+/* harmony export */   TabsList: function() { return /* binding */ TabsList; },
+/* harmony export */   TabsTrigger: function() { return /* binding */ TabsTrigger; }
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _radix_ui_react_tabs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @radix-ui/react-tabs */ "./node_modules/@radix-ui/react-tabs/dist/index.mjs");
+/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/lib/utils */ "./src/modules/animation-builder/lib/utils.js");
+
+
+
+
+const Tabs = _radix_ui_react_tabs__WEBPACK_IMPORTED_MODULE_2__.Root;
+const TabsList = react__WEBPACK_IMPORTED_MODULE_0__.forwardRef(({
+  className,
+  ...props
+}, ref) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_radix_ui_react_tabs__WEBPACK_IMPORTED_MODULE_2__.List, {
+  ref: ref,
+  className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.cn)("inline-flex h-[28px] items-center justify-center rounded bg-background border border-border-2 overflow-hidden", className),
+  ...props
+}));
+TabsList.displayName = _radix_ui_react_tabs__WEBPACK_IMPORTED_MODULE_2__.List.displayName;
+const TabsTrigger = react__WEBPACK_IMPORTED_MODULE_0__.forwardRef(({
+  className,
+  ...props
+}, ref) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_radix_ui_react_tabs__WEBPACK_IMPORTED_MODULE_2__.Trigger, {
+  ref: ref,
+  className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.cn)("inline-flex items-center justify-center whitespace-nowrap px-2 py-1.5 h-full text-xs text-text-2 transition-all bg-background hover:bg-background-hover focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-button-secondary data-[state=active]:text-text cursor-pointer", className),
+  ...props
+}));
+TabsTrigger.displayName = _radix_ui_react_tabs__WEBPACK_IMPORTED_MODULE_2__.Trigger.displayName;
+const TabsContent = react__WEBPACK_IMPORTED_MODULE_0__.forwardRef(({
+  className,
+  ...props
+}, ref) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_radix_ui_react_tabs__WEBPACK_IMPORTED_MODULE_2__.Content, {
+  ref: ref,
+  className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.cn)("mt-2.5 focus-visible:outline-none", className),
+  ...props
+}));
+TabsContent.displayName = _radix_ui_react_tabs__WEBPACK_IMPORTED_MODULE_2__.Content.displayName;
+
 
 /***/ }),
 

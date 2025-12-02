@@ -40071,7 +40071,9 @@ const MainEditor = ({
       });
       createAnimation(sampleData);
     }
-  }, "Custom Animation")))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, "Custom Animation"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_dropdown_menu__WEBPACK_IMPORTED_MODULE_3__.DropdownMenuItem, {
+    onClick: () => console.log("hi")
+  }, "Free Animation Presets")))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex-1"
   }, isLoading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "space-y-2 p-4"
