@@ -9,8 +9,15 @@ export function imageStretchAnim() {
         containerClass,
         containerHeight,
         itemClass,
-        itemWidth,
+        itemMaxWidth,
+        itemMinWidth,
+        itemHeight,
+        start,
+        startCustom,
+        end,
+        endCustom,
         objectFit,
+        markers
       } = section || {};
 
       if (!(containerClass && containerHeight && itemClass)) return;
@@ -22,20 +29,21 @@ export function imageStretchAnim() {
         height: containerHeight,
         transition: "none",
       });
-      gsap.set(itemClass, { objectFit });
+      gsap.set(itemClass, { objectFit, width: itemMinWidth, height: itemHeight });
 
       const istTimeline = gsap.timeline({
         scrollTrigger: {
           trigger: containerClass,
           pin: true,
-          start: "top top",
-          end: "bottom bottom",
+          start: start === "custom" ? startCustom : start || "top top",
+          end: end === "custom" ? endCustom : end || "bottom bottom",
           scrub: true,
           pinSpacing: false,
+          markers: markers === "true" ? true : false
         },
       });
 
-      istTimeline.to(itemClass, { width: itemWidth ?? '100%' });
+      istTimeline.to(itemClass, { width: itemMaxWidth ?? '100%' });
 
       sTimeline[section.id] = istTimeline;
       sContainerClass.push(containerClass);

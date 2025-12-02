@@ -12,14 +12,10 @@ export function cursorHoverMoveAnim() {
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
 
-      // Query all matching items
       document.querySelectorAll(itemClass).forEach((itemEl) => {
-        // Store selectors for reset
         sItemClass.push(itemEl);
 
-        // Mouse move handler for this specific item
         const mouseMoveHandler = (evt) => {
-          // Calculate the percentage of the cursor's position relative to the screen
           const xPosPercent = evt.clientX / windowWidth - 0.5;
           const yPosPercent = evt.clientY / windowHeight - 0.5;
 
@@ -30,20 +26,16 @@ export function cursorHoverMoveAnim() {
             duration: Number(duration)
           };
 
-          // GSAP animation to move the element
           gsap.to(itemEl, config);
         };
 
-        // Mouse enter handler
         const mouseEnterHandler = () => {
           itemEl.addEventListener("mousemove", mouseMoveHandler);
         };
 
-        // Mouse leave handler
         const mouseLeaveHandler = () => {
           itemEl.removeEventListener("mousemove", mouseMoveHandler);
 
-          // Reset position when mouse leaves
           gsap.to(itemEl, {
             x: 0,
             y: 0,
@@ -52,11 +44,9 @@ export function cursorHoverMoveAnim() {
           });
         };
 
-        // Add event listeners
         itemEl.addEventListener("mouseenter", mouseEnterHandler);
         itemEl.addEventListener("mouseleave", mouseLeaveHandler);
 
-        // Store for cleanup
         eventListeners.push({
           element: itemEl,
           enterHandler: mouseEnterHandler,
@@ -64,31 +54,26 @@ export function cursorHoverMoveAnim() {
           moveHandler: mouseMoveHandler
         });
 
-        // Store timeline reference for cleanup
         sTimeline[`${section.id}-${Math.random()}`] = true;
       });
     });
   };
 
   function removeAnimation() {
-    // Kill all timelines
     for (let x in sTimeline) {
       delete sTimeline[x];
     }
 
-    // Remove all event listeners
     eventListeners.forEach(({ element, enterHandler, leaveHandler, moveHandler }) => {
       element.removeEventListener("mouseenter", enterHandler);
       element.removeEventListener("mouseleave", leaveHandler);
       element.removeEventListener("mousemove", moveHandler);
     });
 
-    // Clear stored items
     sItemClass?.forEach((itemEl) => {
       gsap.set(itemEl, { clearProps: "all" });
     });
 
-    // Reset arrays
     sTimeline = {};
     sItemClass = [];
     eventListeners = [];
