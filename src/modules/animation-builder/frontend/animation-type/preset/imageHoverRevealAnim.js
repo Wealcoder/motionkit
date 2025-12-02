@@ -1,8 +1,8 @@
 export function imageHoverRevealAnim() {
   let sTimeline = {};
   let sItemClass = [];
-  let cursorImages = []; // Store cursor image elements
-  let eventListeners = []; // Store event listeners for cleanup
+  let cursorImages = [];
+  let eventListeners = [];
 
   const handler = (e) => {
     (e.detail["wcf-image-hover-reveal-animation"] || []).forEach((section) => {
@@ -17,15 +17,15 @@ export function imageHoverRevealAnim() {
 
       if (!(itemClass && imageUrl)) return;
 
-      // Query all matching items
+      gsap.set(itemClass, {
+        transition: "none"
+      })
+
       document.querySelectorAll(itemClass).forEach((itemEl) => {
-        // Store selectors for reset
         sItemClass.push(itemEl);
 
-        // Create cursor image element
         const cursorImg = document.createElement("div");
 
-        // Parse dimensions properly
         const width = imageWidth?.includes('px') ? imageWidth : `${imageWidth || 300}px`;
         const height = imageHeight?.includes('px') ? imageHeight : `${imageHeight || 300}px`;
 
@@ -45,10 +45,8 @@ export function imageHoverRevealAnim() {
           will-change: transform;
         `;
 
-        // Insert into parent element and ensure parent has position context
         const parentEl = itemEl.parentElement;
         if (parentEl) {
-          // Ensure parent has position context
           const parentPosition = window.getComputedStyle(parentEl).position;
           if (parentPosition === 'static') {
             parentEl.style.position = 'relative';
@@ -58,7 +56,6 @@ export function imageHoverRevealAnim() {
           cursorImages.push(cursorImg);
         }
 
-        // Set initial position based on animationPosition
         let initialPosition = { scale: 0, opacity: 0 };
 
         switch (animationPosition) {
@@ -88,13 +85,11 @@ export function imageHoverRevealAnim() {
             initialPosition.yPercent = -50;
         }
 
-        // Set initial state with force3D for better performance
         gsap.set(cursorImg, {
           ...initialPosition,
           force3D: true
         });
 
-        // Create quickTo methods for smooth cursor movement
         const setCursorX = gsap.quickTo(cursorImg, "x", {
           duration: 0.6,
           ease: "expo"
@@ -105,9 +100,7 @@ export function imageHoverRevealAnim() {
           ease: "expo"
         });
 
-        // Mouse move handler for this specific item
         const mouseMoveHandler = (evt) => {
-          // Get parent element's bounding rect for relative positioning
           const parentRect = parentEl.getBoundingClientRect();
           const relativeX = evt.clientX - parentRect.left;
           const relativeY = evt.clientY - parentRect.top;
@@ -116,7 +109,6 @@ export function imageHoverRevealAnim() {
           setCursorY(relativeY);
         };
 
-        // Create timeline for scale animation
         const tl = gsap.timeline({
           paused: true
         });
@@ -128,23 +120,19 @@ export function imageHoverRevealAnim() {
           ease: "expo.inOut"
         });
 
-        // Mouse enter handler
         const mouseEnterHandler = () => {
           itemEl.addEventListener("mousemove", mouseMoveHandler);
           tl.play();
         };
 
-        // Mouse leave handler
         const mouseLeaveHandler = () => {
           itemEl.removeEventListener("mousemove", mouseMoveHandler);
           tl.reverse();
         };
 
-        // Add event listeners
         itemEl.addEventListener("mouseenter", mouseEnterHandler);
         itemEl.addEventListener("mouseleave", mouseLeaveHandler);
 
-        // Store for cleanup
         eventListeners.push({
           element: itemEl,
           enterHandler: mouseEnterHandler,
@@ -152,36 +140,30 @@ export function imageHoverRevealAnim() {
           moveHandler: mouseMoveHandler
         });
 
-        // Store timeline for cleanup
         sTimeline[`${section.id}-${Math.random()}`] = tl;
       });
     });
   };
 
   function removeAnimation() {
-    // Kill all timelines
     for (let x in sTimeline) {
       sTimeline[x].kill();
     }
 
-    // Remove all event listeners
     eventListeners.forEach(({ element, enterHandler, leaveHandler, moveHandler }) => {
       element.removeEventListener("mouseenter", enterHandler);
       element.removeEventListener("mouseleave", leaveHandler);
       element.removeEventListener("mousemove", moveHandler);
     });
 
-    // Remove cursor images
     cursorImages.forEach((img) => {
       img.remove();
     });
 
-    // Clear stored items
     sItemClass?.forEach((itemEl) => {
       gsap.set(itemEl, { clearProps: "all" });
     });
 
-    // Reset arrays
     sTimeline = {};
     sItemClass = [];
     cursorImages = [];

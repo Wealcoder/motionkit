@@ -33,7 +33,6 @@ export function scrollVideoFrame() {
 
       sTimeline[section.id] = videoScrollTL;
 
-      /* Make sure the video is 'activated' on iOS */
       function once(el, event, fn, opts) {
         var onceFn = function (e) {
           el.removeEventListener(event, onceFn);

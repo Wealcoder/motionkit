@@ -61,8 +61,8 @@ const HorizontalScrollPreset = ({ contentStep, updateContentData }) => {
 
       <div className="grid grid-cols-2 gap-2 justify-between items-center">
         <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Container Height</h3>
-          <ToolTipWrapper text={"container height"} />
+          <h3 className="text-xs text-text-2 capitalize">Scrolling Height</h3>
+          <ToolTipWrapper text={"scroll height"} />
         </div>
         <div className="flex items-center gap-1.5">
           <div className="flex-1">

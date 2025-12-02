@@ -40,7 +40,7 @@ const ScrollVideoPrest = ({ contentStep, updateContentData }) => {
       </div>
       <div className="grid grid-cols-2 gap-2 justify-between items-center">
         <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Container Height</h3>
+          <h3 className="text-xs text-text-2 capitalize">Scrolling Height</h3>
           <ToolTipWrapper
             text={"Set the scroll height – determines scroll duration"}
           />

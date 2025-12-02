@@ -16,15 +16,22 @@ export function textInvertAnim() {
 
       if (!itemClass) return;
 
+      gsap.set(itemClass, {
+        transition: "none"
+      })
+
+      if (triggerClass) {
+        gsap.set(triggerClass, {
+          transition: "none"
+        })
+      }
       const elements = document.querySelectorAll(itemClass);
       elements.forEach((element, index) => {
-        // Create SplitText instance
         const split = new SplitText(element, {
           type: "lines",
           linesClass: "invert-line",
         });
 
-        // Create timeline for the animation
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: triggerClass || itemClass,
@@ -35,7 +42,6 @@ export function textInvertAnim() {
           },
         });
 
-        // Animate each line with opacity
         const lines = element.querySelectorAll(".invert-line");
         tl.from(lines, {
           opacity: 0.2,
@@ -43,7 +49,6 @@ export function textInvertAnim() {
           stagger: 0.1,
         });
 
-        // Store references for cleanup
         const uniqueId = `${section.id}_${index}`;
         sTimeline[uniqueId] = { timeline: tl, split };
         sSplitText.push(split);
@@ -52,7 +57,6 @@ export function textInvertAnim() {
   };
 
   function removeAnimation() {
-    // Clean up timelines and SplitText instances
     for (let x in sTimeline) {
       const { timeline, split } = sTimeline[x];
 
@@ -66,20 +70,17 @@ export function textInvertAnim() {
       }
     }
 
-    // Clear arrays
     sTimeline = {};
     sSplitText = [];
   }
 
-  // Event listeners
   document.addEventListener("aae-animation-event", handler);
   document.addEventListener("aae-reset-animation", removeAnimation);
 
-  // Return cleanup function
   return {
     destroy: removeAnimation
   };
 }
 
-// Initialize the animation
+// Initialize
 textInvertAnim();
