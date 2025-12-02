@@ -145,7 +145,7 @@ class AnimationBuilderPageType {
         }else if( $config['store_type'] == 'option' && $config['type'] == 'url' && isset($config['option'])){
 			return delete_option($config['option']);    
         }
-				return [];
+		return [];
     }
 
     /**
@@ -270,6 +270,7 @@ class AnimationBuilderPageType {
 			'store_type' => 'option',
 			'option'     => $this->option_name. isset($req['path']) ? $req['path'] : 'unknown'
 		];
+		
 	}
 	
 }

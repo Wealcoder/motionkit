@@ -212,25 +212,6 @@ final class Frontend
 
         wp_send_json_success(['message' => __('Animation saved successfully.', 'gsap-animation-builder-for-wordpress')]);
     }
-
-    /**
-     * Sanitize array recursively
-     *
-     * @param array $data Array to sanitize
-     * @return array Sanitized array
-     */
-    private function sanitize_array(array $data): array
-    {
-        $sanitized = [];
-        foreach ($data as $key => $value) {
-            $key = sanitize_key($key);
-            if (is_array($value)) {
-                $sanitized[$key] = $this->sanitize_array($value);
-            } else {
-                $sanitized[$key] = sanitize_text_field(wp_unslash($value));
-            }
-        }
-        return $sanitized;
-    }
+        
 }
 
