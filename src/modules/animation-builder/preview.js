@@ -40,7 +40,7 @@ function receivePageConfig() {
         let mm;
         
         if(window.gsap){
-          mm?.revert?.();
+          mm?.revert();
           mm = gsap.matchMedia();
 
           wcf_anim_preview_object?.device_config?.map((device) => {
@@ -64,7 +64,7 @@ function receivePageConfig() {
               );
             });
           });
-        }
+        } // GSAP check end
 
         const cEvent = new CustomEvent("aae-animation-event", {
           detail: storeAnimation, // payload
