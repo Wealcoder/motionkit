@@ -72,7 +72,7 @@ final class Frontend
         // Enqueue frontend JavaScript
         $this->asset_loader->register_style(
             'wcf-animbuilder-class-selector',
-            'assets/css/animbuilder-copy.css',
+            'assets/build/modules/animation-builder/animbuilder-copy.css',
             []
            
         );      

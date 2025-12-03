@@ -3,9 +3,9 @@ import GetStart from "./GetStart";
 import { AppContextProvider } from "./context/app.context";
 import { Toaster } from "@/components/ui/sonner";
 
-import "./index.css";
 import RegisterPreset from "./lib/registerPreset";
 import RegisterFreePreset from "./lib/registerFreePreset";
+import "./index.css";
 
 window.AAEAnimBuilder = {};
 

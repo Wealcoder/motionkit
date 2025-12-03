@@ -37,6 +37,8 @@ module.exports = {
         "./src/modules/animation-builder/preview.js",
       "modules/animation-builder/frontend":
         "./src/modules/animation-builder/frontend.js",
+      "modules/animation-builder/animbuilder-copy":
+        "./src/modules/animation-builder/animbuilder-copy.css",
 
       // auto-generated preset entries (frontend)
       ...getPresetEntries({
