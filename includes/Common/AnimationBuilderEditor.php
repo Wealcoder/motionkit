@@ -470,6 +470,17 @@ class AnimationBuilderEditor
 			true
 		);
 
+    	$config          = include plugin_dir_path(__FILE__) . '/configs/animation-builder-assets.php'; // adjust path
+        $active_elements = $this->get_active_element_keys("wcf_anim_builder_free_animation_settings");
+        if (is_array($active_elements) && is_array($config)) {
+          foreach ($active_elements as $key) {
+            if (isset($config['js'][$key])) {
+              $element = $config['js'][$key];
+             wp_enqueue_script($key, $element['editorSrc'], $element['editorDeps'], time(), true);
+            }
+          }
+        }
+
 		do_action('wcf_animation_builder/editor/presets/enqueue_element_scripts');
 
 		$url = isset($_GET['builder_url']) ? sanitize_text_field( wp_unslash($_GET['builder_url']) ) : home_url('/');

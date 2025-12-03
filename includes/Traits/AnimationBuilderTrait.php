@@ -21,16 +21,16 @@ if (!defined('ABSPATH')) {
  */
 trait AnimationBuilderTrait
 {
-   
+
       /**
      * Get keys of all active elements in the animation builder data.
      *
      * @param array $data The decoded form data.
      * @return array Array of active element keys.
      */
-    private function get_active_element_keys()
+    private function get_active_element_keys($name="aae_anim_builder_settings")
     {
-        $data = get_option('aae_anim_builder_settings');
+        $data = get_option($name);
         $data = json_decode($data, true);
         $active_keys = [];
         if (is_array($data) && isset($data['elements'])) {
@@ -82,6 +82,6 @@ trait AnimationBuilderTrait
         // Remove duplicates and reindex array
         return array_values(array_unique($presets));
     }
-    
+
 }
 
