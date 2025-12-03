@@ -34,6 +34,23 @@ const MainEditor = ({ isLoading }) => {
                 onClick={() => {
                   const sampleData = {
                     id: generateUniqueId(),
+                    title: "Free Animation",
+                    type: "free_animation",
+                    enable: true,
+                  };
+                  setContentStep({
+                    step: 2,
+                    data: sampleData,
+                  });
+                  createAnimation(sampleData);
+                }}
+              >
+                Free Animation Presets
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const sampleData = {
+                    id: generateUniqueId(),
                     title: "Animation Title",
                     type: "preset",
                     enable: true,
@@ -62,9 +79,6 @@ const MainEditor = ({ isLoading }) => {
                 }}
               >
                 Custom Animation
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => console.log("hi")}>
-                Free Animation Presets
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

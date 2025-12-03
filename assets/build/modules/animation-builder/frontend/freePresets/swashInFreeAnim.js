@@ -34,43 +34,47 @@
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-/*!*******************************************************************************************!*\
-  !*** ./src/modules/animation-builder/frontend/animation-type/freePreset/faSwashInAnim.js ***!
-  \*******************************************************************************************/
+/*!*********************************************************************************************!*\
+  !*** ./src/modules/animation-builder/frontend/animation-type/freePreset/swashInFreeAnim.js ***!
+  \*********************************************************************************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   faSwashInAnim: function() { return /* binding */ faSwashInAnim; }
+/* harmony export */   swashInFreeAnim: function() { return /* binding */ swashInFreeAnim; }
 /* harmony export */ });
-function faSwashInAnim() {
+function swashInFreeAnim() {
+  function handler(e) {
+    const sections = e.detail["wcf-container-swash-in-free-animation"] || [];
+    sections.forEach(sections => {
+      const {
+        id,
+        triggerClass,
+        itemClass,
+        delay,
+        duration,
+        repeat
+      } = sections || {};
+      console.log("swashInFreeAnim", {
+        id,
+        triggerClass,
+        itemClass,
+        delay,
+        duration,
+        repeat
+      });
+
+      // validating itemclass
+      if (!itemClass || !document.querySelector(itemClass)) return;
+    });
+  }
+
+  // wordpress events
+  document.addEventListener("aae-animation-event", handler);
+  document.addEventListener("aae-reset-animation", resetAnimation);
   return {
-    classname: "wcf-fa-swashin",
-    category: "fade",
-    // TODO: Change this
-    properties: {
-      keyframes: {
-        "0%": {
-          opacity: "0",
-          transformOrigin: "50% 50%",
-          transform: "scale(0, 0)"
-        },
-        "90%": {
-          opacity: "1",
-          transformOrigin: "50% 50%",
-          transform: "scale(0.9, 0.9)"
-        },
-        "100%": {
-          opacity: "1",
-          transformOrigin: "50% 50%",
-          transform: "scale(1, 1)"
-        }
-      },
-      duration: 1000,
-      easing: "power2.out",
-      delay: 0,
-      repeat: 1
-    }
+    destroy: resetAnimation
   };
 }
+swashInFreeAnim();
 /******/ })()
 ;
-//# sourceMappingURL=faSwashInAnim.js.map
+//# sourceMappingURL=swashInFreeAnim.js.map

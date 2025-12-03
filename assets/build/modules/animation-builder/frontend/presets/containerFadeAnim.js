@@ -83,12 +83,6 @@ function containerFadeAnimation() {
     target = "",
     method = "from"
   }) {
-    console.log("runAnimtion", {
-      config,
-      secondaryConfig,
-      target,
-      method
-    });
     let resolveCompleted;
     const isCompleted = new Promise(resolve => resolveCompleted = resolve);
 

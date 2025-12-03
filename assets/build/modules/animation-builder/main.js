@@ -40048,6 +40048,20 @@ const MainEditor = ({
     onClick: () => {
       const sampleData = {
         id: (0,_utils_generateUniqueId__WEBPACK_IMPORTED_MODULE_8__.generateUniqueId)(),
+        title: "Free Animation",
+        type: "free_animation",
+        enable: true
+      };
+      setContentStep({
+        step: 2,
+        data: sampleData
+      });
+      createAnimation(sampleData);
+    }
+  }, "Free Animation Presets"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_dropdown_menu__WEBPACK_IMPORTED_MODULE_3__.DropdownMenuItem, {
+    onClick: () => {
+      const sampleData = {
+        id: (0,_utils_generateUniqueId__WEBPACK_IMPORTED_MODULE_8__.generateUniqueId)(),
         title: "Animation Title",
         type: "preset",
         enable: true
@@ -40071,9 +40085,7 @@ const MainEditor = ({
       });
       createAnimation(sampleData);
     }
-  }, "Custom Animation"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_dropdown_menu__WEBPACK_IMPORTED_MODULE_3__.DropdownMenuItem, {
-    onClick: () => console.log("hi")
-  }, "Free Animation Presets")))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, "Custom Animation")))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex-1"
   }, isLoading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "space-y-2 p-4"
@@ -41171,7 +41183,7 @@ const EditorScrollTrigger = () => {
     timelines,
     ScrollTrigger
   } = contentStep?.data;
-  const [enableTrigger, setEnableTrigger] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(ScrollTrigger.enable || false);
+  const [enableTrigger, setEnableTrigger] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(ScrollTrigger?.enable || false);
   const initialState = {
     timeline: ScrollTrigger.timeline || "",
     trigger: ScrollTrigger.trigger || "",

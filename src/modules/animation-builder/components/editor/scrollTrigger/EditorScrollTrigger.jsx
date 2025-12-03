@@ -28,7 +28,7 @@ const EditorScrollTrigger = () => {
   const { contentStep, updateContentData } = useContentStep();
   const { timelines, ScrollTrigger } = contentStep?.data;
   const [enableTrigger, setEnableTrigger] = useState(
-    ScrollTrigger.enable || false
+    ScrollTrigger?.enable || false
   );
 
   const initialState = {
