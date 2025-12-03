@@ -19090,7 +19090,7 @@ const FreeAnimationTopbar = ({
   var _presetCount$total, _presetCount$active;
   const {
     allFreeAnimations,
-    updateActiveFullPreset
+    updateFreeActiveFullPreset
   } = (0,_hooks_app_hooks__WEBPACK_IMPORTED_MODULE_4__.usePresets)();
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "grid grid-cols-1 xl:grid-cols-2 gap-6 xl:gap-11 justify-between items-center"
@@ -19122,9 +19122,8 @@ const FreeAnimationTopbar = ({
     className: "flex items-center space-x-2"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_switch__WEBPACK_IMPORTED_MODULE_1__.Switch, {
     id: "global-enable-all",
-    disabled: presetCount?.total == 0,
     checked: allFreeAnimations?.is_active,
-    onCheckedChange: value => updateActiveFullPreset({
+    onCheckedChange: value => updateFreeActiveFullPreset({
       value
     })
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_label__WEBPACK_IMPORTED_MODULE_2__.Label, {
@@ -19268,27 +19267,17 @@ __webpack_require__.r(__webpack_exports__);
 
 const ShowFreeAnimations = ({
   searchKey,
-  setPresetCount,
-  presetCount
+  setPresetCount
 }) => {
   const {
     allFreeAnimations,
-    updateActivePreset,
-    updateActiveGroupPreset
+    updateFreeActivePreset,
+    updateFreeActiveGroupPreset
   } = (0,_hooks_app_hooks__WEBPACK_IMPORTED_MODULE_9__.usePresets)();
   const [tabValue, setTabValue] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("all");
   const [categoryPresets, setCategoryPresets] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({});
   const [noResult, setNoResult] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [presetTabList, setPresetTabList] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
-  console.log("ShowFreeAnimations", {
-    searchKey,
-    presetCount,
-    allFreeAnimations,
-    tabValue,
-    categoryPresets,
-    noResult,
-    presetTabList
-  });
 
   // Build tab list from all presets
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
@@ -19340,12 +19329,11 @@ const ShowFreeAnimations = ({
       },
       body: new URLSearchParams({
         action: "aae_save_anim_builder_settings",
-        setting_name: "aae_anim_builder_settings",
+        setting_name: "wcf_anim_builder_free_animation_settings",
         form_fields: JSON.stringify(allFreeAnimations),
         nonce: WCF_ANIMATION_BUILDER_ADMIN.nonce
       })
     }).then(response => response.json()).then(data => {
-      console.log("r", data);
       setPresetCount?.(data.count);
       sonner__WEBPACK_IMPORTED_MODULE_6__.toast.success("Presets saved successfully!", {
         position: "top-right"
@@ -19372,11 +19360,7 @@ const ShowFreeAnimations = ({
     value: tab.value
   }, tab.title))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_scroll_area__WEBPACK_IMPORTED_MODULE_7__.ScrollBar, {
     orientation: "horizontal"
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_button__WEBPACK_IMPORTED_MODULE_2__.Button
-  // TODO: need validation for search both classname and disabled
-  , {
-    className: `${presetCount?.total == 0 ? "cursor-not-allowed" : "cursor-pointer"}`,
-    disabled: presetCount?.total == 0,
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_button__WEBPACK_IMPORTED_MODULE_2__.Button, {
     onClick: savePresets
   }, "Save Preset Settings")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_1__.TabsContent, {
     value: "all",
@@ -19397,7 +19381,7 @@ const ShowFreeAnimations = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_switch__WEBPACK_IMPORTED_MODULE_3__.Switch, {
     id: cat,
     checked: categoryPresets[cat].is_active,
-    onCheckedChange: value => updateActiveGroupPreset({
+    onCheckedChange: value => updateFreeActiveGroupPreset({
       value,
       slug: cat
     })
@@ -19409,7 +19393,7 @@ const ShowFreeAnimations = ({
     key: `preset-${i}`,
     preset: categoryPresets[cat].elements[preset],
     slug: preset,
-    updateActiveItem: updateActivePreset,
+    updateActiveItem: updateFreeActivePreset,
     className: "rounded p-5"
   })), Array.from({
     length: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)() - (Object.keys(categoryPresets[cat].elements).length % (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)() || (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)())
@@ -19429,7 +19413,7 @@ const ShowFreeAnimations = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_switch__WEBPACK_IMPORTED_MODULE_3__.Switch, {
     id: cat,
     checked: categoryPresets[cat].is_active,
-    onCheckedChange: value => updateActiveGroupPreset({
+    onCheckedChange: value => updateFreeActiveGroupPreset({
       value,
       slug: cat
     })
@@ -19441,7 +19425,7 @@ const ShowFreeAnimations = ({
     key: `preset-${i}`,
     preset: categoryPresets[cat].elements[preset],
     slug: preset,
-    updateActiveItem: updateActivePreset,
+    updateActiveItem: updateFreeActivePreset,
     className: "rounded p-5"
   })), Array.from({
     length: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)() - (Object.keys(categoryPresets[cat].elements).length % (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)() || (0,_lib_utils__WEBPACK_IMPORTED_MODULE_5__.deviceMediaMatch)())
@@ -19552,7 +19536,6 @@ const ShowPresets = ({
         nonce: WCF_ANIMATION_BUILDER_ADMIN.nonce
       })
     }).then(response => response.json()).then(data => {
-      console.log("r", data);
       setPresetCount?.(data.count);
       sonner__WEBPACK_IMPORTED_MODULE_6__.toast.success("Presets saved successfully!", {
         position: "top-right"
@@ -19719,7 +19702,6 @@ const TopBar = ({
     className: "flex items-center space-x-2"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_switch__WEBPACK_IMPORTED_MODULE_1__.Switch, {
     id: "global-enable-all",
-    disabled: presetCount?.total == 0,
     checked: allPresets?.is_active,
     onCheckedChange: value => updateActiveFullPreset({
       value
@@ -20128,7 +20110,6 @@ const initialState = {
   allPresets: JSON.parse(JSON.stringify((_WCF_ANIMATION_BUILDE = WCF_ANIMATION_BUILDER_ADMIN?.config?.preset_settings) !== null && _WCF_ANIMATION_BUILDE !== void 0 ? _WCF_ANIMATION_BUILDE : {})) || {},
   allFreeAnimations: JSON.parse(JSON.stringify((_WCF_ANIMATION_BUILDE2 = WCF_ANIMATION_BUILDER_ADMIN?.config?.free_animations) !== null && _WCF_ANIMATION_BUILDE2 !== void 0 ? _WCF_ANIMATION_BUILDE2 : {})) || {}
 };
-console.log("Initial State:", initialState);
 const reducer = (state, action) => {
   switch (action.type) {
     case "setAllPresets":
@@ -20159,22 +20140,38 @@ const useMainContext = state => {
       value: data
     });
   }, []);
+
+  // Preset animation state modifier
   const updateActivePreset = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(data => {
-    (0,_lib_presetService__WEBPACK_IMPORTED_MODULE_1__.activePresetFn)(mainState.allPresets, data, dispatch);
+    (0,_lib_presetService__WEBPACK_IMPORTED_MODULE_1__.activePresetFn)(mainState.allPresets, data, dispatch, "setAllPresets");
   }, [mainState.allPresets]);
   const updateActiveGroupPreset = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(data => {
-    (0,_lib_presetService__WEBPACK_IMPORTED_MODULE_1__.activeGroupPresetFn)(mainState.allPresets, data, dispatch);
+    (0,_lib_presetService__WEBPACK_IMPORTED_MODULE_1__.activeGroupPresetFn)(mainState.allPresets, data, dispatch, "setAllPresets");
   }, [mainState.allPresets]);
   const updateActiveFullPreset = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(data => {
-    (0,_lib_presetService__WEBPACK_IMPORTED_MODULE_1__.activeFullPresetFn)(mainState.allPresets, data, dispatch);
+    (0,_lib_presetService__WEBPACK_IMPORTED_MODULE_1__.activeFullPresetFn)(mainState.allPresets, data, dispatch, "setAllPresets");
   }, [mainState.allPresets]);
+
+  // Free animation preset modifier
+  const updateFreeActivePreset = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(data => {
+    (0,_lib_presetService__WEBPACK_IMPORTED_MODULE_1__.activePresetFn)(mainState.allFreeAnimations, data, dispatch, "setAllFreeAnimations");
+  }, [mainState.allFreeAnimations]);
+  const updateFreeActiveGroupPreset = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(data => {
+    (0,_lib_presetService__WEBPACK_IMPORTED_MODULE_1__.activeGroupPresetFn)(mainState.allFreeAnimations, data, dispatch, "setAllFreeAnimations");
+  }, [mainState.allFreeAnimations]);
+  const updateFreeActiveFullPreset = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(data => {
+    (0,_lib_presetService__WEBPACK_IMPORTED_MODULE_1__.activeFullPresetFn)(mainState.allFreeAnimations, data, dispatch, "setAllFreeAnimations");
+  }, [mainState.allFreeAnimations]);
   return {
     mainState,
     setAllPresets,
     setAllFreeAnimations,
     updateActivePreset,
     updateActiveGroupPreset,
-    updateActiveFullPreset
+    updateActiveFullPreset,
+    updateFreeActivePreset,
+    updateFreeActiveGroupPreset,
+    updateFreeActiveFullPreset
   };
 };
 const AppContext = (0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)({
@@ -20211,21 +20208,33 @@ __webpack_require__.r(__webpack_exports__);
 const usePresets = () => {
   const {
     mainState: {
-      allPresets
+      allPresets,
+      allFreeAnimations
     },
     setAllPresets,
     setAllFreeAnimations,
+    // preset animation state modifier
     updateActivePreset,
     updateActiveGroupPreset,
-    updateActiveFullPreset
+    updateActiveFullPreset,
+    // free animation preset modifier
+    updateFreeActivePreset,
+    updateFreeActiveGroupPreset,
+    updateFreeActiveFullPreset
   } = (0,react__WEBPACK_IMPORTED_MODULE_1__.useContext)(_context_app_context__WEBPACK_IMPORTED_MODULE_0__.AppContext);
   return {
     allPresets,
+    allFreeAnimations,
     setAllPresets,
     setAllFreeAnimations,
+    // preset animation state modifier
     updateActivePreset,
     updateActiveGroupPreset,
-    updateActiveFullPreset
+    updateActiveFullPreset,
+    // free animation preset modifier
+    updateFreeActivePreset,
+    updateFreeActiveGroupPreset,
+    updateFreeActiveFullPreset
   };
 };
 
@@ -20255,7 +20264,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   activeGroupPresetFn: function() { return /* binding */ activeGroupPresetFn; },
 /* harmony export */   activePresetFn: function() { return /* binding */ activePresetFn; }
 /* harmony export */ });
-const activePresetFn = (mainContent, data, dispatch) => {
+const activePresetFn = (mainContent, data, dispatch, presetType = null) => {
+  if (!presetType) {
+    console.error("Preset type is required!");
+    return;
+  }
   const result = Object.fromEntries(Object.entries(mainContent.elements).map(([key, value]) => {
     const filteredElements = Object.fromEntries(Object.entries(value.elements || {}).filter(([key2, value2]) => {
       if (key2 === data.slug) {
@@ -20275,7 +20288,7 @@ const activePresetFn = (mainContent, data, dispatch) => {
   }));
   if (!data.value) {
     dispatch({
-      type: "setAllPresets",
+      type: presetType,
       value: {
         ...mainContent,
         is_active: data.value,
@@ -20284,7 +20297,7 @@ const activePresetFn = (mainContent, data, dispatch) => {
     });
   } else {
     dispatch({
-      type: "setAllPresets",
+      type: presetType,
       value: {
         ...mainContent,
         elements: result
@@ -20292,7 +20305,11 @@ const activePresetFn = (mainContent, data, dispatch) => {
     });
   }
 };
-const activeGroupPresetFn = (mainContent, data, dispatch) => {
+const activeGroupPresetFn = (mainContent, data, dispatch, presetType = null) => {
+  if (!presetType) {
+    console.error("Preset type is required!");
+    return;
+  }
   const result = Object.fromEntries(Object.entries(mainContent.elements).map(([key, value]) => {
     const filteredElements = Object.fromEntries(Object.entries(value.elements || {}).filter(([key2, value2]) => {
       if (key === data.slug) {
@@ -20312,7 +20329,7 @@ const activeGroupPresetFn = (mainContent, data, dispatch) => {
   }));
   if (!data.value) {
     dispatch({
-      type: "setAllPresets",
+      type: presetType,
       value: {
         ...mainContent,
         is_active: data.value,
@@ -20321,7 +20338,7 @@ const activeGroupPresetFn = (mainContent, data, dispatch) => {
     });
   } else {
     dispatch({
-      type: "setAllPresets",
+      type: presetType,
       value: {
         ...mainContent,
         elements: result
@@ -20329,7 +20346,11 @@ const activeGroupPresetFn = (mainContent, data, dispatch) => {
     });
   }
 };
-const activeFullPresetFn = (mainContent, data, dispatch) => {
+const activeFullPresetFn = (mainContent, data, dispatch, presetType = null) => {
+  if (!presetType) {
+    console.error("Preset type is required!");
+    return;
+  }
   const result = Object.fromEntries(Object.entries(mainContent.elements).map(([key, value]) => {
     const filteredElements = Object.fromEntries(Object.entries(value.elements || {}).filter(([key2, value2]) => {
       value2.is_active = data.value;
@@ -20342,7 +20363,7 @@ const activeFullPresetFn = (mainContent, data, dispatch) => {
     }];
   }));
   dispatch({
-    type: "setAllPresets",
+    type: presetType,
     value: {
       is_active: data.value,
       elements: result
@@ -20451,7 +20472,7 @@ const MainPage = () => {
         active: 0
       });
     }
-  }, [activeTab]);
+  }, [activeTab, WCF_ANIMATION_BUILDER_ADMIN]);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "wcfabs2025-wrapper  "
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -20460,10 +20481,7 @@ const MainPage = () => {
     className: "container overflow-x-hidden bg-background rounded-[10px] "
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_3__.Tabs, {
     defaultValue: "preset_animaitons",
-    onValueChange: value => {
-      console.log(value);
-      setActiveTab(value);
-    }
+    onValueChange: value => setActiveTab(value)
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "px-5 2xl:px-8 py-3 2xl:py-5 border-b border-b-[#f2f5f8]"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_3__.TabsList, {
@@ -20473,6 +20491,9 @@ const MainPage = () => {
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_3__.TabsTrigger, {
       value: value,
       key: idx,
+      ...(activeTab === value && {
+        "data-active": true
+      }),
       className: "group/item !inline-flex h-9 w-max items-center justify-center bg-background ps-2.5 pe-3 py-2 font-medium transition-colors hover:bg-background-secondary hover:text-text-secondary-hover focus:bg-background-secondary focus:text-text-secondary-hover focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-background-secondary data-[active]:text-text-primary-hover data-[state=open]:bg-background-secondary cursor-pointer rounded-lg gap-2 text-base text-text-secondary"
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
       className: `${activeTab == value ? "text-text-hover" : ""}`
@@ -20491,8 +20512,7 @@ const MainPage = () => {
     className: "mt-4"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ShowFreeAnimations__WEBPACK_IMPORTED_MODULE_6__["default"], {
     searchKey: searchKey,
-    setPresetCount: setPresetCount,
-    presetCount: presetCount
+    setPresetCount: setPresetCount
   })))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_tabs__WEBPACK_IMPORTED_MODULE_3__.TabsContent, {
     value: "preset_animaitons"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -20507,8 +20527,7 @@ const MainPage = () => {
     className: "mt-4"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ShowPresets__WEBPACK_IMPORTED_MODULE_2__["default"], {
     searchKey: searchKey,
-    setPresetCount: setPresetCount,
-    presetCount: presetCount
+    setPresetCount: setPresetCount
   }))))))));
 };
 /* harmony default export */ __webpack_exports__["default"] = (MainPage);

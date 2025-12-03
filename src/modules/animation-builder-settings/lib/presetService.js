@@ -1,4 +1,14 @@
-export const activePresetFn = (mainContent, data, dispatch) => {
+export const activePresetFn = (
+  mainContent,
+  data,
+  dispatch,
+  presetType = null
+) => {
+  if (!presetType) {
+    console.error("Preset type is required!");
+    return;
+  }
+
   const result = Object.fromEntries(
     Object.entries(mainContent.elements).map(([key, value]) => {
       const filteredElements = Object.fromEntries(
@@ -21,7 +31,7 @@ export const activePresetFn = (mainContent, data, dispatch) => {
 
   if (!data.value) {
     dispatch({
-      type: "setAllPresets",
+      type: presetType,
       value: {
         ...mainContent,
         is_active: data.value,
@@ -30,7 +40,7 @@ export const activePresetFn = (mainContent, data, dispatch) => {
     });
   } else {
     dispatch({
-      type: "setAllPresets",
+      type: presetType,
       value: {
         ...mainContent,
         elements: result,
@@ -39,7 +49,16 @@ export const activePresetFn = (mainContent, data, dispatch) => {
   }
 };
 
-export const activeGroupPresetFn = (mainContent, data, dispatch) => {
+export const activeGroupPresetFn = (
+  mainContent,
+  data,
+  dispatch,
+  presetType = null
+) => {
+  if (!presetType) {
+    console.error("Preset type is required!");
+    return;
+  }
   const result = Object.fromEntries(
     Object.entries(mainContent.elements).map(([key, value]) => {
       const filteredElements = Object.fromEntries(
@@ -61,7 +80,7 @@ export const activeGroupPresetFn = (mainContent, data, dispatch) => {
 
   if (!data.value) {
     dispatch({
-      type: "setAllPresets",
+      type: presetType,
       value: {
         ...mainContent,
         is_active: data.value,
@@ -70,7 +89,7 @@ export const activeGroupPresetFn = (mainContent, data, dispatch) => {
     });
   } else {
     dispatch({
-      type: "setAllPresets",
+      type: presetType,
       value: {
         ...mainContent,
         elements: result,
@@ -79,7 +98,16 @@ export const activeGroupPresetFn = (mainContent, data, dispatch) => {
   }
 };
 
-export const activeFullPresetFn = (mainContent, data, dispatch) => {
+export const activeFullPresetFn = (
+  mainContent,
+  data,
+  dispatch,
+  presetType = null
+) => {
+  if (!presetType) {
+    console.error("Preset type is required!");
+    return;
+  }
   const result = Object.fromEntries(
     Object.entries(mainContent.elements).map(([key, value]) => {
       const filteredElements = Object.fromEntries(
@@ -94,7 +122,7 @@ export const activeFullPresetFn = (mainContent, data, dispatch) => {
   );
 
   dispatch({
-    type: "setAllPresets",
+    type: presetType,
     value: {
       is_active: data.value,
       elements: result,

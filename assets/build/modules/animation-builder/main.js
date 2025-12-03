@@ -39617,7 +39617,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _ui_scroll_area__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../ui/scroll-area */ "./src/modules/animation-builder/components/ui/scroll-area.jsx");
 /* harmony import */ var _AllAnimationList__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AllAnimationList */ "./src/modules/animation-builder/components/editor/AllAnimationList.jsx");
 /* harmony import */ var _CustomAnimation__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CustomAnimation */ "./src/modules/animation-builder/components/editor/CustomAnimation.jsx");
-/* harmony import */ var _PresetAnimation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./PresetAnimation */ "./src/modules/animation-builder/components/editor/PresetAnimation.jsx");
+/* harmony import */ var _FreePresetAnimation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./FreePresetAnimation */ "./src/modules/animation-builder/components/editor/FreePresetAnimation.jsx");
+/* harmony import */ var _PresetAnimation__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./PresetAnimation */ "./src/modules/animation-builder/components/editor/PresetAnimation.jsx");
+
 
 
 
@@ -39632,7 +39634,7 @@ const RenderContent = item => {
     case 2:
       return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ui_scroll_area__WEBPACK_IMPORTED_MODULE_1__.ScrollArea, {
         className: "h-[83vh] min-w-[280px] max-w-[450px]"
-      }, item?.data?.type === "preset" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_PresetAnimation__WEBPACK_IMPORTED_MODULE_4__["default"], null) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_CustomAnimation__WEBPACK_IMPORTED_MODULE_3__["default"], null));
+      }, item?.data?.type == "free_animation" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_FreePresetAnimation__WEBPACK_IMPORTED_MODULE_4__["default"], null) : item?.data?.type === "preset" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_PresetAnimation__WEBPACK_IMPORTED_MODULE_5__["default"], null) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_CustomAnimation__WEBPACK_IMPORTED_MODULE_3__["default"], null));
     default:
       return;
   }
@@ -39994,6 +39996,135 @@ const EditorHeader = () => {
 
 /***/ }),
 
+/***/ "./src/modules/animation-builder/components/editor/FreePresetAnimation.jsx":
+/*!*********************************************************************************!*\
+  !*** ./src/modules/animation-builder/components/editor/FreePresetAnimation.jsx ***!
+  \*********************************************************************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _hooks_app_hooks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/hooks/app.hooks */ "./src/modules/animation-builder/hooks/app.hooks.js");
+/* harmony import */ var _ui_input__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../ui/input */ "./src/modules/animation-builder/components/ui/input.jsx");
+/* harmony import */ var _components_ui_select__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/components/ui/select */ "./src/modules/animation-builder/components/ui/select.jsx");
+/* harmony import */ var _common_AllResponsiveControl__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../common/AllResponsiveControl */ "./src/modules/animation-builder/components/common/AllResponsiveControl.jsx");
+/* harmony import */ var _common_SingleResponsiveControl__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../common/SingleResponsiveControl */ "./src/modules/animation-builder/components/common/SingleResponsiveControl.jsx");
+/* harmony import */ var _RenderComponent__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./RenderComponent */ "./src/modules/animation-builder/components/editor/RenderComponent.jsx");
+
+
+
+
+
+
+
+
+const FreePresetAnimation = () => {
+  const {
+    contentStep,
+    updateContentData
+  } = (0,_hooks_app_hooks__WEBPACK_IMPORTED_MODULE_1__.useContentStep)();
+  const {
+    selectedDevice
+  } = (0,_hooks_app_hooks__WEBPACK_IMPORTED_MODULE_1__.useDeviceConfig)();
+  const animationPresets = AAEAnimBuilder.freePresets;
+  console.log("FreePresetAnimation", {
+    animationPresets
+  });
+  return;
+  const [selectedPresetGroup, setSelectedPresetGroup] = useState(contentStep?.data?.presetGroup || "");
+  const [selectedPreset, setSelectedPreset] = useState(contentStep?.data?.preset || "");
+  return createElement("div", null, createElement("div", {
+    className: "p-3 border-b border-border flex flex-col gap-3"
+  }, createElement("div", {
+    className: "flex justify-between items-center gap-2"
+  }, createElement("div", {
+    className: "w-[56px]"
+  }, createElement("h3", {
+    className: "text-xs text-text-2"
+  }, "Title")), createElement("div", {
+    className: "flex-1"
+  }, createElement(Input, {
+    value: contentStep?.data?.title,
+    onChange: e => updateContentData(e.target.value, "title"),
+    placeholder: "Title Animation",
+    className: "h-[28px]"
+  }))), createElement("div", {
+    className: "flex justify-between items-center gap-2"
+  }, createElement("div", {
+    className: "w-[56px]"
+  }, createElement("h3", {
+    className: "text-xs text-text-2"
+  }, "Preset")), createElement("div", {
+    className: "flex-1"
+  }, createElement(Select, {
+    value: selectedPresetGroup,
+    onValueChange: value => {
+      updateContentData({
+        ...contentStep,
+        data: {
+          ...contentStep.data,
+          presetGroup: value
+        }
+      });
+      setSelectedPresetGroup(value);
+    }
+  }, createElement(SelectTrigger, {
+    className: "min-w-[90px] capitalize"
+  }, createElement(SelectValue, {
+    placeholder: "Option",
+    className: "line-clamp-1"
+  })), createElement(SelectContent, {
+    className: "min-w-[90px]"
+  }, createElement(SelectGroup, null, animationPresets.getAllGroups().map((preset, i) => createElement(SelectItem, {
+    key: `${preset}-${i}`,
+    value: preset,
+    className: "capitalize"
+  }, preset))))))), selectedPresetGroup ? createElement("div", {
+    className: "flex justify-between items-center gap-2"
+  }, createElement("div", {
+    className: "w-[56px]"
+  }, createElement("h3", {
+    className: "text-xs text-text-2"
+  }, "Type")), createElement("div", {
+    className: "flex-1"
+  }, createElement(Select, {
+    value: selectedPreset,
+    onValueChange: value => {
+      updateContentData({
+        ...contentStep,
+        data: {
+          ...contentStep.data,
+          preset: value
+        }
+      });
+      setSelectedPreset(value);
+    }
+  }, createElement(SelectTrigger, {
+    className: "min-w-[90px]"
+  }, createElement(SelectValue, {
+    placeholder: "Option",
+    className: "line-clamp-1"
+  })), createElement(SelectContent, {
+    className: "min-w-[90px]"
+  }, createElement(SelectGroup, null, animationPresets.getAllPresets(selectedPresetGroup).map(preset => createElement(SelectItem, {
+    key: preset.presetKey,
+    value: preset.presetKey
+  }, preset.name))))))) : ""), createElement("div", null, createElement(RenderComponent, {
+    selectedPresetGroup: selectedPresetGroup,
+    selectedPreset: selectedPreset,
+    contentStep: contentStep,
+    updateContentData: updateContentData
+  }), selectedDevice === "desktop" ? createElement(AllResponsiveControl, {
+    id: contentStep?.data?.id
+  }) : createElement(SingleResponsiveControl, {
+    id: contentStep?.data?.id
+  })));
+};
+/* harmony default export */ __webpack_exports__["default"] = (FreePresetAnimation);
+
+/***/ }),
+
 /***/ "./src/modules/animation-builder/components/editor/MainEditor.jsx":
 /*!************************************************************************!*\
   !*** ./src/modules/animation-builder/components/editor/MainEditor.jsx ***!
@@ -40034,7 +40165,7 @@ const MainEditor = ({
   } = (0,_hooks_app_hooks__WEBPACK_IMPORTED_MODULE_6__.useAnimationControl)();
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "bg-background h-full flex flex-col justify-between relative"
-  }, contentStep.step === 1 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, contentStep?.step === 1 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "p-3 border-b border-border"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_dropdown_menu__WEBPACK_IMPORTED_MODULE_3__.DropdownMenu, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ui_dropdown_menu__WEBPACK_IMPORTED_MODULE_3__.DropdownMenuTrigger, {
     asChild: true
@@ -41185,20 +41316,20 @@ const EditorScrollTrigger = () => {
   } = contentStep?.data;
   const [enableTrigger, setEnableTrigger] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(ScrollTrigger?.enable || false);
   const initialState = {
-    timeline: ScrollTrigger.timeline || "",
-    trigger: ScrollTrigger.trigger || "",
-    endTrigger: ScrollTrigger.endTrigger || "",
-    start: ScrollTrigger.start || "",
-    customStart: ScrollTrigger.customStart || "",
-    end: ScrollTrigger.end || "",
-    customEnd: ScrollTrigger.customEnd || "",
-    scrub: ScrollTrigger.scrub || "",
-    customScrub: ScrollTrigger.customScrub || "",
-    pin: ScrollTrigger.pin || "",
-    customPin: ScrollTrigger.customPin || "",
-    pinSpacing: ScrollTrigger.pinSpacing || "",
-    customPinSpacing: ScrollTrigger.customPinSpacing || "",
-    properties: ScrollTrigger.properties || []
+    timeline: ScrollTrigger?.timeline || "",
+    trigger: ScrollTrigger?.trigger || "",
+    endTrigger: ScrollTrigger?.endTrigger || "",
+    start: ScrollTrigger?.start || "",
+    customStart: ScrollTrigger?.customStart || "",
+    end: ScrollTrigger?.end || "",
+    customEnd: ScrollTrigger?.customEnd || "",
+    scrub: ScrollTrigger?.scrub || "",
+    customScrub: ScrollTrigger?.customScrub || "",
+    pin: ScrollTrigger?.pin || "",
+    customPin: ScrollTrigger?.customPin || "",
+    pinSpacing: ScrollTrigger?.pinSpacing || "",
+    customPinSpacing: ScrollTrigger?.customPinSpacing || "",
+    properties: ScrollTrigger?.properties || []
   };
   function reducer(state, action) {
     switch (action.type) {
@@ -43312,6 +43443,7 @@ const initialState = {
   pageConfig: {},
   selectedDevice: "desktop"
 };
+console.log("Initial State:", initialState);
 const reducer = (state, action) => {
   switch (action.type) {
     case "setContentStep":
@@ -44132,6 +44264,145 @@ const IconDrag = ({
 
 /***/ }),
 
+/***/ "./src/modules/animation-builder/lib/registerFreePreset.js":
+/*!*****************************************************************!*\
+  !*** ./src/modules/animation-builder/lib/registerFreePreset.js ***!
+  \*****************************************************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+class RegisterFreePreset {
+  #freePreset;
+  constructor(initialPreset = []) {
+    this.#freePreset = {};
+    this.register(initialPreset);
+  }
+
+  // Helper: safely clone plain objects but keep functions/React elements intact
+  #safeClone(obj) {
+    if (obj === null || typeof obj !== "object") return obj;
+    if (typeof obj === "function" || obj.$$typeof && obj.props) {
+      return obj;
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.#safeClone(item));
+    }
+    const cloned = {};
+    for (const key in obj) {
+      cloned[key] = this.#safeClone(obj[key]);
+    }
+    return cloned;
+  }
+  register(preset) {
+    console.log("RegisterFreePreset register", {
+      preset
+    });
+    if (!preset) {
+      if (WCF_ANIMATION_BUILDER.debug) {
+        console.error("Preset cannot be empty");
+      }
+      return;
+    }
+
+    // Accept array or single preset
+    const presetArray = Array.isArray(preset) ? preset : [preset];
+    const validPresets = presetArray.filter(item => item && typeof item === "object" && "presetKey" in item && "groupName" in item);
+    if (validPresets.length === 0) {
+      if (WCF_ANIMATION_BUILDER.debug) {
+        console.error("Invalid preset format");
+      }
+      return;
+    }
+    console.log("RegisterFreePreset validPresets", {
+      validPresets
+    });
+    validPresets.forEach(newPreset => {
+      const group = newPreset.groupName;
+
+      // Ensure group exists
+      if (!this.#freePreset[group]) {
+        this.#freePreset[group] = [];
+      }
+
+      // Check if presetKey already exists in group
+      const exists = this.#freePreset[group].some(item => item.presetKey === newPreset.presetKey);
+      if (exists) {
+        if (WCF_ANIMATION_BUILDER.debug) {
+          console.warn(`Preset with presetKey "${newPreset.presetKey}" already exists in group "${group}". Use updatePreset() to modify it.`);
+        }
+      } else {
+        this.#freePreset[group].push(this.#safeClone(newPreset));
+      }
+    });
+  }
+  updatePreset(preset) {
+    if (!preset || typeof preset !== "object" || !("presetKey" in preset) || !("groupName" in preset)) {
+      if (WCF_ANIMATION_BUILDER.debug) {
+        console.error("Invalid preset format for update");
+      }
+      return;
+    }
+    const group = preset.groupName;
+    if (!this.#freePreset[group]) {
+      if (WCF_ANIMATION_BUILDER.debug) {
+        console.warn(`Group "${group}" does not exist. Use register() to add it.`);
+      }
+      return;
+    }
+    const index = this.#freePreset[group].findIndex(item => item.presetKey === preset.presetKey);
+    if (index === -1) {
+      if (WCF_ANIMATION_BUILDER.debug) {
+        console.warn(`Preset "${preset.presetKey}" does not exist in group "${group}". Use register() to add it.`);
+      }
+      return;
+    }
+    this.#freePreset[group][index] = {
+      ...this.#freePreset[group][index],
+      ...this.#safeClone(preset)
+    };
+  }
+  getPreset(groupName, presetKey) {
+    if (!this.#freePreset[groupName]) return null;
+    const found = this.#freePreset[groupName].find(item => item.presetKey === presetKey);
+    return found ? this.#safeClone(found) : null;
+  }
+  getAllPresets(groupName = null) {
+    if (groupName) {
+      return this.#freePreset[groupName] ? this.#freePreset[groupName].map(item => this.#safeClone(item)) : [];
+    }
+    // Return all groups
+    const allGroups = {};
+    for (const group in this.#freePreset) {
+      allGroups[group] = this.#freePreset[group].map(item => this.#safeClone(item));
+    }
+    return allGroups;
+  }
+  hasPreset(groupName, presetKey) {
+    return this.#freePreset[groupName]?.some(item => item.presetKey === presetKey) || false;
+  }
+  removePreset(groupName, presetKey) {
+    if (!this.#freePreset[groupName]) return;
+    this.#freePreset[groupName] = this.#freePreset[groupName].filter(item => item.presetKey !== presetKey);
+    if (WCF_ANIMATION_BUILDER.debug) {
+      console.log(`Preset "${presetKey}" removed from group "${groupName}" (if it existed).`);
+    }
+  }
+  getAllGroups() {
+    return Object.keys(this.#freePreset);
+  }
+  findGroupByPresetKey(presetKey) {
+    for (const group in this.#freePreset) {
+      if (this.#freePreset[group].some(item => item.presetKey === presetKey)) {
+        return group;
+      }
+    }
+    return null; // Not found
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (RegisterFreePreset);
+
+/***/ }),
+
 /***/ "./src/modules/animation-builder/lib/registerPreset.js":
 /*!*************************************************************!*\
   !*** ./src/modules/animation-builder/lib/registerPreset.js ***!
@@ -44643,6 +44914,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_ui_sonner__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @/components/ui/sonner */ "./src/modules/animation-builder/components/ui/sonner.jsx");
 /* harmony import */ var _index_css__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./index.css */ "./src/modules/animation-builder/index.css");
 /* harmony import */ var _lib_registerPreset__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/registerPreset */ "./src/modules/animation-builder/lib/registerPreset.js");
+/* harmony import */ var _lib_registerFreePreset__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./lib/registerFreePreset */ "./src/modules/animation-builder/lib/registerFreePreset.js");
+
 
 
 
@@ -44652,8 +44925,9 @@ __webpack_require__.r(__webpack_exports__);
 
 window.AAEAnimBuilder = {};
 AAEAnimBuilder.presets = new _lib_registerPreset__WEBPACK_IMPORTED_MODULE_6__["default"]();
+AAEAnimBuilder.freePresets = new _lib_registerFreePreset__WEBPACK_IMPORTED_MODULE_7__["default"]();
 AAEAnimBuilder.hooks = wp.hooks.createHooks();
-console.log("AAE Animation Builder Preset Loaded");
+console.log("AAE Animation Builder Presets Loaded");
 _wordpress_dom_ready__WEBPACK_IMPORTED_MODULE_1___default()(function () {
   const editor_panel = document.getElementById("wcf--animation-builder--editor");
   wp.element.render((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_context_app_context__WEBPACK_IMPORTED_MODULE_3__.AppContextProvider, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_GetStart__WEBPACK_IMPORTED_MODULE_2__["default"], null)), editor_panel);

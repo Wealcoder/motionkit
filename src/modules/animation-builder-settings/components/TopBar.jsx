@@ -33,7 +33,6 @@ const TopBar = ({ searchKey, setSearchKey, presetCount }) => {
         <div className="flex items-center space-x-2">
           <Switch
             id="global-enable-all"
-            disabled={presetCount?.total == 0}
             checked={allPresets?.is_active}
             onCheckedChange={(value) => updateActiveFullPreset({ value })}
           />

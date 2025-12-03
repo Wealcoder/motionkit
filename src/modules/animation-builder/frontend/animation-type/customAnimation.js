@@ -22,7 +22,7 @@ export function customAnimation() {
         timelines[timeline.id] = createTimeline;
       });
 
-      section.animations.forEach((animation) => {
+      section.animations?.forEach((animation) => {
         const timeline = timelines[animation.timeline];
         if (
           animation.applyAnimation.className &&
@@ -42,8 +42,8 @@ export function customAnimation() {
           }
 
           gsap.set(animation.applyAnimation.className, {
-            transition: "none"
-          })
+            transition: "none",
+          });
 
           // targetElement.style.transition = "none";
           // 👉 If drawSVG exists
@@ -207,13 +207,13 @@ export function customAnimation() {
 
               animation?.splitText?.propIndex
                 ? (config.propIndex = toBoolean(
-                  animation?.splitText?.propIndex
-                ))
+                    animation?.splitText?.propIndex
+                  ))
                 : "";
               animation?.splitText?.autoSplit
                 ? (config.autoSplit = toBoolean(
-                  animation?.splitText?.autoSplit
-                ))
+                    animation?.splitText?.autoSplit
+                  ))
                 : "";
               animation?.splitText?.charsClass
                 ? (config.charsClass = animation?.splitText?.charsClass)
@@ -226,8 +226,8 @@ export function customAnimation() {
                 : "";
               animation?.splitText?.smartWrap
                 ? (config.smartWrap = toBoolean(
-                  animation?.splitText?.smartWrap
-                ))
+                    animation?.splitText?.smartWrap
+                  ))
                 : "";
               animation?.splitText?.ignore
                 ? (config.ignore = animation?.splitText?.ignore)
@@ -265,10 +265,9 @@ export function customAnimation() {
       if (scrollConfig?.enable && scrollConfig.enable) {
         const scrolTime = timelines[scrollConfig.timeline];
         if (scrolTime && ScrollTrigger) {
-
           gsap.set(scrollConfig.trigger, {
-            transition: "none"
-          })
+            transition: "none",
+          });
 
           const final_scroll_configs = {
             animation: scrolTime,
@@ -298,8 +297,8 @@ export function customAnimation() {
               scrollConfig.scrub === "true"
                 ? true
                 : scrollConfig.scrub === "false"
-                  ? false
-                  : scrollConfig.customScrub;
+                ? false
+                : scrollConfig.customScrub;
           }
 
           if (scrollConfig.pin || scrollConfig.customPin) {
@@ -307,8 +306,8 @@ export function customAnimation() {
               scrollConfig.pin === "true"
                 ? true
                 : scrollConfig.pin === "false"
-                  ? false
-                  : scrollConfig.customPin;
+                ? false
+                : scrollConfig.customPin;
           }
 
           if (scrollConfig.pinSpacing) {

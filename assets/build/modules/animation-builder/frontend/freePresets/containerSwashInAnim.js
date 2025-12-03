@@ -34,14 +34,14 @@
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-/*!*********************************************************************************************!*\
-  !*** ./src/modules/animation-builder/frontend/animation-type/freePreset/swashInFreeAnim.js ***!
-  \*********************************************************************************************/
+/*!**************************************************************************************************!*\
+  !*** ./src/modules/animation-builder/frontend/animation-type/freePreset/containerSwashInAnim.js ***!
+  \**************************************************************************************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   swashInFreeAnim: function() { return /* binding */ swashInFreeAnim; }
+/* harmony export */   containerSwashInAnim: function() { return /* binding */ containerSwashInAnim; }
 /* harmony export */ });
-function swashInFreeAnim() {
+function containerSwashInAnim() {
   function handler(e) {
     const sections = e.detail["wcf-container-swash-in-free-animation"] || [];
     sections.forEach(sections => {
@@ -74,7 +74,7 @@ function swashInFreeAnim() {
     destroy: resetAnimation
   };
 }
-swashInFreeAnim();
+containerSwashInAnim();
 /******/ })()
 ;
-//# sourceMappingURL=swashInFreeAnim.js.map
+//# sourceMappingURL=containerSwashInAnim.js.map

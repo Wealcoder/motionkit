@@ -14,24 +14,17 @@ import { ScrollArea, ScrollBar } from "@@/components/ui/scroll-area";
 import PresetCard from "./PresetCard";
 import { usePresets } from "@@/hooks/app.hooks";
 
-const ShowFreeAnimations = ({ searchKey, setPresetCount, presetCount }) => {
-  const { allFreeAnimations, updateActivePreset, updateActiveGroupPreset } =
-    usePresets();
+const ShowFreeAnimations = ({ searchKey, setPresetCount }) => {
+  const {
+    allFreeAnimations,
+    updateFreeActivePreset,
+    updateFreeActiveGroupPreset,
+  } = usePresets();
 
   const [tabValue, setTabValue] = useState("all");
   const [categoryPresets, setCategoryPresets] = useState({});
   const [noResult, setNoResult] = useState(false);
   const [presetTabList, setPresetTabList] = useState([]);
-
-  console.log("ShowFreeAnimations", {
-    searchKey,
-    presetCount,
-    allFreeAnimations,
-    tabValue,
-    categoryPresets,
-    noResult,
-    presetTabList,
-  });
 
   // Build tab list from all presets
   useEffect(() => {
@@ -91,14 +84,13 @@ const ShowFreeAnimations = ({ searchKey, setPresetCount, presetCount }) => {
 
       body: new URLSearchParams({
         action: "aae_save_anim_builder_settings",
-        setting_name: "aae_anim_builder_settings",
+        setting_name: "wcf_anim_builder_free_animation_settings",
         form_fields: JSON.stringify(allFreeAnimations),
         nonce: WCF_ANIMATION_BUILDER_ADMIN.nonce,
       }),
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("r", data);
         setPresetCount?.(data.count);
         toast.success("Presets saved successfully!", { position: "top-right" });
       });
@@ -121,16 +113,7 @@ const ShowFreeAnimations = ({ searchKey, setPresetCount, presetCount }) => {
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
-        <Button
-          // TODO: need validation for search both classname and disabled
-          className={`${
-            presetCount?.total == 0 ? "cursor-not-allowed" : "cursor-pointer"
-          }`}
-          disabled={presetCount?.total == 0}
-          onClick={savePresets}
-        >
-          Save Preset Settings
-        </Button>
+        <Button onClick={savePresets}>Save Preset Settings</Button>
       </div>
 
       {/* All Presets Tab */}
@@ -154,7 +137,7 @@ const ShowFreeAnimations = ({ searchKey, setPresetCount, presetCount }) => {
                     id={cat}
                     checked={categoryPresets[cat].is_active}
                     onCheckedChange={(value) =>
-                      updateActiveGroupPreset({ value, slug: cat })
+                      updateFreeActiveGroupPreset({ value, slug: cat })
                     }
                   />
                   <Label htmlFor={cat}>Enable All</Label>
@@ -166,7 +149,7 @@ const ShowFreeAnimations = ({ searchKey, setPresetCount, presetCount }) => {
                     key={`preset-${i}`}
                     preset={categoryPresets[cat].elements[preset]}
                     slug={preset}
-                    updateActiveItem={updateActivePreset}
+                    updateActiveItem={updateFreeActivePreset}
                     className="rounded p-5"
                   />
                 ))}
@@ -202,7 +185,7 @@ const ShowFreeAnimations = ({ searchKey, setPresetCount, presetCount }) => {
                   id={cat}
                   checked={categoryPresets[cat].is_active}
                   onCheckedChange={(value) =>
-                    updateActiveGroupPreset({ value, slug: cat })
+                    updateFreeActiveGroupPreset({ value, slug: cat })
                   }
                 />
                 <Label htmlFor={cat}>Enable All</Label>
@@ -214,7 +197,7 @@ const ShowFreeAnimations = ({ searchKey, setPresetCount, presetCount }) => {
                   key={`preset-${i}`}
                   preset={categoryPresets[cat].elements[preset]}
                   slug={preset}
-                  updateActiveItem={updateActivePreset}
+                  updateActiveItem={updateFreeActivePreset}
                   className="rounded p-5"
                 />
               ))}

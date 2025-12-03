@@ -258,7 +258,7 @@ function customAnimation() {
         const createTimeline = gsap.timeline(config);
         timelines[timeline.id] = createTimeline;
       });
-      section.animations.forEach(animation => {
+      section.animations?.forEach(animation => {
         const timeline = timelines[animation.timeline];
         if (animation.applyAnimation.className && animation.applyAnimation.className !== "") {
           const findDrawSVG = animation?.properties?.find(el => el.name === "drawSVG" && el.value);

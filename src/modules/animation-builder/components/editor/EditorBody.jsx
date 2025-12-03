@@ -1,6 +1,7 @@
 import { ScrollArea } from "../ui/scroll-area";
 import AllAnimationList from "./AllAnimationList";
 import CustomAnimation from "./CustomAnimation";
+import FreePresetAnimation from "./FreePresetAnimation";
 import PresetAnimation from "./PresetAnimation";
 
 const RenderContent = (item) => {
@@ -14,7 +15,9 @@ const RenderContent = (item) => {
     case 2:
       return (
         <ScrollArea className="h-[83vh] min-w-[280px] max-w-[450px]">
-          {item?.data?.type === "preset" ? (
+          {item?.data?.type == "free_animation" ? (
+            <FreePresetAnimation />
+          ) : item?.data?.type === "preset" ? (
             <PresetAnimation />
           ) : (
             <CustomAnimation />

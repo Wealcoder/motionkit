@@ -32,20 +32,20 @@ const EditorScrollTrigger = () => {
   );
 
   const initialState = {
-    timeline: ScrollTrigger.timeline || "",
-    trigger: ScrollTrigger.trigger || "",
-    endTrigger: ScrollTrigger.endTrigger || "",
-    start: ScrollTrigger.start || "",
-    customStart: ScrollTrigger.customStart || "",
-    end: ScrollTrigger.end || "",
-    customEnd: ScrollTrigger.customEnd || "",
-    scrub: ScrollTrigger.scrub || "",
-    customScrub: ScrollTrigger.customScrub || "",
-    pin: ScrollTrigger.pin || "",
-    customPin: ScrollTrigger.customPin || "",
-    pinSpacing: ScrollTrigger.pinSpacing || "",
-    customPinSpacing: ScrollTrigger.customPinSpacing || "",
-    properties: ScrollTrigger.properties || [],
+    timeline: ScrollTrigger?.timeline || "",
+    trigger: ScrollTrigger?.trigger || "",
+    endTrigger: ScrollTrigger?.endTrigger || "",
+    start: ScrollTrigger?.start || "",
+    customStart: ScrollTrigger?.customStart || "",
+    end: ScrollTrigger?.end || "",
+    customEnd: ScrollTrigger?.customEnd || "",
+    scrub: ScrollTrigger?.scrub || "",
+    customScrub: ScrollTrigger?.customScrub || "",
+    pin: ScrollTrigger?.pin || "",
+    customPin: ScrollTrigger?.customPin || "",
+    pinSpacing: ScrollTrigger?.pinSpacing || "",
+    customPinSpacing: ScrollTrigger?.customPinSpacing || "",
+    properties: ScrollTrigger?.properties || [],
   };
 
   function reducer(state, action) {

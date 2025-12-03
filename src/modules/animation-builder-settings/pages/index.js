@@ -27,7 +27,7 @@ const MainPage = () => {
         }
       );
     }
-  }, [activeTab]);
+  }, [activeTab, WCF_ANIMATION_BUILDER_ADMIN]);
 
   return (
     <div className="wcfabs2025-wrapper  ">
@@ -35,10 +35,7 @@ const MainPage = () => {
         <div className="container overflow-x-hidden bg-background rounded-[10px] ">
           <Tabs
             defaultValue="preset_animaitons"
-            onValueChange={(value) => {
-              console.log(value);
-              setActiveTab(value);
-            }}
+            onValueChange={(value) => setActiveTab(value)}
           >
             <div className="px-5 2xl:px-8 py-3 2xl:py-5 border-b border-b-[#f2f5f8]">
               {/* tabs manues */}
@@ -49,6 +46,7 @@ const MainPage = () => {
                     <TabsTrigger
                       value={value}
                       key={idx}
+                      {...(activeTab === value && { "data-active": true })}
                       className="group/item !inline-flex h-9 w-max items-center justify-center bg-background ps-2.5 pe-3 py-2 font-medium transition-colors hover:bg-background-secondary hover:text-text-secondary-hover focus:bg-background-secondary focus:text-text-secondary-hover focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-background-secondary data-[active]:text-text-primary-hover data-[state=open]:bg-background-secondary cursor-pointer rounded-lg gap-2 text-base text-text-secondary"
                     >
                       <span
@@ -78,7 +76,6 @@ const MainPage = () => {
                   <ShowFreeAnimations
                     searchKey={searchKey}
                     setPresetCount={setPresetCount}
-                    presetCount={presetCount}
                   />
                 </div>
               </div>
@@ -97,7 +94,6 @@ const MainPage = () => {
                   <ShowPresets
                     searchKey={searchKey}
                     setPresetCount={setPresetCount}
-                    presetCount={presetCount}
                   />
                 </div>
               </div>

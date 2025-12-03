@@ -217,11 +217,15 @@ return [
             ],
             'version' => WCF_ANIMATION_BUILDER_VERSION,
         ],
+
+
+
+
         // free animation presets
-         'wcf-free-animation-preset' => [
-            'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/freeAnimations.js',
-            'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rFreePresetAnim.js',
-            'deps' => [],
+         'wcf-container-swash-in-free-animation' => [
+            'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/containerSwashInAnim.js',
+            'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rContainerSwashInAnim.js',
+            'deps' => ['gsap', 'ScrollTrigger'],
             'editorDeps' => [
                 'react',
                 'react-dom',

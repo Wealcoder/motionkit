@@ -5,13 +5,15 @@ import { Toaster } from "@/components/ui/sonner";
 
 import "./index.css";
 import RegisterPreset from "./lib/registerPreset";
+import RegisterFreePreset from "./lib/registerFreePreset";
 
 window.AAEAnimBuilder = {};
 
 AAEAnimBuilder.presets = new RegisterPreset();
+AAEAnimBuilder.freePresets = new RegisterFreePreset();
 AAEAnimBuilder.hooks = wp.hooks.createHooks();
 
-console.log("AAE Animation Builder Preset Loaded");
+console.log("AAE Animation Builder Presets Loaded");
 
 domReady(function () {
   const editor_panel = document.getElementById(

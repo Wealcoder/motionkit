@@ -16,8 +16,6 @@ const initialState = {
     ) || {},
 };
 
-console.log("Initial State:", initialState);
-
 const reducer = (state, action) => {
   switch (action.type) {
     case "setAllPresets":
@@ -47,25 +45,68 @@ const useMainContext = (state) => {
     });
   }, []);
 
+  // Preset animation state modifier
   const updateActivePreset = useCallback(
     (data) => {
-      activePresetFn(mainState.allPresets, data, dispatch);
+      activePresetFn(mainState.allPresets, data, dispatch, "setAllPresets");
     },
     [mainState.allPresets]
   );
 
   const updateActiveGroupPreset = useCallback(
     (data) => {
-      activeGroupPresetFn(mainState.allPresets, data, dispatch);
+      activeGroupPresetFn(
+        mainState.allPresets,
+        data,
+        dispatch,
+        "setAllPresets"
+      );
     },
     [mainState.allPresets]
   );
 
   const updateActiveFullPreset = useCallback(
     (data) => {
-      activeFullPresetFn(mainState.allPresets, data, dispatch);
+      activeFullPresetFn(mainState.allPresets, data, dispatch, "setAllPresets");
     },
     [mainState.allPresets]
+  );
+
+  // Free animation preset modifier
+  const updateFreeActivePreset = useCallback(
+    (data) => {
+      activePresetFn(
+        mainState.allFreeAnimations,
+        data,
+        dispatch,
+        "setAllFreeAnimations"
+      );
+    },
+    [mainState.allFreeAnimations]
+  );
+
+  const updateFreeActiveGroupPreset = useCallback(
+    (data) => {
+      activeGroupPresetFn(
+        mainState.allFreeAnimations,
+        data,
+        dispatch,
+        "setAllFreeAnimations"
+      );
+    },
+    [mainState.allFreeAnimations]
+  );
+
+  const updateFreeActiveFullPreset = useCallback(
+    (data) => {
+      activeFullPresetFn(
+        mainState.allFreeAnimations,
+        data,
+        dispatch,
+        "setAllFreeAnimations"
+      );
+    },
+    [mainState.allFreeAnimations]
   );
 
   return {
@@ -75,6 +116,9 @@ const useMainContext = (state) => {
     updateActivePreset,
     updateActiveGroupPreset,
     updateActiveFullPreset,
+    updateFreeActivePreset,
+    updateFreeActiveGroupPreset,
+    updateFreeActiveFullPreset,
   };
 };
 

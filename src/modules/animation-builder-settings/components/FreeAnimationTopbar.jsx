@@ -6,8 +6,7 @@ import { Input } from "@@/components/ui/input";
 import { usePresets } from "@@/hooks/app.hooks";
 
 const FreeAnimationTopbar = ({ searchKey, setSearchKey, presetCount }) => {
-  const { allFreeAnimations, updateActiveFullPreset } = usePresets();
-
+  const { allFreeAnimations, updateFreeActiveFullPreset } = usePresets();
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 xl:gap-11 justify-between items-center">
       <div className="flex items-center gap-3">
@@ -33,9 +32,8 @@ const FreeAnimationTopbar = ({ searchKey, setSearchKey, presetCount }) => {
         <div className="flex items-center space-x-2">
           <Switch
             id="global-enable-all"
-            disabled={presetCount?.total == 0}
             checked={allFreeAnimations?.is_active}
-            onCheckedChange={(value) => updateActiveFullPreset({ value })}
+            onCheckedChange={(value) => updateFreeActiveFullPreset({ value })}
           />
           <Label htmlFor="global-enable-all">Enable All</Label>
         </div>

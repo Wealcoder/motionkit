@@ -88,7 +88,6 @@ const ShowPresets = ({ searchKey, setPresetCount }) => {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("r", data);
         setPresetCount?.(data.count);
         toast.success("Presets saved successfully!", { position: "top-right" });
       });

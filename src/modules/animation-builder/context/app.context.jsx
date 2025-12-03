@@ -20,6 +20,8 @@ const initialState = {
   selectedDevice: "desktop",
 };
 
+console.log("Initial State:", initialState);
+
 const reducer = (state, action) => {
   switch (action.type) {
     case "setContentStep":

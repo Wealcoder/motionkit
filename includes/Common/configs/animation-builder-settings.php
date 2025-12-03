@@ -211,6 +211,7 @@ return array(
 			),
 		),
 	),
+  // free animations
   'free_animations' => array(
 		'is_active' => false,
 		'elements'  => array(
@@ -218,15 +219,15 @@ return array(
 				'title'     => 'Container',
 				'is_active' => false,
 				'elements'  => array(
-					'wcf-container-fade-animation' => array(
-						'label'       => 'Fade',
+					'wcf-container-swash-in-free-animation' => array(
+						'label'       => 'Swash In',
 						'is_active'   => false,
 						'is_upcoming' => false,
 						'icon'        => 'wcf-icon-Image-Box',
 						'demo_url'    => '',
 						'doc_url'     => '',
 						'youtube_url' => '',
-						'description' => 'Perfectly timed fade animations powered by GSAP give your content a premium, modern feel.',
+						'description' => 'Swash In delivers a smooth, stylish pop-in effect that gracefully scales elements into view with a polished, attention-grabbing entrance.',
 					),
 				),
 			),

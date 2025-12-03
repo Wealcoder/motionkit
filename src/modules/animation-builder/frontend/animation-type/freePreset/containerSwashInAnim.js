@@ -1,4 +1,4 @@
-export function swashInFreeAnim() {
+export function containerSwashInAnim() {
   function handler(e) {
     const sections = e.detail["wcf-container-swash-in-free-animation"] || [];
     sections.forEach((sections) => {
@@ -25,4 +25,4 @@ export function swashInFreeAnim() {
 
   return { destroy: resetAnimation };
 }
-swashInFreeAnim();
+containerSwashInAnim();
