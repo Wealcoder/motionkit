@@ -31,8 +31,7 @@ module.exports = {
         "./src/modules/animation-builder/main.js",
       "modules/animation-builder-settings/main":
         "./src/modules/animation-builder-settings/main.js",
-      "modules/animation-builder/frontend/customAnimation":
-        "./src/modules/animation-builder/frontend/animation-type/customAnimation.js",
+      
       "modules/animation-builder/preview":
         "./src/modules/animation-builder/preview.js",
       "modules/animation-builder/frontend":
