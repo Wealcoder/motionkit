@@ -168,8 +168,7 @@ class AnimationBuilderCore
 			wp_register_script('wcf-animation-builder-preview', WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/preview.js', $deps, time(), true);
 			wp_enqueue_script('wcf-animation-builder-preview');
 
-			wp_register_script('wcf-custom-animation', WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/customAnimation.js', $deps, time(), true);
-			wp_enqueue_script('wcf-custom-animation');
+			
 
        	$config          = include plugin_dir_path(__FILE__) . '/configs/animation-builder-assets.php'; // adjust path
         $active_elements = $this->get_active_element_keys("wcf_anim_builder_free_animation_settings");
@@ -182,7 +181,7 @@ class AnimationBuilderCore
           }
         }
 
-			do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts');
+			do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts', $deps);
 
 
 			$config = include plugin_dir_path(__FILE__) . 'configs/animation-builder-device.php'; // adjust path
