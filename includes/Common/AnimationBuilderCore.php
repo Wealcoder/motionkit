@@ -223,6 +223,12 @@ class AnimationBuilderCore
 				$this->getActivePresets($pageConfigs, $is_custom);
 				
 				$deps = $this->register_builder_dependency();
+				$deps = array_filter($deps, function($item) {
+					return $item !== 'wp-element';
+				});
+
+				$deps = array_values($deps);
+				
 				wp_register_script('wcf-anim-builder-frontend', WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend.js', $deps, time(), true);
 				wp_enqueue_script('wcf-anim-builder-frontend');
 

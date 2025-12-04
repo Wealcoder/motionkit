@@ -8,7 +8,7 @@ defined('ABSPATH') || die();
 
 
 return [
-    'js' => [
+    'presets' => [
         'wcf-scroll-video-animation' => [
             'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/scrollVideoFrame.js',
             'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rScrollVideoFrame.js',
