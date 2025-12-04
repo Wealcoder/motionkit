@@ -18,10 +18,6 @@ const FreePresetAnimation = () => {
   const { selectedDevice } = useDeviceConfig();
   const animationPresets = AAEAnimBuilder.freePresets;
 
-  console.log("FreePresetAnimation", { animationPresets });
-
-  return;
-
   const [selectedPresetGroup, setSelectedPresetGroup] = useState(
     contentStep?.data?.presetGroup || ""
   );

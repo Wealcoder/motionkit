@@ -19,6 +19,8 @@ export function containerSwashInAnim() {
     });
   }
 
+  const resetAnimation = () => {};
+
   // wordpress events
   document.addEventListener("aae-animation-event", handler);
   document.addEventListener("aae-reset-animation", resetAnimation);
