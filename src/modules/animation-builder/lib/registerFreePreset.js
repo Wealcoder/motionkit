@@ -43,7 +43,7 @@ class RegisterFreePreset {
 
     if (validPresets.length === 0) {
       if (WCF_ANIMATION_BUILDER.debug) {
-        console.error("Invalid preset format");
+        console.error("Invalid free preset format");
       }
       return;
     }

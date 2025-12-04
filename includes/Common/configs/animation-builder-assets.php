@@ -221,9 +221,9 @@ return [
 
       "freePresets"=>[
  // free animation presets
-         'wcf-container-swash-in-free-animation' => [
-            'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/containerSwashInAnim.js',
-            'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rContainerSwashInAnim.js',
+         'wcf-general-swash-in-free-animation' => [
+            'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSwashInAnim.js',
+            'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSwashInAnim.js',
             'deps' => [],
             'editorDeps' => [
                 'react',

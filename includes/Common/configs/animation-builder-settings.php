@@ -215,11 +215,11 @@ return array(
   'free_animations' => array(
 		'is_active' => false,
 		'elements'  => array(
-      'container' => array(
-				'title'     => 'Container',
+      'general' => array(
+				'title'     => 'General',
 				'is_active' => false,
 				'elements'  => array(
-					'wcf-container-swash-in-free-animation' => array(
+					'wcf-general-swash-in-free-animation' => array(
 						'label'       => 'Swash In',
 						'is_active'   => false,
 						'is_upcoming' => false,
