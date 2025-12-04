@@ -23,6 +23,7 @@ class RegisterFreePreset {
   }
 
   register(preset) {
+    
     if (!preset) {
       if (WCF_ANIMATION_BUILDER.debug) {
         console.error("Preset cannot be empty");
@@ -43,7 +44,7 @@ class RegisterFreePreset {
 
     if (validPresets.length === 0) {
       if (WCF_ANIMATION_BUILDER.debug) {
-        console.error("Invalid preset format");
+        console.error("Invalid Free preset format");
       }
       return;
     }
