@@ -212,7 +212,7 @@ class AnimationBuilderEditor
 			$merge_config['preset_count']          = $this->count_total_and_active_elements($preset_db_data);
 			$merge_config['preset_count']['total'] = $this->count_total_and_active_elements($config['preset_settings'])['total'];
 
-      $merge_config['free_animation_count']          = $this->count_total_and_active_elements($free_animation_db_data);
+      		$merge_config['free_animation_count']          = $this->count_total_and_active_elements($free_animation_db_data);
 			$merge_config['free_animation_count']['total'] = $this->count_total_and_active_elements($config['free_animations'])['total'];
 
 			wp_localize_script(
@@ -469,6 +469,32 @@ class AnimationBuilderEditor
 			WCF_ANIMATION_BUILDER_VERSION,
 			true
 		);
+
+		$config          = include plugin_dir_path(__FILE__) . '/configs/animation-builder-assets.php'; // adjust path
+
+		$active_elements = $this->get_active_element_keys();
+		// Register and enqueue active element scripts for editor
+		if (is_array($active_elements) && is_array($config)) {
+			foreach ($active_elements as $key) {
+				if (isset($config['presets'][$key])) {
+					$element = $config['presets'][$key];
+					wp_enqueue_script($key, $element['editorSrc'], $element['editorDeps'], time(), true);
+				}
+			}
+		}
+
+		$config          = include plugin_dir_path(__FILE__) . '/configs/animation-builder-assets.php'; // adjust path
+
+		$active_elements = $this->get_active_element_keys();
+		// Register and enqueue active element scripts for editor
+		if (is_array($active_elements) && is_array($config)) {
+			foreach ($active_elements as $key) {
+				if (isset($config['presets'][$key])) {
+					$element = $config['presets'][$key];
+					wp_enqueue_script($key, $element['editorSrc'], $element['editorDeps'], time(), true);
+				}
+			}
+		}
 
     	$config          = include plugin_dir_path(__FILE__) . '/configs/animation-builder-assets.php'; // adjust path
         $active_elements = $this->get_active_element_keys("wcf_anim_builder_free_animation_settings");
