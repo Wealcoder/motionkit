@@ -3,6 +3,7 @@
 namespace WcfAnimationBuilder\Common;
 
 use WcfAnimationBuilder\Traits\AnimationBuilderTrait;
+use WcfAnimationBuilder\Helpers\Tools;
 
 if (! defined('ABSPATH')) {
 	exit; // Exit if accessed directly
@@ -45,7 +46,7 @@ class AnimationBuilderEditor
 		// dashboard settings
 
 		add_action('admin_enqueue_scripts', array($this, 'admin_scripts'), 999);
- 		add_filter('show_admin_bar', array($this, 'hide_admin_bar_for_iframe'));
+		add_filter('show_admin_bar', array($this, 'hide_admin_bar_for_iframe'));
 		add_action('wp', array($this, 'init'));
 		add_action('wcfanimationbuilder_before_enqueue_scripts', array($this, 'editor_script'));
 		add_action('wcfanimationbuilder_before_enqueue_styles', array($this, 'editor_style'));
@@ -66,33 +67,6 @@ class AnimationBuilderEditor
 		$this->page_type = $obj;
 	}
 
-	/**
-	 * Count total and active elements in the animation builder data.
-	 *
-	 * @param array $data The decoded form data.
-	 * @return array ['total' => int, 'active' => int]
-	 */
-	private function count_total_and_active_elements($data)
-	{
-		$active_count = 0;
-		$total_count  = 0;
-		if (is_array($data) && isset($data['elements'])) {
-			foreach ($data['elements'] as $group) {
-				if (isset($group['elements']) && is_array($group['elements'])) {
-					foreach ($group['elements'] as $element) {
-						++$total_count;
-						if (! empty($element['is_active'])) {
-							++$active_count;
-						}
-					}
-				}
-			}
-		}
-		return array(
-			'total'  => $total_count,
-			'active' => $active_count,
-		);
-	}
 
 	public function init()
 	{
@@ -152,25 +126,25 @@ class AnimationBuilderEditor
 		}
 		global $wp_styles;
 
-		if ( empty( $wp_styles->registered ) ) {
+		if (empty($wp_styles->registered)) {
 			return;
 		}
 
-		$theme_dir = basename( get_template_directory() ); // e.g. "astra" or "hello-elementor"
-		$theme_dir = sanitize_text_field( $theme_dir );
+		$theme_dir = basename(get_template_directory()); // e.g. "astra" or "hello-elementor"
+		$theme_dir = sanitize_text_field($theme_dir);
 
 
-		foreach ( $wp_styles->registered as $handle => $style ) {
+		foreach ($wp_styles->registered as $handle => $style) {
 
-			if ( ! empty( $style->src ) ) {
-				$style->src = sanitize_text_field( $style->src );
+			if (! empty($style->src)) {
+				$style->src = sanitize_text_field($style->src);
 			}
 
-			if ( ! empty( $style->src ) && strpos( $style->src, "/{$theme_dir}/" ) !== false ) {
+			if (! empty($style->src) && strpos($style->src, "/{$theme_dir}/") !== false) {
 
 				// Remove only theme styles
-				wp_dequeue_style( $handle );
-				wp_deregister_style( $handle );
+				wp_dequeue_style($handle);
+				wp_deregister_style($handle);
 			}
 		}
 
@@ -197,23 +171,22 @@ class AnimationBuilderEditor
 			$merge_config = array();
 			$preset_settings    = get_option('aae_anim_builder_settings');
 			$free_animation_settings    = get_option('wcf_anim_builder_free_animation_settings');
-			$preset_db_data      = json_decode($preset_settings, true);
+			$preset_db_data      = json_decode($preset_settings, true) ?? array();
 			$free_animation_db_data      = json_decode($free_animation_settings, true) ?? array();
 
 
 			if (is_array($preset_db_data)) {
 				$merge_config['preset_settings'] = $this->sync_with_config_structure($config['preset_settings'], $preset_db_data);
-
 			}
 			if (is_array($free_animation_db_data)) {
 				$merge_config['free_animations'] = $this->sync_with_config_structure($config['free_animations'], $free_animation_db_data);
 			}
 
-			$merge_config['preset_count']          = $this->count_total_and_active_elements($preset_db_data);
-			$merge_config['preset_count']['total'] = $this->count_total_and_active_elements($config['preset_settings'])['total'];
+			$merge_config['preset_count']          = Tools::count_total_and_active_elements($preset_db_data);
+			$merge_config['preset_count']['total'] = Tools::count_total_and_active_elements($config['preset_settings'])['total'];
 
-      		$merge_config['free_animation_count']          = $this->count_total_and_active_elements($free_animation_db_data);
-			$merge_config['free_animation_count']['total'] = $this->count_total_and_active_elements($config['free_animations'])['total'];
+			$merge_config['free_animation_count']          = Tools::count_total_and_active_elements($free_animation_db_data);
+			$merge_config['free_animation_count']['total'] = Tools::count_total_and_active_elements($config['free_animations'])['total'];
 
 			wp_localize_script(
 				'aae-animation-builder-settings',
@@ -440,7 +413,7 @@ class AnimationBuilderEditor
 	public function is_edit_mode()
 	{
 
-		if (isset($_GET['action']) && sanitize_text_field( wp_unslash($_GET['action']) ) == 'animation-builder') {
+		if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) == 'animation-builder') {
 			return true;
 		}
 
@@ -454,8 +427,8 @@ class AnimationBuilderEditor
 	public function editor_script()
 	{
 		wp_enqueue_media();
-		wp_enqueue_style( 'media-views' );
-		wp_enqueue_style( 'wp-mediaelement' );
+		wp_enqueue_style('media-views');
+		wp_enqueue_style('wp-mediaelement');
 		wp_enqueue_script(
 			'wcf-pro-animation-builder',
 			WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/main.js',
@@ -483,7 +456,7 @@ class AnimationBuilderEditor
 			}
 		}
 
-    $active_free_elements = $this->get_active_element_keys('wcf_anim_builder_free_animation_settings');
+		$active_free_elements = $this->get_active_element_keys('wcf_anim_builder_free_animation_settings');
 
 		// Register and enqueue active element scripts for editor
 		if (is_array($active_free_elements) && is_array($config)) {
@@ -498,7 +471,7 @@ class AnimationBuilderEditor
 
 		do_action('wcf_animation_builder/editor/presets/enqueue_element_scripts');
 
-		$url = isset($_GET['builder_url']) ? sanitize_text_field( wp_unslash($_GET['builder_url']) ) : home_url('/');
+		$url = isset($_GET['builder_url']) ? sanitize_text_field(wp_unslash($_GET['builder_url'])) : home_url('/');
 
 		$final_url = add_query_arg(
 			array(

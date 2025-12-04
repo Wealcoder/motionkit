@@ -11,12 +11,12 @@ namespace WcfAnimationBuilder\Backend;
 
 // Prevent direct access
 if (!defined('ABSPATH')) {
-    exit;
+	exit;
 }
 
 use WcfAnimationBuilder\Common\Assets\AssetLoader;
 use WcfAnimationBuilder\Factory\ComponentFactory;
-use WcfAnimationBuilder\Decorator\ConditionalAssetLoaderDecorator;
+use WcfAnimationBuilder\Helpers\Tools;
 
 /**
  * Backend Class
@@ -25,45 +25,45 @@ use WcfAnimationBuilder\Decorator\ConditionalAssetLoaderDecorator;
  */
 final class Backend
 {
-    /**
-     * Asset loader instance
-     *
-     * @var AssetLoader
-     */
-    private AssetLoader $asset_loader;
+	/**
+	 * Asset loader instance
+	 *
+	 * @var AssetLoader
+	 */
+	private AssetLoader $asset_loader;
 
-    /**
-     * Initialize backend functionality
-     *
-     * @return void
-     */
-    public function init(): void
-    {
-        $this->asset_loader = ComponentFactory::create_asset_loader();
-        $this->init_hooks();
-    }
-
-    /**
-     * Initialize hooks
-     *
-     * @return void
-     */
-    private function init_hooks(): void
-    {
-        // Add admin hooks here
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
-        add_action('admin_menu', [$this, 'add_admin_menu'],30);
-       
-        add_action('admin_head', array($this, 'remove_notice_for_setting_page'));	
-        add_action('wp_ajax_aae_save_anim_builder_settings', array($this, 'save_dashboard_settings'));	
-        add_filter('page_row_actions', [$this, 'add_custom_quick_link'], 10, 2);
-		add_filter('post_row_actions', [$this, 'add_custom_quick_link'], 10, 2);
-    }
-
-    function add_custom_quick_link($actions, $post)
+	/**
+	 * Initialize backend functionality
+	 *
+	 * @return void
+	 */
+	public function init(): void
 	{
-		if ( ! ( current_user_can( 'manage_options' ) ) ){
-			return $actions;	
+		$this->asset_loader = ComponentFactory::create_asset_loader();
+		$this->init_hooks();
+	}
+
+	/**
+	 * Initialize hooks
+	 *
+	 * @return void
+	 */
+	private function init_hooks(): void
+	{
+		// Add admin hooks here
+		add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+		add_action('admin_menu', [$this, 'add_admin_menu'], 30);
+
+		add_action('admin_head', array($this, 'remove_notice_for_setting_page'));
+		add_action('wp_ajax_aae_save_anim_builder_settings', array($this, 'save_dashboard_settings'));
+		add_filter('page_row_actions', [$this, 'add_custom_quick_link'], 10, 2);
+		add_filter('post_row_actions', [$this, 'add_custom_quick_link'], 10, 2);
+	}
+
+	function add_custom_quick_link($actions, $post)
+	{
+		if (! (current_user_can('manage_options'))) {
+			return $actions;
 		}
 		// Ensure this only applies to pages , posts
 		if ($post->post_type === 'page' || $post->post_type === 'post') {
@@ -88,7 +88,7 @@ final class Backend
 		return $actions;
 	}
 
-    public function save_dashboard_settings()
+	public function save_dashboard_settings()
 	{
 
 		check_ajax_referer('wcf_admin_nonce', 'nonce');
@@ -110,7 +110,7 @@ final class Backend
 		update_option($setting_name, $form_data);
 
 		$data   = json_decode($form_data, true);
-		$counts = $this->count_total_and_active_elements($data);
+		$counts = Tools::count_total_and_active_elements($data);
 
 		$return_message = array(
 			'message' => 'Settings Updated',
@@ -122,35 +122,32 @@ final class Backend
 		wp_send_json($return_message);
 	}
 
-    /**
-     * Enqueue admin scripts and styles
-     *
-     * @param string $hook The current admin page hook
-     * @return void
-     */
-    public function enqueue_admin_assets(string $hook): void
-    {         
-     
-    }
-    
-    /**
-     * Get asset loader instance
-     *
-     * @return AssetLoader Asset loader instance
-     */
-    public function get_asset_loader(): AssetLoader
-    {
-        return $this->asset_loader;
-    }
+	/**
+	 * Enqueue admin scripts and styles
+	 *
+	 * @param string $hook The current admin page hook
+	 * @return void
+	 */
+	public function enqueue_admin_assets(string $hook): void {}
 
-    /**
-     * Add admin menu
-     *
-     * @return void
-     */
-    public function add_admin_menu(): void
-    {
-       //add menu page	
+	/**
+	 * Get asset loader instance
+	 *
+	 * @return AssetLoader Asset loader instance
+	 */
+	public function get_asset_loader(): AssetLoader
+	{
+		return $this->asset_loader;
+	}
+
+	/**
+	 * Add admin menu
+	 *
+	 * @return void
+	 */
+	public function add_admin_menu(): void
+	{
+		//add menu page	
 		add_menu_page(
 			esc_html__('Animation Builder', 'gsap-animation-builder-for-wordpress'),
 			esc_html__('Animation Builder', 'gsap-animation-builder-for-wordpress'),
@@ -160,12 +157,11 @@ final class Backend
 			'dashicons-admin-generic', // icon
 			59 // position
 		);
-		
-    }
+	}
 
-    public function remove_notice_for_setting_page()
+	public function remove_notice_for_setting_page()
 	{
-	
+
 		$page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
 		$php_self = isset($_SERVER['PHP_SELF']) ? sanitize_text_field(wp_unslash($_SERVER['PHP_SELF'])) : '';
 
@@ -185,7 +181,7 @@ final class Backend
 		}
 	}
 
-    /**
+	/**
 	 * Render submenu
 	 *
 	 * Outputs the submenu content.
@@ -199,4 +195,3 @@ final class Backend
 		echo '</div>';
 	}
 }
-
