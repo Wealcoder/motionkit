@@ -28,6 +28,7 @@ const FreePresetAnimation = () => {
   return (
     <div>
       <div className="p-3 border-b border-border flex flex-col gap-3">
+        {/* title */}
         <div className="flex justify-between items-center gap-2">
           <div className="w-[56px]">
             <h3 className="text-xs text-text-2">Title</h3>
@@ -41,6 +42,7 @@ const FreePresetAnimation = () => {
             />
           </div>
         </div>
+        {/* Preset group and preset selection */}
         <div className="flex justify-between items-center gap-2">
           <div className="w-[56px]">
             <h3 className="text-xs text-text-2">Preset</h3>
@@ -64,15 +66,17 @@ const FreePresetAnimation = () => {
               </SelectTrigger>
               <SelectContent className="min-w-[90px]">
                 <SelectGroup>
-                  {animationPresets.getAllGroups().map((preset, i) => (
-                    <SelectItem
-                      key={`${preset}-${i}`}
-                      value={preset}
-                      className="capitalize"
-                    >
-                      {preset}
-                    </SelectItem>
-                  ))}
+                  {animationPresets
+                    .getAllFreePresetGroups()
+                    .map((preset, i) => (
+                      <SelectItem
+                        key={`${preset}-${i}`}
+                        value={preset}
+                        className="capitalize"
+                      >
+                        {preset}
+                      </SelectItem>
+                    ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -103,7 +107,7 @@ const FreePresetAnimation = () => {
                 <SelectContent className="min-w-[90px]">
                   <SelectGroup>
                     {animationPresets
-                      .getAllPresets(selectedPresetGroup)
+                      .getAllFreePresets(selectedPresetGroup)
                       .map((preset) => (
                         <SelectItem
                           key={preset.presetKey}
@@ -121,6 +125,7 @@ const FreePresetAnimation = () => {
           ""
         )}
       </div>
+      {/* Rendering preset configuration */}
       <div>
         <RenderComponent
           selectedPresetGroup={selectedPresetGroup}

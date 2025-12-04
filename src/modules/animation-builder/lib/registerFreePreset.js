@@ -23,8 +23,6 @@ class RegisterFreePreset {
   }
 
   register(preset) {
-    console.log("RegisterFreePreset register", { preset });
-
     if (!preset) {
       if (WCF_ANIMATION_BUILDER.debug) {
         console.error("Preset cannot be empty");
@@ -49,8 +47,6 @@ class RegisterFreePreset {
       }
       return;
     }
-
-    console.log("RegisterFreePreset validPresets", { validPresets });
 
     validPresets.forEach((newPreset) => {
       const group = newPreset.groupName;
@@ -118,7 +114,7 @@ class RegisterFreePreset {
     };
   }
 
-  getPreset(groupName, presetKey) {
+  getSingleFreePresets(groupName, presetKey) {
     if (!this.#freePreset[groupName]) return null;
     const found = this.#freePreset[groupName].find(
       (item) => item.presetKey === presetKey
@@ -126,7 +122,7 @@ class RegisterFreePreset {
     return found ? this.#safeClone(found) : null;
   }
 
-  getAllPresets(groupName = null) {
+  getAllFreePresets(groupName = null) {
     if (groupName) {
       return this.#freePreset[groupName]
         ? this.#freePreset[groupName].map((item) => this.#safeClone(item))
@@ -162,7 +158,7 @@ class RegisterFreePreset {
     }
   }
 
-  getAllGroups() {
+  getAllFreePresetGroups() {
     return Object.keys(this.#freePreset);
   }
 

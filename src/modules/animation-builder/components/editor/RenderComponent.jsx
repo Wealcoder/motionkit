@@ -7,8 +7,28 @@ const RenderComponent = ({
   updateContentData,
 }) => {
   if (!selectedPreset) return null;
-  const animationPresets = AAEAnimBuilder.presets;
-  const preset = animationPresets.getPreset(selectedPresetGroup, selectedPreset);
+  const presetType = contentStep?.data?.type || null;
+
+  if (!presetType) {
+    console.error("Preset type missmatch. Cannot render animation preset!");
+    return;
+  }
+
+  // Differentiating between free and premium presets animation.
+  let animationPresets = null;
+  let preset = null;
+
+  if (presetType === "free_animation") {
+    animationPresets = AAEAnimBuilder.freePresets;
+    preset = animationPresets.getSingleFreePresets(
+      selectedPresetGroup,
+      selectedPreset
+    );
+  } else {
+    animationPresets = AAEAnimBuilder.presets;
+    preset = animationPresets.getPreset(selectedPresetGroup, selectedPreset);
+  }
+
   if (!preset) return null;
 
   const { component } = preset;

@@ -20,18 +20,16 @@ const initialState = {
   selectedDevice: "desktop",
 };
 
-console.log("Initial State:", initialState);
-
 const reducer = (state, action) => {
   switch (action.type) {
     case "setContentStep":
-      return { ...state, contentStep: action.value };
+      return { ...state, contentStep: action?.value };
     case "setAllAnimation":
-      return { ...state, allAnimation: action.value };
+      return { ...state, allAnimation: action?.value };
     case "setPageConfig":
-      return { ...state, pageConfig: action.value };
+      return { ...state, pageConfig: action?.value };
     case "setSelectedDevice":
-      return { ...state, selectedDevice: action.value };
+      return { ...state, selectedDevice: action?.value };
     default:
       throw new Error();
   }
@@ -475,6 +473,7 @@ const useMainContext = (state) => {
     },
     [mainState.contentStep]
   );
+
   const updateResponsive = useCallback(
     (id, device, value) => {
       setAllAnimation({
