@@ -125,16 +125,6 @@ export function containerFadeAnimation() {
     end,
     markers,
   }) {
-    console.log({
-      id,
-      config,
-      itemClass,
-      triggerClass,
-      start,
-      end,
-      markers,
-    });
-
     // killing others animation
     handleKillAnimation();
     // preventing inital component render

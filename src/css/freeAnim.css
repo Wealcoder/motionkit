@@ -1,5 +1,5 @@
 /* Free animation classes */
-.swashIn {
+.wcf-free-ab-swashIn {
   -webkit-animation-name: swashIn;
   animation-name: swashIn;
 }
@@ -168,7 +168,7 @@
   animation-name: twisterInDown;
 }
 
-.magictime {
+/* .wcf-free-ab-freeAnimGeneral {
   -webkit-animation-duration: 1s;
   animation-duration: 1s;
   -webkit-animation-fill-mode: both;
@@ -176,9 +176,9 @@
 }
 
 @media (print), (prefers-reduced-motion) {
-  .magictime {
+  .wcf-ab-freeAnimGeneral {
     -webkit-animation: unset !important;
     animation: unset !important;
     transition: none !important;
   }
-}
+} */

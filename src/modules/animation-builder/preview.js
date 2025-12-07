@@ -64,8 +64,6 @@ function receivePageConfig() {
           });
         }
 
-        console.log({ wcf_anim_preview_object });
-
         wcf_anim_preview_object?.device_config?.map((device) => {
           handleMediaQuery(device.mediaQuery, () => {
             event.data["wcf-animation-config"]?.[device?.key].forEach(

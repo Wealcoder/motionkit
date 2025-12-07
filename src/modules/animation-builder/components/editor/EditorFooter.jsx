@@ -10,7 +10,6 @@ import DeleteConfirmDialog from "../common/DeleteConfirmDialog";
 import { cn } from "@/lib/utils";
 import { RiResetRightLine } from "react-icons/ri";
 import { useState } from "react";
-import { generateFreeAnimCSS } from "@/lib/freeAnimHelper";
 
 const EditorFooter = () => {
   const { contentStep, setContentStep } = useContentStep();
