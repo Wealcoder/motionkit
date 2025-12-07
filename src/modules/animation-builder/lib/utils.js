@@ -198,3 +198,10 @@ const isSignificantValue = (value) => {
   if (typeof value === "object" && Object.keys(value).length > 0) return true;
   return false;
 };
+
+export function handleMediaQuery(mediaQuery = "", callback = () => {}) {
+  const isMatched = window.matchMedia(mediaQuery);
+  if (isMatched?.matches) {
+    callback();
+  }
+}

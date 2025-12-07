@@ -1,21 +1,14 @@
 export function containerSwashInAnim() {
   function handler(e) {
-    const sections = e.detail["wcf-container-swash-in-free-animation"] || [];
+    const sections = e.detail["wcf-general-swash-in-free-animation"] || [];
     sections.forEach((sections) => {
-      const { id, triggerClass, itemClass, delay, duration, repeat } =
-        sections || {};
-
-      console.log("swashInFreeAnim", {
-        id,
-        triggerClass,
-        itemClass,
-        delay,
-        duration,
-        repeat,
+      const elements = document.querySelectorAll(sections?.itemClass);
+      console.log({ elements, document, sections });
+      elements.forEach((item) => {
+        item.classList.add("magictime", "swashIn");
       });
 
-      // validating itemclass
-      if (!itemClass || !document.querySelector(itemClass)) return;
+      // if (!itemClass || !document.querySelector(itemClass)) return;
     });
   }
 

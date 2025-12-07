@@ -7,14 +7,13 @@ import {
 // import { animStructure } from "./lib/animStructure";
 import AnimationStructure from "@/components/common/AnimationStructure";
 import "./index.css";
-
+import { handleMediaQuery } from "./lib/utils";
 
 const storeState = {
   hoverEnabled: false,
 };
 
 let storeAnimation = {};
-
 
 function enableHover() {
   if (!storeState.hoverEnabled) {
@@ -38,11 +37,10 @@ function receivePageConfig() {
         disableHover();
         storeAnimation = {};
         let mm;
-        
-        if(window.gsap){
+
+        if (window.gsap) {
           mm?.revert();
           mm = gsap.matchMedia();
-
           wcf_anim_preview_object?.device_config?.map((device) => {
             mm.add(device.mediaQuery, () => {
               event.data["wcf-animation-config"]?.[device?.key].forEach(
@@ -53,7 +51,7 @@ function receivePageConfig() {
                         ...(storeAnimation[section?.preset] || []),
                         section,
                       ];
-                    } else {
+                    } else if (section.type === "custom") {
                       storeAnimation["custom"] = [
                         ...(storeAnimation["custom"] || []),
                         section,
@@ -64,8 +62,27 @@ function receivePageConfig() {
               );
             });
           });
-        } // GSAP check end
+        }
 
+        console.log({ wcf_anim_preview_object });
+
+        wcf_anim_preview_object?.device_config?.map((device) => {
+          handleMediaQuery(device.mediaQuery, () => {
+            event.data["wcf-animation-config"]?.[device?.key].forEach(
+              (section) => {
+                if (section.enable) {
+                  if (section.type === "free_animation") {
+                    storeAnimation[section?.preset] = [
+                      ...(storeAnimation[section?.preset] || []),
+                      section,
+                    ];
+                  }
+                }
+              }
+            );
+          });
+        });
+        // GSAP check end
         const cEvent = new CustomEvent("aae-animation-event", {
           detail: storeAnimation, // payload
           bubbles: true, // can bubble up the DOM
@@ -127,7 +144,6 @@ function runPopup() {
 
     const isSkip = target.classList.contains("wcfanimb-skip-selector");
 
-
     if (!isSkip) {
       showPopup(selector, event.clientX + 10, event.clientY + 10);
     }
@@ -186,14 +202,9 @@ receivePageConfig();
 // animStructure()
 
 window.addEventListener("load", () => {
-  const structure_panel = document.getElementById(
-    "wcf-anim-builder-structure"
-  );
+  const structure_panel = document.getElementById("wcf-anim-builder-structure");
 
   if (structure_panel) {
-    wp.element.render(
-      <AnimationStructure />,
-      structure_panel
-    );
+    wp.element.render(<AnimationStructure />, structure_panel);
   }
 });

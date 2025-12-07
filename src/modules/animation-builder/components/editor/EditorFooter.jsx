@@ -10,15 +10,14 @@ import DeleteConfirmDialog from "../common/DeleteConfirmDialog";
 import { cn } from "@/lib/utils";
 import { RiResetRightLine } from "react-icons/ri";
 import { useState } from "react";
+import { generateFreeAnimCSS } from "@/lib/freeAnimHelper";
 
 const EditorFooter = () => {
   const { contentStep, setContentStep } = useContentStep();
   const { updateAnimation, allAnimation, setAllAnimation } =
     useAnimationControl();
   const { pageConfig } = usePageConfig();
-
   const [activeReset, setActiveReset] = useState(false);
-
   const params = new URLSearchParams(window.location.search);
 
   const showPreview = () => {
@@ -26,11 +25,8 @@ const EditorFooter = () => {
     const iframe = document.getElementById(
       "wcf--animation-builder--animation--preview"
     );
-    if (iframe) {
-      const win = iframe.contentWindow;
-      //win.location.reload();    
-      win.postMessage({ "wcf-animation-config": allAnimation });
-    }
+    const win = iframe.contentWindow;
+    win.postMessage({ "wcf-animation-config": allAnimation });
   };
   const resetPreview = () => {
     setActiveReset(false);
@@ -65,7 +61,7 @@ const EditorFooter = () => {
           toast("Animation Delete Successfully");
         });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

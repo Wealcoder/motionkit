@@ -31,13 +31,14 @@ module.exports = {
         "./src/modules/animation-builder/main.js",
       "modules/animation-builder-settings/main":
         "./src/modules/animation-builder-settings/main.js",
-      
+
       "modules/animation-builder/preview":
         "./src/modules/animation-builder/preview.js",
       "modules/animation-builder/frontend":
         "./src/modules/animation-builder/frontend.js",
       "modules/animation-builder/animbuilder-copy":
         "./src/modules/animation-builder/animbuilder-copy.css",
+      "modules/animation-builder/freeAnim": "./src/css/freeAnim.css",
 
       // auto-generated preset entries (frontend)
       ...getPresetEntries({

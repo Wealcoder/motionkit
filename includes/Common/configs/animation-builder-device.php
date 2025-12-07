@@ -12,12 +12,14 @@ return [
     'title' => 'Desktop',
     'viewWidth' => '1920px',
     'mediaQuery' => '(min-width: 1441px)',
+    'width' => '1441',
   ],
   [
     'key' => 'laptop',
     'title' => 'Laptop',
     'viewWidth' => '1440px',
     'mediaQuery' => '(min-width: 1200px) and (max-width: 1440px)',
+    'width' => '1200-1440'
   ],
   [
     'key' => 'tab_land',
