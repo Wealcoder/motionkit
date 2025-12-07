@@ -41,7 +41,7 @@ const ShowFreeAnimations = ({ searchKey, setPresetCount }) => {
 
   // Filter presets based on search and tab
   useEffect(() => {
-    if (!allFreeAnimations) return;
+    if (!allFreeAnimations?.elements) return;
     let filtered = allFreeAnimations.elements;
     if (searchKey) {
       filtered = findSearchResult();

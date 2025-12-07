@@ -24,19 +24,20 @@ class Tools
 		return 0;
 	}
 
-	public static function check_file_in_uploads($file_name) {
+	public static function check_file_in_uploads($file_name)
+	{
 		global $wp_filesystem;
-		require_once ( ABSPATH . '/wp-admin/includes/file.php' );
-		WP_Filesystem(); 	
+		require_once(ABSPATH . '/wp-admin/includes/file.php');
+		WP_Filesystem();
 		// Get the upload directory
 		$upload_dir = wp_upload_dir();
 		$upload_path = $upload_dir['basedir'] . '/wcf-animations/'; // The folder inside the uploads directory
-		$upload_url = $upload_dir['baseurl'] . '/wcf-animations/'; 
-	
+		$upload_url = $upload_dir['baseurl'] . '/wcf-animations/';
+
 		// Full path to the file
 		$file_path = $upload_path . $file_name;
 		$url_path = $upload_url . $file_name;
-	
+
 		// Check if the file exists
 		if ($wp_filesystem->exists($file_path)) {
 			return $url_path;  // File exists
@@ -46,23 +47,52 @@ class Tools
 	}
 
 	/**
+	 * Count total and active elements in the animation builder data.
+	 *
+	 * @param array $data The decoded form data.
+	 * @return array ['total' => int, 'active' => int]
+	 */
+	public static function count_total_and_active_elements($data)
+	{
+		$active_count = 0;
+		$total_count  = 0;
+		if (is_array($data) && isset($data['elements'])) {
+			foreach ($data['elements'] as $group) {
+				if (isset($group['elements']) && is_array($group['elements'])) {
+					foreach ($group['elements'] as $element) {
+						++$total_count;
+						if (! empty($element['is_active'])) {
+							++$active_count;
+						}
+					}
+				}
+			}
+		}
+		return array(
+			'total'  => $total_count,
+			'active' => $active_count,
+		);
+	}
+
+	/**
 	 * @return string | bool
 	 * @since 1.0
 	 * @param string	
 	 */
-	public static function is_valid_css_container_max_width($value) {
-	
+	public static function is_valid_css_container_max_width($value)
+	{
+
 		$value = trim($value);
-	
+
 		// Check if the string is a number only (integer or decimal)
 		if (is_numeric($value)) {
 			// If it's a valid number, return it with 'px' appended
 			return $value . 'px';
 		}
-	
+
 		// Regular expression to validate CSS max-width values
 		$pattern = '/^(0|(\d+(\.\d+)?\s*(px|em|rem|%)))$/';
-	
+
 		// Check if the string matches the pattern
 		if (preg_match($pattern, $value)) {
 			return $value; // Valid, return as-is
@@ -184,13 +214,18 @@ class Tools
 			return true;
 		}
 		switch (json_last_error()) {
-			case JSON_ERROR_DEPTH: return 'Maximum stack depth exceeded';
-			case JSON_ERROR_STATE_MISMATCH: return 'Underflow or the modes mismatch';
-			case JSON_ERROR_CTRL_CHAR: return 'Unexpected control character found';
-			case JSON_ERROR_SYNTAX: return 'Syntax error, malformed JSON';
-			case JSON_ERROR_UTF8: return 'Malformed UTF-8 characters, possibly incorrectly encoded';
-			default: return 'Unknown error';
+			case JSON_ERROR_DEPTH:
+				return 'Maximum stack depth exceeded';
+			case JSON_ERROR_STATE_MISMATCH:
+				return 'Underflow or the modes mismatch';
+			case JSON_ERROR_CTRL_CHAR:
+				return 'Unexpected control character found';
+			case JSON_ERROR_SYNTAX:
+				return 'Syntax error, malformed JSON';
+			case JSON_ERROR_UTF8:
+				return 'Malformed UTF-8 characters, possibly incorrectly encoded';
+			default:
+				return 'Unknown error';
 		}
 	}
 }
-

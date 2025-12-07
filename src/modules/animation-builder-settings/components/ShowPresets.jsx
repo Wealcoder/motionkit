@@ -38,7 +38,7 @@ const ShowPresets = ({ searchKey, setPresetCount }) => {
 
   // Filter presets based on search and tab
   useEffect(() => {
-    if (!allPresets) return;
+    if (!allPresets?.elements) return;
     let filtered = allPresets.elements;
     if (searchKey) {
       filtered = findSearchResult();
