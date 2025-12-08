@@ -1,41 +1,54 @@
-const BREAKPOINTS = {
-  desktop: null,
-  laptop: "(max-width: 1440px)",
-  tab_land: "(max-width: 1024px)",
-  tab: "(max-width: 768px)",
-  mobile: "(max-width: 480px)",
-};
-
-export function generateFreeAnimCSS(data) {
-  // const currentData = [];
-  // if(!Array.isArray(data)){
-  //   currentData
-  // }
-  return Object.entries(data).reduce((cssOutput, [device, items]) => {
-    const cssForDevice = items.reduce((acc, item) => {
-      if (!item.enable) return acc;
-      const selector = item.itemClass;
-      const rules = `
-        ${selector} {
-          animation-delay: ${item.delay}ms;
-          animation-duration: ${item.duration}ms;
-          animation-iteration-count: ${item.repeat};
+// Helper function
+export function handleAddClassName(
+  elements = null,
+  classList = [],
+  generalStyle = {}
+) {
+  if (!elements || !Array.isArray(classList) || !classList.length) return;
+  elements = Array.isArray(elements) ? elements : Array.from(elements);
+  elements.forEach((item) => {
+    if (generalStyle && typeof generalStyle === "object") {
+      Object.entries(generalStyle).forEach(([key, value]) => {
+        if (value != null) {
+          item.style[key] = value;
         }
-      `;
-      return acc + rules;
-    }, "");
-    if (!cssForDevice.trim()) return cssOutput;
-    const media = BREAKPOINTS[device];
-    if (!media) {
-      return cssOutput + cssForDevice;
+      });
     }
-    return (
-      cssOutput +
-      `
-      @media ${media} {
-        ${cssForDevice}
-      }
-    `
-    );
-  }, "");
+    item.classList.add(...classList);
+  });
+}
+
+export function handleRemoveClassName(elements = null, classList = []) {
+  if (!elements || !Array.isArray(classList) || !classList?.length) return;
+  elements?.forEach((item) => item.classList.remove(...classList));
+}
+
+// Event function
+export function onScrollTrigger(trigger, callback, threshold = 0.2) {
+  if (!trigger || typeof callback !== "function") return;
+
+  const elements =
+    typeof trigger === "string"
+      ? document.querySelectorAll(trigger)
+      : Array.isArray(trigger)
+      ? trigger
+      : [trigger];
+
+  if (!elements.length) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          callback(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    {
+      threshold,
+    }
+  );
+
+  elements.forEach((el) => observer.observe(el));
 }
