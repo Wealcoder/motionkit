@@ -8,6 +8,10 @@ import {
 import AnimationStructure from "@/components/common/AnimationStructure";
 import "./index.css";
 import { handleMediaQuery } from "./lib/utils";
+import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelper";
+
+window.WCFFreeAnimBuilder = null;
+WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 
 const storeState = {
   hoverEnabled: false,

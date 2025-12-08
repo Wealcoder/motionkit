@@ -1,27 +1,26 @@
-import {
-  handleAddClassName,
-  handleRemoveClassName,
-  onScrollTrigger,
-} from "@/lib/freeAnimHelper";
 import { freeAnimClassMapping } from "@/register/freeAnimClassMapping";
 
 export function containerSwashInAnim() {
-  let allElements = [];
+  let allElements = new Map();
 
-  function handleOnScrollAnimation({
-    elements = [],
-    trigger = "",
-    classToAdd = [],
-    styles = {},
-  }) {
-    if (!trigger) return;
-    onScrollTrigger(
-      trigger,
-      () => {
-        handleAddClassName(elements, classToAdd, styles);
-      },
-      0.2
-    );
+  function handleOnScrollAnimation({ elements = [] }) {
+    console.log("Swash IN handleOnScrollAnimation");
+
+    console.log({ WCFFreeAnimBuilder });
+
+    WCFFreeAnimBuilder.triggerOnScrollObserver(elements);
+
+    // window.WCFFreeAnimBuilder.addElements([
+    //   {
+    //     id: elementId,
+    //     elements,
+    //     classToAdd,
+    //     styles,
+    //     type: "on_scroll",
+    //   },
+    // ]);
+    // window.WCFFreeAnimBuilder.observeElementsByType("on_scroll");
+    // console.log(window.WCFFreeAnimBuilder.getElements());
   }
 
   function handlePageLoadAnimation() {}
@@ -34,6 +33,37 @@ export function containerSwashInAnim() {
 
   function handler(e) {
     const sections = e.detail["wcf-general-swash-in-free-animation"] || [];
+
+    console.log({ sections });
+
+    // Organizing elements data by trigger type.
+    sections?.forEach((section) => {
+      const { id, preset, triggerType, itemClass, styles, initElementStyle } =
+        section || {};
+      const getElementsByType = allElements?.get(triggerType) || [];
+      const classToAdd = freeAnimClassMapping(preset);
+      const newElement = {
+        id,
+        trigger: itemClass,
+        classToAdd,
+        styles,
+        initElementStyle,
+      };
+      if (!getElementsByType?.length) {
+        allElements.set(triggerType, [newElement]);
+      } else {
+        const allElementsByType = allElements?.get(triggerType);
+        allElements?.set(triggerType, [...allElementsByType, newElement]);
+      }
+    });
+
+    const allOnScrollElements = allElements?.get("on_scroll");
+
+    if (allOnScrollElements?.length > 0) {
+      handleOnScrollAnimation({ elements: allOnScrollElements });
+    }
+
+    return;
     sections.forEach((section) => {
       const {
         enable,
@@ -42,15 +72,14 @@ export function containerSwashInAnim() {
         preset,
         presetGroup,
         title,
-        triggerClass,
         triggerType,
         styles,
         type,
       } = section || {};
 
       const elements = document.querySelectorAll(itemClass) || [];
-      const animationClasses = freeAnimClassMapping(preset);
-      const currentTriggerClass = triggerClass || itemClass;
+
+      console.log({ elements });
 
       if (!itemClass || !elements?.length || !animationClasses?.length) return;
 
@@ -61,8 +90,7 @@ export function containerSwashInAnim() {
       switch (triggerType) {
         case "on_scroll":
           handleOnScrollAnimation({
-            elements,
-            trigger: currentTriggerClass,
+            trigger: itemClass,
             classToAdd: animationClasses,
             styles,
           });
@@ -82,8 +110,8 @@ export function containerSwashInAnim() {
   }
 
   function resetAnimation(e) {
-    handleRemoveClassName(allElements, ["magictime", "swashIn"]);
-    allElements = null;
+    // handleRemoveClassName(allElements, ["magictime", "swashIn"]);
+    // allElements = null;
   }
 
   // wordpress events

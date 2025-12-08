@@ -1,28 +1,22 @@
 /* Free animation classes */
 .wcf-free-ab-swashIn {
-  -webkit-animation-name: swashIn;
-  animation-name: swashIn;
+  -webkit-animation-name: wcf-fee-ab-swashIn-keyframes;
+  animation-name: wcf-fee-ab-swashIn-keyframes;
 }
 
-@-webkit-keyframes swashIn {
+@-webkit-keyframes wcf-fee-ab-swashIn-keyframes {
   0% {
-    opacity: 0;
     transform-origin: 50% 50%;
     transform: scale(0, 0);
-  }
-  90% {
-    opacity: 1;
-    transform-origin: 50% 50%;
-    transform: scale(0.9, 0.9);
+    visibility: visible;
   }
   100% {
-    opacity: 1;
     transform-origin: 50% 50%;
     transform: scale(1, 1);
   }
 }
 
-@keyframes swashIn {
+@keyframes wcf-fee-ab-swashIn-keyframes {
   0% {
     opacity: 0;
     transform-origin: 50% 50%;

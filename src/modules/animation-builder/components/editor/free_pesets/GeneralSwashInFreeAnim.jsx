@@ -22,13 +22,17 @@ const GeneralSwashInFreeAnim = ({ contentStep, updateContentData }) => {
   const { data } = contentStep || {};
 
   const [fullConfig, setFullConfig] = useState({
-    triggerClass: data?.triggerClass || "",
     triggerType: data?.triggerType || "on_scroll",
     itemClass: data?.itemClass || "",
     styles: {
       animationDelay: data?.styles?.animationDelay || "0s",
       animationDuration: data?.styles?.animationDuration || "1s",
       animationIterationCount: data?.styles?.animationIterationCount || "0s",
+    },
+    // handle element initial states
+    initElementStyle: {
+      visibility: "visible",
+      opacity: 1,
     },
   });
 
@@ -77,28 +81,6 @@ const GeneralSwashInFreeAnim = ({ contentStep, updateContentData }) => {
                 </SelectGroup>
               </SelectContent>
             </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* trigger class  */}
-      <div className="grid grid-cols-2 gap-2 justify-between items-center">
-        <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Trigger Class</h3>
-          <ToolTipWrapper text={"Add the trigger class name"} />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="flex-1">
-            <Input
-              value={fullConfig?.triggerClass}
-              onChange={(e) => {
-                setFullConfig((prev) => ({
-                  ...prev,
-                  triggerClass: e.target.value,
-                }));
-              }}
-              placeholder="add value"
-            />
           </div>
         </div>
       </div>

@@ -22,33 +22,3 @@ export function handleRemoveClassName(elements = null, classList = []) {
   if (!elements || !Array.isArray(classList) || !classList?.length) return;
   elements?.forEach((item) => item.classList.remove(...classList));
 }
-
-// Event function
-export function onScrollTrigger(trigger, callback, threshold = 0.2) {
-  if (!trigger || typeof callback !== "function") return;
-
-  const elements =
-    typeof trigger === "string"
-      ? document.querySelectorAll(trigger)
-      : Array.isArray(trigger)
-      ? trigger
-      : [trigger];
-
-  if (!elements.length) return;
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          callback(entry.target);
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    {
-      threshold,
-    }
-  );
-
-  elements.forEach((el) => observer.observe(el));
-}

@@ -1,9 +1,11 @@
-const { handleMediaQuery } = require("./lib/utils");
+import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelper";
 
+const { handleMediaQuery } = require("./lib/utils");
 const storeAnimation = {};
+window.WCFFreeAnimBuilder = null;
+WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 
 function playAnimation() {
-  console.log("play funciton triggered");
   try {
     if (
       wcfanimb !== undefined &&
@@ -63,7 +65,7 @@ function playAnimation() {
       });
     }
   } catch (err) {
-    console.log("PlayAnimation Error", { err });
+    console.error("PlayAnimation Error", { err });
   }
 }
 
