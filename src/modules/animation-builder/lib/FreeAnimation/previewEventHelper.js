@@ -27,9 +27,6 @@ class FreeAnimationEventHelperClass {
             // removing observation for cleanup.
             this.#onScrollObserver.unobserve(entry?.target);
             isAllCompleted++;
-            console.log(
-              `LOG: ON SCROLL OBSERVER => ${entry?.target?.__wcfFreeAnimConfig?.type} : Intersected`
-            );
           } else {
             // applying initial element styles (like controlling opacity or visibility).
             if (
@@ -44,8 +41,6 @@ class FreeAnimationEventHelperClass {
                 style: entry?.target?.__wcfFreeAnimConfig?.initElementStyle,
               });
             }
-
-            console.log(`LOG: ON SCROLL OBSERVER => Not Intersected`);
           }
           // cleaning observer.
           if (isAllCompleted === this.#totalOnScrollObserver) {
@@ -103,8 +98,6 @@ class FreeAnimationEventHelperClass {
   }
 
   handleRemoveClassName({ element = null, classList = [], style = {} }) {
-    console.log("handleRemoveClassName", { element, classList, style });
-
     if (!element) return;
     // Removing inline general styles.
     if (style && typeof style === "object") {

@@ -19,7 +19,6 @@ export function containerSwashInAnim() {
 
   function handleClickAnimation() {}
 
-  // TODO: Work on replay function . and remove observer on reset animation
   function handler(e) {
     const sections = e.detail["wcf-general-swash-in-free-animation"] || [];
 
