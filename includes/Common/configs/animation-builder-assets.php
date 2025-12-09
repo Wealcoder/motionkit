@@ -233,7 +233,7 @@ return [
             ],
             'version' => WCF_ANIMATION_BUILDER_VERSION,
         ],
-         'wcf-general-vanish-in-free-animation' => [
+        'wcf-general-vanish-in-free-animation' => [
             'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalVanishInAnim.js',
             'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralVanishInAnim.js',
             'deps' => [],
@@ -245,7 +245,20 @@ return [
                 'wp-hooks'
             ],
             'version' => WCF_ANIMATION_BUILDER_VERSION,
-        ],
+         ],
+         'wcf-general-sil-free-animation' => [
+            'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpaceInLeftAnim.js',
+            'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSpeceInLeftAnim.js',
+            'deps' => [],
+            'editorDeps' => [
+                'react',
+                'react-dom',
+                'wp-dom-ready',
+                'wp-element',
+                'wp-hooks'
+            ],
+            'version' => WCF_ANIMATION_BUILDER_VERSION,
+          ],
       ]
 
 ];
