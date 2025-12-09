@@ -52,10 +52,12 @@ export function containerSwashInAnim() {
     });
 
     const allOnScrollElements = allElements?.get("on_scroll");
+    const allPageLoadAnimation = allElements?.get("page_load");
 
     if (allOnScrollElements?.length > 0) {
       handleOnScrollAnimation({ elements: allOnScrollElements });
     }
+
     return;
   }
 
