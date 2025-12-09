@@ -9,10 +9,12 @@
     transform-origin: 50% 50%;
     transform: scale(0, 0);
     visibility: visible;
+    opacity: 0;
   }
   100% {
     transform-origin: 50% 50%;
     transform: scale(1, 1);
+    opacity: 1;
   }
 }
 
@@ -162,17 +164,16 @@
   animation-name: twisterInDown;
 }
 
-/* .wcf-free-ab-freeAnimGeneral {
-  -webkit-animation-duration: 1s;
-  animation-duration: 1s;
-  -webkit-animation-fill-mode: both;
+.wcf-free-ab-freeAnimGeneral {
+  animation-duration: var(--animationDuration);
+  animation-delay: var(--animationDelay);
+  animation-iteration-count: var(--animationIterationCount);
+  animation-timing-function: var(--animationTimingFunction);
   animation-fill-mode: both;
 }
 
-@media (print), (prefers-reduced-motion) {
-  .wcf-ab-freeAnimGeneral {
-    -webkit-animation: unset !important;
-    animation: unset !important;
-    transition: none !important;
-  }
-} */
+/* used to controll element visibility */
+.wcf-free-ab-init-style-props {
+  visibility: var(--visibility);
+  opacity: var(--opacity);
+}
