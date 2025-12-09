@@ -1,10 +1,11 @@
 /* Free animation classes */
+/* swash in */
 .wcf-free-ab-swashIn {
-  -webkit-animation-name: wcf-fee-ab-swashIn-keyframes;
-  animation-name: wcf-fee-ab-swashIn-keyframes;
+  -webkit-animation-name: wcf-free-ab-swashIn-keyframes;
+  animation-name: wcf-free-ab-swashIn-keyframes;
 }
 
-@-webkit-keyframes wcf-fee-ab-swashIn-keyframes {
+@-webkit-keyframes wcf-free-ab-swashIn-keyframes {
   0% {
     transform-origin: 50% 50%;
     transform: scale(0, 0);
@@ -18,7 +19,7 @@
   }
 }
 
-@keyframes wcf-fee-ab-swashIn-keyframes {
+@keyframes wcf-free-ab-swashIn-keyframes {
   0% {
     opacity: 0;
     transform-origin: 50% 50%;
@@ -36,12 +37,13 @@
   }
 }
 
-.vanishIn {
-  -webkit-animation-name: vanishIn;
-  animation-name: vanishIn;
+/* vanishIn */
+.wcf-free-ab-vanishIn {
+  -webkit-animation-name: wcf-free-ab-vanishIn-keyframes;
+  animation-name: wcf-free-ab-vanishIn-keyframes;
 }
 
-@-webkit-keyframes vanishIn {
+@-webkit-keyframes wcf-free-ab-vanishIn-keyframes {
   0% {
     opacity: 0;
     transform-origin: 50% 50%;
@@ -55,7 +57,8 @@
     filter: blur(0px);
   }
 }
-@keyframes vanishIn {
+
+@keyframes wcf-free-ab-vanishIn-keyframes {
   0% {
     opacity: 0;
     transform-origin: 50% 50%;

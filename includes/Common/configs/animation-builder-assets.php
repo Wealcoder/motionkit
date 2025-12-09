@@ -218,12 +218,24 @@ return [
             'version' => WCF_ANIMATION_BUILDER_VERSION,
         ],
       ],
-
+      // free animation presets
       "freePresets"=>[
- // free animation presets
          'wcf-general-swash-in-free-animation' => [
             'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSwashInAnim.js',
             'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSwashInAnim.js',
+            'deps' => [],
+            'editorDeps' => [
+                'react',
+                'react-dom',
+                'wp-dom-ready',
+                'wp-element',
+                'wp-hooks'
+            ],
+            'version' => WCF_ANIMATION_BUILDER_VERSION,
+        ],
+         'wcf-general-vanish-in-free-animation' => [
+            'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalVanishInAnim.js',
+            'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralVanishInAnim.js',
             'deps' => [],
             'editorDeps' => [
                 'react',

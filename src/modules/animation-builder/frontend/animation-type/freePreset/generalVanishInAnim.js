@@ -26,7 +26,7 @@ export function containerSwashInAnim() {
   function handleClickAnimation() {}
 
   function handler(e) {
-    const sections = e.detail["wcf-general-swash-in-free-animation"] || [];
+    const sections = e.detail["wcf-general-vanish-in-free-animation"] || [];
 
     // Organizing elements data by trigger type.
     sections?.forEach((section) => {
