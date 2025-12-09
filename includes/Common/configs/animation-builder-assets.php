@@ -259,6 +259,19 @@ return [
             ],
             'version' => WCF_ANIMATION_BUILDER_VERSION,
           ],
+          'wcf-general-sir-free-animation' => [
+            'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpeceInRightAnim.js',
+            'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSpeceInRightAnim.js',
+            'deps' => [],
+            'editorDeps' => [
+                'react',
+                'react-dom',
+                'wp-dom-ready',
+                'wp-element',
+                'wp-hooks'
+            ],
+            'version' => WCF_ANIMATION_BUILDER_VERSION,
+          ],
       ]
 
 ];

@@ -1,6 +1,6 @@
 import { freeAnimClassMapping } from "@/register/freeAnimClassMapping";
 
-export function containerSwashInAnim() {
+export function generalVanishInAnim() {
   let allElements = new Map();
 
   function handleOnScrollAnimation({ elements = [] }) {
@@ -101,4 +101,4 @@ export function containerSwashInAnim() {
 
   return { destroy: resetAnimation };
 }
-containerSwashInAnim();
+generalVanishInAnim();

@@ -104,12 +104,13 @@
   }
 }
 
-.spaceInRight {
-  -webkit-animation-name: spaceInRight;
-  animation-name: spaceInRight;
+/* space in right */
+.wcf-free-ab-spaceInRight {
+  -webkit-animation-name: wcf-free-ab-spaceInRight-keyframes;
+  animation-name: wcf-free-ab-spaceInRight-keyframes;
 }
 
-@-webkit-keyframes spaceInRight {
+@-webkit-keyframes wcf-free-ab-spaceInRight-keyframes {
   0% {
     opacity: 0;
     transform-origin: 100% 50%;
@@ -121,7 +122,7 @@
     transform: scale(1) translate(0%, 0%);
   }
 }
-@keyframes spaceInRight {
+@keyframes wcf-free-ab-spaceInRight-keyframes {
   0% {
     opacity: 0;
     transform-origin: 100% 50%;

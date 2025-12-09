@@ -1,6 +1,6 @@
 import { freeAnimClassMapping } from "@/register/freeAnimClassMapping";
 
-export function generalSpaceInLeftAnim() {
+export function generalSpeceInRightAnim() {
   let allElements = new Map();
 
   function handleOnScrollAnimation({ elements = [] }) {
@@ -26,7 +26,7 @@ export function generalSpaceInLeftAnim() {
   function handleClickAnimation() {}
 
   function handler(e) {
-    const sections = e.detail["wcf-general-sil-free-animation"] || [];
+    const sections = e.detail["wcf-general-sir-free-animation"] || [];
 
     // Organizing elements data by trigger type.
     sections?.forEach((section) => {
@@ -101,4 +101,4 @@ export function generalSpaceInLeftAnim() {
 
   return { destroy: resetAnimation };
 }
-generalSpaceInLeftAnim();
+generalSpeceInRightAnim();
