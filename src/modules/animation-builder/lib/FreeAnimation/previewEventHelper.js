@@ -10,20 +10,28 @@ class FreeAnimationEventHelperClass {
         let isAllCompleted = 0; // using for clean up purpose
         entries?.forEach((entry) => {
           if (entry?.isIntersecting) {
-            // if intersecting adding classnames and styles.
+            // removing initial props classes style.
+            this.handleRemoveClassName({
+              element: entry?.target,
+              classList: ["wcf-free-ab-init-style-props"],
+              style: entry?.target?.__wcfFreeAnimConfig?.initElementStyle,
+            });
+
+            // Adding animation classnames and styles.
             this.handleAddClassName({
-              elements: entry?.target,
+              element: entry?.target,
               classList: entry?.target?.__wcfFreeAnimConfig?.classToAdd,
               style: entry?.target?.__wcfFreeAnimConfig?.styles,
             });
-            // removing observation when intersected.
+
+            // removing observation for cleanup.
             this.#onScrollObserver.unobserve(entry?.target);
             isAllCompleted++;
-            if (WCF_ANIMATION_BUILDER.debug) {
-              console.log(``);
-            }
+            console.log(
+              `LOG: ON SCROLL OBSERVER => ${entry?.target?.__wcfFreeAnimConfig?.type} : Intersected`
+            );
           } else {
-            // applying initial element styles (like controlling opacity or visibility)
+            // applying initial element styles (like controlling opacity or visibility).
             if (
               entry?.target?.__wcfFreeAnimConfig?.initElementStyle &&
               Object.keys(
@@ -31,20 +39,25 @@ class FreeAnimationEventHelperClass {
               )?.length > 0
             ) {
               this.handleAddClassName({
-                elements: entry,
+                element: entry?.target,
+                classList: ["wcf-free-ab-init-style-props"],
                 style: entry?.target?.__wcfFreeAnimConfig?.initElementStyle,
               });
             }
+
+            console.log(`LOG: ON SCROLL OBSERVER => Not Intersected`);
           }
           // cleaning observer.
           if (isAllCompleted === this.#totalOnScrollObserver) {
             this.#onScrollObserver.disconnect();
+            this.#onScrollObserver = null;
+            this.#totalOnScrollObserver = 0;
           }
         });
       },
       {
         threshold: 0,
-        rootMargin: "50% 0px -50% 0px",
+        rootMargin: "50% 0px -20% 0px",
       }
     );
   }
@@ -66,19 +79,35 @@ class FreeAnimationEventHelperClass {
   }
 
   // Helper Functions
-  handleAddClassName({ elements = null, classList = [], style = {} }) {
-    if (!elements) return;
+  handleAddClassName({ element = null, classList = [], style = {} }) {
+    if (!element) return;
     // Applying inline general styles.
     if (style && typeof style === "object") {
       Object.entries(style).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          elements.style[key] = value;
+        if (key !== null && element.style) {
+          element.style.setProperty(`--${key}`, value);
+        }
+      });
+    }
+    // Applying mapped classname from freeAnimClassMapping.js under register into the target.
+    if (Array.isArray(classList) && classList.length) {
+      element.classList.add(...classList);
+    }
+  }
+
+  handleRemoveClassName({ element = null, classList = [], style = {} }) {
+    if (!element) return;
+    // Removing inline general styles.
+    if (style && typeof style === "object") {
+      Object.entries(style).forEach(([key, _]) => {
+        if (key !== null && element.style) {
+          element.style.removeProperty(`--${key}`);
         }
       });
     }
     // Apping mapped classname from freeAnimClassMapping.js under register
     if (Array.isArray(classList) && classList.length) {
-      elements.classList.add(...classList);
+      element.classList.remove(...classList);
     }
   }
 }

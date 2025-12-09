@@ -4,23 +4,11 @@ export function containerSwashInAnim() {
   let allElements = new Map();
 
   function handleOnScrollAnimation({ elements = [] }) {
-    console.log("Swash IN handleOnScrollAnimation");
-
-    console.log({ WCFFreeAnimBuilder });
-
+    if (!WCFFreeAnimBuilder) {
+      console.error("LOG: Free animation event handler not found!");
+      return;
+    }
     WCFFreeAnimBuilder.triggerOnScrollObserver(elements);
-
-    // window.WCFFreeAnimBuilder.addElements([
-    //   {
-    //     id: elementId,
-    //     elements,
-    //     classToAdd,
-    //     styles,
-    //     type: "on_scroll",
-    //   },
-    // ]);
-    // window.WCFFreeAnimBuilder.observeElementsByType("on_scroll");
-    // console.log(window.WCFFreeAnimBuilder.getElements());
   }
 
   function handlePageLoadAnimation() {}
@@ -31,15 +19,21 @@ export function containerSwashInAnim() {
 
   function handleClickAnimation() {}
 
+  // TODO: Work on replay function . and remove observer on reset animation
   function handler(e) {
     const sections = e.detail["wcf-general-swash-in-free-animation"] || [];
 
-    console.log({ sections });
-
     // Organizing elements data by trigger type.
     sections?.forEach((section) => {
-      const { id, preset, triggerType, itemClass, styles, initElementStyle } =
-        section || {};
+      const {
+        id,
+        preset,
+        triggerType,
+        itemClass,
+        styles,
+        initElementStyle,
+        type,
+      } = section || {};
       const getElementsByType = allElements?.get(triggerType) || [];
       const classToAdd = freeAnimClassMapping(preset);
       const newElement = {
@@ -48,6 +42,7 @@ export function containerSwashInAnim() {
         classToAdd,
         styles,
         initElementStyle,
+        type,
       };
       if (!getElementsByType?.length) {
         allElements.set(triggerType, [newElement]);
@@ -110,8 +105,7 @@ export function containerSwashInAnim() {
   }
 
   function resetAnimation(e) {
-    // handleRemoveClassName(allElements, ["magictime", "swashIn"]);
-    // allElements = null;
+    console.log("Testng reset");
   }
 
   // wordpress events

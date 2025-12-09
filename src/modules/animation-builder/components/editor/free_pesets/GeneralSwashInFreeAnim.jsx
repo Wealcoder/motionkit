@@ -9,6 +9,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
+import AnimationTimingFunc from "./Shared/AnimationTimingFunc";
+import AnimationDelay from "./Shared/AnimationDelay";
+import AnimationDuration from "./Shared/AnimationDuration";
+import AnimationRepeat from "./Shared/AnimationRepeat";
 
 const GeneralSwashInFreeAnim = ({ contentStep, updateContentData }) => {
   const triggerTypes = [
@@ -28,11 +32,12 @@ const GeneralSwashInFreeAnim = ({ contentStep, updateContentData }) => {
       animationDelay: data?.styles?.animationDelay || "0s",
       animationDuration: data?.styles?.animationDuration || "1s",
       animationIterationCount: data?.styles?.animationIterationCount || "0s",
+      animationTimingFunction: data?.styles?.animationTimingFunction || "ease",
     },
     // handle element initial states
     initElementStyle: {
-      visibility: "visible",
-      opacity: 1,
+      visibility: "hidden",
+      opacity: 0,
     },
   });
 
@@ -108,92 +113,52 @@ const GeneralSwashInFreeAnim = ({ contentStep, updateContentData }) => {
       </div>
 
       {/* delay  */}
-      <div className="grid grid-cols-2 gap-2 justify-between items-center">
-        <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Delay</h3>
-          <ToolTipWrapper text={"Animation delay in seconds"} />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="flex-1">
-            <Input
-              type="number"
-              value={Number(
-                fullConfig?.styles?.animationDelay?.replace("s", "")
-              )}
-              min={0}
-              step={1}
-              onChange={(e) => {
-                const value = Math.max(0, Number(e.target.value || 0));
-                setFullConfig((prev) => ({
-                  ...prev,
-                  styles: {
-                    ...prev.styles,
-                    animationDelay: `${value}s`,
-                  },
-                }));
-              }}
-            />
-          </div>
-        </div>
-      </div>
+      <AnimationDelay
+        onChange={(value) => {
+          setFullConfig((prev) => {
+            const newState = { ...prev };
+            newState.styles["animationDelay"] = value;
+            return newState;
+          });
+        }}
+        value={fullConfig?.styles?.animationDelay}
+      />
 
       {/* duration  */}
-      <div className="grid grid-cols-2 gap-2 justify-between items-center">
-        <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Duration</h3>
-          <ToolTipWrapper text={"Animation duration in seconds"} />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="flex-1">
-            <Input
-              type="number"
-              value={Number(
-                fullConfig?.styles?.animationDuration?.replace("s", "")
-              )}
-              min={0}
-              step={1}
-              onChange={(e) => {
-                const value = Math.max(0, Number(e.target.value || 0));
-                setFullConfig((prev) => ({
-                  ...prev,
-                  styles: {
-                    ...prev.styles,
-                    animationDuration: `${value}s`,
-                  },
-                }));
-              }}
-            />
-          </div>
-        </div>
-      </div>
+      <AnimationDuration
+        onChange={(value) => {
+          setFullConfig((prev) => {
+            const newState = { ...prev };
+            newState.styles["animationDuration"] = value;
+            return newState;
+          });
+        }}
+        value={fullConfig?.styles?.animationDuration}
+      />
+
+      {/* easing */}
+      <AnimationTimingFunc
+        onChange={(value) => {
+          setFullConfig((prev) => {
+            const newState = { ...prev };
+            newState.styles["animationTimingFunction"] = value;
+            return newState;
+          });
+        }}
+        value={fullConfig?.styles?.animationTimingFunction}
+      />
 
       {/* repeat */}
-      <div className="grid grid-cols-2 gap-2 justify-between items-center">
-        <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Repeat</h3>
-          <ToolTipWrapper text={"Add the class name of the video element"} />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="flex-1">
-            <Input
-              type="number"
-              value={Number(fullConfig?.styles?.animationIterationCount) ?? 0}
-              min={0}
-              step={1}
-              onChange={(e) => {
-                const value = Math.max(0, Number(e.target.value || 0));
-                setFullConfig((prev) => ({
-                  ...prev,
-                  styles: {
-                    ...prev.styles,
-                    animationIterationCount: value,
-                  },
-                }));
-              }}
-            />
-          </div>
-        </div>
-      </div>
+      <AnimationRepeat
+        onChange={(value) => {
+          setFullConfig((prev) => {
+            const newState = { ...prev };
+            newState.styles["animationIterationCount"] = value;
+            return newState;
+          });
+        }}
+        value={fullConfig?.styles?.animationIterationCount}
+      />
     </div>
   );
 };
