@@ -4,23 +4,11 @@ export function containerSwashInAnim() {
   let allElements = new Map();
 
   function handleOnScrollAnimation({ elements = [] }) {
-    console.log("Swash IN handleOnScrollAnimation");
-
-    console.log({ WCFFreeAnimBuilder });
-
+    if (!WCFFreeAnimBuilder) {
+      console.error("LOG: Free animation event handler not found!");
+      return;
+    }
     WCFFreeAnimBuilder.triggerOnScrollObserver(elements);
-
-    // window.WCFFreeAnimBuilder.addElements([
-    //   {
-    //     id: elementId,
-    //     elements,
-    //     classToAdd,
-    //     styles,
-    //     type: "on_scroll",
-    //   },
-    // ]);
-    // window.WCFFreeAnimBuilder.observeElementsByType("on_scroll");
-    // console.log(window.WCFFreeAnimBuilder.getElements());
   }
 
   function handlePageLoadAnimation() {}
@@ -34,12 +22,17 @@ export function containerSwashInAnim() {
   function handler(e) {
     const sections = e.detail["wcf-general-swash-in-free-animation"] || [];
 
-    console.log({ sections });
-
     // Organizing elements data by trigger type.
     sections?.forEach((section) => {
-      const { id, preset, triggerType, itemClass, styles, initElementStyle } =
-        section || {};
+      const {
+        id,
+        preset,
+        triggerType,
+        itemClass,
+        styles,
+        initElementStyle,
+        type,
+      } = section || {};
       const getElementsByType = allElements?.get(triggerType) || [];
       const classToAdd = freeAnimClassMapping(preset);
       const newElement = {
@@ -48,6 +41,7 @@ export function containerSwashInAnim() {
         classToAdd,
         styles,
         initElementStyle,
+        type,
       };
       if (!getElementsByType?.length) {
         allElements.set(triggerType, [newElement]);
@@ -62,56 +56,42 @@ export function containerSwashInAnim() {
     if (allOnScrollElements?.length > 0) {
       handleOnScrollAnimation({ elements: allOnScrollElements });
     }
-
     return;
-    sections.forEach((section) => {
-      const {
-        enable,
-        id,
-        itemClass,
-        preset,
-        presetGroup,
-        title,
-        triggerType,
-        styles,
-        type,
-      } = section || {};
-
-      const elements = document.querySelectorAll(itemClass) || [];
-
-      console.log({ elements });
-
-      if (!itemClass || !elements?.length || !animationClasses?.length) return;
-
-      // storing preview animation information for removing animation purpose
-      allElements = elements;
-
-      // handle animations based on trigger type
-      switch (triggerType) {
-        case "on_scroll":
-          handleOnScrollAnimation({
-            trigger: itemClass,
-            classToAdd: animationClasses,
-            styles,
-          });
-          break;
-        case "page_load":
-          break;
-        case "play_with_scroll":
-          break;
-        case "hover":
-          break;
-        case "click":
-          break;
-        default:
-          break;
-      }
-    });
   }
 
-  function resetAnimation(e) {
-    // handleRemoveClassName(allElements, ["magictime", "swashIn"]);
-    // allElements = null;
+  function resetAnimation() {
+    // removing all animations elements property by trigger class.
+    const flattenElements = [...allElements.values()].flat();
+
+    flattenElements?.forEach((element) => {
+      const { trigger, classToAdd: classToRemove, styles } = element || {};
+      const nodes = document.querySelectorAll(trigger) || [];
+      nodes.forEach((entry) => {
+        console.log("resetAnimation", {
+          flattenElements,
+          element: {
+            trigger,
+            classToAdd: classToRemove,
+            styles,
+          },
+          nodes,
+          entry,
+          target: entry?.target,
+        });
+        WCFFreeAnimBuilder.handleRemoveClassName({
+          element: entry,
+          classList: classToRemove,
+          style: styles,
+        });
+      });
+    });
+
+    // kill running observer if available
+    WCFFreeAnimBuilder.killOnScrollObserver();
+
+    // clear Map.
+    allElements?.clear();
+    return;
   }
 
   // wordpress events
