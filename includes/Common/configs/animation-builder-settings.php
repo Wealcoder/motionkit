@@ -167,6 +167,22 @@ return array(
 					),
 				),
 			),
+			'sticky'  => array(
+				'title'     => 'Sticky',
+				'is_active' => false,
+				'elements'  => array(
+					'wcf-header-sticky-animation' => array(
+						'label'       => 'Media',
+						'is_active'   => false,
+						'is_upcoming' => false,
+						'icon'        => 'wcf-icon-Image-Box',
+						'demo_url'    => '',
+						'doc_url'     => '',
+						'youtube_url' => '',
+						'description' => 'Create a smooth and responsive sticky header animation that enhances navigation visibility while maintaining a clean user experience. The header intelligently sticks to the top as users scroll, using subtle transitions to ensure it feels natural and unobtrusive.',
+					),
+				),
+			),
 			'cursor' => array(
 				'title'     => 'Cursor',
 				'is_active' => false,
@@ -193,7 +209,7 @@ return array(
 					),
 				),
 			),
-      'container' => array(
+			'container' => array(
 				'title'     => 'Container',
 				'is_active' => false,
 				'elements'  => array(
@@ -211,11 +227,11 @@ return array(
 			),
 		),
 	),
-  // free animations
-  'free_animations' => array(
+	// free animations
+	'free_animations' => array(
 		'is_active' => false,
 		'elements'  => array(
-      'general' => array(
+			'general' => array(
 				'title'     => 'General',
 				'is_active' => false,
 				'elements'  => array(

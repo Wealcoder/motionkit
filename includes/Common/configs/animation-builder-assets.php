@@ -217,6 +217,19 @@ return [
             ],
             'version' => WCF_ANIMATION_BUILDER_VERSION,
         ],
+        'wcf-header-sticky-animation' => [
+            'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/headerStickyAnim.js',
+            'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rHeaderStickyAnim.js',
+            'deps' => ['gsap', 'ScrollTrigger'],
+            'editorDeps' => [
+                'react',
+                'react-dom',
+                'wp-dom-ready',
+                'wp-element',
+                'wp-hooks'
+            ],
+            'version' => WCF_ANIMATION_BUILDER_VERSION,
+        ],
       ],
 
       "freePresets"=>[
