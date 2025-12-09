@@ -49,9 +49,7 @@ class FreeAnimationEventHelperClass {
           }
           // cleaning observer.
           if (isAllCompleted === this.#totalOnScrollObserver) {
-            this.#onScrollObserver.disconnect();
-            this.#onScrollObserver = null;
-            this.#totalOnScrollObserver = 0;
+            this.killOnScrollObserver();
           }
         });
       },
@@ -60,6 +58,15 @@ class FreeAnimationEventHelperClass {
         rootMargin: "50% 0px -20% 0px",
       }
     );
+  }
+
+  killOnScrollObserver() {
+    if (this.#onScrollObserver) {
+      this.#onScrollObserver.disconnect();
+      this.#onScrollObserver = null;
+      this.#totalOnScrollObserver = 0;
+    }
+    return;
   }
 
   triggerOnScrollObserver(elements = []) {
@@ -96,6 +103,8 @@ class FreeAnimationEventHelperClass {
   }
 
   handleRemoveClassName({ element = null, classList = [], style = {} }) {
+    console.log("handleRemoveClassName", { element, classList, style });
+
     if (!element) return;
     // Removing inline general styles.
     if (style && typeof style === "object") {
