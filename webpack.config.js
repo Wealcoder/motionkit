@@ -40,12 +40,6 @@ module.exports = {
         "./src/modules/animation-builder/animbuilder-copy.css",
       "modules/animation-builder/freeAnim": "./src/css/freeAnim.css",
 
-      // auto-generated preset entries (frontend)
-      ...getPresetEntries({
-        folder:
-          "./src/modules/animation-builder/frontend/animation-type/preset",
-        outPrefix: "modules/animation-builder/frontend/presets/",
-      }),
 
       // auto-generated free preset entries (frontend)
       ...getPresetEntries({
