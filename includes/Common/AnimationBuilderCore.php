@@ -42,15 +42,14 @@ class AnimationBuilderCore
 	}
 
 	/**
-     * Initialize compatibility checks
-     *
-     * @return void
-     */
-    public function init(): void
-    {
-        $this->init_hooks();
-
-    }
+	 * Initialize compatibility checks
+	 *
+	 * @return void
+	 */
+	public function init(): void
+	{
+		$this->init_hooks();
+	}
 
 	/**
 	 *  Plugin class constructor
@@ -73,9 +72,9 @@ class AnimationBuilderCore
 		add_action('wp_ajax_wcf_anim_builder_configs_delete', [$this, 'configs_delete']);
 
 		//editor
-		 $this->page_type = AnimationBuilderPageType::instance();
-		 $builder = AnimationBuilderEditor::instance();
-		 $builder->setPageType($this->page_type);
+		$this->page_type = AnimationBuilderPageType::instance();
+		$builder = AnimationBuilderEditor::instance();
+		$builder->setPageType($this->page_type);
 	}
 
 
@@ -90,8 +89,8 @@ class AnimationBuilderCore
 		}
 
 		// Get and sanitize the JSON data
-		$pageTypeConfigs = isset($_POST['pageTypeConfigs']) ? sanitize_text_field( wp_unslash($_POST['pageTypeConfigs']) ) : '';
-		$animationConfigs = isset($_POST['animationConfigs']) ? sanitize_text_field( wp_unslash($_POST['animationConfigs']) ): '';
+		$pageTypeConfigs = isset($_POST['pageTypeConfigs']) ? sanitize_text_field(wp_unslash($_POST['pageTypeConfigs'])) : '';
+		$animationConfigs = isset($_POST['animationConfigs']) ? sanitize_text_field(wp_unslash($_POST['animationConfigs'])) : '';
 
 		// Validate JSON structure
 		if (empty($pageTypeConfigs) || empty($animationConfigs)) {
@@ -126,7 +125,7 @@ class AnimationBuilderCore
 		}
 
 		// Get and sanitize the JSON data
-		$pageTypeConfigs = isset($_POST['pageTypeConfigs']) ? sanitize_text_field( wp_unslash($_POST['pageTypeConfigs']) ): '';
+		$pageTypeConfigs = isset($_POST['pageTypeConfigs']) ? sanitize_text_field(wp_unslash($_POST['pageTypeConfigs'])) : '';
 
 		// Validate JSON structure
 		if (empty($pageTypeConfigs)) {
@@ -153,12 +152,12 @@ class AnimationBuilderCore
 	public function config_enqueue_script()
 	{
 
-		if (isset($_GET['action']) && sanitize_text_field( wp_unslash($_GET['action']) ) == 'animation-builder') {
+		if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) == 'animation-builder') {
 			wp_enqueue_style('wcf-animbuilder-class-selector');
 		}
 		$is_custom = false;
 		$deps = $this->register_builder_dependency();
-			// Register
+		// Register
 		wp_register_style(
 			'wcf-animation-builder-free-anim',
 			WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/freeAnim.css',
@@ -166,8 +165,8 @@ class AnimationBuilderCore
 			WCF_ANIMATION_BUILDER_VERSION,
 			'all' // ⬅ media="all"
 		);
-		if (isset($_GET['action']) && sanitize_text_field( wp_unslash($_GET['action']) ) == 'animation-builder') {
-      		$is_custom = true;
+		if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) == 'animation-builder') {
+			$is_custom = true;
 			wp_enqueue_style(
 				'aae-animation-builder-preview',
 				WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/preview.css'
@@ -177,13 +176,13 @@ class AnimationBuilderCore
 			$config          = include plugin_dir_path(__FILE__) . '/configs/animation-builder-assets.php'; // adjust path
 			$active_elements = $this->get_active_element_keys("wcf_anim_builder_free_animation_settings");
 			if (is_array($active_elements) && is_array($config)) {
-			wp_enqueue_style('wcf-animation-builder-free-anim');
-			foreach ($active_elements as $key) {
-				if (isset($config['freePresets'][$key])) {
-				$element = $config['freePresets'][$key];
-				wp_enqueue_script($key, $element['src'], $element['deps'], WCF_ANIMATION_BUILDER_VERSION, true);
+				wp_enqueue_style('wcf-animation-builder-free-anim');
+				foreach ($active_elements as $key) {
+					if (isset($config['freePresets'][$key])) {
+						$element = $config['freePresets'][$key];
+						wp_enqueue_script($key, $element['src'], $element['deps'], WCF_ANIMATION_BUILDER_VERSION, true);
+					}
 				}
-			}
 			}
 			$config = include plugin_dir_path(__FILE__) . 'configs/animation-builder-device.php'; // adjust path
 			// sanitize / normalize
@@ -225,7 +224,7 @@ class AnimationBuilderCore
 
 			if ($pageConfigs = $this->page_type->getConfig()) {
 				$this->getActivePresets($pageConfigs, $is_custom);
-				$deps = array_filter($deps, function($item) {
+				$deps = array_filter($deps, function ($item) {
 					return $item !== 'wp-element';
 				});
 				$deps = array_values($deps);
@@ -235,15 +234,15 @@ class AnimationBuilderCore
 				$active_elements = $this->get_active_element_keys("wcf_anim_builder_free_animation_settings");
 				if (is_array($active_elements) && is_array($config)) {
 
-				// Enqueue
-				wp_enqueue_style('wcf-animation-builder-free-anim');
+					// Enqueue
+					wp_enqueue_style('wcf-animation-builder-free-anim');
 
-				foreach ($active_elements as $key) {
-					if (isset($config['freePresets'][$key])) {
-					$element = $config['freePresets'][$key];
-					wp_enqueue_script($key, $element['src'], $element['deps'], WCF_ANIMATION_BUILDER_VERSION, true);
+					foreach ($active_elements as $key) {
+						if (isset($config['freePresets'][$key])) {
+							$element = $config['freePresets'][$key];
+							wp_enqueue_script($key, $element['src'], $element['deps'], WCF_ANIMATION_BUILDER_VERSION, true);
+						}
 					}
-				}
 				}
 				$config = include plugin_dir_path(__FILE__) . 'configs/animation-builder-device.php'; // adjust path
 				// sanitize / normalize
@@ -264,8 +263,8 @@ class AnimationBuilderCore
 					]
 				);
 			}
-      		do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts',$deps,$is_custom);
 		}
+		do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts', $deps, $is_custom);
 	}
 	public function register_builder_dependency()
 	{
@@ -324,22 +323,23 @@ class AnimationBuilderCore
 			exit; // Prevent WordPress from loading other templates
 		}
 	}
-	function wp_get_current_url() {
+	function wp_get_current_url()
+	{
 
 		// Detect HTTPS
 		$scheme = is_ssl() ? 'https' : 'http';
 
 		// Raw host
-		$host = isset( $_SERVER['HTTP_HOST'] )
-			? esc_url_raw( wp_unslash( $_SERVER['HTTP_HOST'] ) )
+		$host = isset($_SERVER['HTTP_HOST'])
+			? esc_url_raw(wp_unslash($_SERVER['HTTP_HOST']))
 			: '';
 
 		// Just in case the host contains a protocol, strip it
-		$host = preg_replace( '#^https?://#i', '', $host );
+		$host = preg_replace('#^https?://#i', '', $host);
 
 		// Sanitize request URI as URL part
-		$request_uri = isset( $_SERVER['REQUEST_URI'] )
-			? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) )
+		$request_uri = isset($_SERVER['REQUEST_URI'])
+			? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI']))
 			: '';
 
 		// Remove unwanted query args
@@ -350,7 +350,7 @@ class AnimationBuilderCore
 			'aaeid',
 		);
 
-		$request_uri = remove_query_arg( $strip, $request_uri );
+		$request_uri = remove_query_arg($strip, $request_uri);
 
 		// Final URL
 		$url = "{$scheme}://{$host}{$request_uri}";
@@ -401,6 +401,3 @@ class AnimationBuilderCore
 		}
 	}
 }
-
-
-
