@@ -11,8 +11,8 @@ import {
 const triggerTypes = [
   { title: "On Scroll", value: "on_scroll" },
   { title: "On Page Load", value: "page_load" },
-  { title: "Hover", value: "hover" },
-  { title: "Click", value: "click" },
+  // { title: "Hover", value: "hover" },
+  // { title: "Click", value: "click" },
 ];
 
 const AnimationTriggerType = ({
