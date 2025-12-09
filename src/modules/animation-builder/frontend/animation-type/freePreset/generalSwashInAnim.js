@@ -11,7 +11,14 @@ export function containerSwashInAnim() {
     WCFFreeAnimBuilder.triggerOnScrollObserver(elements);
   }
 
-  function handlePageLoadAnimation() {}
+  function handlePageLoadAnimation({ elements = [] }) {
+    if (!WCFFreeAnimBuilder) {
+      console.error("LOG: Free animation event handler not found!");
+      return;
+    }
+    WCFFreeAnimBuilder.initOnPageLoadEvent(elements);
+    console.log("Called initOnPageLoadEvent");
+  }
 
   function handlePlayWithScroll() {}
 
@@ -56,6 +63,10 @@ export function containerSwashInAnim() {
 
     if (allOnScrollElements?.length > 0) {
       handleOnScrollAnimation({ elements: allOnScrollElements });
+    }
+
+    if (allPageLoadAnimation?.length > 0) {
+      handlePageLoadAnimation({ elements: allPageLoadAnimation });
     }
 
     return;
