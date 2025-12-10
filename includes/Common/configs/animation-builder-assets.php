@@ -327,6 +327,32 @@ return [
       ],
       'version' => WCF_ANIMATION_BUILDER_VERSION,
     ],
+    'wcf-text-clip-slide-up-free-animation' => [
+      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipSlideUpAnim.js',
+      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rTextClipSlideUpAnim.js',
+      'deps' => [],
+      'editorDeps' => [
+        'react',
+        'react-dom',
+        'wp-dom-ready',
+        'wp-element',
+        'wp-hooks'
+      ],
+      'version' => WCF_ANIMATION_BUILDER_VERSION,
+    ],
+    'wcf-text-clip-slide-right-free-animation' => [
+      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipSlideRightAnim.js',
+      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rTextClipSlideRightAnim.js',
+      'deps' => [],
+      'editorDeps' => [
+        'react',
+        'react-dom',
+        'wp-dom-ready',
+        'wp-element',
+        'wp-hooks'
+      ],
+      'version' => WCF_ANIMATION_BUILDER_VERSION,
+    ],
   ]
 
 ];
