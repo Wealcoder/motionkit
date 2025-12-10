@@ -23,6 +23,7 @@ const HeaderStickyPrest = ({ contentStep, updateContentData }) => {
     styleClass: data?.styleClass || "",
     upScroll: data?.upScroll || false,
     ease: data?.ease || "power2.out",
+    duration: data?.duration || 1,
   });
 
   useEffect(() => {
@@ -190,6 +191,30 @@ const HeaderStickyPrest = ({ contentStep, updateContentData }) => {
                 </SelectGroup>
               </SelectContent>
             </Select>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 justify-between items-center">
+        <div className="flex items-center gap-1">
+          <h3 className="text-xs text-text-2 capitalize">Duration</h3>
+          <ToolTipWrapper text={"Animation duration in seconds"} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1">
+            <Input
+              type="number"
+              value={fullConfig?.duration}
+              onChange={(e) => {
+                setFullConfig((prev) => ({
+                  ...prev,
+                  duration: parseFloat(e.target.value) || 1,
+                }));
+              }}
+              placeholder="1"
+              step="0.1"
+              min="0"
+            />
           </div>
         </div>
       </div>
