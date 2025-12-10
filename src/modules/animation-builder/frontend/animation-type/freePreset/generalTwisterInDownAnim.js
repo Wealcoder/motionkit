@@ -1,44 +1,18 @@
-import { freeAnimClassMapping } from "@/register/freeAnimClassMapping";
 import {
   handleOnScrollAnimation,
+  handleOrganizedSectionByTriggerType,
   handlePageLoadAnimation,
   resetAnimation,
 } from "./Shared/freeAnimationHelper";
 
 export function generalSpaceInLeftAnim() {
-  let allElements = new Map();
+  let allElements;
 
   function handler(e) {
     const sections = e.detail["wcf-general-tid-free-animation"] || [];
 
     // Organizing elements data by trigger type.
-    sections?.forEach((section) => {
-      const {
-        id,
-        preset,
-        triggerType,
-        itemClass,
-        styles,
-        initElementStyle,
-        type,
-      } = section || {};
-      const getElementsByType = allElements?.get(triggerType) || [];
-      const classToAdd = freeAnimClassMapping(preset);
-      const newElement = {
-        id,
-        trigger: itemClass,
-        classToAdd,
-        styles,
-        initElementStyle,
-        type,
-      };
-      if (!getElementsByType?.length) {
-        allElements.set(triggerType, [newElement]);
-      } else {
-        const allElementsByType = allElements?.get(triggerType);
-        allElements?.set(triggerType, [...allElementsByType, newElement]);
-      }
-    });
+    allElements = handleOrganizedSectionByTriggerType(sections);
 
     const allOnScrollElements = allElements?.get("on_scroll");
     const allPageLoadAnimation = allElements?.get("page_load");

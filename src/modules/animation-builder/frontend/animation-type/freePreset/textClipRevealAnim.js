@@ -5,11 +5,11 @@ import {
   resetAnimation,
 } from "./Shared/freeAnimationHelper";
 
-export function generalVanishInAnim() {
+export function textClipRevealAnim() {
   let allElements;
 
   function handler(e) {
-    const sections = e.detail["wcf-general-vanish-in-free-animation"] || [];
+    const sections = e.detail["wcf-text-clip-reveal-free-animation"] || [];
 
     // Organizing elements data by trigger type.
     allElements = handleOrganizedSectionByTriggerType(sections);
@@ -34,4 +34,4 @@ export function generalVanishInAnim() {
 
   return { destroy: resetAnimation };
 }
-generalVanishInAnim();
+textClipRevealAnim();

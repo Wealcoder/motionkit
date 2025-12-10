@@ -297,6 +297,22 @@ return array(
           ),
         ),
       ),
+      'text' => array(
+        'title'     => 'Text',
+        'is_active' => false,
+        'elements'  => array(
+          'wcf-text-clip-reveal-free-animation' => array(
+            'label'       => 'Clip Reveal',
+            'is_active'   => false,
+            'is_upcoming' => false,
+            'icon'        => 'wcf-icon-Image-Box',
+            'demo_url'    => '',
+            'doc_url'     => '',
+            'youtube_url' => '',
+            'description' => 'Text Clip Reveal unveils content with a clean sliding mask effect, creating a sharp, modern entrance that highlights text with precision and visual impact.',
+          ),
+        ),
+      ),
     ),
   ),
 );

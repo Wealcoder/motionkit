@@ -1,43 +1,18 @@
-import { freeAnimClassMapping } from "@/register/freeAnimClassMapping";
 import {
   handleOnScrollAnimation,
+  handleOrganizedSectionByTriggerType,
   handlePageLoadAnimation,
+  resetAnimation,
 } from "./Shared/freeAnimationHelper";
 
 export function generalSpeceInRightAnim() {
-  let allElements = new Map();
+  let allElements;
 
   function handler(e) {
     const sections = e.detail["wcf-general-sir-free-animation"] || [];
 
     // Organizing elements data by trigger type.
-    sections?.forEach((section) => {
-      const {
-        id,
-        preset,
-        triggerType,
-        itemClass,
-        styles,
-        initElementStyle,
-        type,
-      } = section || {};
-      const getElementsByType = allElements?.get(triggerType) || [];
-      const classToAdd = freeAnimClassMapping(preset);
-      const newElement = {
-        id,
-        trigger: itemClass,
-        classToAdd,
-        styles,
-        initElementStyle,
-        type,
-      };
-      if (!getElementsByType?.length) {
-        allElements.set(triggerType, [newElement]);
-      } else {
-        const allElementsByType = allElements?.get(triggerType);
-        allElements?.set(triggerType, [...allElementsByType, newElement]);
-      }
-    });
+    allElements = handleOrganizedSectionByTriggerType(sections);
 
     const allOnScrollElements = allElements?.get("on_scroll");
     const allPageLoadAnimation = allElements?.get("page_load");
@@ -50,30 +25,6 @@ export function generalSpeceInRightAnim() {
       handlePageLoadAnimation({ elements: allPageLoadAnimation });
     }
 
-    return;
-  }
-
-  function resetAnimation() {
-    // removing all animations elements property by trigger class.
-    const flattenElements = [...allElements.values()].flat();
-
-    flattenElements?.forEach((element) => {
-      const { trigger, classToAdd: classToRemove, styles } = element || {};
-      const nodes = document.querySelectorAll(trigger) || [];
-      nodes.forEach((entry) => {
-        WCFFreeAnimBuilder.handleRemoveClassName({
-          element: entry,
-          classList: classToRemove,
-          style: styles,
-        });
-      });
-    });
-
-    // kill running observer if available
-    WCFFreeAnimBuilder.killOnScrollObserver();
-
-    // clear Map.
-    allElements?.clear();
     return;
   }
 

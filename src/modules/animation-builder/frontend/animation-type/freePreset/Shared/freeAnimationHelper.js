@@ -1,28 +1,6 @@
-export function handleOnScrollAnimation({ elements = [] }) {
-  if (!WCFFreeAnimBuilder) {
-    console.error("LOG: Free animation event handler not found!");
-    return;
-  }
-  WCFFreeAnimBuilder.triggerOnScrollObserver(elements);
-}
+import { freeAnimClassMapping } from "@/register/freeAnimClassMapping";
 
-export function handlePageLoadAnimation({ elements = [] }) {
-  if (!WCFFreeAnimBuilder) {
-    console.error("LOG: Free animation event handler not found!");
-    return;
-  }
-  WCFFreeAnimBuilder.initOnPageLoadEvent(elements);
-}
-
-// Commented for future update.
-// export function handlePlayWithScroll() {}
-
-// export function handleHoverAnimation() {}
-
-// export function handleClickAnimation() {}
-
-// Reset Animation;
-
+// ############## MAIN FUNCTION ##############
 export function resetAnimation(allElements) {
   if (!allElements?.size) return;
   // removing all animations elements property by trigger class.
@@ -47,3 +25,61 @@ export function resetAnimation(allElements) {
   allElements?.clear();
   return;
 }
+
+// ############## HELPER FUNCTION ##############
+export function handleOrganizedSectionByTriggerType(sections = []) {
+  if (!sections?.length) return;
+  const ElementsMap = new Map();
+  sections?.forEach((section) => {
+    const {
+      id,
+      preset,
+      triggerType,
+      itemClass,
+      styles,
+      initElementStyle,
+      type,
+    } = section || {};
+    const getElementsByType = ElementsMap?.get(triggerType) || [];
+    const classToAdd = freeAnimClassMapping(preset);
+    const newElement = {
+      id,
+      trigger: itemClass,
+      classToAdd,
+      styles,
+      initElementStyle,
+      type,
+    };
+    if (!getElementsByType?.length) {
+      ElementsMap.set(triggerType, [newElement]);
+    } else {
+      const allElementsByType = ElementsMap?.get(triggerType);
+      ElementsMap?.set(triggerType, [...allElementsByType, newElement]);
+    }
+  });
+  return ElementsMap;
+}
+
+// ############## EVENT FUNCTION ##############
+export function handleOnScrollAnimation({ elements = [] }) {
+  if (!WCFFreeAnimBuilder) {
+    console.error("LOG: Free animation event handler not found!");
+    return;
+  }
+  WCFFreeAnimBuilder.triggerOnScrollObserver(elements);
+}
+
+export function handlePageLoadAnimation({ elements = [] }) {
+  if (!WCFFreeAnimBuilder) {
+    console.error("LOG: Free animation event handler not found!");
+    return;
+  }
+  WCFFreeAnimBuilder.initOnPageLoadEvent(elements);
+}
+
+// Commented for future update.
+// export function handlePlayWithScroll() {}
+
+// export function handleHoverAnimation() {}
+
+// export function handleClickAnimation() {}

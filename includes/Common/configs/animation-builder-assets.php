@@ -233,6 +233,7 @@ return [
   ],
   // free animation presets
   "freePresets" => [
+    // ############## GENERAL ############## //
     'wcf-general-swash-in-free-animation' => [
       'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSwashInAnim.js',
       'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSwashInAnim.js',
@@ -301,6 +302,21 @@ return [
     'wcf-general-tid-free-animation' => [
       'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalTwisterInDownAnim.js',
       'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralTwisterInDownAnim.js',
+      'deps' => [],
+      'editorDeps' => [
+        'react',
+        'react-dom',
+        'wp-dom-ready',
+        'wp-element',
+        'wp-hooks'
+      ],
+      'version' => WCF_ANIMATION_BUILDER_VERSION,
+    ],
+
+    // ############## TEXT ############## //
+    'wcf-text-clip-reveal-free-animation' => [
+      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipRevealAnim.js',
+      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rTextClipRevealAnim.js',
       'deps' => [],
       'editorDeps' => [
         'react',
