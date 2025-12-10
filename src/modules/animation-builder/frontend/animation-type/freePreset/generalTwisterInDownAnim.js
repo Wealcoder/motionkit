@@ -5,11 +5,11 @@ import {
   resetAnimation,
 } from "./Shared/freeAnimationHelper";
 
-export function generalVanishInAnim() {
+export function generalSpaceInLeftAnim() {
   let allElements;
 
   function handler(e) {
-    const sections = e.detail["wcf-general-vanish-in-free-animation"] || [];
+    const sections = e.detail["wcf-general-tid-free-animation"] || [];
 
     // Organizing elements data by trigger type.
     allElements = handleOrganizedSectionByTriggerType(sections);
@@ -24,14 +24,15 @@ export function generalVanishInAnim() {
     if (allPageLoadAnimation?.length > 0) {
       handlePageLoadAnimation({ elements: allPageLoadAnimation });
     }
-
     return;
   }
 
   // wordpress events
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", resetAnimation(allElements));
+  document.addEventListener("aae-reset-animation", () =>
+    resetAnimation(allElements)
+  );
 
   return { destroy: resetAnimation };
 }
-generalVanishInAnim();
+generalSpaceInLeftAnim();

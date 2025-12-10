@@ -93,6 +93,7 @@ function receivePageConfig() {
 
         document.dispatchEvent(cEvent);
       }
+
       if ("wcf-animation-config-reset" in event.data) {
         const cEvent = new CustomEvent("aae-reset-animation", {
           detail: "", // payload

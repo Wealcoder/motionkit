@@ -6,6 +6,7 @@ export const freeAnimClassMapping = (preset) => {
     return [];
   }
   switch (preset) {
+    /* ############## GENERAL ############## */
     case "wcf-general-swash-in-free-animation":
       return [
         "wcf-free-ab-25",
@@ -29,6 +30,26 @@ export const freeAnimClassMapping = (preset) => {
         "wcf-free-ab-25",
         "wcf-free-ab-freeAnimGeneral",
         "wcf-free-ab-spaceInRight",
+      ];
+    case "wcf-general-swap-free-animation":
+      return [
+        "wcf-free-ab-25",
+        "wcf-free-ab-freeAnimGeneral",
+        "wcf-free-ab-swap",
+      ];
+    case "wcf-general-tid-free-animation":
+      return [
+        "wcf-free-ab-25",
+        "wcf-free-ab-freeAnimGeneral",
+        "wcf-free-ab-twisterInDown",
+      ];
+
+    /* ############## TEXT ############## */
+    case "wcf-text-clip-reveal-free-animation":
+      return [
+        "wcf-free-ab-25",
+        "wcf-free-ab-freeAnimGeneral",
+        "wcf-free-ab-clip-reveal",
       ];
     default:
       return [];
