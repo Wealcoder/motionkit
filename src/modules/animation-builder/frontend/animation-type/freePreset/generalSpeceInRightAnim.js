@@ -1,29 +1,11 @@
 import { freeAnimClassMapping } from "@/register/freeAnimClassMapping";
+import {
+  handleOnScrollAnimation,
+  handlePageLoadAnimation,
+} from "./Shared/freeAnimationHelper";
 
 export function generalSpeceInRightAnim() {
   let allElements = new Map();
-
-  function handleOnScrollAnimation({ elements = [] }) {
-    if (!WCFFreeAnimBuilder) {
-      console.error("LOG: Free animation event handler not found!");
-      return;
-    }
-    WCFFreeAnimBuilder.triggerOnScrollObserver(elements);
-  }
-
-  function handlePageLoadAnimation({ elements = [] }) {
-    if (!WCFFreeAnimBuilder) {
-      console.error("LOG: Free animation event handler not found!");
-      return;
-    }
-    WCFFreeAnimBuilder.initOnPageLoadEvent(elements);
-  }
-
-  function handlePlayWithScroll() {}
-
-  function handleHoverAnimation() {}
-
-  function handleClickAnimation() {}
 
   function handler(e) {
     const sections = e.detail["wcf-general-sir-free-animation"] || [];
@@ -97,7 +79,7 @@ export function generalSpeceInRightAnim() {
 
   // wordpress events
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", resetAnimation);
+  document.addEventListener("aae-reset-animation", resetAnimation(allElements));
 
   return { destroy: resetAnimation };
 }

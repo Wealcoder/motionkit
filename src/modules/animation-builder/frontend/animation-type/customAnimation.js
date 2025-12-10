@@ -5,7 +5,6 @@ export function customAnimation() {
   const createdScrollTriggers = [];
   let config = [];
   document.addEventListener("aae-animation-event", (e) => {
-    console.log('old')
     const formattedConfig = e.detail || {};
     config = formattedConfig["custom"];
     formattedConfig["custom"]?.forEach((section) => {

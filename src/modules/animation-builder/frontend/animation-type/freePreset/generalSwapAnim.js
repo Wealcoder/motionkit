@@ -5,11 +5,11 @@ import {
   resetAnimation,
 } from "./Shared/freeAnimationHelper";
 
-export function generalVanishInAnim() {
+export function generalSpaceInLeftAnim() {
   let allElements = new Map();
 
   function handler(e) {
-    const sections = e.detail["wcf-general-vanish-in-free-animation"] || [];
+    const sections = e.detail["wcf-general-swap-free-animation"] || [];
 
     // Organizing elements data by trigger type.
     sections?.forEach((section) => {
@@ -60,4 +60,4 @@ export function generalVanishInAnim() {
 
   return { destroy: resetAnimation };
 }
-generalVanishInAnim();
+generalSpaceInLeftAnim();
