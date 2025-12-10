@@ -1,20 +1,16 @@
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { IconDelete } from "@/lib/icons";
 import { useEffect, useState } from "react";
 
-const HeaderStickyPreset = ({ contentStep, updateContentData }) => {
+const HeaderStickyPrest = ({ contentStep, updateContentData }) => {
   const { data } = contentStep;
 
   const [fullConfig, setFullConfig] = useState({
-    containerClass: data?.containerClass || "",
-    containerHeight: data?.containerHeight || "",
     itemClass: data?.itemClass || "",
-    itemWidthType: data?.itemWidthType || "default",
-    itemWidth: data?.itemWidth || "",
-    itemsWidth: data?.itemsWidth || [],
+    endClass: data?.endClass || "",
+    startPosition: data?.startPosition || "300",
+    zIndex: data?.zIndex || "",
+    styleClass: data?.styleClass || "",
   });
 
   useEffect(() => {
@@ -22,63 +18,8 @@ const HeaderStickyPreset = ({ contentStep, updateContentData }) => {
     updateContentData(result);
   }, [fullConfig]);
 
-  const addItemField = () => {
-    setFullConfig((prev) => ({
-      ...prev,
-      itemsWidth: [...prev.itemsWidth, ""],
-    }));
-  };
-
-  const removeItemField = (index) => {
-    setFullConfig((prev) => ({
-      ...prev,
-      itemsWidth: prev.itemsWidth.filter((_, i) => i !== index),
-    }));
-  };
-
   return (
     <div className="flex flex-col gap-2 border-b border-border-2 w-full p-3">
-      <div className="grid grid-cols-2 gap-2 justify-between items-center">
-        <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Container Class</h3>
-          <ToolTipWrapper text={"Add the wrapper container class name"} />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="flex-1">
-            <Input
-              value={fullConfig?.containerClass}
-              onChange={(e) => {
-                setFullConfig((prev) => ({
-                  ...prev,
-                  containerClass: e.target.value,
-                }));
-              }}
-              placeholder="add value"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 justify-between items-center">
-        <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Scrolling Height</h3>
-          <ToolTipWrapper text={"scroll height"} />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="flex-1">
-            <Input
-              value={fullConfig?.containerHeight}
-              onChange={(e) => {
-                setFullConfig((prev) => ({
-                  ...prev,
-                  containerHeight: e.target.value,
-                }));
-              }}
-              placeholder="add value"
-            />
-          </div>
-        </div>
-      </div>
       <div className="grid grid-cols-2 gap-2 justify-between items-center">
         <div className="flex items-center gap-1">
           <h3 className="text-xs text-text-2 capitalize">Item Class</h3>
@@ -99,98 +40,92 @@ const HeaderStickyPreset = ({ contentStep, updateContentData }) => {
           </div>
         </div>
       </div>
-      {/* tab  */}
-      <Tabs
-        value={fullConfig.itemWidthType}
-        onValueChange={(value) =>
-          setFullConfig((prev) => ({
-            ...prev,
-            itemWidthType: value,
-          }))
-        }
-      >
-        <TabsList className="w-full">
-          <TabsTrigger value={"default"} className="w-full">
-            Default
-          </TabsTrigger>
-          <TabsTrigger value={"custom"} className="w-full">
-            Custom
-          </TabsTrigger>
-        </TabsList>
 
-        <TabsContent value={"default"}>
-          <div className="grid grid-cols-2 gap-2 justify-between items-center">
-            <div className="flex items-center gap-1">
-              <h3 className="text-xs text-text-2 capitalize">Item Width</h3>
-              <ToolTipWrapper text={"Add the width"} />
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="flex-1">
-                <Input
-                  value={fullConfig?.itemWidth}
-                  onChange={(e) => {
-                    setFullConfig((prev) => ({
-                      ...prev,
-                      itemWidth: e.target.value,
-                    }));
-                  }}
-                  placeholder="add value"
-                />
-              </div>
-            </div>
+      <div className="grid grid-cols-2 gap-2 justify-between items-center">
+        <div className="flex items-center gap-1">
+          <h3 className="text-xs text-text-2 capitalize">End Class</h3>
+          <ToolTipWrapper text={"Add the end class name"} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1">
+            <Input
+              value={fullConfig?.endClass}
+              onChange={(e) => {
+                setFullConfig((prev) => ({
+                  ...prev,
+                  endClass: e.target.value,
+                }));
+              }}
+              placeholder="add value"
+            />
           </div>
-        </TabsContent>
-        <TabsContent value="custom">
-          <div className="flex flex-col gap-2">
-            <Button onClick={addItemField} variant="play" size="play">
-              Add Item Width
-            </Button>
+        </div>
+      </div>
 
-            {fullConfig.itemsWidth.length > 0 ? (
-              fullConfig.itemsWidth.map((w, idx) => (
-                <div
-                  key={idx}
-                  className="grid grid-cols-2 gap-2 justify-between items-center"
-                >
-                  <div className="flex items-center gap-1">
-                    <h3 className="text-xs text-text-2 capitalize">
-                      Item {idx + 1} Width
-                    </h3>
-                    <ToolTipWrapper text="Add the width for this item" />
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <Input
-                      className="flex-1"
-                      value={w}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setFullConfig((prev) => {
-                          const newArr = [...prev.itemsWidth];
-                          newArr[idx] = val;
-                          return { ...prev, itemsWidth: newArr };
-                        });
-                      }}
-                      placeholder="add value"
-                    />
-
-                    <div
-                      onClick={() => removeItemField(idx)}
-                      className="flex justify-center items-center cursor-pointer"
-                    >
-                      <IconDelete />
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p>Click “Add Item Width” to create custom-width fields.</p>
-            )}
+      <div className="grid grid-cols-2 gap-2 justify-between items-center">
+        <div className="flex items-center gap-1">
+          <h3 className="text-xs text-text-2 capitalize">Start Position</h3>
+          <ToolTipWrapper text={"start position"} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1">
+            <Input
+              value={fullConfig?.startPosition}
+              onChange={(e) => {
+                setFullConfig((prev) => ({
+                  ...prev,
+                  startPosition: e.target.value,
+                }));
+              }}
+              placeholder="add value"
+            />
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 justify-between items-center">
+        <div className="flex items-center gap-1">
+          <h3 className="text-xs text-text-2 capitalize">Z-Index</h3>
+          <ToolTipWrapper text={"Add z-index value"} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1">
+            <Input
+              value={fullConfig?.zIndex}
+              onChange={(e) => {
+                setFullConfig((prev) => ({
+                  ...prev,
+                  zIndex: e.target.value,
+                }));
+              }}
+              placeholder="add value"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 justify-between items-center">
+        <div className="flex items-center gap-1">
+          <h3 className="text-xs text-text-2 capitalize">Style Class</h3>
+          <ToolTipWrapper text={"Add only style class name"} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1">
+            <Input
+              value={fullConfig?.styleClass}
+              onChange={(e) => {
+                setFullConfig((prev) => ({
+                  ...prev,
+                  styleClass: e.target.value,
+                }));
+              }}
+              placeholder="add value"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default HeaderStickyPreset;
+export default HeaderStickyPrest;
