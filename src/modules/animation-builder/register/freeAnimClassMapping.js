@@ -51,6 +51,18 @@ export const freeAnimClassMapping = (preset) => {
         "wcf-free-ab-freeAnimGeneral",
         "wcf-free-ab-clip-reveal",
       ];
+    case "wcf-text-clip-slide-up-free-animation":
+      return [
+        "wcf-free-ab-25",
+        "wcf-free-ab-freeAnimGeneral",
+        "wcf-free-ab-clip-slide-up",
+      ];
+    case "wcf-text-clip-slide-right-free-animation":
+      return [
+        "wcf-free-ab-25",
+        "wcf-free-ab-freeAnimGeneral",
+        "wcf-free-ab-clip-slide-right",
+      ];
     default:
       return [];
   }
