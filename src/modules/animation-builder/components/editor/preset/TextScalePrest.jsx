@@ -8,29 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EaseConfig } from "@/config/easeData";
 import { useEffect, useState } from "react";
 
-const easeConfig = [
-  "power2.out",
-  "power2.in",
-  "power2.inOut",
-  "power3.out",
-  "power3.in",
-  "power3.inOut",
-  "power4.out",
-  "power4.in",
-  "power4.inOut",
-  "back",
-  "bounce",
-  "circ",
-  "elastic",
-  "expo",
-  "sine",
-  "steps",
-  "rough",
-  "slow",
-  "none",
-];
 
 const TextScalePrest = ({ contentStep, updateContentData }) => {
   const { data } = contentStep;
@@ -443,7 +423,7 @@ const TextScalePrest = ({ contentStep, updateContentData }) => {
               </SelectTrigger>
               <SelectContent className="min-w-[90px]">
                 <SelectGroup>
-                  {easeConfig?.map((el) => (
+                  {EaseConfig?.map((el) => (
                     <SelectItem key={el} value={el}>
                       {el}
                     </SelectItem>
