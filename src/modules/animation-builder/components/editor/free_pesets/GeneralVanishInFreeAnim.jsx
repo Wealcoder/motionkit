@@ -6,7 +6,7 @@ import AnimationRepeat from "./Shared/AnimationRepeat";
 import AnimationTriggerType from "./Shared/AnimationTriggerType";
 import TextInput from "./Shared/AnimationItemClassModifier";
 
-const GeneralSwashInFreeAnim = ({ contentStep, updateContentData }) => {
+const GeneralVanishInFreeAnim = ({ contentStep, updateContentData }) => {
   const { data } = contentStep || {};
 
   const [fullConfig, setFullConfig] = useState({
@@ -108,4 +108,4 @@ const GeneralSwashInFreeAnim = ({ contentStep, updateContentData }) => {
   );
 };
 
-export default GeneralSwashInFreeAnim;
+export default GeneralVanishInFreeAnim;

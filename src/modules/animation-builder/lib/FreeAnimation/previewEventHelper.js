@@ -1,8 +1,10 @@
 class FreeAnimationEventHelperClass {
   #onScrollObserver = null;
   #totalOnScrollObserver = 0;
+  #onPageLoadEvent = null;
 
   // Events Functions
+  // on scroll
   initOnScrollObserver() {
     if (this.#onScrollObserver) return;
     this.#onScrollObserver = new IntersectionObserver(
@@ -77,6 +79,23 @@ class FreeAnimationEventHelperClass {
           this.#onScrollObserver.observe(node); // observing
         });
       }
+    });
+  }
+
+  // on page load
+  initOnPageLoadEvent(elements = []) {
+    if (!elements?.length) return;
+    elements?.forEach((element) => {
+      const { trigger, classToAdd, styles } = element || {};
+      const nodes = document.querySelectorAll(trigger);
+      if (!nodes?.length) return;
+      nodes.forEach((entry) => {
+        this.handleAddClassName({
+          element: entry,
+          classList: classToAdd,
+          style: styles,
+        });
+      });
     });
   }
 

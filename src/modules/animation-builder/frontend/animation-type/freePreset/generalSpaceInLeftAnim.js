@@ -1,6 +1,6 @@
 import { freeAnimClassMapping } from "@/register/freeAnimClassMapping";
 
-export function generalSwashInAnim() {
+export function generalSpaceInLeftAnim() {
   let allElements = new Map();
 
   function handleOnScrollAnimation({ elements = [] }) {
@@ -26,7 +26,7 @@ export function generalSwashInAnim() {
   function handleClickAnimation() {}
 
   function handler(e) {
-    const sections = e.detail["wcf-general-swash-in-free-animation"] || [];
+    const sections = e.detail["wcf-general-sil-free-animation"] || [];
 
     // Organizing elements data by trigger type.
     sections?.forEach((section) => {
@@ -101,4 +101,4 @@ export function generalSwashInAnim() {
 
   return { destroy: resetAnimation };
 }
-generalSwashInAnim();
+generalSpaceInLeftAnim();
