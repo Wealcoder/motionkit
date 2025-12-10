@@ -231,35 +231,9 @@ return [
       'version' => WCF_ANIMATION_BUILDER_VERSION,
     ],
   ],
-  // free animation presets
+  // ############## FREE ANIMATIONS ##############
   "freePresets" => [
     // ############## GENERAL ############## //
-    'wcf-general-swash-in-free-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSwashInAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSwashInAnim.js',
-      'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
-    ],
-    'wcf-general-vanish-in-free-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalVanishInAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralVanishInAnim.js',
-      'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
-    ],
     'wcf-general-sil-free-animation' => [
       'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpaceInLeftAnim.js',
       'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSpeceInLeftAnim.js',
@@ -302,6 +276,34 @@ return [
     'wcf-general-tid-free-animation' => [
       'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalTwisterInDownAnim.js',
       'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralTwisterInDownAnim.js',
+      'deps' => [],
+      'editorDeps' => [
+        'react',
+        'react-dom',
+        'wp-dom-ready',
+        'wp-element',
+        'wp-hooks'
+      ],
+      'version' => WCF_ANIMATION_BUILDER_VERSION,
+    ],
+
+    // ############## IMAGE ############## //
+    'wcf-image-swash-in-free-animation' => [
+      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/imageSwashInAnim.js',
+      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rImageSwashInAnim.js',
+      'deps' => [],
+      'editorDeps' => [
+        'react',
+        'react-dom',
+        'wp-dom-ready',
+        'wp-element',
+        'wp-hooks'
+      ],
+      'version' => WCF_ANIMATION_BUILDER_VERSION,
+    ],
+    'wcf-image-vanish-in-free-animation' => [
+      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/imageVanishInAnim.js',
+      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rImageVanishInAnim.js',
       'deps' => [],
       'editorDeps' => [
         'react',

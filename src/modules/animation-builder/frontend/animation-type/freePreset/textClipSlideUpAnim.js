@@ -24,15 +24,16 @@ export function textClipSlideUpAnim() {
     if (allPageLoadAnimation?.length > 0) {
       handlePageLoadAnimation({ elements: allPageLoadAnimation });
     }
-
-    console.log("textClipSlideUpAnim", { allElements, sections });
-
     return;
   }
 
   // wordpress events
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", resetAnimation(allElements));
+  document.addEventListener("aae-reset-animation", () => {
+    if (allElements) {
+      resetAnimation(allElements);
+    }
+  });
 
   return { destroy: resetAnimation };
 }

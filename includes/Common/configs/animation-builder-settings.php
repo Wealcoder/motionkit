@@ -235,7 +235,7 @@ return array(
         'title'     => 'General',
         'is_active' => false,
         'elements'  => array(
-          'wcf-general-swash-in-free-animation' => array(
+          'wcf-image-swash-in-free-animation' => array(
             'label'       => 'Swash In',
             'is_active'   => false,
             'is_upcoming' => false,
@@ -245,7 +245,7 @@ return array(
             'youtube_url' => '',
             'description' => 'Swash In delivers a smooth, stylish pop-in effect that gracefully scales elements into view with a polished, attention-grabbing entrance.',
           ),
-          'wcf-general-vanish-in-free-animation' => array(
+          'wcf-image-vanish-in-free-animation' => array(
             'label'       => 'Vanish In',
             'is_active'   => false,
             'is_upcoming' => false,
@@ -294,6 +294,32 @@ return array(
             'doc_url'     => '',
             'youtube_url' => '',
             'description' => 'Twister In Down spins elements into place with a smooth downward twist, delivering a dramatic, attention-grabbing reveal that feels both fluid and cinematic.',
+          ),
+        ),
+      ),
+      'image' => array(
+        'title'     => 'Image',
+        'is_active' => false,
+        'elements'  => array(
+          'wcf-image-swash-in-free-animation' => array(
+            'label'       => 'Swash In',
+            'is_active'   => false,
+            'is_upcoming' => false,
+            'icon'        => 'wcf-icon-Image-Box',
+            'demo_url'    => '',
+            'doc_url'     => '',
+            'youtube_url' => '',
+            'description' => 'Swash In delivers a smooth, stylish pop-in effect that gracefully scales elements into view with a polished, attention-grabbing entrance.',
+          ),
+          'wcf-image-vanish-in-free-animation' => array(
+            'label'       => 'Vanish In',
+            'is_active'   => false,
+            'is_upcoming' => false,
+            'icon'        => 'wcf-icon-Image-Box',
+            'demo_url'    => '',
+            'doc_url'     => '',
+            'youtube_url' => '',
+            'description' => 'Vanish In brings elements into focus with a bold blur-to-clarity transition, offering a powerful, cinematic entrance that feels instantly impactful.',
           ),
         ),
       ),

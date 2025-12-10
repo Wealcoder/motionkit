@@ -29,9 +29,11 @@ export function generalSpaceInLeftAnim() {
 
   // wordpress events
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", () =>
-    resetAnimation(allElements)
-  );
+  document.addEventListener("aae-reset-animation", () => {
+    if (allElements) {
+      resetAnimation(allElements);
+    }
+  });
 
   return { destroy: resetAnimation };
 }

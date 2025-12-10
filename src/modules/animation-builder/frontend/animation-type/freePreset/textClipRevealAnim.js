@@ -24,13 +24,16 @@ export function textClipRevealAnim() {
     if (allPageLoadAnimation?.length > 0) {
       handlePageLoadAnimation({ elements: allPageLoadAnimation });
     }
-
     return;
   }
 
   // wordpress events
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", resetAnimation(allElements));
+  document.addEventListener("aae-reset-animation", () => {
+    if (allElements) {
+      resetAnimation(allElements);
+    }
+  });
 
   return { destroy: resetAnimation };
 }

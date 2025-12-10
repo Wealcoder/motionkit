@@ -2,6 +2,7 @@ import { freeAnimClassMapping } from "@/register/freeAnimClassMapping";
 
 // ############## MAIN FUNCTION ##############
 export function resetAnimation(allElements) {
+  console.log("reset function", { allElements });
   if (!allElements?.size) return;
   // removing all animations elements property by trigger class.
   const flattenElements = [...allElements.values()].flat();

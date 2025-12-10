@@ -5,11 +5,11 @@ import {
   resetAnimation,
 } from "./Shared/freeAnimationHelper";
 
-export function generalSwashInAnim() {
+export function generalVanishInAnim() {
   let allElements;
 
   function handler(e) {
-    const sections = e.detail["wcf-general-swash-in-free-animation"] || [];
+    const sections = e.detail["wcf-image-vanish-in-free-animation"] || [];
 
     // Organizing elements data by trigger type.
     allElements = handleOrganizedSectionByTriggerType(sections);
@@ -30,8 +30,12 @@ export function generalSwashInAnim() {
 
   // wordpress events
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", resetAnimation(allElements));
+  document.addEventListener("aae-reset-animation", () => {
+    if (allElements) {
+      resetAnimation(allElements);
+    }
+  });
 
   return { destroy: resetAnimation };
 }
-generalSwashInAnim();
+generalVanishInAnim();

@@ -7,13 +7,13 @@ export const freeAnimClassMapping = (preset) => {
   }
   switch (preset) {
     /* ############## GENERAL ############## */
-    case "wcf-general-swash-in-free-animation":
+    case "wcf-image-swash-in-free-animation":
       return [
         "wcf-free-ab-25",
         "wcf-free-ab-freeAnimGeneral",
         "wcf-free-ab-swashIn",
       ];
-    case "wcf-general-vanish-in-free-animation":
+    case "wcf-image-vanish-in-free-animation":
       return [
         "wcf-free-ab-25",
         "wcf-free-ab-freeAnimGeneral",
