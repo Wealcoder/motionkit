@@ -9,6 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class AnimationBuilderPageType {
 
     private static $instance = null;
+	
     private $gl = [ 'category' , 'author' , 'post_tag' , 'archive' , 'custom-taxonomy' ];
     /**
      * Option name prefix for storing unknown entity configs.
