@@ -48,13 +48,15 @@ trait AnimationBuilderTrait
         return $active_keys;
     }
 
-    function getActivePresets(array $data, &$custom)
+    function getActivePresets(array $data, &$custom ,&$is_free = false)
     {
         $presets = [];
 
-        $iterator = function ($array) use (&$iterator, &$presets, &$custom) {
+        $iterator = function ($array) use (&$iterator, &$presets, &$custom ,&$is_free) {
+
             foreach ($array as $value) {
-                if (is_array($value)) {
+
+                if (is_array($value)) {                    
                     // If it's an animation item
                     if (
                         isset($value['type'], $value['enable'], $value['preset']) &&
@@ -63,6 +65,20 @@ trait AnimationBuilderTrait
                     ) {
                         $presets[] = $value['preset'];
                     }
+
+                    //free
+                    if (
+                        isset($value['type'], $value['enable'], $value['preset']) &&
+                        $value['type'] === 'free_animation' &&
+                        (int)$value['enable'] === 1
+                    ) {
+                        $presets[] = $value['preset'];
+                        $is_free = true;
+                    }
+
+                    // Recurse deeper
+                    $iterator($value);
+                    
 
                     if (
                         isset($value['type'], $value['enable']) &&
@@ -74,7 +90,41 @@ trait AnimationBuilderTrait
                     // Recurse deeper
                     $iterator($value);
                 }
+
             }
+
+        };
+
+        $iterator($data);
+
+        // Remove duplicates and reindex array
+        return array_values(array_unique($presets));
+    }
+
+    function getFreePresets(array $data)
+    {
+        $presets = [];
+
+        $iterator = function ($array) use (&$iterator, &$presets) {
+
+            foreach ($array as $value) {
+
+                if (is_array($value)) {
+                    // If it's an animation item
+                    if (
+                        isset($value['type'], $value['enable'], $value['preset']) &&
+                        $value['type'] === 'free_animation' &&
+                        (int)$value['enable'] === 1
+                    ) {
+                        $presets[] = $value['preset'];
+                    }
+
+                    // Recurse deeper
+                    $iterator($value);
+                }
+                
+            }
+
         };
 
         $iterator($data);
