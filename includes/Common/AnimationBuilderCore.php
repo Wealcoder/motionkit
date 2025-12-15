@@ -155,6 +155,7 @@ class AnimationBuilderCore
 		if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) == 'animation-builder') {
 			wp_enqueue_style('wcf-animbuilder-class-selector');
 		}
+		$actives = [];
 		$is_custom = false;
 		$deps = $this->register_builder_dependency();
 		// Register
@@ -223,7 +224,7 @@ class AnimationBuilderCore
 			}
 
 			if ($pageConfigs = $this->page_type->getConfig()) {
-				
+
 				$actives = $this->getActivePresets($pageConfigs, $is_custom, $is_free);
 				$deps = array_filter($deps, function ($item) {
 					return $item !== 'wp-element';

@@ -99,39 +99,7 @@ trait AnimationBuilderTrait
 
         // Remove duplicates and reindex array
         return array_values(array_unique($presets));
-    }
-
-    function getFreePresets(array $data)
-    {
-        $presets = [];
-
-        $iterator = function ($array) use (&$iterator, &$presets) {
-
-            foreach ($array as $value) {
-
-                if (is_array($value)) {
-                    // If it's an animation item
-                    if (
-                        isset($value['type'], $value['enable'], $value['preset']) &&
-                        $value['type'] === 'free_animation' &&
-                        (int)$value['enable'] === 1
-                    ) {
-                        $presets[] = $value['preset'];
-                    }
-
-                    // Recurse deeper
-                    $iterator($value);
-                }
-                
-            }
-
-        };
-
-        $iterator($data);
-
-        // Remove duplicates and reindex array
-        return array_values(array_unique($presets));
-    }
+    }    
 
 }
 
