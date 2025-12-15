@@ -3,7 +3,7 @@
 namespace WcfAnimationBuilder\Common;
 
 use WcfAnimationBuilder\Traits\AnimationBuilderTrait;
-
+use WcfAnimationBuilderPro\Helpers\Helper;
 if (! defined('ABSPATH')) {
 	exit; // Exit if accessed directly
 }
@@ -223,22 +223,23 @@ class AnimationBuilderCore
 			}
 
 			if ($pageConfigs = $this->page_type->getConfig()) {
-				$this->getActivePresets($pageConfigs, $is_custom);
+				$actives = $this->getActivePresets($pageConfigs, $is_custom, $is_free);
 				$deps = array_filter($deps, function ($item) {
 					return $item !== 'wp-element';
-				});
+				});				
+				
 				$deps = array_values($deps);
 				wp_register_script('wcf-anim-builder-frontend', WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend.js', $deps, time(), true);
 				wp_enqueue_script('wcf-anim-builder-frontend');
 				$config          = include plugin_dir_path(__FILE__) . '/configs/animation-builder-assets.php'; // adjust path
 				$active_elements = $this->get_active_element_keys("wcf_anim_builder_free_animation_settings");
-				if (is_array($active_elements) && is_array($config)) {
+				if (is_array($active_elements) && is_array($config) && $is_free) {
 
 					// Enqueue
 					wp_enqueue_style('wcf-animation-builder-free-anim');
 
 					foreach ($active_elements as $key) {
-						if (isset($config['freePresets'][$key])) {
+						if (isset($config['freePresets'][$key]) && in_array($key, $actives, true)) {
 							$element = $config['freePresets'][$key];
 							wp_enqueue_script($key, $element['src'], $element['deps'], WCF_ANIMATION_BUILDER_VERSION, true);
 						}
