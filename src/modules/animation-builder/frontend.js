@@ -1,6 +1,6 @@
 import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelper";
 
-const { handleMediaQuery } = require("./lib/utils");
+import { handleMediaQuery } from './lib/utils';
 const storeAnimation = {};
 window.WCFFreeAnimBuilder = null;
 WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
