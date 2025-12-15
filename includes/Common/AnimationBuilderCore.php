@@ -223,6 +223,7 @@ class AnimationBuilderCore
 			}
 
 			if ($pageConfigs = $this->page_type->getConfig()) {
+				
 				$actives = $this->getActivePresets($pageConfigs, $is_custom, $is_free);
 				$deps = array_filter($deps, function ($item) {
 					return $item !== 'wp-element';
@@ -233,8 +234,8 @@ class AnimationBuilderCore
 				wp_enqueue_script('wcf-anim-builder-frontend');
 				$config          = include plugin_dir_path(__FILE__) . '/configs/animation-builder-assets.php'; // adjust path
 				$active_elements = $this->get_active_element_keys("wcf_anim_builder_free_animation_settings");
-				if (is_array($active_elements) && is_array($config) && $is_free) {
 
+				if (is_array($active_elements) && is_array($config) && $is_free) {
 					// Enqueue
 					wp_enqueue_style('wcf-animation-builder-free-anim');
 
@@ -244,6 +245,7 @@ class AnimationBuilderCore
 							wp_enqueue_script($key, $element['src'], $element['deps'], WCF_ANIMATION_BUILDER_VERSION, true);
 						}
 					}
+
 				}
 				$config = include plugin_dir_path(__FILE__) . 'configs/animation-builder-device.php'; // adjust path
 				// sanitize / normalize
@@ -265,7 +267,7 @@ class AnimationBuilderCore
 				);
 			}
 		}
-		do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts', $deps, $is_custom);
+		do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts', $deps, $is_custom , $actives);
 	}
 	public function register_builder_dependency()
 	{

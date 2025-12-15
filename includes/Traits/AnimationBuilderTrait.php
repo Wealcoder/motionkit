@@ -56,7 +56,7 @@ trait AnimationBuilderTrait
 
             foreach ($array as $value) {
 
-                if (is_array($value)) {
+                if (is_array($value)) {                    
                     // If it's an animation item
                     if (
                         isset($value['type'], $value['enable'], $value['preset']) &&
