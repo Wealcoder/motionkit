@@ -46,7 +46,7 @@ export function getUniqueSelector(element) {
   const tag = element.tagName.toLowerCase();
   // Add ID if available
   if (element.id) {
-    return `${tag}#${element.id}`; // Only tag and ID, skip classes
+    return `${tag}#${CSS.escape(element.id)}`;
   }
 
   if (element.dataset.id) {
