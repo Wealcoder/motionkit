@@ -16,12 +16,13 @@ import { Skeleton } from "../ui/skeleton";
 const MainEditor = ({ isLoading }) => {
   const { contentStep, setContentStep } = useContentStep();
   const { createAnimation } = useAnimationControl();
+
   return (
     <div className="bg-background h-full flex flex-col justify-between relative">
       {contentStep?.step === 1 && (
         <div className="p-3 border-b border-border">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild id="wcf-n-anim-trigger">
               <Button variant="play" size="play">
                 <IconPlus2 /> Add new animation
               </Button>

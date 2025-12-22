@@ -6,12 +6,19 @@ import {
 } from "./frontend/animationUtils";
 // import { animStructure } from "./lib/animStructure";
 import AnimationStructure from "@/components/common/AnimationStructure";
+import EditorContextMenu from "./components/common/EditorContextMenu";
 import "./index.css";
 import { handleMediaQuery } from "./lib/utils";
 import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelper";
 
 window.WCFFreeAnimBuilder = null;
 WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
+// global store
+window.__WCF_CONTEXT__ = {
+  target: null,
+  x: 0,
+  y: 0,
+};
 
 const storeState = {
   hoverEnabled: false,
@@ -137,11 +144,14 @@ function runPopup() {
 
   document.body.addEventListener("click", (event) => {
     event.preventDefault();
+
     const target = event.target;
     if (target.closest(".wcfanimb-skip-selector-full")) {
       return;
     }
+    // collecting element classname
     const selector = getFullSelector(target);
+
     // Show the popup at the click location
     enableHover();
 
@@ -150,6 +160,20 @@ function runPopup() {
     if (!isSkip) {
       showPopup(selector, event.clientX + 10, event.clientY + 10);
     }
+  });
+
+  // context menu event handler
+  document.body.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    hidePopup();
+
+    const target = event.target;
+    if (target.closest(".wcfanimb-skip-selector-full")) return;
+
+    window.__WCF_CONTEXT__.target = target;
+    window.__WCF_CONTEXT__.x = event.clientX;
+    window.__WCF_CONTEXT__.y = event.clientY;
+    window.dispatchEvent(new CustomEvent("wcf-open-context-menu"));
   });
 
   document
@@ -206,8 +230,11 @@ receivePageConfig();
 
 window.addEventListener("load", () => {
   const structure_panel = document.getElementById("wcf-anim-builder-structure");
-
+  const context_menu = document.getElementById("wcf-ab-context-menu-wrapper");
   if (structure_panel) {
     wp.element.render(<AnimationStructure />, structure_panel);
+  }
+  if (context_menu) {
+    wp.element.render(<EditorContextMenu />, context_menu);
   }
 });

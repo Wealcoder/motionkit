@@ -50,8 +50,12 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 20;
+  word-break: break-word;
 }
-.wcfanimb-popup .wcfanimb-wrapper .wcfanimb-classes .wcfanimb-popupContent.close {
+.wcfanimb-popup
+  .wcfanimb-wrapper
+  .wcfanimb-classes
+  .wcfanimb-popupContent.close {
   -webkit-line-clamp: 1;
 }
 .wcfanimb-popup .wcfanimb-wrapper .wcfanim-btn-group {
@@ -85,7 +89,10 @@
   border-radius: 6px;
   cursor: pointer;
 }
-.wcfanimb-popup .wcfanimb-wrapper .wcfanim-btn-group .wcfanimb-select-btn:hover {
+.wcfanimb-popup
+  .wcfanimb-wrapper
+  .wcfanim-btn-group
+  .wcfanimb-select-btn:hover {
   background-color: #fc6848;
   color: white;
 }
