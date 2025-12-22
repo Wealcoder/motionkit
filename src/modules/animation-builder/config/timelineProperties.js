@@ -50,6 +50,11 @@ export const AProperties = [
         info: "Map input values to y-axis positions using linear mapping, e.g., input 50 (range 0-100) maps to y = 250px (range 0-500).",
       },
       {
+        name: "overflow",
+        type: "string",
+        info: "Overflow — effortlessly control your content, keep layouts neat, and enable smooth scrolling wherever it matters.",
+      },
+      {
         name: "opacity",
         type: "number",
         info: "Set opacity directly using received value (0 to 1)",
