@@ -1,24 +1,4 @@
-export function resetAnimations({ config, timelines, createdScrollTriggers }) {
-  for (let x in timelines) {
-    if (timelines[x].split && typeof timelines[x].split.revert === "function") {
-      timelines[x].split.revert();
-    }
-    timelines[x].revert();
-    timelines[x].kill();
-  }
 
-  createdScrollTriggers?.forEach((st) => st.kill());
-  createdScrollTriggers.length = 0;
-
-  config?.forEach((section) => {
-    section.animations?.forEach((animation) => {
-      const selector = extractLastSelector(animation.applyAnimation.className);
-      if (selector?.full && selector.full !== "") {
-        gsap.set(selector.full, { clearProps: "all" });
-      }
-    });
-  });
-}
 
 export function getFullSelector(element) {
   const path = [];
@@ -115,13 +95,6 @@ export function showPopup(selector, x, y) {
 export function hidePopup() {
   const popup = document.getElementById("wcfanim-selectorPopup");
   popup.style.display = "none";
-}
-
-export function extractNameAndValue(data) {
-  return data.map((item) => ({
-    name: item.name,
-    value: item.value,
-  }));
 }
 
 export function handleMouseOver(event) {

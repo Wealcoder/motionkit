@@ -3,8 +3,7 @@ import {
   handleMouseOver,
   hidePopup,
   showPopup,
-} from "./frontend/animationUtils";
-// import { animStructure } from "./lib/animStructure";
+} from "./lib/animationUtils";
 import AnimationStructure from "@/components/common/AnimationStructure";
 import "./index.css";
 import { handleMediaQuery } from "./lib/utils";
@@ -86,9 +85,9 @@ function receivePageConfig() {
         });
         // GSAP check end
         const cEvent = new CustomEvent("aae-animation-event", {
-          detail: storeAnimation, // payload
-          bubbles: true, // can bubble up the DOM
-          cancelable: true, // can be prevented
+          detail: storeAnimation,
+          bubbles: true,
+          cancelable: true,
         });
 
         document.dispatchEvent(cEvent);
@@ -96,9 +95,9 @@ function receivePageConfig() {
 
       if ("wcf-animation-config-reset" in event.data) {
         const cEvent = new CustomEvent("aae-reset-animation", {
-          detail: "", // payload
-          bubbles: true, // can bubble up the DOM
-          cancelable: true, // can be prevented
+          detail: "",
+          bubbles: true,
+          cancelable: true,
         });
 
         document.dispatchEvent(cEvent);
@@ -142,7 +141,6 @@ function runPopup() {
       return;
     }
     const selector = getFullSelector(target);
-    // Show the popup at the click location
     enableHover();
 
     const isSkip = target.classList.contains("wcfanimb-skip-selector");
@@ -158,9 +156,7 @@ function runPopup() {
       const textElement = document.getElementById("wcfanim-popupContent");
       const textToCopy = textElement.textContent;
 
-      // Use navigator.clipboard if available
       if (navigator.clipboard && window.isSecureContext) {
-        // Modern API for copying
         navigator.clipboard
           .writeText(textToCopy)
           .then(() => {
@@ -171,16 +167,13 @@ function runPopup() {
             console.error("Failed to copy text: ", err);
           });
       } else {
-        // Fallback to manual method for older browsers
         const tempTextarea = document.createElement("textarea");
         tempTextarea.value = textToCopy;
 
-        // Style the textarea to be offscreen
         tempTextarea.style.position = "fixed";
         tempTextarea.style.top = "-9999px";
         document.body.appendChild(tempTextarea);
 
-        // Select the text inside the textarea
         tempTextarea.focus();
         tempTextarea.select();
 
@@ -193,7 +186,6 @@ function runPopup() {
           console.error("Error copying text: ", err);
         }
 
-        // Clean up by removing the temporary textarea
         document.body.removeChild(tempTextarea);
       }
     });
@@ -202,7 +194,6 @@ function runPopup() {
 enableHover();
 runPopup();
 receivePageConfig();
-// animStructure()
 
 window.addEventListener("load", () => {
   const structure_panel = document.getElementById("wcf-anim-builder-structure");
