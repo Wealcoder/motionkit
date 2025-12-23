@@ -1,6 +1,9 @@
-import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelper";
+/**
+ * This file is used for frontend live preview.
+ */
 
-import { handleMediaQuery } from './lib/utils';
+import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelper";
+import { handleMediaQuery } from "./lib/utils";
 const storeAnimation = {};
 window.WCFFreeAnimBuilder = null;
 WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();

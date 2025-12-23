@@ -1,8 +1,10 @@
 import domReady from "@wordpress/dom-ready";
 import GetStart from "./GetStart";
 import { AppContextProvider } from "./context/app.context";
+/**
+ * This file is used for editor controller.
+ */
 import { Toaster } from "@/components/ui/sonner";
-
 import RegisterPreset from "./lib/registerPreset";
 import RegisterFreePreset from "./lib/registerFreePreset";
 import "./index.css";

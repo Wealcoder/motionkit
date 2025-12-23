@@ -1,22 +1,19 @@
-
-
 // Border management
 export const addOutlinesToAnimatedElements = (animations) => {
   animations.forEach((animation) => {
     if (!animation.el) return;
 
-    const outlineStyle = animation.animType === 'builder' ? "1px solid #F80" : "1px dashed #21E23D"
+    const outlineStyle =
+      animation.animType === "builder"
+        ? "1px solid #F80"
+        : "1px dashed #21E23D";
 
     // save original outline so we can restore it later
     if (!animation.el.dataset.originalOutline) {
       animation.el.dataset.originalOutline = animation.el.style.outline || "";
     }
 
-    animation.el.style.setProperty(
-      "outline",
-      outlineStyle,
-      "important"
-    );
+    animation.el.style.setProperty("outline", outlineStyle, "important");
     animation.el.style.setProperty("outline-offset", "2px", "important"); // optional: pushes outline outward
   });
 };
@@ -25,45 +22,35 @@ export const removeOutlinesFromElements = () => {
   document.querySelectorAll("[data-original-outline]").forEach((el) => {
     try {
       el.style.outline = el.dataset.originalOutline || "";
-    } catch { }
+    } catch {}
     delete el.dataset.originalOutline;
   });
 };
-
 
 // Animation detection helpers
 export const isLikelyAnimatedTarget = (el) => {
   const skipTags = ["body", "html", "main", "header", "footer", "nav"];
   const skipClasses = ["wcf-cursor", "wcf-cursor-follower"];
-  const skipIds = ["smooth-content"]
+  const skipIds = ["smooth-content"];
 
   try {
     const style = window.getComputedStyle(el);
     const inline = el.style;
     const tag = el.tagName.toLowerCase();
 
-    if (
-      skipTags.includes(tag)
-    )
-      return null;
+    if (skipTags.includes(tag)) return null;
 
-    if (
-      [...el.classList].some((cls) => skipClasses.includes(cls))
-    )
-      return null;
+    if ([...el.classList].some((cls) => skipClasses.includes(cls))) return null;
 
-    if (
-      el.id && skipIds.includes(el.id)
-    )
-      return null;
-
+    if (el.id && skipIds.includes(el.id)) return null;
 
     if (el._gsap || el._gsTransform || el.hasAttribute("data-gsap"))
       return true;
 
     if (inline.cssText) {
       if (
-        (inline.cssText.includes("transform") && !inline.cssText.includes("text-transform")) ||
+        (inline.cssText.includes("transform") &&
+          !inline.cssText.includes("text-transform")) ||
         inline.cssText.includes("translate") ||
         inline.cssText.includes("matrix") ||
         inline.cssText.includes("scale") ||
@@ -129,17 +116,27 @@ export const getUniqueSelector = (el) => {
 };
 
 // Add element to animation list
-export const addElementToAnimations = (
-  { el,
-    animations,
-    seenSelectors,
-    counterRef,
-    context,
-    animType = 'default',
-    aId,
-    aTitle
-  }
-) => {
+export const addElementToAnimations = ({
+  el,
+  animations,
+  seenSelectors,
+  counterRef,
+  context,
+  animType = "default",
+  aId,
+  aTitle,
+}) => {
+  // console.log({
+  //   el,
+  //   animations,
+  //   seenSelectors,
+  //   counterRef,
+  //   context,
+  //   animType,
+  //   aId,
+  //   aTitle,
+  // });
+
   if (!document.contains(el)) return;
 
   let mainWrapper = el;
@@ -161,8 +158,9 @@ export const addElementToAnimations = (
   const selector = getUniqueSelector(targetEl);
   if (seenSelectors.has(selector)) return; // already added before → skip
 
-  if (animType === 'builder') {
+  if (animType === "builder") {
     targetEl.classList.add("hover-outline-highlight-builder");
+    targetEl.dataset.wcfAnimId = aId;
     const overlay = createBuilderOverlay(selector, aId);
 
     targetEl.appendChild(overlay);
@@ -179,16 +177,14 @@ export const addElementToAnimations = (
     selector,
     animType,
     el: targetEl,
-  }
+  };
 
   if (aId) {
-    result.aId = aId
+    result.aId = aId;
   }
   animations.push(result);
   counterRef.current++;
 };
-
-
 
 export const scrollToElement = (animation) => {
   if (!animation.el) return;
@@ -198,7 +194,6 @@ export const scrollToElement = (animation) => {
   animation.el.style.outline = "2px solid #55B2FF";
   setTimeout(() => (animation.el.style.outline = ""), 4000);
 };
-
 
 export const scrollToElementByData = (attrName, attrValue) => {
   const el = document.querySelector(`[data-${attrName}="${attrValue}"]`);
@@ -213,14 +208,11 @@ export const scrollToElementByData = (attrName, attrValue) => {
   });
 
   el.classList.add("active-item");
-  setTimeout(() => (el.classList.remove("active-item")), 2000);
+  setTimeout(() => el.classList.remove("active-item"), 2000);
 };
-
-
 
 export const truncateText = (text, maxLength = 35) =>
   text.length <= maxLength ? text : text.substring(0, maxLength - 3) + "...";
-
 
 // A separate function that returns your overlay DOM node
 const createDefaultOverlay = (selector) => {
@@ -357,5 +349,3 @@ const createBuilderOverlay = (selector, aId) => {
 
   return overlay;
 };
-
-

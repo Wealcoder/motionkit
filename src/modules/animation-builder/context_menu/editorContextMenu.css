@@ -1,0 +1,47 @@
+.wcf-context-menu {
+  position: fixed;
+  z-index: 99999;
+  width: 100%;
+  max-width: 250px;
+  min-width: 215px;
+  padding: 10px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  background: #1f2124;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: Inter;
+  text-align: left;
+  box-shadow: rgba(100, 100, 111, 0.2) 0px 10px 20px 5px;
+  border: none !important;
+  border-radius: 6px;
+  outline: none !important;
+}
+
+.wcf-ab-context-menuItems {
+  transition: all 0.3s ease-in-out;
+  width: 100%;
+  padding: 0px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  line-height: 32px;
+  border: none !important;
+  border-radius: 6px;
+  outline: none !important;
+}
+
+.wcf-ab-context-menuItems svg {
+  border: none !important;
+  outline: none !important;
+}
+
+.wcf-ab-context-menuItems:hover {
+  background: #ebebeb;
+  color: black;
+}

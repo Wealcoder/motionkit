@@ -1,3 +1,6 @@
+/**
+ * This file is used for editor preview only.
+ */
 import {
   getFullSelector,
   handleMouseOver,
@@ -6,10 +9,24 @@ import {
 } from "./frontend/animationUtils";
 // import { animStructure } from "./lib/animStructure";
 import AnimationStructure from "@/components/common/AnimationStructure";
-import EditorContextMenu from "./components/common/EditorContextMenu";
+import EditorContextMenu from "./context_menu/EditorContextMenu";
 import "./index.css";
 import { handleMediaQuery } from "./lib/utils";
 import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelper";
+
+import ContextMenuHandler from "./context_menu/contextmenu";
+import { menuItems } from "./register/context_menu/context_menu_register";
+
+// Register context menus
+window.AAEAnimPreviewBuilder = {};
+AAEAnimPreviewBuilder.contextMenu = new ContextMenuHandler();
+
+function handleAddContextMenus() {
+  menuItems?.forEach((menu) =>
+    AAEAnimPreviewBuilder.contextMenu.register(menu)
+  );
+}
+handleAddContextMenus();
 
 window.WCFFreeAnimBuilder = null;
 WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
