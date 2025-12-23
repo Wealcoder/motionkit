@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import AllResponsiveControl from "../common/AllResponsiveControl";
 import SingleResponsiveControl from "../common/SingleResponsiveControl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import RenderComponent from "./RenderComponent";
 
 const PresetAnimation = () => {
@@ -18,13 +18,14 @@ const PresetAnimation = () => {
   const { selectedDevice } = useDeviceConfig();
   const animationPresets = AAEAnimBuilder.presets;
 
+  const [selectedPresetGroup, setSelectedPresetGroup] = useState("");
+  const [selectedPreset, setSelectedPreset] = useState("");
 
-  const [selectedPresetGroup, setSelectedPresetGroup] = useState(
-    contentStep?.data?.presetGroup || ""
-  );
-  const [selectedPreset, setSelectedPreset] = useState(
-    contentStep?.data?.preset || ""
-  );
+  useEffect(() => {
+    if (contentStep?.data?.presetGroup)
+      setSelectedPresetGroup(contentStep.data.presetGroup);
+    if (contentStep?.data?.preset) setSelectedPreset(contentStep.data.preset);
+  }, [contentStep]);
 
   return (
     <div>
@@ -66,7 +67,11 @@ const PresetAnimation = () => {
               <SelectContent className="min-w-[90px]">
                 <SelectGroup>
                   {animationPresets.getAllGroups().map((preset, i) => (
-                    <SelectItem key={`${preset}-${i}`} value={preset} className="capitalize">
+                    <SelectItem
+                      key={`${preset}-${i}`}
+                      value={preset}
+                      className="capitalize"
+                    >
                       {preset}
                     </SelectItem>
                   ))}
@@ -75,8 +80,8 @@ const PresetAnimation = () => {
             </Select>
           </div>
         </div>
-        {
-          selectedPresetGroup ? <div className="flex justify-between items-center gap-2">
+        {selectedPresetGroup ? (
+          <div className="flex justify-between items-center gap-2">
             <div className="w-[56px]">
               <h3 className="text-xs text-text-2">Type</h3>
             </div>
@@ -99,18 +104,24 @@ const PresetAnimation = () => {
                 </SelectTrigger>
                 <SelectContent className="min-w-[90px]">
                   <SelectGroup>
-                    {animationPresets.getAllPresets(selectedPresetGroup).map((preset) => (
-                      <SelectItem key={preset.presetKey} value={preset.presetKey}>
-                        {preset.name}
-                      </SelectItem>
-                    ))}
+                    {animationPresets
+                      .getAllPresets(selectedPresetGroup)
+                      .map((preset) => (
+                        <SelectItem
+                          key={preset.presetKey}
+                          value={preset.presetKey}
+                        >
+                          {preset.name}
+                        </SelectItem>
+                      ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
-          </div> : ""
-        }
-
+          </div>
+        ) : (
+          ""
+        )}
       </div>
       <div>
         <RenderComponent
