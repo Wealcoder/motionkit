@@ -1,63 +1,55 @@
-import { useEffect, useState } from "react";
-import "./editorContextMenu.css";
+import { useRef, useState, useEffect } from "react";
 import { IoIosArrowForward } from "react-icons/io";
-import { getFullSelector, hidePopup } from "@/frontend/animationUtils";
-import { useAnimationControl, useContentStep } from "@/hooks/app.hooks";
-import { generateUniqueId } from "../../../utils/generateUniqueId";
-import { ABCustomPresetData } from "@/config/animationPresetData";
+import "./editorContextMenu.css";
+import { hidePopup } from "@/lib/animationUtils";
 
 const EditorContextMenu = () => {
-  const [menuItems, setMenuItem] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [context, setContext] = useState({ target: null, x: 0, y: 0 });
+  const [isOpen, setIsOpen] = useState(false);
+  const [targetElement, setTargetElement] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [activePath, setActivePath] = useState([]);
 
+  const { menus } = AAEAnimPreviewBuilder.contextMenu.getProps() || {};
+
   const handleCloseMenu = () => {
-    setOpen(false);
-    setContext({ target: null, x: 0, y: 0 });
     hidePopup();
+    setIsOpen(false);
+    setTargetElement(null);
+    setMenuPosition({ x: 0, y: 0 });
+    setActivePath([]);
   };
 
-  // for add animation
-  const { setContentStep } = useContentStep();
-  const { createAnimation } = useAnimationControl();
-
-  // load context menus
-  useEffect(() => {
-    const menus = AAEAnimPreviewBuilder.contextMenu.getContextMenus();
-    if (!menus) return;
-    setMenuItem(menus);
-  }, [AAEAnimPreviewBuilder.contextMenu]);
+  const handleStartMenu = () => {
+    const { target, position } =
+      AAEAnimPreviewBuilder.contextMenu.getProps() || {};
+    if (!target) return;
+    setIsOpen(true);
+    setTargetElement(target);
+    setMenuPosition(position);
+  };
 
   useEffect(() => {
-    const openHandler = () => {
-      setContext({ ...window.__WCF_CONTEXT__ });
-      setOpen(true);
-    };
-
-    const closeHandler = () => setOpen(false);
-
-    window.addEventListener("wcf-open-context-menu", openHandler);
-    window.addEventListener("click", closeHandler);
-    window.addEventListener("wheel", closeHandler);
+    window.addEventListener("wcf-open-context-menu", handleStartMenu);
+    window.addEventListener("click", handleCloseMenu);
+    window.addEventListener("wheel", handleCloseMenu);
 
     return () => {
-      window.removeEventListener("wcf-open-context-menu", openHandler);
-      window.removeEventListener("click", closeHandler);
-      window.removeEventListener("wheel", closeHandler);
+      window.removeEventListener("wcf-open-context-menu", handleStartMenu);
+      window.removeEventListener("click", handleCloseMenu);
+      window.removeEventListener("wheel", handleCloseMenu);
     };
   }, []);
 
-  if (!context) return null;
+  if (!menus?.length || !targetElement || !isOpen) return null;
 
   return (
-    <div style={{ display: open ? "flex" : "none" }}>
+    <div className="wcfanimb-skip-selector-full">
       <Menu
-        menuItems={menuItems}
-        context={context}
+        menus={menus}
+        targetElement={targetElement}
+        menuPosition={menuPosition}
         activePath={activePath}
         setActivePath={setActivePath}
-        handleCloseMenu={handleCloseMenu}
       />
     </div>
   );
@@ -65,76 +57,102 @@ const EditorContextMenu = () => {
 
 export default EditorContextMenu;
 
+const clamp = (v, min, max) => {
+  return Math.min(Math.max(v, min), max);
+};
+
 function Menu({
-  menuItems = [],
-  context = {},
-  activePath = [],
-  setActivePath = () => {},
+  menus = [],
+  targetElement,
+  menuPosition = { x: 0, y: 0 },
+  activePath,
+  setActivePath,
   level = 0,
-  handleCloseMenu = () => {},
+  parentFlip = { x: false, y: false },
 }) {
-  const [hoverdMenuKey, setHoveredMenuKey] = useState(null);
-  const [openLeft, setOpenLeft] = useState(false);
+  const menuRef = useRef(null);
+  const [flipX, setFlipX] = useState(parentFlip.x);
+  const [flipY, setFlipY] = useState(parentFlip.y);
+  const [isHoveringMenu, setIsHoveringMenu] = useState(false);
 
   const isRoot = level === 0;
+  const isSubmenuBlocked = level >= 3;
+
+  // Handling submenu flipping to viewport
+  useEffect(() => {
+    if (!menuRef.current || isRoot) return;
+    const rect = menuRef.current.getBoundingClientRect();
+    const overflowRight = rect.right > window.innerWidth;
+    const overflowBottom = rect.bottom > window.innerHeight;
+    setFlipX(parentFlip.x || overflowRight);
+    setFlipY(parentFlip.y || overflowBottom);
+  }, []);
+
+  // Conditional style properties
+  const rootStyle = isRoot
+    ? {
+        position: "fixed",
+        left: clamp(menuPosition.x, 8, window.innerWidth - 250 - 8),
+        top: clamp(menuPosition.y, 8, window.innerHeight - 8),
+      }
+    : {};
+
+  const submenuStyle = !isRoot
+    ? {
+        position: "absolute",
+        top: flipY ? "auto" : 0,
+        bottom: flipY ? 0 : "auto",
+        left: flipX ? "auto" : "100%",
+        right: flipX ? "100%" : "auto",
+      }
+    : {};
 
   return (
     <ul
+      ref={menuRef}
       className="wcf-context-menu"
-      style={
-        isRoot
-          ? {
-              position: "fixed",
-              top: context?.y ?? 0,
-              left: context?.x ?? 0,
-            }
-          : {
-              position: "absolute",
-              top: 0,
-              ...(openLeft
-                ? { right: "100%", left: "auto" }
-                : { left: "100%", right: "auto" }),
-            }
-      }
+      style={{ ...rootStyle, ...submenuStyle }}
     >
-      {menuItems.map((menu, index) => {
+      {menus.map((menu) => {
+        if (!menu?.contextMenuKey) return null;
+        const isOpen = activePath[level] === menu.contextMenuKey;
         const hasSubmenu = !!menu?.options?.length;
         return (
           <li
-            key={menu.key ?? index}
+            key={menu.contextMenuKey}
             className="wcf-ab-context-menuItems"
             style={{ position: "relative" }}
             onClick={() => {
-              if (menu?.callback && typeof menu?.callback === "function") {
-                menu.callback(context, { ...menu });
+              if (typeof menu.callback === "function") {
+                menu.callback(targetElement);
               }
             }}
-            onMouseEnter={(e) => {
+            onMouseEnter={() => {
               if (!hasSubmenu) return;
-              setActivePath();
-              const rect = e.currentTarget.getBoundingClientRect();
-              const shouldFlip = rect.right + 255 > window.innerWidth;
-              setOpenLeft(shouldFlip);
-              setHoveredMenuKey(menu.key);
+              setIsHoveringMenu(true);
+              setActivePath((prev) => {
+                const next = prev.slice(0, level);
+                next[level] = menu.contextMenuKey;
+                return next;
+              });
             }}
             onMouseLeave={() => {
-              setHoveredMenuKey(null);
-              setOpenLeft(false);
+              if (!hasSubmenu) return;
+              setIsHoveringMenu(false);
             }}
           >
-            {menu.title}
+            <span>{menu.title}</span>
+            {menu?.options?.length > 0 && <IoIosArrowForward />}
 
-            {hasSubmenu && (
-              <>
-                <IoIosArrowForward />
-                {hoverdMenuKey === menu.key && (
-                  <Menu
-                    menuItems={menu.options}
-                    context={context}
-                    level={level + 1}
-                  />
-                )}
-              </>
+            {hasSubmenu && !isSubmenuBlocked && isHoveringMenu && isOpen && (
+              <Menu
+                menus={menu.options}
+                targetElement={targetElement}
+                activePath={activePath}
+                setActivePath={setActivePath}
+                level={level + 1}
+                parentFlip={{ x: flipX, y: flipY }}
+              />
             )}
           </li>
         );

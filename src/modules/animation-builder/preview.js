@@ -183,10 +183,11 @@ function runPopup() {
 
     const target = event.target;
     if (target.closest(".wcfanimb-skip-selector-full")) return;
-
-    window.__WCF_CONTEXT__.target = target;
-    window.__WCF_CONTEXT__.x = event.clientX;
-    window.__WCF_CONTEXT__.y = event.clientY;
+    AAEAnimPreviewBuilder.contextMenu.updateContextMenu({
+      target,
+      x: event.clientX,
+      y: event.clientY,
+    });
     window.dispatchEvent(new CustomEvent("wcf-open-context-menu"));
   });
 

@@ -1,4 +1,4 @@
-import { getFullSelector } from "../../frontend/animationUtils";
+import { getFullSelector } from "@/lib/animationUtils";
 
 const verifyContextCallback = (callback = () => {}) => {
   return (...args) => {
@@ -11,14 +11,13 @@ const verifyContextCallback = (callback = () => {}) => {
   };
 };
 
-const handleCopyText = (text) => {
+const handleCopyText = (text, handleCloseMenu) => {
   if (navigator.clipboard && window.isSecureContext) {
     // Modern API for copying
     navigator.clipboard
       .writeText(text)
       .then(() => {
         // handleCloseMenu();
-        window.alert();
       })
       .catch((err) => {
         console.error("Failed to copy text: ", err);
@@ -56,8 +55,7 @@ export const handleContextMenuCopyClass = verifyContextCallback((e) => {
   if (!textToCopy) {
     console.error("An error occured while copying class name.");
   }
-  window.alert(textToCopy);
-  // handleCopyText(textToCopy);
+  handleCopyText(textToCopy);
 });
 
 export const handleContextMenuCopyParentClass = verifyContextCallback((e) => {

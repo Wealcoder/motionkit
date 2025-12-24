@@ -4,7 +4,7 @@
   width: 100%;
   max-width: 250px;
   min-width: 215px;
-  padding: 10px;
+  padding: 0px;
   list-style: none;
   display: flex;
   flex-direction: column;
@@ -18,7 +18,8 @@
   font-family: Inter;
   text-align: left;
   box-shadow: rgba(100, 100, 111, 0.2) 0px 10px 20px 5px;
-  border: none !important;
+  /* use border for padding. padding cause problem onMouseEnter for submenu */
+  border: 10px solid transparent;
   border-radius: 6px;
   outline: none !important;
 }
