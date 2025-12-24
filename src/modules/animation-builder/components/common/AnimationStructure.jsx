@@ -47,7 +47,6 @@ export default function AnimationStructure() {
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-  // Effect for showing borders on hover
   useEffect(() => {
     if (hoveredAnimation) {
       addOutlinesToAnimatedElements([hoveredAnimation]);
@@ -64,7 +63,6 @@ export default function AnimationStructure() {
     };
   }, [hoveredAnimation, showBorder, containers, bContainers]);
 
-  // Drag & resize effects
   useEffect(() => {
     function onPointerMove(e) {
       if (draggingRef.current) {
@@ -130,7 +128,6 @@ export default function AnimationStructure() {
   }, []);
 
   useEffect(() => {
-    // Initial load
     wcf_anim_preview_object?.animation_config?.desktop?.forEach((mainAnim) => {
       if (mainAnim?.type === "custom") {
         mainAnim?.animations?.forEach((anim) =>
@@ -159,8 +156,7 @@ export default function AnimationStructure() {
 
     const handleMessage = (event) => {
       if (event?.data?.["wcf-animation-config"]) {
-        setBContainers([]); // Reset first
-        // Use setTimeout to ensure reset completes
+        setBContainers([]);
         setTimeout(() => {
           event?.data?.["wcf-animation-config"]?.desktop?.forEach(
             (mainAnim) => {
@@ -221,38 +217,33 @@ export default function AnimationStructure() {
 
   useEffect(() => {
     const handleClick = (e) => {
-      // Find the closest element with your class
       const btn = e.target.closest(".ab-setting-action");
       const copyBtn = e.target.closest(".ab-copy-action");
 
-      // --- Handle copy action ---
       if (copyBtn) {
         const text = copyBtn.getAttribute("data-selector-copy");
         if (text) {
-          // fallback copy using a hidden textarea (no flash / no layout shift)
           const copyWithFallback = (text) => {
             const textarea = document.createElement("textarea");
             textarea.value = text;
 
-            // Prevent mobile keyboard and keep it invisible/offscreen
             textarea.setAttribute("readonly", "");
             textarea.setAttribute("aria-hidden", "true");
-            textarea.style.position = "fixed"; // avoid scrolling to it
-            textarea.style.left = "-9999px"; // fully off-screen
+            textarea.style.position = "fixed";
+            textarea.style.left = "-9999px";
             textarea.style.top = "0";
             textarea.style.opacity = "0";
             textarea.style.pointerEvents = "none";
 
             document.body.appendChild(textarea);
 
-            // select text (works for desktop + mobile)
             textarea.focus();
             textarea.select();
             textarea.setSelectionRange(0, textarea.value.length);
 
             let success = false;
             try {
-              success = document.execCommand("copy"); // <-- actually copies to clipboard
+              success = document.execCommand("copy");
             } catch (err) {
               success = false;
             }
@@ -261,7 +252,6 @@ export default function AnimationStructure() {
             return success;
           };
 
-          // main copy function (prefers Clipboard API)
           const doCopy = async (text) => {
             if (
               navigator.clipboard &&
@@ -279,7 +269,6 @@ export default function AnimationStructure() {
             }
           };
 
-          // perform copy and give feedback
           doCopy(text).then((ok) => {
             copyBtn.classList.add("zoom-effect");
             setTimeout(() => copyBtn.classList.remove("zoom-effect"), 200);
@@ -320,7 +309,6 @@ export default function AnimationStructure() {
       }
     };
 
-    // Attach one handler for all buttons
     document.addEventListener("click", handleClick);
 
     return () => {
@@ -328,7 +316,6 @@ export default function AnimationStructure() {
     };
   }, []);
 
-  // Drag & resize handlers
   const onHeaderPointerDown = (e) => {
     e.preventDefault();
     draggingRef.current = true;
@@ -347,7 +334,6 @@ export default function AnimationStructure() {
     panelRef.current?.setPointerCapture?.(e.pointerId);
   };
 
-  // Scan GSAP animations + inline transforms
   const scanGSAP = () => {
     const animations = [...containers];
     const seenSelectors = new Set(animations.map((a) => a.selector));
@@ -375,7 +361,6 @@ export default function AnimationStructure() {
 
           targets.forEach((el) => {
             if (el && el.nodeType === 1 && isLikelyAnimatedTarget(el)) {
-              // use aria-label ancestor if available
               const ariaAncestor = el.closest?.("[aria-label]");
               uniqueTargets.add(ariaAncestor || el);
             }
@@ -383,7 +368,6 @@ export default function AnimationStructure() {
         });
       }
 
-      // also check inline styled elements
       document
         .querySelectorAll(
           '[style*="transform"], [style*="translate"], [style*="matrix"], [style*="opacity"]'
@@ -395,7 +379,6 @@ export default function AnimationStructure() {
           }
         });
 
-      // now process each unique element once
       uniqueTargets.forEach((el) =>
         addElementToAnimations({
           el,
@@ -421,7 +404,6 @@ export default function AnimationStructure() {
       return;
     }
 
-    // Use functional update to get the latest state
     setBContainers((prevBContainers) => {
       const animations = [...prevBContainers];
       const seenSelectors = new Set(animations.map((a) => a.selector));
@@ -442,7 +424,7 @@ export default function AnimationStructure() {
   };
 
   const getFilteredContainers = () => {
-    if (!searchText.trim()) return bContainers; // nothing typed → return all
+    if (!searchText.trim()) return bContainers;
 
     return bContainers.filter((container) =>
       container.name.toLowerCase().includes(searchText.toLowerCase())
@@ -463,7 +445,6 @@ export default function AnimationStructure() {
           height: size.height,
         }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between py-[8px] px-[12px] border-b-[1px] cursor-grab gap-[8px] w-full">
           <div
             className="flex items-center gap-[8px]"
@@ -524,8 +505,6 @@ export default function AnimationStructure() {
             <IconCross size="10" />
           </Button>
         </div>
-
-        {/* tab and search  */}
 
         <div className="ps-[12px] border-b-[1px]">
           <Tabs value={tabValue} onValueChange={setTabValue}>
@@ -799,9 +778,6 @@ export default function AnimationStructure() {
           </Tabs>
         </div>
 
-        {/* Animation list */}
-
-        {/* Resizer */}
         <div
           onPointerDown={onResizePointerDown}
           className="h-[16px] cursor-ns-resize flex items-center justify-center"

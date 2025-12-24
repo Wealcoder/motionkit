@@ -1,32 +1,11 @@
-export function resetAnimations({ config, timelines, createdScrollTriggers }) {
-  for (let x in timelines) {
-    if (timelines[x].split && typeof timelines[x].split.revert === "function") {
-      timelines[x].split.revert();
-    }
-    timelines[x].revert();
-    timelines[x].kill();
-  }
 
-  createdScrollTriggers?.forEach((st) => st.kill());
-  createdScrollTriggers.length = 0;
-
-  config?.forEach((section) => {
-    section.animations?.forEach((animation) => {
-      const selector = extractLastSelector(animation.applyAnimation.className);
-      if (selector?.full && selector.full !== "") {
-        gsap.set(selector.full, { clearProps: "all" });
-      }
-    });
-  });
-}
 
 export function getFullSelector(element) {
   const path = [];
-  let depth = 0; // Track depth
+  let depth = 0;
 
   while (element && element.tagName.toLowerCase() !== "html" && depth < 5) {
     let selector = getUniqueSelector(element);
-    // Check if the current element has an ID
     path.unshift(selector);
     if (document.querySelectorAll(selector).length === 1 || element.id) {
       break;
@@ -44,7 +23,6 @@ export function getFullSelector(element) {
 
 export function getUniqueSelector(element) {
   const tag = element.tagName.toLowerCase();
-  // Add ID if available
   if (element.id) {
     return `${tag}#${CSS.escape(element.id)}`;
   }
@@ -52,39 +30,38 @@ export function getUniqueSelector(element) {
   if (element.dataset.id) {
     let customClass = `.elementor-element-${element.dataset.id}`;
     if (document.querySelectorAll(customClass).length === 1) {
-      return `${customClass}`; // Only tag and ID, skip classes
+      return `${customClass}`;
     }
   }
 
-  // Add class names, excluding the hover-highlight class
   const classList = Array.from(element.classList).filter(
-    (cls) => cls !== "wcf-animb--hover-highlight"
+    (cls) => cls !== "wcf-animb--hover-highlight" && cls !== "hover-outline-highlight-builder" &&
+      cls !== "hover-outline-highlight-default" &&
+      !/[.#]/.test(cls)
   );
   if (classList.length > 0) {
-    return `${tag}.${classList.join(".")}`; // Concatenated classes if no ID
+    return `${tag}.${classList.join(".")}`;
   }
 
-  return tag; // Return only tag if no ID or classes
+  return tag;
 }
 
 export function extractLastSelector(selector) {
   if (selector === undefined) {
     return { full: "", tag: "", classes: false, id: "" };
   }
-  // Regular expression to match selectors based on common delimiters
   const lastPart = selector
     .trim()
     .split(/[\s>+~]+/) // Split by spaces, >, +, or ~
-    .pop() // Get the last element in the array
+    .pop()
     .trim();
 
-  // Extract the tag (if any) and classes (if any)
-  const tag = lastPart.split(".")[0].split("#")[0]; // Takes the first part before classes or IDs
+  const tag = lastPart.split(".")[0].split("#")[0];
   const classes = lastPart
     .split(".")
-    .slice(1) // Remove the tag name
-    .join("."); // Join classes back
-  const id = lastPart.split("#")[1]; // Extract the ID if present
+    .slice(1)
+    .join(".");
+  const id = lastPart.split("#")[1];
 
   return { full: lastPart, tag, classes, id };
 }
@@ -93,45 +70,31 @@ export function showPopup(selector, x, y) {
   const popup = document.getElementById("wcfanim-selectorPopup");
   const content = document.getElementById("wcfanim-popupContent");
 
-  // Set the content of the popup (for example, display the selector string)
   content.textContent = selector;
 
-  // Get the width and height of the popup and its content
   const popupWidth = popup.offsetWidth;
   const popupHeight = popup.offsetHeight;
 
-  // Get the current viewport size
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
-  // Adjust the x-coordinate if the popup is too wide for the screen
   if (x + popupWidth > viewportWidth) {
-    x = viewportWidth - popupWidth - 10; // Keep it 10px away from the right edge
+    x = viewportWidth - popupWidth - 10;
   }
 
-  // Adjust the y-coordinate if the popup is too tall for the screen
   if (y + popupHeight > viewportHeight) {
-    y = viewportHeight - popupHeight - 10; // Keep it 10px away from the bottom edge
+    y = viewportHeight - popupHeight - 10;
   }
 
-  // Position the popup
   popup.style.left = `${x}px`;
   popup.style.top = `${y}px`;
 
-  // Show the popup
   popup.style.display = "block";
 }
 
 export function hidePopup() {
   const popup = document.getElementById("wcfanim-selectorPopup");
   popup.style.display = "none";
-}
-
-export function extractNameAndValue(data) {
-  return data.map((item) => ({
-    name: item.name,
-    value: item.value,
-  }));
 }
 
 export function handleMouseOver(event) {

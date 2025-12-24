@@ -1,3 +1,5 @@
+import { getFullSelector } from "@/lib/animationUtils";
+
 // Border management
 export const addOutlinesToAnimatedElements = (animations) => {
   animations.forEach((animation) => {
@@ -78,43 +80,6 @@ export const isLikelyAnimatedTarget = (el) => {
   }
 };
 
-// Unique selector
-export const getUniqueSelector = (el) => {
-  if (!el || !el.tagName) return "element";
-  let current = el;
-  const segments = [];
-  let depth = 0;
-  while (current && current !== document.body && depth < 3) {
-    const tag = current.tagName.toLowerCase();
-    if (current.id) {
-      segments.unshift(`#${current.id}`);
-      break;
-    }
-
-    if (current.classList && current.classList.length > 0) {
-      const cls = [...current.classList]
-        .slice(0, 2)
-        .map((c) => `.${c}`)
-        .join("");
-      segments.unshift(cls ? `${tag}${cls}` : tag);
-    } else {
-      segments.unshift(tag);
-    }
-
-    if (
-      segments.length >= 2 &&
-      document.querySelectorAll(segments.join(" > ")).length === 1
-    )
-      break;
-    current = current.parentElement;
-    depth++;
-  }
-
-  let selector = segments.join(" > ");
-
-  return selector;
-};
-
 // Add element to animation list
 export const addElementToAnimations = ({
   el,
@@ -126,17 +91,6 @@ export const addElementToAnimations = ({
   aId,
   aTitle,
 }) => {
-  // console.log({
-  //   el,
-  //   animations,
-  //   seenSelectors,
-  //   counterRef,
-  //   context,
-  //   animType,
-  //   aId,
-  //   aTitle,
-  // });
-
   if (!document.contains(el)) return;
 
   let mainWrapper = el;
@@ -155,7 +109,7 @@ export const addElementToAnimations = ({
       ? mainWrapper
       : el;
 
-  const selector = getUniqueSelector(targetEl);
+  const selector = getFullSelector(targetEl);
   if (seenSelectors.has(selector)) return; // already added before → skip
 
   if (animType === "builder") {

@@ -172,7 +172,7 @@ return array(
         'is_active' => false,
         'elements'  => array(
           'wcf-header-sticky-animation' => array(
-            'label'       => 'Media',
+            'label'       => 'Header',
             'is_active'   => false,
             'is_upcoming' => false,
             'icon'        => 'wcf-icon-Image-Box',
