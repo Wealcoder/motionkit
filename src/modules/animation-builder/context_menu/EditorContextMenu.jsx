@@ -3,47 +3,67 @@ import { IoIosArrowForward } from "react-icons/io";
 import "./editorContextMenu.css";
 import { hidePopup } from "@/lib/animationUtils";
 
+const clamp = (v, min, max) => {
+  return Math.min(Math.max(v, min), max);
+};
+
 const EditorContextMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [targetElement, setTargetElement] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [activePath, setActivePath] = useState([]);
-
+  const [pendingActions, setPendingActions] = useState({});
   const { menus } = AAEAnimPreviewBuilder.contextMenu.getProps() || {};
 
+  // contxt menu closing handler
   const handleCloseMenu = () => {
-    hidePopup();
     setIsOpen(false);
     setTargetElement(null);
     setMenuPosition({ x: 0, y: 0 });
     setActivePath([]);
   };
 
+  // context menu opening handler
   const handleStartMenu = () => {
+    hidePopup();
     const { target, position } =
       AAEAnimPreviewBuilder.contextMenu.getProps() || {};
     if (!target) return;
-    setIsOpen(true);
     setTargetElement(target);
     setMenuPosition(position);
+    setIsOpen(true);
   };
 
   useEffect(() => {
+    // opening context menu event
     window.addEventListener("wcf-open-context-menu", handleStartMenu);
-    window.addEventListener("click", handleCloseMenu);
+    // closing context menu event
+    window.addEventListener("wcf-close-context-menu", handleCloseMenu);
     window.addEventListener("wheel", handleCloseMenu);
 
     return () => {
       window.removeEventListener("wcf-open-context-menu", handleStartMenu);
-      window.removeEventListener("click", handleCloseMenu);
+      window.removeEventListener("wcf-close-context-menu", handleCloseMenu);
       window.removeEventListener("wheel", handleCloseMenu);
     };
   }, []);
 
   if (!menus?.length || !targetElement || !isOpen) return null;
 
+  // Conditional style properties
+  const rootStyle = {
+    position: "fixed",
+    left: clamp(menuPosition.x, 8, window.innerWidth - 250 - 8),
+    top: clamp(menuPosition.y, 8, window.innerHeight - 8),
+  };
+
   return (
-    <div className="wcfanimb-skip-selector-full">
+    <div
+      // todo: same element context menu not upadating position.
+      key={`${menuPosition.x}-${menuPosition.y}`}
+      className="wcfanimb-skip-selector-full"
+      style={{ ...rootStyle }}
+    >
       <Menu
         menus={menus}
         targetElement={targetElement}
@@ -57,14 +77,9 @@ const EditorContextMenu = () => {
 
 export default EditorContextMenu;
 
-const clamp = (v, min, max) => {
-  return Math.min(Math.max(v, min), max);
-};
-
 function Menu({
   menus = [],
   targetElement,
-  menuPosition = { x: 0, y: 0 },
   activePath,
   setActivePath,
   level = 0,
@@ -75,12 +90,11 @@ function Menu({
   const [flipY, setFlipY] = useState(parentFlip.y);
   const [isHoveringMenu, setIsHoveringMenu] = useState(false);
 
-  const isRoot = level === 0;
   const isSubmenuBlocked = level >= 3;
 
   // Handling submenu flipping to viewport
   useEffect(() => {
-    if (!menuRef.current || isRoot) return;
+    if (!menuRef.current) return;
     const rect = menuRef.current.getBoundingClientRect();
     const overflowRight = rect.right > window.innerWidth;
     const overflowBottom = rect.bottom > window.innerHeight;
@@ -88,31 +102,16 @@ function Menu({
     setFlipY(parentFlip.y || overflowBottom);
   }, []);
 
-  // Conditional style properties
-  const rootStyle = isRoot
-    ? {
-        position: "fixed",
-        left: clamp(menuPosition.x, 8, window.innerWidth - 250 - 8),
-        top: clamp(menuPosition.y, 8, window.innerHeight - 8),
-      }
-    : {};
-
-  const submenuStyle = !isRoot
-    ? {
-        position: "absolute",
-        top: flipY ? "auto" : 0,
-        bottom: flipY ? 0 : "auto",
-        left: flipX ? "auto" : "100%",
-        right: flipX ? "100%" : "auto",
-      }
-    : {};
+  const submenuStyle = {
+    position: "absolute",
+    top: flipY ? "auto" : 0,
+    bottom: flipY ? 0 : "auto",
+    left: flipX ? "auto" : "100%",
+    right: flipX ? "100%" : "auto",
+  };
 
   return (
-    <ul
-      ref={menuRef}
-      className="wcf-context-menu"
-      style={{ ...rootStyle, ...submenuStyle }}
-    >
+    <ul ref={menuRef} className="wcf-context-menu" style={{ ...submenuStyle }}>
       {menus.map((menu) => {
         if (!menu?.contextMenuKey) return null;
         const isOpen = activePath[level] === menu.contextMenuKey;
@@ -122,10 +121,10 @@ function Menu({
             key={menu.contextMenuKey}
             className="wcf-ab-context-menuItems"
             style={{ position: "relative" }}
-            onClick={() => {
-              if (typeof menu.callback === "function") {
-                menu.callback(targetElement);
-              }
+            onClick={async () => {
+              if (typeof menu?.callback !== "function" || !menu?.callback)
+                return;
+              menu.callback(targetElement, menu);
             }}
             onMouseEnter={() => {
               if (!hasSubmenu) return;
@@ -140,6 +139,7 @@ function Menu({
               if (!hasSubmenu) return;
               setIsHoveringMenu(false);
             }}
+            onMouseDown={(e) => e.preventDefault()} // prevent selecting text on double click
           >
             <span>{menu.title}</span>
             {menu?.options?.length > 0 && <IoIosArrowForward />}

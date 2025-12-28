@@ -15,6 +15,7 @@ import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelpe
 
 import ContextMenuHandler from "./context_menu/contextmenu";
 import { menuItems } from "./register/context_menu/context_menu_register";
+import { handleCloseMenuEvent } from "./lib/contextMenu/contextMenuHelper";
 
 // Register context menus
 window.AAEAnimPreviewBuilder = {};
@@ -173,6 +174,7 @@ function runPopup() {
 
     if (!isSkip) {
       showPopup(selector, event.clientX + 10, event.clientY + 10);
+      handleCloseMenuEvent(); // closing context menu
     }
   });
 

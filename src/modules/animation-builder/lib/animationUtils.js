@@ -1,4 +1,13 @@
-
+export function getClosestAnimId(element) {
+  let el = element;
+  while (el) {
+    if (el.dataset && el.dataset.wcfAnimId) {
+      return el.dataset.wcfAnimId;
+    }
+    el = el.parentElement;
+  }
+  return null;
+}
 
 export function getFullSelector(element) {
   const path = [];
@@ -35,7 +44,9 @@ export function getUniqueSelector(element) {
   }
 
   const classList = Array.from(element.classList).filter(
-    (cls) => cls !== "wcf-animb--hover-highlight" && cls !== "hover-outline-highlight-builder" &&
+    (cls) =>
+      cls !== "wcf-animb--hover-highlight" &&
+      cls !== "hover-outline-highlight-builder" &&
       cls !== "hover-outline-highlight-default" &&
       !/[.#]/.test(cls)
   );
@@ -57,10 +68,7 @@ export function extractLastSelector(selector) {
     .trim();
 
   const tag = lastPart.split(".")[0].split("#")[0];
-  const classes = lastPart
-    .split(".")
-    .slice(1)
-    .join(".");
+  const classes = lastPart?.split(".")?.slice(1)?.join(".");
   const id = lastPart.split("#")[1];
 
   return { full: lastPart, tag, classes, id };

@@ -12,10 +12,112 @@ import { useAnimationControl, useContentStep } from "@/hooks/app.hooks";
 import { ABCustomPresetData } from "@/config/animationPresetData";
 import { generateUniqueId } from "../../../../utils/generateUniqueId";
 import { Skeleton } from "../ui/skeleton";
+import { useEffect } from "react";
+import { handleCopyText } from "@/lib/contextMenu/contextMenuHelper";
 
 const MainEditor = ({ isLoading }) => {
   const { contentStep, setContentStep } = useContentStep();
-  const { createAnimation } = useAnimationControl();
+  const { allAnimation, createAnimation, deleteAnimation } =
+    useAnimationControl();
+
+  // context menu helper function to communicate preview iframe with editor using event listener
+  const handleMessage = (event) => {
+    // create animation
+    if (event.data.type === "WCF_AB_CREATE_ANIMATION") {
+      const { sampleData, itemClass, contextMenuKey } = event.data.payload;
+      if (!sampleData || !sampleData.id || !contextMenuKey) return;
+      setContentStep({
+        step: 2,
+        data: sampleData,
+      });
+      createAnimation(sampleData);
+      // TODO: need to add classname on the animation data.
+      return;
+    }
+
+    // preview animation
+    if (event.data.type === "WCF_AB_PREVIEW_ANIMATION") {
+      const { wcfAnimId } = event.data.payload;
+      if (!wcfAnimId) return;
+      // filter animation by id
+      const filteredAnimation = Object.entries(allAnimation).reduce(
+        (acc, [key, value]) => {
+          const matched = value?.find((anim) => anim.id === wcfAnimId);
+          if (matched) {
+            acc[key] = [matched];
+          }
+          return acc;
+        },
+        {}
+      );
+      if (Object.keys(filteredAnimation).length === 0) return;
+      const iframe = document.getElementById(
+        "wcf--animation-builder--animation--preview"
+      );
+      const win = iframe.contentWindow;
+      win.postMessage({ "wcf-animation-config": filteredAnimation });
+      return;
+    }
+
+    // copy animation
+    if (event.data.type === "WCF_AB_COPY_ANIMATION") {
+      const { wcfAnimId } = event.data.payload;
+      if (!wcfAnimId) return;
+      // generate new id for copied animation
+      const newUniqueAnimId = generateUniqueId();
+      // filter animation by id
+      const filteredAnimation = Object.entries(allAnimation).reduce(
+        (acc, [key, value]) => {
+          const matched = value?.find((anim) => anim.id === wcfAnimId);
+          if (matched) {
+            matched["id"] = newUniqueAnimId;
+            acc[key] = [matched];
+          }
+          return acc;
+        },
+        {}
+      );
+      handleCopyText(JSON.stringify(filteredAnimation));
+      return;
+    }
+
+    // paste animation
+    // TODO: paste can be either add new animation or override existing animation
+    if (event.data.type === "WCF_AB_PASTE_ANIMATION") {
+      console.log("Implement paste animation functionality");
+      // const { wcfAnimId } = event.data.payload;
+      // if (!wcfAnimId) return;
+      // // generate new id for copied animation
+      // const newUniqueAnimId = generateUniqueId();
+      // // filter animation by id
+      // const filteredAnimation = Object.entries(allAnimation).reduce(
+      //   (acc, [key, value]) => {
+      //     const matched = value?.find((anim) => anim.id === wcfAnimId);
+      //     if (matched) {
+      //       matched.id = newUniqueAnimId;
+      //       acc[key] = [matched];
+      //     }
+      //     return acc;
+      //   },
+      //   {}
+      // );
+      // handleCopyText(JSON.stringify(filteredAnimation));
+      return;
+    }
+
+    // delete animation
+    if (event.data.type === "WCF_AB_DELETE_ANIMATION") {
+      const { wcfAnimId } = event.data.payload;
+      if (!wcfAnimId) return;
+      deleteAnimation(wcfAnimId);
+    }
+  };
+
+  // context menu event helper
+  useEffect(() => {
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [createAnimation, setContentStep, allAnimation, deleteAnimation]);
 
   return (
     <div className="bg-background h-full flex flex-col justify-between relative">

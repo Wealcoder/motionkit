@@ -17,11 +17,13 @@
   font-weight: 500;
   font-family: Inter;
   text-align: left;
-  box-shadow: rgba(100, 100, 111, 0.2) 0px 10px 20px 5px;
+  box-shadow: 0 2px 15px rgb(31, 33, 36, 0.9);
   /* use border for padding. padding cause problem onMouseEnter for submenu */
   border: 10px solid transparent;
   border-radius: 6px;
   outline: none !important;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
 }
 
 .wcf-ab-context-menuItems {
