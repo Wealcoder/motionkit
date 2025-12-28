@@ -11,14 +11,16 @@ import {
 import { EaseConfig } from "@/config/easeData";
 import { useEffect, useState } from "react";
 
-
 const ImageRevealPreset = ({ contentStep, updateContentData }) => {
   const { data } = contentStep;
 
   const [fullConfig, setFullConfig] = useState({
     triggerClass: data?.triggerClass || "",
+    triggerType: data?.triggerType || "on_scroll",
     itemClass: data?.itemClass || "",
     animationTo: data?.animationTo || "left",
+    delay: data?.delay || 0,
+    duration: data?.duration || 1,
     animationStart: data?.animationStart || "top top",
     animationCStart: data?.animationCStart || "",
     ease: data?.ease || "power2.out",
@@ -31,26 +33,68 @@ const ImageRevealPreset = ({ contentStep, updateContentData }) => {
 
   return (
     <div className="flex flex-col gap-2 border-b border-border-2 w-full p-3">
+      {/* trigger type  */}
       <div className="grid grid-cols-2 gap-2 justify-between items-center">
         <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Trigger Class</h3>
-          <ToolTipWrapper text={"Add the scroll trigger class name"} />
+          <h3 className="text-xs text-text-2 capitalize">Trigger Type</h3>
+          <ToolTipWrapper text={"Select the trigger type"} />
         </div>
         <div className="flex items-center gap-1.5">
           <div className="flex-1">
-            <Input
-              value={fullConfig?.triggerClass}
-              onChange={(e) => {
+            <Select
+              value={fullConfig.triggerType}
+              onValueChange={(value) =>
                 setFullConfig((prev) => ({
                   ...prev,
-                  triggerClass: e.target.value,
-                }));
-              }}
-              placeholder="add value"
-            />
+                  triggerType: value,
+                }))
+              }
+            >
+              <SelectTrigger className="min-w-[90px]">
+                <SelectValue
+                  placeholder="Select type"
+                  className="line-clamp-1"
+                />
+              </SelectTrigger>
+              <SelectContent className="min-w-[90px]">
+                <SelectGroup>
+                  <SelectItem value="on_scroll">On Scroll</SelectItem>
+                  <SelectItem value="page_load">On Page Load</SelectItem>
+                  <SelectItem value="play_with_scroll">
+                    Play With Scroll
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
+
+      {/* trigger class  */}
+      {fullConfig.triggerType !== "page_load" ? (
+        <div className="grid grid-cols-2 gap-2 justify-between items-center">
+          <div className="flex items-center gap-1">
+            <h3 className="text-xs text-text-2 capitalize">Trigger Class</h3>
+            <ToolTipWrapper text={"Add the scroll trigger class name"} />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="flex-1">
+              <Input
+                value={fullConfig?.triggerClass}
+                onChange={(e) => {
+                  setFullConfig((prev) => ({
+                    ...prev,
+                    triggerClass: e.target.value,
+                  }));
+                }}
+                placeholder="add value"
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
 
       <div className="grid grid-cols-2 gap-2 justify-between items-center">
         <div className="flex items-center gap-1">
@@ -108,58 +152,115 @@ const ImageRevealPreset = ({ contentStep, updateContentData }) => {
         </div>
       </div>
 
+      {/* delay  */}
       <div className="grid grid-cols-2 gap-2 justify-between items-center">
         <div className="flex items-center gap-1">
-          <h3 className="text-xs text-text-2 capitalize">Animation Start</h3>
-          <ToolTipWrapper
-            text={
-              "Select the direction where the animation will move (Left, Right, Top, or Bottom)"
-            }
-          />
+          <h3 className="text-xs text-text-2 capitalize">Delay</h3>
+          <ToolTipWrapper text={"Animation delay in seconds"} />
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="flex-1 flex flex-col gap-2">
-            <Select
-              value={fullConfig.animationStart}
-              onValueChange={(value) =>
+          <div className="flex-1">
+            <Input
+              type="number"
+              value={fullConfig?.delay}
+              onChange={(e) => {
                 setFullConfig((prev) => ({
                   ...prev,
-                  animationStart: value,
-                }))
-              }
-            >
-              <SelectTrigger className="min-w-[90px]">
-                <SelectValue placeholder="Top Top" className="line-clamp-1" />
-              </SelectTrigger>
-              <SelectContent className="min-w-[90px]">
-                <SelectGroup>
-                  <SelectItem value={"top top"}>Top Top</SelectItem>
-                  <SelectItem value={"top center"}>Top Center</SelectItem>
-                  <SelectItem value={"top bottom"}>Top Bottom</SelectItem>
-                  <SelectItem value={"bottom top"}>Bottom Top</SelectItem>
-                  <SelectItem value={"bottom center"}>Bottom Center</SelectItem>
-                  <SelectItem value={"bottom bottom"}>Bottom Bottom</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            {fullConfig.animationStart === "custom" ? (
-              <Input
-                placeholder="top top+=100"
-                value={fullConfig.animationCStart}
-                onChange={(e) =>
-                  setFullConfig((prev) => ({
-                    ...prev,
-                    animationCStart: e.target.value,
-                  }))
-                }
-              />
-            ) : (
-              ""
-            )}
+                  delay: parseFloat(e.target.value) || 0,
+                }));
+              }}
+              placeholder="0"
+            />
           </div>
         </div>
       </div>
+
+      {/* duration  */}
+      <div className="grid grid-cols-2 gap-2 justify-between items-center">
+        <div className="flex items-center gap-1">
+          <h3 className="text-xs text-text-2 capitalize">Duration</h3>
+          <ToolTipWrapper text={"Animation duration in seconds"} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1">
+            <Input
+              type="number"
+              value={fullConfig?.duration}
+              onChange={(e) => {
+                const value = parseFloat(e.target.value);
+
+                setFullConfig((prev) => ({
+                  ...prev,
+                  duration: Number.isNaN(value) ? 1 : value,
+                }));
+              }}
+              placeholder="1"
+              min="0"
+            />
+          </div>
+        </div>
+      </div>
+
+      {fullConfig.triggerType !== "page_load" ? (
+        <div className="grid grid-cols-2 gap-2 justify-between items-center">
+          <div className="flex items-center gap-1">
+            <h3 className="text-xs text-text-2 capitalize">Animation Start</h3>
+            <ToolTipWrapper
+              text={
+                "Select the direction where the animation will move (Left, Right, Top, or Bottom)"
+              }
+            />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="flex-1 flex flex-col gap-2">
+              <Select
+                value={fullConfig.animationStart}
+                onValueChange={(value) =>
+                  setFullConfig((prev) => ({
+                    ...prev,
+                    animationStart: value,
+                  }))
+                }
+              >
+                <SelectTrigger className="min-w-[90px]">
+                  <SelectValue placeholder="Top Top" className="line-clamp-1" />
+                </SelectTrigger>
+                <SelectContent className="min-w-[90px]">
+                  <SelectGroup>
+                    <SelectItem value={"top top"}>Top Top</SelectItem>
+                    <SelectItem value={"top center"}>Top Center</SelectItem>
+                    <SelectItem value={"top bottom"}>Top Bottom</SelectItem>
+                    <SelectItem value={"bottom top"}>Bottom Top</SelectItem>
+                    <SelectItem value={"bottom center"}>
+                      Bottom Center
+                    </SelectItem>
+                    <SelectItem value={"bottom bottom"}>
+                      Bottom Bottom
+                    </SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              {fullConfig.animationStart === "custom" ? (
+                <Input
+                  placeholder="top top+=100"
+                  value={fullConfig.animationCStart}
+                  onChange={(e) =>
+                    setFullConfig((prev) => ({
+                      ...prev,
+                      animationCStart: e.target.value,
+                    }))
+                  }
+                />
+              ) : (
+                ""
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
 
       <div className="grid grid-cols-2 gap-2 justify-between items-center">
         <div className="flex items-center gap-1">
