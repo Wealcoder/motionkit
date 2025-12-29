@@ -8,7 +8,7 @@ import {
   handlePasteAnimContextMenu,
   handlePreviewAnimContextMenu,
   handleSaveAnimContextMenu,
-} from "../../lib/contextMenu/contextMenuHelper";
+} from "../../lib/contextMenu/contextMenu";
 
 export const menuItems = [
   {

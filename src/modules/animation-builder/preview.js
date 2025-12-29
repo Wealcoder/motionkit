@@ -15,7 +15,7 @@ import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelpe
 
 import ContextMenuHandler from "./context_menu/contextmenu";
 import { menuItems } from "./register/context_menu/context_menu_register";
-import { handleCloseMenuEvent } from "./lib/contextMenu/contextMenuHelper";
+import { handleCloseMenuEvent } from "./lib/contextMenu/contextMenu";
 
 // Register context menus
 window.AAEAnimPreviewBuilder = {};
@@ -166,6 +166,7 @@ function runPopup() {
     if (target.closest(".wcfanimb-skip-selector-full")) {
       return;
     }
+
     // collecting element classname
     const selector = getFullSelector(target);
     enableHover();

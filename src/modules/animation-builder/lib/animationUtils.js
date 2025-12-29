@@ -116,6 +116,11 @@ export function handleMouseOver(event) {
     return;
   }
 
+  // prevent child element selection if parent has wcf-anim-id attribute for paste animation from context menu
+  if (target.closest("[data-wcf-anim-id]")) {
+    return;
+  }
+
   target.classList.add("wcf-animb--hover-highlight");
   target.addEventListener(
     "mouseleave",
