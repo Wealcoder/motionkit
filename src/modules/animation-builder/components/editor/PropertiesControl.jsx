@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { IconPlus, IconPlus2 } from "@/lib/icons";
+import { IconPlus, IconPlus2 } from "../../../../assets/icons";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import ToolTipWrapper from "../common/ToolTipWrapper";

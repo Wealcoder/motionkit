@@ -1,4 +1,11 @@
-import { IconCross } from "@/lib/icons";
+import Brand from "./Shared/header/Brand";
+import Structure from "./Shared/header/Structure";
+import ActivateBorderBtn from "./Shared/header/ActivateBorderBtn";
+import History from "./Shared/header/History";
+import Help from "./Shared/header/Help";
+import ExitBuilder from "./Shared/header/ExitBuilder";
+import ResponsiveControl from "./Shared/header/ResponsiveControl";
+
 import {
   Dialog,
   DialogClose,
@@ -9,32 +16,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button, buttonVariants } from "@/components/ui/button";
+
 import { cn } from "@/lib/utils";
 import { useAnimationControl, useDeviceConfig } from "@/hooks/app.hooks";
-import { Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
-import {
-  Tooltip,
-  ToolTipArrow,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useEffect, useState } from "react";
 
-const ResponsiveIcons = {
-  desktop: <Monitor />,
-  laptop: <Laptop />,
-  tab_land: <Tablet style={{ rotate: "90deg" }} />,
-  tab: <Tablet />,
-  mobile: <Smartphone />,
-};
+import { useEffect, useState } from "react";
+import Search from "./Shared/header/Search";
 
 const EditorHeader = () => {
   const [activeStructure, setActiveStructure] = useState(true);
   const [activeBorder, setActiveBorder] = useState(false);
   const { updateAnimation } = useAnimationControl();
-  const { selectedDevice, setSelectedDevice } = useDeviceConfig();
 
   const previewUrl = new URL(WCF_ANIMATION_BUILDER.iframe_url);
   previewUrl.searchParams.delete("action");
@@ -90,47 +82,30 @@ const EditorHeader = () => {
   };
 
   return (
-    <div className="flex justify-between bg-background items-center gap-2 p-3 border-b border-border">
-      <div className="flex items-center gap-2">
-        <Button
-          onClick={() => {
-            updateActiveStructure(!activeStructure);
-          }}
-          className={cn(
-            "h-[36px] w-[36px] bg-transparent hover:bg-border-2 border-[1px] border-border-active px-0 py-0 [&_svg]:size-[24px] rounded-[4px]",
-            activeStructure && "bg-border-2"
-          )}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            <path
-              d="M12.4417 14.553L10.1358 17.2531C9.14121 18.4177 8.6439 19 8 19C7.3561 19 6.85879 18.4177 5.86418 17.2531L3.55829 14.553C2.51943 13.3366 2 12.7284 2 12C2 11.2716 2.51943 10.6634 3.55829 9.44699L5.86418 6.74694C6.85879 5.58231 7.3561 5 8 5C8.6439 5 9.14121 5.58231 10.1358 6.74694L12.4417 9.44699C13.4806 10.6634 14 11.2716 14 12C14 12.7284 13.4806 13.3366 12.4417 14.553Z"
-              stroke="white"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M13 19L16.5118 14.6032C17.5039 13.361 18 12.7398 18 12C18 11.2602 17.5039 10.639 16.5118 9.39683L13 5"
-              stroke="white"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M17 19L20.5118 14.6032C21.5039 13.361 22 12.7398 22 12C22 11.2602 21.5039 10.639 20.5118 9.39683L17 5"
-              stroke="white"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </Button>
+    <div className="max-h-[66px] grid grid-cols-3 bg-background px-[18px] py-[9px]">
+      {/* left side */}
+      <div className="flex justify-start items-center gap-10">
+        <Brand />
+        {/* left side controller */}
+        <div className="flex justify-between items-center gap-2">
+          <Structure />
+          <ActivateBorderBtn />
+          <History />
+          <Help />
+          <ExitBuilder />
+        </div>
+      </div>
+      {/* center */}
+      <div className="flex justify-center items-center">
+        <ResponsiveControl />
+      </div>
+      {/* right side */}
+      <div className="flex justify-end items-center">
+        {/* //TODO: work on right side button */}
+        <Search />
+      </div>
+      {/* <div className="flex items-center gap-2">
+
         <Button
           onClick={() => {
             updateActiveBorder(!activeBorder);
@@ -179,31 +154,7 @@ const EditorHeader = () => {
         </Button>
       </div>
 
-      <div className="flex items-center justify-center gap-4">
-        {WCF_ANIMATION_BUILDER?.device_config?.map((device) => (
-          <TooltipProvider delayDuration={100} key={device.key}>
-            <Tooltip delayDuration={100}>
-              <TooltipTrigger asChild>
-                <div
-                  className={cn(
-                    selectedDevice === device.key
-                      ? "[&>svg]:stroke-text"
-                      : "[&>svg]:stroke-text-3",
-                    "[&>svg]:cursor-pointer"
-                  )}
-                  onClick={() => setSelectedDevice(device.key)}
-                >
-                  {ResponsiveIcons[device.key]}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent align="center" className="mr-0">
-                <p>{device.viewWidth}</p>
-                <ToolTipArrow className="fill-[#474852] -mt-[0.5px]" />
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
-      </div>
+
 
       <div className="flex items-center gap-4">
         <div
@@ -248,7 +199,7 @@ const EditorHeader = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </div> */}
     </div>
   );
 };

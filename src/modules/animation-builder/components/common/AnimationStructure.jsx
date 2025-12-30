@@ -9,7 +9,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
-import { IconCross } from "@/lib/icons";
+import { IconCross } from "../../../../assets/icons";
 import { Search, SearchX } from "lucide-react";
 import { Input } from "../ui/input";
 import {

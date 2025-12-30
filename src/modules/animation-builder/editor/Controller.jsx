@@ -1,24 +1,24 @@
-import { IconPlus2 } from "@/lib/icons";
-import { Button } from "../ui/button";
+import { IconPlus2 } from "../../../assets/icons";
+import { Button } from "../components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import EditorBody from "./EditorBody";
-import EditorFooter from "./EditorFooter";
+import EditorBody from "../components/editor/EditorBody";
+import EditorFooter from "../components/editor/EditorFooter";
 import { useAnimationControl, useContentStep } from "@/hooks/app.hooks";
 import { ABCustomPresetData } from "@/config/animationPresetData";
-import { generateUniqueId } from "../../../../utils/generateUniqueId";
-import { Skeleton } from "../ui/skeleton";
+import { generateUniqueId } from "../../../utils/generateUniqueId";
+import { Skeleton } from "../components/ui/skeleton";
 import { useEffect, useContext } from "react";
 import { handleCopyText } from "@/lib/contextMenu/contextMenuHelper";
 import { getResponsiveAndBelow } from "@/lib/utils";
 import { AppContext } from "@/context/app.context";
 import { handleFilterAnimation } from "@/lib/contextMenu/contextMenuHelper";
 
-const MainEditor = ({ isLoading }) => {
+const Controller = ({ isLoading }) => {
   const { contentStep, setContentStep } = useContentStep();
   const {
     allAnimation,
@@ -280,4 +280,4 @@ const MainEditor = ({ isLoading }) => {
   );
 };
 
-export default MainEditor;
+export default Controller;

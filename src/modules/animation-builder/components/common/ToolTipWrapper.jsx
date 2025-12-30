@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { IconHelp } from "@/lib/icons";
+import { IconHelp } from "../../../../assets/icons";
 
 const ToolTipWrapper = ({ text }) => {
   return (

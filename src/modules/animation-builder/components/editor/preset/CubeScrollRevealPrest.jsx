@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/accordion";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { RiUploadCloud2Line } from "react-icons/ri";
+// import { RiUploadCloud2Line } from "react-icons/ri"; // use huge icons instead
 
 const CubeScrollRevealPreset = ({ contentStep, updateContentData }) => {
   const { data } = contentStep;
@@ -360,7 +360,7 @@ const CubeScrollRevealPreset = ({ contentStep, updateContentData }) => {
                     }
                     className="px-[5px]"
                   >
-                    <RiUploadCloud2Line size="20" />
+                    {/* <RiUploadCloud2Line size="20" /> */}
                   </Button>
                 </div>
               </div>
@@ -413,7 +413,7 @@ const CubeScrollRevealPreset = ({ contentStep, updateContentData }) => {
                     }
                     className="px-[5px]"
                   >
-                    <RiUploadCloud2Line size="20" />
+                    {/* <RiUploadCloud2Line size="20" /> */}
                   </Button>
                 </div>
               </div>
@@ -466,7 +466,7 @@ const CubeScrollRevealPreset = ({ contentStep, updateContentData }) => {
                     }
                     className="px-[5px]"
                   >
-                    <RiUploadCloud2Line size="20" />
+                    {/* <RiUploadCloud2Line size="20" /> */}
                   </Button>
                 </div>
               </div>
@@ -519,7 +519,7 @@ const CubeScrollRevealPreset = ({ contentStep, updateContentData }) => {
                     }
                     className="px-[5px]"
                   >
-                    <RiUploadCloud2Line size="20" />
+                    {/* <RiUploadCloud2Line size="20" /> */}
                   </Button>
                 </div>
               </div>
@@ -572,7 +572,7 @@ const CubeScrollRevealPreset = ({ contentStep, updateContentData }) => {
                     }
                     className="px-[5px]"
                   >
-                    <RiUploadCloud2Line size="20" />
+                    {/* <RiUploadCloud2Line size="20" /> */}
                   </Button>
                 </div>
               </div>
@@ -628,7 +628,7 @@ const CubeScrollRevealPreset = ({ contentStep, updateContentData }) => {
                     }
                     className="px-[5px]"
                   >
-                    <RiUploadCloud2Line size="20" />
+                    {/* <RiUploadCloud2Line size="20" /> */}
                   </Button>
                 </div>
               </div>

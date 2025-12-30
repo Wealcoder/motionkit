@@ -2,7 +2,7 @@ import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { IconDelete } from "@/lib/icons";
+import { IconDelete } from "../../../../../assets/icons";
 import { useEffect, useState } from "react";
 
 const HorizontalScrollPreset = ({ contentStep, updateContentData }) => {

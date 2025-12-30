@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AProperties } from "@/config/timelineProperties";
-import { IconCopy, IconDrag } from "@/lib/icons";
+import { IconCopy, IconDrag } from "../../../../../assets/icons";
 import {
   Select,
   SelectContent,

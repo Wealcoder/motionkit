@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { IoIosArrowForward } from "react-icons/io";
+// import { IoIosArrowForward } from "react-icons/io"; // use huge icon instead
 import "./editorContextMenu.css";
 import { hidePopup } from "@/lib/animationUtils";
 
@@ -142,7 +142,7 @@ function Menu({
             onMouseDown={(e) => e.preventDefault()} // prevent selecting text on double click
           >
             <span>{menu.title}</span>
-            {menu?.options?.length > 0 && <IoIosArrowForward />}
+            {/* {menu?.options?.length > 0 && <IoIosArrowForward />} */}
 
             {hasSubmenu && !isSubmenuBlocked && isHoveringMenu && isOpen && (
               <Menu

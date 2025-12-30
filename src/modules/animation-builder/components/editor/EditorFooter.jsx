@@ -1,4 +1,4 @@
-import { IconPlay } from "@/lib/icons";
+import { IconPlay } from "../../../../assets/icons";
 import { Button, buttonVariants } from "../ui/button";
 import {
   useAnimationControl,
@@ -8,7 +8,7 @@ import {
 import { toast } from "sonner";
 import DeleteConfirmDialog from "../common/DeleteConfirmDialog";
 import { cn } from "@/lib/utils";
-import { RiResetRightLine } from "react-icons/ri";
+// import { RiResetRightLine } from "react-icons/ri";
 import { useState } from "react";
 
 const EditorFooter = () => {
@@ -69,7 +69,7 @@ const EditorFooter = () => {
       <div className="p-3 border-t border-border">
         {activeReset ? (
           <Button variant="play" size="play" onClick={() => resetPreview()}>
-            <RiResetRightLine /> Reply
+            {/* <RiResetRightLine /> Reply */}Reply
           </Button>
         ) : (
           <Button variant="play" size="play" onClick={() => showPreview()}>

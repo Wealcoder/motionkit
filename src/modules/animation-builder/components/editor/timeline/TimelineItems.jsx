@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TProperties } from "@/config/timelineProperties";
 import { useContentStep } from "@/hooks/app.hooks";
-import { IconCopy } from "@/lib/icons";
+import { IconCopy } from "../../../../../assets/icons";
 import { useEffect, useState } from "react";
 import PropertiesControl from "../PropertiesControl";
 import { generateUniqueId } from "../../../../../utils/generateUniqueId";

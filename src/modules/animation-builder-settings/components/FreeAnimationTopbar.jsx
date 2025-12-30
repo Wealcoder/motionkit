@@ -1,4 +1,4 @@
-import { RiCloseLine, RiCommandLine, RiSearchLine } from "react-icons/ri";
+// import { RiCloseLine, RiCommandLine, RiSearchLine } from "react-icons/ri";
 import { Dot } from "lucide-react";
 import { Switch } from "@@/components/ui/switch";
 import { Label } from "@@/components/ui/label";
@@ -11,7 +11,7 @@ const FreeAnimationTopbar = ({ searchKey, setSearchKey, presetCount }) => {
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 xl:gap-11 justify-between items-center">
       <div className="flex items-center gap-3">
         <div className="border rounded-full h-[52px] w-[52px] flex justify-center items-center shadow-common">
-          <RiCommandLine size={24} color="#FC6848" />
+          {/* <RiCommandLine size={24} color="#FC6848" /> */}
         </div>
         <div className="flex flex-col gap-1">
           <div className="flex items-center">
@@ -39,21 +39,20 @@ const FreeAnimationTopbar = ({ searchKey, setSearchKey, presetCount }) => {
         </div>
         <div className="ml-6 mr-2">
           <div className="relative">
-            <RiSearchLine className="absolute left-3 top-2.5 h-5 w-5 text-icon-secondary" />
+            {/* <RiSearchLine className="absolute left-3 top-2.5 h-5 w-5 text-icon-secondary" /> */}
             <Input
               value={searchKey}
               onChange={(e) => setSearchKey(e.target.value)}
               placeholder="Search Presets"
               className="px-9"
             />
-            {searchKey ? (
-              <RiCloseLine
-                onClick={() => setSearchKey("")}
-                className="absolute right-3 top-2.5 h-5 w-5 cursor-pointer text-icon-secondary"
-              />
-            ) : (
-              ""
-            )}
+            {searchKey
+              ? ""
+              : // <RiCloseLine
+                //   onClick={() => setSearchKey("")}
+                //   className="absolute right-3 top-2.5 h-5 w-5 cursor-pointer text-icon-secondary"
+                // />
+                ""}
           </div>
         </div>
       </div>

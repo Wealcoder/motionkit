@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { IconDelete } from "@/lib/icons";
+import { IconDelete } from "../../../../assets/icons";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 

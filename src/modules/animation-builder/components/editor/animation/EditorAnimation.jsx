@@ -5,7 +5,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-import { IconPlus } from "@/lib/icons";
+import { IconPlus } from "../../../../../assets/icons";
 import AnimationItems from "./AnimationItems";
 import { useContentStep } from "@/hooks/app.hooks";
 import { generateUniqueId } from "../../../../../utils/generateUniqueId";
@@ -93,7 +93,6 @@ const EditorAnimation = () => {
       updateContentData(result, "animations");
     }
   };
-
 
   return (
     <Accordion

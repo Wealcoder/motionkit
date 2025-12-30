@@ -25,6 +25,10 @@ module.exports = {
     return {
       ...getWebpackEntryPoints(),
 
+      // assets entries
+      "assets/AssetImage": "./src/assets/AssetImage.js",
+      "assets/AssetImage": "./src/assets/icons.jsx",
+
       // manual entries
 
       "modules/animation-builder/main":
@@ -39,7 +43,6 @@ module.exports = {
       "modules/animation-builder/animbuilder-copy":
         "./src/modules/animation-builder/animbuilder-copy.css",
       "modules/animation-builder/freeAnim": "./src/css/freeAnim.css",
-
 
       // auto-generated free preset entries (frontend)
       ...getPresetEntries({

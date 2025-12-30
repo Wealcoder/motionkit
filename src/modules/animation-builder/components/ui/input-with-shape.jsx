@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { IconPlaceholderS } from "@/lib/icons";
+import { IconPlaceholderS } from "../../../../assets/icons";
 
 const InputWithShape = React.forwardRef(
   ({ className, type = "number", ...props }, ref) => {

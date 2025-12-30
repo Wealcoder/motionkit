@@ -3,17 +3,17 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import MainEditor from "@/components/editor/MainEditor";
+import Controller from "@/editor/Controller";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import {
   useAnimationControl,
   useDeviceConfig,
   usePageConfig,
-} from "./hooks/app.hooks";
-import EditorHeader from "./components/editor/EditorHeader";
+} from "../hooks/app.hooks";
+import EditorHeader from "./EditorHeader";
 
-const GetStart = () => {
+const Editor = () => {
   const { setPageConfig } = usePageConfig();
   const { setAllAnimation } = useAnimationControl();
   const { selectedDevice } = useDeviceConfig();
@@ -88,11 +88,11 @@ const GetStart = () => {
           defaultSize={15}
           className={cn("min-w-[280px] max-w-[450px] h-[calc(100vh-53px)]")}
         >
-          <MainEditor isLoading={isLoading} />
+          <Controller isLoading={isLoading} />
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
   );
 };
 
-export default GetStart;
+export default Editor;

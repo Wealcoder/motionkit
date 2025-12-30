@@ -1,5 +1,5 @@
 import domReady from "@wordpress/dom-ready";
-import GetStart from "./GetStart";
+import Editor from "@/editor/Editor";
 import { AppContextProvider } from "./context/app.context";
 /**
  * This file is used for editor controller.
@@ -22,7 +22,7 @@ domReady(function () {
 
   wp.element.render(
     <AppContextProvider>
-      <GetStart />
+      <Editor />
     </AppContextProvider>,
     editor_panel
   );

@@ -3,7 +3,7 @@ import {
   useContentStep,
   useDeviceConfig,
 } from "@/hooks/app.hooks";
-import { IconCopy, IconDrag } from "@/lib/icons";
+import { IconCopy, IconDrag } from "../../../../assets/icons";
 import DeleteConfirmDialog from "../common/DeleteConfirmDialog";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
