@@ -408,8 +408,6 @@ class AnimationBuilderEditor
 		do_action('wcfanimationbuilder/editor/wp_head');
 	}
 
-
-
 	public function is_edit_mode()
 	{
 
@@ -424,6 +422,7 @@ class AnimationBuilderEditor
 	{
 		wp_enqueue_style('wcf-pro-animation-builder', WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/main.css');
 	}
+
 	public function editor_script()
 	{
 		wp_enqueue_media();

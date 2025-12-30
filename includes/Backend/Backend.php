@@ -56,6 +56,7 @@ final class Backend
 
 		add_action('admin_head', array($this, 'remove_notice_for_setting_page'));
 		add_action('wp_ajax_aae_save_anim_builder_settings', array($this, 'save_dashboard_settings'));
+		add_action('wp_ajax_wcf_anim_builder_reusable_glabal_animations', array($this, 'reusable_glabal_animations'));
 		add_filter('page_row_actions', [$this, 'add_custom_quick_link'], 10, 2);
 		add_filter('post_row_actions', [$this, 'add_custom_quick_link'], 10, 2);
 	}
@@ -119,6 +120,42 @@ final class Backend
 				'active' => $counts['active'],
 			),
 		);
+		wp_send_json($return_message);
+	}
+	/**
+	 * Save reusable global animations
+	 * globalSavedanimations
+	 * @return void
+	 */
+	public function reusable_glabal_animations()
+	{
+
+		// Verify nonce
+		check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'gsap-animation-builder-for-wordpress')], 403);
+		}
+		// Get and sanitize the JSON data	
+
+		if (! isset($_POST['globalSavedanimations'])) {
+			return;
+		}
+
+		if (! isset($_POST['setting_name'])) {
+			return;
+		}
+
+		$animationConfigs = isset( $_POST[ 'globalSavedanimations' ] ) ? sanitize_text_field(wp_unslash($_POST['globalSavedanimations'])) : [];
+		$setting_name	  = sanitize_text_field( wp_unslash( $_POST[ 'setting_name' ] ) );
+
+		update_option($setting_name, $animationConfigs);		
+
+		$return_message = array(
+			'message' => 'Settings Updated',			
+		);
+
 		wp_send_json($return_message);
 	}
 

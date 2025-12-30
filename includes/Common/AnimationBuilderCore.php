@@ -67,16 +67,70 @@ class AnimationBuilderCore
 		add_filter('query_vars', [$this, 'custom_query_vars']);
 		add_action('template_redirect', [$this, 'animation_builder_template_redirect']);
 		add_action('wp_enqueue_scripts', [$this, 'config_enqueue_script'], 60);
-
+		// page type configs ajax
 		add_action('wp_ajax_wcf_anim_builder_configs_store', [$this, 'configs_store']);
 		add_action('wp_ajax_wcf_anim_builder_configs_delete', [$this, 'configs_delete']);
 
+		// Global Animation Builder Page Type
+		add_action('wp_ajax_wcf_anim_builder_gl_configs_store', [$this, 'global_configs_store']);
+		add_action('wp_ajax_wcf_anim_builder_gl_configs_delete', [$this, 'global_configs_delete']);
 		//editor
 		$this->page_type = AnimationBuilderPageType::instance();
 		$builder = AnimationBuilderEditor::instance();
 		$builder->setPageType($this->page_type);
 	}
 
+	public function global_configs_store()
+	{
+		// Verify nonce
+		check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'gsap-animation-builder-for-wordpress')], 403);
+		}
+
+		// Get and sanitize the JSON data
+		
+		$animationConfigs = isset($_POST['animationConfigs']) ? sanitize_text_field(wp_unslash($_POST['animationConfigs'])) : '';
+
+		// Validate JSON structure
+		if (empty($animationConfigs)) {
+			wp_send_json_error(['msg' => esc_html__('Missing configuration data', 'gsap-animation-builder-for-wordpress')], 400);
+		}
+
+		// Decode JSON and check for errors		
+		$animationConfigs = json_decode($animationConfigs, true);
+
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			wp_send_json_error(['msg' => esc_html__('Invalid JSON format', 'gsap-animation-builder-for-wordpress')], 400);
+		}
+
+		// Further validation on the decoded data to ensure expected structure
+		if (!is_array($animationConfigs)) {
+			wp_send_json_error(['msg' => esc_html__('Invalid configuration structure', 'gsap-animation-builder-for-wordpress')], 400);
+		}
+
+		// Save configurations		
+		update_option( 'wcf_global_animation_builder_configs' , $animationConfigs );
+		
+		wp_send_json_success(['msg' => esc_html__('Configurations updated successfully', 'gsap-animation-builder-for-wordpress'), 'configs' => $animationConfigs]);
+	}
+
+	public function global_configs_delete()
+	{
+		// Verify nonce
+		check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+
+		// Check user permissions
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'gsap-animation-builder-for-wordpress')], 403);
+		}		
+	
+		delete_option('wcf_global_animation_builder_configs');
+
+		wp_send_json_success(['msg' => esc_html__('Configurations deleted successfully', 'gsap-animation-builder-for-wordpress')]);
+	}
 
 	public function configs_store()
 	{
@@ -114,6 +168,7 @@ class AnimationBuilderCore
 		$this->page_type->saveConfig($pageTypeConfigs, $animationConfigs);
 		wp_send_json_success(['msg' => esc_html__('Configurations updated successfully', 'gsap-animation-builder-for-wordpress'), 'configs' => $animationConfigs]);
 	}
+
 	public function configs_delete()
 	{
 		// Verify nonce
@@ -270,10 +325,11 @@ class AnimationBuilderCore
 		}
 		do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts', $deps, $is_custom , $actives);
 	}
+
 	public function register_builder_dependency()
 	{
 
-		return  apply_filters('wcf_animation_builder_core_lib_deps', ['wp-element']); //
+		return apply_filters('wcf_animation_builder_core_lib_deps', ['wp-element']); //
 	}
 	public function register_editor_scripts()
 	{
