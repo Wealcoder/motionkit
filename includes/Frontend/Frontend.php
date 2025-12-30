@@ -16,7 +16,6 @@ if (!defined('ABSPATH')) {
 
 use WcfAnimationBuilder\Common\Assets\AssetLoader;
 use WcfAnimationBuilder\Factory\ComponentFactory;
-use WcfAnimationBuilder\Helpers\Helper;
 
 /**
  * Frontend Class
@@ -82,7 +81,7 @@ final class Frontend
 
     if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) == 'animation-builder') {
       wp_enqueue_style('wcf-animbuilder-class-selector');
-?>
+  ?>
       <div class="wcfanimb-skip-selector" id="wcf-anim-builder-structure"></div>
       <div id="wcfanim-selectorPopup" class="wcfanimb-popup wcfanimb-skip-selector" style="display: none;">
         <div class="wcfanimb-wrapper wcfanimb-skip-selector">
@@ -112,7 +111,7 @@ final class Frontend
         </div>
       </div>
       <div id="wcf-ab-context-menu-wrapper"></div>
-<?php
+  <?php
     }
   }
 
@@ -200,4 +199,5 @@ final class Frontend
 
     wp_send_json_success(['message' => __('Animation saved successfully.', 'gsap-animation-builder-for-wordpress')]);
   }
+
 }

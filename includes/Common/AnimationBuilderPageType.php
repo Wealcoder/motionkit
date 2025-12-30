@@ -160,6 +160,7 @@ class AnimationBuilderPageType {
 		if (is_front_page()) {
 			if ('page' === get_option('show_on_front')) {
 				// Static front page
+				
 				return [
 					'type'       => 'post',
 					'store_type' => 'option',
