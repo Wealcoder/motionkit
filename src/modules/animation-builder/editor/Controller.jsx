@@ -197,7 +197,7 @@ const Controller = ({ isLoading }) => {
   }, [createAnimation, setContentStep, allAnimation, deleteAnimation]);
 
   return (
-    <div className="bg-background-sidebar h-full flex flex-col justify-between relative">
+    <div className="bg-background-sidebar h-full flex flex-col justify-between relative rounded-l-[10px]">
       {contentStep?.step === 1 && (
         <div className="p-3 border-b border-border">
           <DropdownMenu>

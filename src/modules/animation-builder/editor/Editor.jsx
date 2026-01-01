@@ -136,11 +136,13 @@ const Editor = () => {
         defaultSize={0} // disable default side for collapsible funcitonality
         collapsible
         collapsedSize={0}
+        className="rounded-l-[10px]"
         style={{
           flexBasis: settings?.isEditorOpen ? "360px" : "5px",
           transition: "flex-basis 0.3s linear",
-          maxWidth: "440px",
+          maxWidth: "360px",
           overflow: "hidden",
+          cursor: "pointer !important",
         }}
       >
         <Controller isLoading={isLoading} />
