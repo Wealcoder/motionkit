@@ -41,6 +41,7 @@ window.addEventListener(
   (e) => {
     if (e.shiftKey) {
       e.preventDefault();
+      e.stopPropagation();
       storeState.xplacement += e.deltaY < 0 ? 10 : -10;
       window.parent.postMessage(
         {

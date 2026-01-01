@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import Controller from "@/editor/Controller";
+import { getScreenSize } from "@/lib/utils";
+import { SearchAddIcon } from "@hugeicons/core-free-icons/index";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useEffect, useState } from "react";
 import {
   useAnimationControl,
   useDeviceConfig,
@@ -11,11 +16,6 @@ import {
   usePageConfig,
 } from "../hooks/app.hooks";
 import EditorHeader from "./EditorHeader";
-import Controller from "@/editor/Controller";
-import { getScreenSize } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { SearchAddIcon } from "@hugeicons/core-free-icons/index";
 
 const Editor = () => {
   const { settings, toggleController, handleEventToKernel } = useKernel();
@@ -23,7 +23,6 @@ const Editor = () => {
   const { setAllAnimation } = useAnimationControl();
   const { selectedDevice } = useDeviceConfig();
   const [isLoading, setIsLoading] = useState(true);
-  const containerRef = useRef(null);
   const device = getScreenSize(selectedDevice) || {};
 
   function disableIframeLinks() {
@@ -67,22 +66,30 @@ const Editor = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleWheel = (e) => {
+      e.preventDefault();
+    };
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
+
   return (
     <ResizablePanelGroup
       direction="horizontal"
       className="!h-screen max-w-full"
       // blocking browser zoom outside iframe section.
-      onWheel={(e) => e.preventDefault()}
     >
       {/* Left panel */}
       <ResizablePanel
         defaultSize={85}
-        className="flex flex-col justify-center items-center bg-[#EBEBEB]"
+        className="flex flex-col justify-center items-center bg-[#EBEBEB] "
       >
         <EditorHeader />
         <div
-          ref={containerRef}
-          className="relative h-full flex justify-center items-start overflow-hidden"
+          className=" relative h-full flex justify-center items-start overflow-hidden"
           style={{
             width: device?.key === "desktop" ? "100%" : device?.viewWidth,
             margin: "0 auto",
