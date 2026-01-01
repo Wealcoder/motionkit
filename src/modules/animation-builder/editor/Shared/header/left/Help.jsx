@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ViewIcon } from "@hugeicons/core-free-icons";
-import { cn } from "../../../lib/utils";
+import { InformationCircleIcon } from "@hugeicons/core-free-icons";
 
-const ActivateBorderBtn = () => {
+const Help = () => {
   return (
     <Button
       className={`h-[36px] w-[36px] bg-button-default border-none rounded-btn`}
@@ -15,9 +14,14 @@ const ActivateBorderBtn = () => {
       //   activeStructure && "bg-border-2"
       // )}
     >
-      <HugeiconsIcon icon={ViewIcon} />
+      <HugeiconsIcon
+        icon={InformationCircleIcon}
+        size={16}
+        color="currentColor"
+        strokeWidth={1.5}
+      />
     </Button>
   );
 };
 
-export default ActivateBorderBtn;
+export default Help;

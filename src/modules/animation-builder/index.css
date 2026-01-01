@@ -8,18 +8,19 @@
   /* uses for dark styles */
   :root {
     /* background */
-    --background: hsl(240, 4%, 16%);
-    --background-hover: hsl(240, 4%, 16%);
-    --background-disable: hsl(240, 4%, 16%);
+    --background: #27272a;
+    --background-hover: #27272a;
+    --background-disable: #27272a;
+    --background-sidebar: #18181b;
 
     /* text */
     --text-default: hsl(0, 0%, 100%);
 
     /* button */
-    --btn-background: hsl(240, 5%, 26%);
-    --btn-bg-responsive-device: hsl(240, 5%, 26%);
-    --btn-bg-action: hsl(101, 60%, 30%);
-    --btn-bg-cancel: hsl(11, 56%, 45%);
+    --btn-background: #3f3f46;
+    --btn-bg-responsive-device: #3f3f46;
+    --btn-bg-action: #3c7a1f;
+    --btn-bg-cancel: #b34a32;
   }
 }
 

@@ -1,5 +1,16 @@
+import { Kernel } from "@/context/app.kernel";
 import { AppContext } from "@/context/app.context";
 import { useContext } from "react";
+
+export const useKernel = () => {
+  const currentKernelData = useContext(Kernel);
+  const { mainState, ...rest } = currentKernelData || {};
+  const settings = structuredClone(mainState);
+  return {
+    settings,
+    ...rest,
+  };
+};
 
 export const useContentStep = () => {
   const {

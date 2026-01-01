@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Clock03Icon } from "@hugeicons/core-free-icons";
-import { cn } from "../../../lib/utils";
 
 const History = () => {
   return (
@@ -15,7 +14,12 @@ const History = () => {
       //   activeStructure && "bg-border-2"
       // )}
     >
-      <HugeiconsIcon icon={Clock03Icon} />
+      <HugeiconsIcon
+        icon={Clock03Icon}
+        size={16}
+        color="currentColor"
+        strokeWidth={1.5}
+      />
     </Button>
   );
 };

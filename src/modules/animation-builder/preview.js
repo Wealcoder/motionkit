@@ -16,32 +16,77 @@ import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelpe
 import ContextMenuHandler from "./context_menu/contextmenu";
 import { menuItems } from "./register/context_menu/context_menu_register";
 import { handleCloseMenuEvent } from "./lib/contextMenu/contextMenu";
+import { eventToKeyCombination } from "./lib/events/keyboardEventUtils";
+
+const storeState = {
+  hoverEnabled: false,
+  maxZoom: 1.5,
+  minZoom: 0.7,
+  zoom: 1,
+  xplacement: 0,
+};
+
+let storeAnimation = {};
 
 // Register context menus
 window.AAEAnimPreviewBuilder = {};
 AAEAnimPreviewBuilder.contextMenu = new ContextMenuHandler();
 
+window.WCFFreeAnimBuilder = null;
+WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
+
+// zoom and x axis placement event handler
+window.addEventListener(
+  "wheel",
+  (e) => {
+    if (e.shiftKey) {
+      e.preventDefault();
+      storeState.xplacement += e.deltaY < 0 ? 10 : -10;
+      window.parent.postMessage(
+        {
+          type: "WCF_AB_WHEEL_EVENT_X_PLACEMENT",
+          value: storeState.xplacement,
+        },
+        "*"
+      );
+    } else if (e.ctrlKey) {
+      e.preventDefault();
+      storeState.zoom += e.deltaY < 0 ? 0.1 : -0.1;
+      storeState.zoom = Math.min(
+        storeState.maxZoom,
+        Math.max(storeState.minZoom, Number(storeState.zoom.toFixed(2)))
+      );
+      window.parent.postMessage(
+        {
+          type: "WCF_AB_WHEEL_EVENT",
+          value: storeState.zoom,
+        },
+        "*"
+      );
+    }
+  },
+  { passive: false }
+);
+
+// keyboard event handler
+window.addEventListener("keydown", (e) => {
+  const pressetKeys = eventToKeyCombination(e);
+  window.parent.postMessage(
+    {
+      type: "WCF_AB_KEYDOWN_EVENT",
+      value: pressetKeys,
+    },
+    "*"
+  );
+});
+
+// context menus handler
 function handleAddContextMenus() {
   menuItems?.forEach((menu) =>
     AAEAnimPreviewBuilder.contextMenu.register(menu)
   );
 }
 handleAddContextMenus();
-
-window.WCFFreeAnimBuilder = null;
-WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
-// global store
-window.__WCF_CONTEXT__ = {
-  target: null,
-  x: 0,
-  y: 0,
-};
-
-const storeState = {
-  hoverEnabled: false,
-};
-
-let storeAnimation = {};
 
 function enableHover() {
   if (!storeState.hoverEnabled) {

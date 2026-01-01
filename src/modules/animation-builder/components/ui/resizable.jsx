@@ -1,7 +1,7 @@
-import { GripVertical } from "lucide-react";
 import * as ResizablePrimitive from "react-resizable-panels";
-
+import { Button } from "./button";
 import { cn } from "@/lib/utils";
+import Logo from "../common/Logo";
 
 const ResizablePanelGroup = ({ className, ...props }) => (
   <ResizablePrimitive.PanelGroup
@@ -24,9 +24,9 @@ const ResizableHandle = ({ withHandle, className, ...props }) => (
     {...props}
   >
     {withHandle && (
-      <div className="z-10 h-4 w-3 flex items-center justify-center rounded-sm border bg-border-active">
-        <GripVertical className="h-2.5 w-2.5 text-text" />
-      </div>
+      <Button className="h-12 min-w-12 z-10 flex items-center justify-center bg-[#3F3F46] rounded-full border-none !cursor-pointer">
+        <Logo />
+      </Button>
     )}
   </ResizablePrimitive.PanelResizeHandle>
 );

@@ -206,6 +206,7 @@ export default function AnimationStructure() {
         setOffPanel(event?.data?.["aae_show_structure"]);
       }
       if (event?.data?.["aae_show_border"] !== undefined) {
+        console.log("triggered");
         setShowBorder(event?.data?.["aae_show_border"]);
       }
     };

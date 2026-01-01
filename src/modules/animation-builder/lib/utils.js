@@ -216,3 +216,14 @@ export const debounceFn = (mainFunction, delay = 300) => {
     }, delay);
   };
 };
+
+export const getScreenSize = (value) => {
+  let result = WCF_ANIMATION_BUILDER?.device_config.find(
+    (el) => el.key === value
+  );
+  if (result) {
+    return result;
+  } else {
+    return "100%";
+  }
+};

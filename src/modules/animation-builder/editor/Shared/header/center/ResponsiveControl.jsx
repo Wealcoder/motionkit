@@ -14,36 +14,75 @@ import {
   SmartPhone01Icon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
-import { useDeviceConfig } from "@/hooks/app.hooks";
+import { useDeviceConfig, useKernel } from "@/hooks/app.hooks";
 
-// CHECK: Remove this later (here tab_land removed )
 const ResponsiveIcons = {
-  desktop: <HugeiconsIcon icon={ComputerIcon} />,
-  laptop: <HugeiconsIcon icon={LaptopIcon} />,
+  desktop: (
+    <HugeiconsIcon
+      icon={ComputerIcon}
+      stroke="currentColor"
+      strokeWidth={1.5}
+      fill="none"
+    />
+  ),
+  laptop: (
+    <HugeiconsIcon
+      icon={LaptopIcon}
+      stroke="currentColor"
+      strokeWidth={1.5}
+      fill="none"
+    />
+  ),
   tab_land: (
     <HugeiconsIcon
       icon={Tablet01Icon}
+      stroke="currentColor"
+      strokeWidth={1.5}
+      fill="none"
       style={{ transform: "rotate(270deg)" }}
     />
   ),
-  tab: <HugeiconsIcon icon={Tablet01Icon} />,
-  mobile: <HugeiconsIcon icon={SmartPhone01Icon} />,
+  tab: (
+    <HugeiconsIcon
+      icon={Tablet01Icon}
+      stroke="currentColor"
+      strokeWidth={1.5}
+      fill="none"
+    />
+  ),
+  mobile: (
+    <HugeiconsIcon
+      icon={SmartPhone01Icon}
+      stroke="currentColor"
+      strokeWidth={1.5}
+      fill="none"
+    />
+  ),
 };
 
 const ResponsiveControl = () => {
+  const { resetEditorPreview } = useKernel();
   const { selectedDevice, setSelectedDevice } = useDeviceConfig();
+
+  // Setting device configuration and resetting editor preview placement and zoom level
+  const handleSetSelectedDevice = (key) => {
+    resetEditorPreview();
+    setSelectedDevice(key);
+  };
+
   return (
     <div className="flex items-center justify-center gap-4">
       {WCF_ANIMATION_BUILDER?.device_config?.map((device) => (
         <TooltipProvider delayDuration={100} key={device.key}>
           <Tooltip delayDuration={100}>
             <TooltipTrigger asChild>
+              {/* //TODO: Fix icon stroke color */}
               <Button
-                onClick={() => setSelectedDevice(device.key)}
+                onClick={() => handleSetSelectedDevice(device.key)}
                 className={cn(
                   selectedDevice === device?.key
-                    ? "bg-button-rd"
-                    : "bg-transparent",
+                    ? "bg-button-rd !text-white "
+                    : "bg-transparent !text-gray-500",
                   "h-[36px] w-[36px] border-none rounded-full"
                 )}
               >

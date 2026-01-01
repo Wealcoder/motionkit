@@ -5,6 +5,7 @@ import {
   handleCopyAnimContextMenu,
   handleDeleteAnimContextMenu,
   handleEditAnimContextMenu,
+  handleInspect,
   handlePasteAnimContextMenu,
   handlePreviewAnimContextMenu,
   handleSaveAnimContextMenu,
@@ -112,5 +113,12 @@ export const menuItems = [
     trigger: [],
     options: [],
     callback: handleSaveAnimContextMenu,
+  },
+  {
+    contextMenuKey: "wcf-cmb-inspect-devtools",
+    title: "Inspect",
+    trigger: [],
+    options: [],
+    callback: handleInspect,
   },
 ];

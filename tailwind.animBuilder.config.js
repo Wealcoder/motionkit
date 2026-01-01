@@ -21,6 +21,7 @@ module.exports = {
           DEFAULT: "var(--background)",
           hover: "var(--background-hover)",
           disable: "var(--background-disable)",
+          sidebar: "var(--background-sidebar)",
         },
         text: {
           default: "var(--text-default)",

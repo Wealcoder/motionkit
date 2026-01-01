@@ -195,3 +195,9 @@ export const handleSaveAnimContextMenu = verifyContextCallback((e) => {
   console.log("Save animation - to be implemented");
   return;
 });
+
+// Inspect
+export const handleInspect = verifyContextCallback((e) => {
+  const target = e;
+  console.log(target);
+});
