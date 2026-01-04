@@ -76,14 +76,13 @@ const ResponsiveControl = () => {
         <TooltipProvider delayDuration={100} key={device.key}>
           <Tooltip delayDuration={100}>
             <TooltipTrigger asChild>
-              {/* //TODO: Fix icon stroke color */}
               <Button
                 onClick={() => handleSetSelectedDevice(device.key)}
                 className={cn(
                   selectedDevice === device?.key
-                    ? "bg-button-rd !text-white "
-                    : "bg-transparent !text-gray-500",
-                  "h-[36px] w-[36px] border-none rounded-full"
+                    ? "bg-button-rd text-white"
+                    : "bg-transparent text-[#A1A1AA]",
+                  "h-[36px] w-[36px] rounded-full border-none"
                 )}
               >
                 {ResponsiveIcons[device.key]}

@@ -23,11 +23,6 @@ module.exports = {
           disable: "var(--background-disable)",
           sidebar: "var(--background-sidebar)",
         },
-        text: {
-          default: "var(--text-default)",
-          // hover: "var(--text-hover)",
-          // disable: "var(--text-disable)",
-        },
         button: {
           default: "var(--btn-background)",
           action: "var(--btn-bg-action)",

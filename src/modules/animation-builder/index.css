@@ -13,9 +13,6 @@
     --background-disable: #27272a;
     --background-sidebar: #18181b;
 
-    /* text */
-    --text-default: hsl(0, 0%, 100%);
-
     /* button */
     --btn-background: #3f3f46;
     --btn-bg-responsive-device: #3f3f46;
@@ -31,5 +28,5 @@
 }
 
 .wcfab2025 * {
-  @apply font-inter text-text-default box-border;
+  @apply font-inter box-border;
 }

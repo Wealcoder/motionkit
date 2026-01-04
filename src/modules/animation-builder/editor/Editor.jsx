@@ -97,7 +97,7 @@ const Editor = () => {
           }}
         >
           {/* zoom indicator */}
-          <Button className="absolute top-2 right-4 z-10 gap-2 px-4 py-2 min-h-[34px] min-w-[100px] bg-background text-text-default text-sm font-normal leading-none border-none rounded-[5px] cursor-none pointer-events-none ">
+          <Button className="absolute top-2 right-4 z-10 gap-2 px-4 py-2 min-h-[34px] min-w-[100px] bg-background text-text text-sm font-normal leading-none border-none rounded-[5px] cursor-none pointer-events-none ">
             <HugeiconsIcon
               icon={SearchAddIcon}
               size={16}
