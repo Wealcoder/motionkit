@@ -13,6 +13,9 @@ module.exports = {
   },
   theme: {
     extend: {
+      fontSize: {
+        15: "0.9375rem",
+      },
       fontFamily: {
         inter: ["Inter", "sans-serif"],
       },
@@ -22,6 +25,7 @@ module.exports = {
           hover: "var(--background-hover)",
           disable: "var(--background-disable)",
           sidebar: "var(--background-sidebar)",
+          card: "var(--card-background)",
         },
         button: {
           default: "var(--btn-background)",
@@ -32,6 +36,9 @@ module.exports = {
         borderRadius: {
           btn: "5px",
         },
+      },
+      borderRadius: {
+        5: "0.3125rem",
       },
     },
   },

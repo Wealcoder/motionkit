@@ -16,6 +16,7 @@ import {
   usePageConfig,
 } from "../hooks/app.hooks";
 import EditorHeader from "./EditorHeader";
+import { disableIframeLinks } from "@/lib/editor";
 
 const Editor = () => {
   const { settings, toggleController, handleEventToKernel } = useKernel();
@@ -25,53 +26,32 @@ const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
   const device = getScreenSize(selectedDevice) || {};
 
-  function disableIframeLinks() {
-    const iframe = document.getElementById(
-      "wcf--animation-builder--animation--preview"
-    );
-    iframe.onload = function () {
-      const iframeDocument =
-        iframe.contentDocument || iframe.contentWindow.document;
+  // window.addEventListener(
+  //   "message",
+  //   (event) => {
+  //     if (event?.data?.type === "wcf-animation-builder") {
+  //       if (event?.data) {
+  //         setAllAnimation(event.data?.animation_config || []);
+  //         setPageConfig(event.data);
+  //         setIsLoading(false);
+  //       }
+  //     }
+  //   },
+  //   false
+  // );
 
-      const links = iframeDocument.querySelectorAll("a");
-
-      links.forEach((link) => {
-        link.addEventListener("click", function (event) {
-          event.preventDefault();
-        });
-      });
-    };
-  }
-
-  window.addEventListener(
-    "message",
-    (event) => {
-      if (event?.data?.type === "wcf-animation-builder") {
-        if (event?.data) {
-          setAllAnimation(event.data?.animation_config || []);
-          setPageConfig(event.data);
-          setIsLoading(false);
-        }
-      }
-    },
-    false
-  );
+  const handleWheel = (e) => {
+    e.preventDefault();
+  };
 
   useEffect(() => {
     disableIframeLinks();
     // communicating between iframe and editor
     window.addEventListener("message", handleEventToKernel);
+    // controlling editor preview pane interaction
+    // window.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
       window.removeEventListener("message", handleEventToKernel);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleWheel = (e) => {
-      e.preventDefault();
-    };
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    return () => {
       window.removeEventListener("wheel", handleWheel);
     };
   }, []);
@@ -84,7 +64,7 @@ const Editor = () => {
     >
       {/* Left panel */}
       <ResizablePanel
-        defaultSize={85}
+        // defaultSize={85}
         className="flex flex-col justify-center items-center bg-[#EBEBEB] "
       >
         <EditorHeader />
@@ -97,7 +77,7 @@ const Editor = () => {
           }}
         >
           {/* zoom indicator */}
-          <Button className="absolute top-2 right-4 z-10 gap-2 px-4 py-2 min-h-[34px] min-w-[100px] bg-background text-text text-sm font-normal leading-none border-none rounded-[5px] cursor-none pointer-events-none ">
+          <Button className="absolute top-2 right-4 z-10 gap-2 px-4 py-2 min-h-[34px] min-w-[100px] bg-background text-white text-sm font-normal leading-none border-none rounded-5 cursor-none pointer-events-none ">
             <HugeiconsIcon
               icon={SearchAddIcon}
               size={16}
@@ -138,9 +118,9 @@ const Editor = () => {
         collapsedSize={0}
         className="rounded-l-[10px]"
         style={{
-          flexBasis: settings?.isEditorOpen ? "360px" : "5px",
+          flexBasis: settings?.isEditorOpen ? "440px" : "5px",
           transition: "flex-basis 0.3s linear",
-          maxWidth: "360px",
+          maxWidth: "440px",
           overflow: "hidden",
           cursor: "pointer !important",
         }}
