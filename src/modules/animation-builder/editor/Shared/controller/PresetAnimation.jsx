@@ -109,7 +109,7 @@ const AnimationPresetCard = ({
   handleAddAnimation = () => {},
 }) => {
   return (
-    <Button
+    <button
       onClick={() => {
         if (preset?.config) {
           handleAddAnimation(preset.config);
@@ -117,7 +117,7 @@ const AnimationPresetCard = ({
         }
         return;
       }}
-      className="h-[122px] w-[124px] px-6 py-4 relative flex flex-col justify-center items-center gap-[10px] bg-background-card rounded-5 border-none cursor-pointer"
+      className="h-[122px] w-[124px] px-[26px] py-4 relative flex flex-col justify-center items-center gap-[10px] bg-background-card rounded-5 border-none cursor-pointer"
     >
       {/* //TODO: need to work on premium badge modal. Ask designer */}
       {preset?.isPro && isPremium && (
@@ -126,10 +126,9 @@ const AnimationPresetCard = ({
         </div>
       )}
       <img src={preset?.icon} alt={preset?.title} height={"32px"} />
-      {/* //TODO: fix text break */}
-      <span className=" text-white font-normal text-sm leading-[18px] tracking-normal text-center break-all">
+      <p className="w-[69px] text-white font-normal text-sm leading-[18px] tracking-normal text-center m-0">
         {preset?.cardtTitle ?? ""}
-      </span>
-    </Button>
+      </p>
+    </button>
   );
 };
