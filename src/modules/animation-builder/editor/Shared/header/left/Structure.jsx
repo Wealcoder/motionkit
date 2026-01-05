@@ -5,7 +5,7 @@ import { KeyframesMultipleIcon } from "@hugeicons/core-free-icons";
 const Structure = () => {
   return (
     <Button
-      className={`h-[36px] w-[36px] bg-button-default border-none rounded-btn`}
+      className={`h-[36px] w-[36px] bg-button-primary border-none rounded-btn`}
     >
       <HugeiconsIcon
         icon={KeyframesMultipleIcon}

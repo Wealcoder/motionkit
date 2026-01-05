@@ -25,6 +25,7 @@ export function eventToKeyCombination(event) {
 }
 
 export function validateKeyCombination(keys, actions) {
+  if (!keys || !actions) return;
   const normalizedKeys = normalizeKeyCombination(keys);
   for (const combo in keybordTriggerControl) {
     if (normalizeKeyCombination(combo) === normalizedKeys) {

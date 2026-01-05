@@ -1,6 +1,5 @@
 import domReady from "@wordpress/dom-ready";
 import Editor from "@/editor/Editor";
-import { KernelContextProvider } from "./context/app.kernel";
 import { AppContextProvider } from "./context/app.context";
 /**
  * This file is used for editor controller.
@@ -22,11 +21,9 @@ domReady(function () {
   );
 
   wp.element.render(
-    <KernelContextProvider>
-      <AppContextProvider>
-        <Editor />
-      </AppContextProvider>
-    </KernelContextProvider>,
+    <AppContextProvider>
+      <Editor />
+    </AppContextProvider>,
     editor_panel
   );
 });

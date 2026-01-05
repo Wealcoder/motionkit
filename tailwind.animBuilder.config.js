@@ -28,7 +28,7 @@ module.exports = {
           card: "var(--card-background)",
         },
         button: {
-          default: "var(--btn-background)",
+          primary: "var(--btn-primary)",
           action: "var(--btn-bg-action)",
           cancel: "var(--btn-bg-cancel)",
           rd: "var(--btn-bg-responsive-device)",

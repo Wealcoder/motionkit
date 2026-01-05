@@ -21,7 +21,7 @@ const Others = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          className={`h-[36px] bg-button-default font-medium text-[15px] leading-5 tracking-normal border-none rounded-btn`}
+          className={`h-[36px] bg-button-primary font-medium text-[15px] leading-5 tracking-normal border-none rounded-btn`}
         >
           <HugeiconsIcon
             icon={MoreVerticalIcon}

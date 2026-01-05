@@ -1,14 +1,28 @@
-import { Kernel } from "@/context/app.kernel";
 import { AppContext } from "@/context/app.context";
 import { useContext } from "react";
 
 export const useKernel = () => {
-  const currentKernelData = useContext(Kernel);
-  const { mainState, ...rest } = currentKernelData || {};
-  const settings = structuredClone(mainState);
+  const currentKernelData = useContext(AppContext);
+  const {
+    mainState: { editorConfig = {} } = {},
+    setIsEditorLoading,
+    setEditorZoomLevel,
+    setEditorXPlacement,
+    resetEditorPreview,
+    toggleController,
+    toggleStructure,
+  } = currentKernelData || {};
+  const settings = structuredClone(editorConfig);
+  const isLoading = settings.isEditorLoading ?? false;
   return {
+    isLoading,
     settings,
-    ...rest,
+    setIsEditorLoading,
+    setEditorZoomLevel,
+    setEditorXPlacement,
+    resetEditorPreview,
+    toggleController,
+    toggleStructure,
   };
 };
 

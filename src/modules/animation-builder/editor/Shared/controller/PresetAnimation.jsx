@@ -54,11 +54,11 @@ const animationPresetTypes = [
 
 const PresetAnimation = ({ handleAddAnimation = () => {} }) => {
   const isPremium = isPremiumUser();
-  const { isOpen, onOpen, onClose, onToggle } = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   return (
     <Collapsible
       open={isOpen}
-      onOpenChange={onToggle}
+      onOpenChange={onOpen}
       className="flex flex-col gap-2"
     >
       <CollapsibleTrigger asChild>
@@ -112,7 +112,7 @@ const AnimationPresetCard = ({
     <button
       onClick={() => {
         if (preset?.config) {
-          handleAddAnimation(preset.config);
+          handleAddAnimation(preset);
           return;
         }
         return;

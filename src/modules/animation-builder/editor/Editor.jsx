@@ -1,44 +1,48 @@
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import Controller from "@/editor/Controller";
-import { getScreenSize } from "@/lib/utils";
-import { SearchAddIcon } from "@hugeicons/core-free-icons/index";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { useEffect, useState } from "react";
-import {
-  useAnimationControl,
-  useDeviceConfig,
-  useKernel,
-  usePageConfig,
-} from "../hooks/app.hooks";
-import EditorHeader from "./EditorHeader";
+import { useIframeMessageBridge } from "@/hooks/core/useIframeMessageBridge";
 import { disableIframeLinks } from "@/lib/editor";
+import { getScreenSize } from "@/lib/utils";
+import { PlusSignIcon, Remove01Icon } from "@hugeicons/core-free-icons/index";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useEffect } from "react";
+import { useDeviceConfig, useKernel } from "../hooks/app.hooks";
+import EditorHeader from "./EditorHeader";
 
 const Editor = () => {
-  const { settings, toggleController, handleEventToKernel } = useKernel();
-  const { setPageConfig } = usePageConfig();
-  const { setAllAnimation } = useAnimationControl();
+  // MAJOR (DO NOT DELETE THIS) : initiating iframe and editor communication
+  useIframeMessageBridge();
+  const {
+    isLoading,
+    settings,
+    toggleController,
+    setEditorZoomLevel,
+    resetEditorPreview,
+  } = useKernel();
   const { selectedDevice } = useDeviceConfig();
-  const [isLoading, setIsLoading] = useState(true);
   const device = getScreenSize(selectedDevice) || {};
 
-  // window.addEventListener(
-  //   "message",
-  //   (event) => {
-  //     if (event?.data?.type === "wcf-animation-builder") {
-  //       if (event?.data) {
-  //         setAllAnimation(event.data?.animation_config || []);
-  //         setPageConfig(event.data);
-  //         setIsLoading(false);
-  //       }
-  //     }
-  //   },
-  //   false
-  // );
+  const handleEditorZoom = (type = "positive") => {
+    const currentZoomLevel = settings?.editorZoomLevel ?? 1;
+    const maxZoom = 1.5;
+    const minZoom = 0.7;
+    if (type === "positive" && currentZoomLevel < maxZoom) {
+      const value = parseFloat((currentZoomLevel + 0.1).toFixed(1));
+      setEditorZoomLevel(value);
+      return;
+    } else if (type === "negative" && currentZoomLevel > minZoom) {
+      const value = parseFloat((currentZoomLevel - 0.1).toFixed(1));
+      setEditorZoomLevel(value);
+      return;
+    }
+    return;
+  };
 
   const handleWheel = (e) => {
     e.preventDefault();
@@ -46,15 +50,14 @@ const Editor = () => {
 
   useEffect(() => {
     disableIframeLinks();
-    // communicating between iframe and editor
-    window.addEventListener("message", handleEventToKernel);
     // controlling editor preview pane interaction
     // window.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
-      window.removeEventListener("message", handleEventToKernel);
       window.removeEventListener("wheel", handleWheel);
     };
   }, []);
+
+  console.log({ settings });
 
   return (
     <ResizablePanelGroup
@@ -77,15 +80,31 @@ const Editor = () => {
           }}
         >
           {/* zoom indicator */}
-          <Button className="absolute top-2 right-4 z-10 gap-2 px-4 py-2 min-h-[34px] min-w-[100px] bg-background text-white text-sm font-normal leading-none border-none rounded-5 cursor-none pointer-events-none ">
-            <HugeiconsIcon
-              icon={SearchAddIcon}
-              size={16}
-              stroke="currentColor"
-              strokeWidth={1.5}
-            />
-            {(settings?.editorZoomLevel * 100).toFixed(0)}%
-          </Button>
+          <div className="absolute top-2 right-4 z-10 px-4 py-2 min-h-[34px]  grid grid-cols-[50px,1fr] justify-center items-center gap-4 bg-background text-white text-sm font-normal leading-none border-none rounded-5">
+            <span>{(settings?.editorZoomLevel * 100).toFixed(0)}%</span>
+            <ButtonGroup className={"gap-2"}>
+              <Button
+                onClick={() => handleEditorZoom("negative")}
+                size="icon"
+                className="border-none outline-none !rounded-5"
+              >
+                <HugeiconsIcon icon={Remove01Icon} />
+              </Button>
+              <Button
+                onClick={() => handleEditorZoom("positive")}
+                size="icon"
+                className="border-none outline-none !rounded-5"
+              >
+                <HugeiconsIcon icon={PlusSignIcon} />
+              </Button>
+              <Button
+                onClick={() => resetEditorPreview()}
+                className="min-h-9 min-w-[63px] border-none outline-none !rounded-5"
+              >
+                Reset
+              </Button>
+            </ButtonGroup>
+          </div>
           {/* live site iframe preview */}
           <iframe
             className="wcf--animation-builder-editor-iframe h-full border-0 bg-white"
@@ -118,7 +137,7 @@ const Editor = () => {
         collapsedSize={0}
         className="rounded-l-[10px]"
         style={{
-          flexBasis: settings?.isEditorOpen ? "440px" : "5px",
+          flexBasis: settings?.isControllerOpen ? "440px" : "5px",
           transition: "flex-basis 0.3s linear",
           maxWidth: "440px",
           overflow: "hidden",

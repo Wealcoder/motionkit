@@ -11,17 +11,59 @@ import { CheckProperties } from "@/lib/validationCheck";
 import { toast } from "sonner";
 
 const initialState = {
+  // editor configuration
+  editorConfig: {
+    isEditorLoading: false,
+    editorZoomLevel: 1,
+    xPlacement: 0,
+    isControllerOpen: true,
+    isStructureOpen: false,
+  },
+  // content sections
   contentStep: {
     step: 1,
     data: {},
   },
+  // all animation sections
   allAnimation: {},
+  // page configuration
   pageConfig: {},
   selectedDevice: "desktop",
 };
 
 const reducer = (state, action) => {
   switch (action.type) {
+    // Editor Settings
+    case "setEditorLoading":
+      return {
+        ...state,
+        editorConfig: { ...state.editorConfig, isEditorLoading: action?.value },
+      };
+    case "setEditorZoomLevel":
+      return {
+        ...state,
+        editorConfig: { ...state.editorConfig, editorZoomLevel: action?.value },
+      };
+    case "setEditorXPlacement":
+      return {
+        ...state,
+        editorConfig: { ...state.editorConfig, xPlacement: action?.value },
+      };
+    case "toggleController":
+      return {
+        ...state,
+        editorConfig: {
+          ...state.editorConfig,
+          isControllerOpen: action?.value,
+        },
+      };
+    case "toggleStructure":
+      return {
+        ...state,
+        editorConfig: { ...state.editorConfig, isStructureOpen: action?.value },
+      };
+
+    // Animation Settings
     case "setContentStep":
       return { ...state, contentStep: action?.value };
     case "setAllAnimation":
@@ -38,6 +80,59 @@ const reducer = (state, action) => {
 const useMainContext = (state) => {
   const [mainState, dispatch] = useReducer(reducer, state);
 
+  // #################### EDITOR FUNCTION ####################
+  const setIsEditorLoading = useCallback((value = false) => {
+    const outsideValue = String(value);
+    const currentState = outsideValue
+      ? outsideValue === "true"
+      : !mainState.isEditorLoading;
+    dispatch({ type: "setEditorLoading", value: currentState });
+    return currentState;
+  });
+
+  // changing iframe zoom during scroll. (Ctrl + mouse wheel)
+  const setEditorZoomLevel = useCallback((level = 1) => {
+    if (!level || typeof level !== "number") return;
+    dispatch({
+      type: "setEditorZoomLevel",
+      value: level,
+    });
+  });
+
+  // changing x axios position during scroll. (Shift + mouse wheel)
+  const setEditorXPlacement = useCallback((placement = 0) => {
+    dispatch({
+      type: "setEditorXPlacement",
+      value: placement * 5, // 10 is scrolling speed
+    });
+  });
+
+  // reset editor zoom level and placement
+  const resetEditorPreview = useCallback(() => {
+    dispatch({
+      type: "setEditorZoomLevel",
+      value: 1,
+    });
+    dispatch({
+      type: "setEditorXPlacement",
+      value: 0,
+    });
+  });
+
+  const toggleController = useCallback(() => {
+    dispatch({
+      type: "toggleController",
+    });
+  });
+
+  // toggle editor structure
+  const toggleStructure = useCallback(() => {
+    dispatch({
+      type: "toggleStructure",
+    });
+  });
+
+  // #################### ANIMATION FUNCTION ####################
   const setContentStep = useCallback((data) => {
     dispatch({
       type: "setContentStep",
@@ -488,6 +583,14 @@ const useMainContext = (state) => {
 
   return {
     mainState,
+    // Eiditor functions
+    setIsEditorLoading,
+    setEditorZoomLevel,
+    setEditorXPlacement,
+    resetEditorPreview,
+    toggleController,
+    toggleStructure,
+    // Animation functions
     setContentStep,
     setAllAnimation,
     updateContentData,

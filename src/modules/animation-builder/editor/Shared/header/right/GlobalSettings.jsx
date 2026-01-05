@@ -5,7 +5,7 @@ import { Globe02Icon } from "@hugeicons/core-free-icons";
 const GlobalSettings = () => {
   return (
     <Button
-      className={`h-[36px] bg-button-default font-medium text-[15px] leading-5 tracking-normal border-none rounded-btn`}
+      className={`h-[36px] bg-button-primary font-medium text-[15px] leading-5 tracking-normal border-none rounded-btn`}
     >
       <HugeiconsIcon
         icon={Globe02Icon}
