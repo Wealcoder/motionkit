@@ -17,6 +17,7 @@
     --card-background: #3f3f46;
     /* button */
     --btn-primary: #3f3f46;
+    --btn-primary-hover: #3f3f467c;
     --btn-bg-responsive-device: #3f3f46;
     --btn-bg-action: #3c7a1f;
     --btn-bg-cancel: #b34a32;

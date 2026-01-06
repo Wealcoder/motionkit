@@ -11,7 +11,7 @@ const GlobalSettings = () => {
         icon={Globe02Icon}
         size={16}
         color="currentColor"
-        strokeWidth={1.5}
+        strokeWidth={2}
       />
       Global Settings
     </Button>

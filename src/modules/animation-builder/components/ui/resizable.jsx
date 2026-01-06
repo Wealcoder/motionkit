@@ -24,7 +24,7 @@ const ResizableHandle = ({ withHandle, className, ...props }) => (
     {...props}
   >
     {withHandle && (
-      <Button className="h-12 min-w-12 z-10 flex items-center justify-center bg-[#3F3F46] rounded-full border-none !cursor-pointer">
+      <Button className="h-12 min-w-12 z-10 flex items-center justify-center bg-button-primary hover:bg-button-primary rounded-full border-none !cursor-pointer">
         <Logo />
       </Button>
     )}

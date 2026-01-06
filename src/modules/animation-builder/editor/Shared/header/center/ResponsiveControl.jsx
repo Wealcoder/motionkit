@@ -21,7 +21,7 @@ const ResponsiveIcons = {
     <HugeiconsIcon
       icon={ComputerIcon}
       stroke="currentColor"
-      strokeWidth={1.5}
+      strokeWidth={2}
       fill="none"
     />
   ),
@@ -29,7 +29,7 @@ const ResponsiveIcons = {
     <HugeiconsIcon
       icon={LaptopIcon}
       stroke="currentColor"
-      strokeWidth={1.5}
+      strokeWidth={2}
       fill="none"
     />
   ),
@@ -37,7 +37,7 @@ const ResponsiveIcons = {
     <HugeiconsIcon
       icon={Tablet01Icon}
       stroke="currentColor"
-      strokeWidth={1.5}
+      strokeWidth={2}
       fill="none"
       style={{ transform: "rotate(270deg)" }}
     />
@@ -46,7 +46,7 @@ const ResponsiveIcons = {
     <HugeiconsIcon
       icon={Tablet01Icon}
       stroke="currentColor"
-      strokeWidth={1.5}
+      strokeWidth={2}
       fill="none"
     />
   ),
@@ -54,7 +54,7 @@ const ResponsiveIcons = {
     <HugeiconsIcon
       icon={SmartPhone01Icon}
       stroke="currentColor"
-      strokeWidth={1.5}
+      strokeWidth={2}
       fill="none"
     />
   ),
@@ -80,8 +80,8 @@ const ResponsiveControl = () => {
                 onClick={() => handleSetSelectedDevice(device.key)}
                 className={cn(
                   selectedDevice === device?.key
-                    ? "bg-button-rd text-white"
-                    : "bg-transparent text-[#A1A1AA]",
+                    ? "bg-button-primary  text-white"
+                    : "bg-transparent hover:bg-button-primary text-[#A1A1AA] hover:text-white",
                   "h-[36px] w-[36px] rounded-full border-none"
                 )}
               >

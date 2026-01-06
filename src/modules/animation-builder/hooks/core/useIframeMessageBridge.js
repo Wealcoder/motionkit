@@ -25,12 +25,10 @@ export const useIframeMessageBridge = () => {
   const handleMessage = useCallback(
     (e) => {
       if (e.origin !== window.location.origin) return;
-
       const data = e.data || {};
       const { type, value } = data;
-      console.log("useIframeMessageBridge", { type, value });
-      if (!type) return;
 
+      if (!type) return;
       switch (type) {
         case "WCF_AB_WHEEL_EVENT":
           setEditorZoomLevel(value);

@@ -11,7 +11,7 @@ const Structure = () => {
         icon={KeyframesMultipleIcon}
         size={16}
         color="currentColor"
-        strokeWidth={1.5}
+        strokeWidth={2}
       />
     </Button>
   );

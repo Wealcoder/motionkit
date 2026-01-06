@@ -8,16 +8,19 @@ import {
 import Controller from "@/editor/Controller";
 import { useIframeMessageBridge } from "@/hooks/core/useIframeMessageBridge";
 import { disableIframeLinks } from "@/lib/editor";
-import { getScreenSize } from "@/lib/utils";
+import { cn, getScreenSize } from "@/lib/utils";
 import { PlusSignIcon, Remove01Icon } from "@hugeicons/core-free-icons/index";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect } from "react";
 import { useDeviceConfig, useKernel } from "../hooks/app.hooks";
 import EditorHeader from "./EditorHeader";
+import { editorConfig } from "@/config/editorConfig";
+import { handleEditorZoom } from "@/lib/editor/editor";
 
 const Editor = () => {
   // MAJOR (DO NOT DELETE THIS) : initiating iframe and editor communication
   useIframeMessageBridge();
+  // Editor
   const {
     isLoading,
     settings,
@@ -28,15 +31,22 @@ const Editor = () => {
   const { selectedDevice } = useDeviceConfig();
   const device = getScreenSize(selectedDevice) || {};
 
-  const handleEditorZoom = (type = "positive") => {
+  const handleWheel = (e) => {
+    e.preventDefault();
+  };
+
+  // controlling editor zoom by zoom indicator on top of the preview pane.
+  const handleEditorZoom = (type = "positive", settings = {}) => {
+    if (!Object.keys(settings)?.includes("editorZoomLevel")) return;
     const currentZoomLevel = settings?.editorZoomLevel ?? 1;
-    const maxZoom = 1.5;
-    const minZoom = 0.7;
-    if (type === "positive" && currentZoomLevel < maxZoom) {
+    if (type === "positive" && currentZoomLevel < editorConfig?.maxZoom) {
       const value = parseFloat((currentZoomLevel + 0.1).toFixed(1));
       setEditorZoomLevel(value);
       return;
-    } else if (type === "negative" && currentZoomLevel > minZoom) {
+    } else if (
+      type === "negative" &&
+      currentZoomLevel > editorConfig?.minZoom
+    ) {
       const value = parseFloat((currentZoomLevel - 0.1).toFixed(1));
       setEditorZoomLevel(value);
       return;
@@ -44,20 +54,15 @@ const Editor = () => {
     return;
   };
 
-  const handleWheel = (e) => {
-    e.preventDefault();
-  };
-
   useEffect(() => {
+    // initialized editor. Do not delete this.
     disableIframeLinks();
     // controlling editor preview pane interaction
-    // window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
       window.removeEventListener("wheel", handleWheel);
     };
   }, []);
-
-  console.log({ settings });
 
   return (
     <ResizablePanelGroup
@@ -84,18 +89,35 @@ const Editor = () => {
             <span>{(settings?.editorZoomLevel * 100).toFixed(0)}%</span>
             <ButtonGroup className={"gap-2"}>
               <Button
-                onClick={() => handleEditorZoom("negative")}
+                onClick={() => handleEditorZoom("negative", settings)}
                 size="icon"
-                className="border-none outline-none !rounded-5"
+                className={cn(
+                  "border-none outline-none !rounded-5 hover:bg-button-primary-hover hover:text-white",
+                  settings?.editorZoomLevel === editorConfig?.minZoom
+                    ? "!cursor-not-allowed"
+                    : "!cursor-pointer"
+                )}
+                disabled={settings?.editorZoomLevel === editorConfig?.minZoom}
               >
-                <HugeiconsIcon icon={Remove01Icon} />
+                <HugeiconsIcon
+                  icon={Remove01Icon}
+                  stroke="currentColor"
+                  size={16}
+                  strokeWidth={2}
+                />
               </Button>
               <Button
-                onClick={() => handleEditorZoom("positive")}
+                onClick={() => handleEditorZoom("positive", settings)}
                 size="icon"
-                className="border-none outline-none !rounded-5"
+                className={cn(
+                  "border-none outline-none !rounded-5 hover:bg-button-primary-hover hover:text-white",
+                  settings?.editorZoomLevel === editorConfig?.maxZoom
+                    ? "!cursor-not-allowed"
+                    : "!cursor-pointer"
+                )}
+                disabled={settings?.editorZoomLevel === editorConfig?.maxZoom}
               >
-                <HugeiconsIcon icon={PlusSignIcon} />
+                <HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />
               </Button>
               <Button
                 onClick={() => resetEditorPreview()}

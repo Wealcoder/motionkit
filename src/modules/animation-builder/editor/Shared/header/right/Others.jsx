@@ -27,12 +27,16 @@ const Others = () => {
             icon={MoreVerticalIcon}
             size={16}
             color="currentColor"
-            strokeWidth={1.5}
+            strokeWidth={2}
           />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-background w-56" align="start">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+      <DropdownMenuContent
+        className="w-56 bg-background text-white shadow-lg"
+        align="end"
+      >
+        <span>Add options here</span>
+        {/* <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuGroup>
           <DropdownMenuItem>
             Profile
@@ -78,7 +82,7 @@ const Others = () => {
         <DropdownMenuItem>
           Log out
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -54,13 +54,16 @@ const reducer = (state, action) => {
         ...state,
         editorConfig: {
           ...state.editorConfig,
-          isControllerOpen: action?.value,
+          isControllerOpen: !state?.editorConfig?.isControllerOpen,
         },
       };
     case "toggleStructure":
       return {
         ...state,
-        editorConfig: { ...state.editorConfig, isStructureOpen: action?.value },
+        editorConfig: {
+          ...state.editorConfig,
+          isStructureOpen: !state?.editorConfig?.isStructureOpen,
+        },
       };
 
     // Animation Settings
@@ -101,6 +104,7 @@ const useMainContext = (state) => {
 
   // changing x axios position during scroll. (Shift + mouse wheel)
   const setEditorXPlacement = useCallback((placement = 0) => {
+    if (!placement && typeof placement !== "number") return;
     dispatch({
       type: "setEditorXPlacement",
       value: placement * 5, // 10 is scrolling speed

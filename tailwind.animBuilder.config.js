@@ -29,6 +29,7 @@ module.exports = {
         },
         button: {
           primary: "var(--btn-primary)",
+          "primary-hover": "var(--btn-primary-hover)",
           action: "var(--btn-bg-action)",
           cancel: "var(--btn-bg-cancel)",
           rd: "var(--btn-bg-responsive-device)",
