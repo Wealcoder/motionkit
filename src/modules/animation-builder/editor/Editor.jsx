@@ -74,7 +74,7 @@ const Editor = () => {
         <div
           className=" relative h-full flex justify-center items-start overflow-hidden"
           style={{
-            width: device?.key === "desktop" ? "100%" : device?.viewWidth,
+            width: "100%",
             margin: "0 auto",
             transition: "all 0.3s ease-out",
           }}
@@ -110,7 +110,7 @@ const Editor = () => {
             className="wcf--animation-builder-editor-iframe h-full border-0 bg-white"
             id="wcf--animation-builder--animation--preview"
             style={{
-              width: "100%",
+              width: device?.key === "desktop" ? "100%" : device?.viewWidth,
               transform: `translateX(${settings?.xPlacement || 0}px) scale(${
                 settings?.editorZoomLevel
               })`,
