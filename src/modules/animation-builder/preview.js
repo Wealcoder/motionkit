@@ -1,22 +1,23 @@
 /**
  * This file is used for editor preview only.
  */
-import {
-  getFullSelector,
-  handleMouseOver,
-  hidePopup,
-  showPopup,
-} from "./lib/animationUtils";
 import AnimationStructure from "@/components/common/AnimationStructure";
 import EditorContextMenu from "./context_menu/EditorContextMenu";
 import "./index.css";
-import { handleMediaQuery } from "./lib/utils";
+import {
+  handleMouseOver,
+  hidePopup,
+  showPopup,
+} from "./lib/editor/classSelectorHelper";
 import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelper";
-
+import { handleMediaQuery } from "./lib/utils";
+import { copySelectorMap } from "./config/editorConfig";
 import ContextMenuHandler from "./context_menu/contextmenu";
-import { menuItems } from "./register/context_menu/context_menu_register";
 import { handleCloseMenuEvent } from "./lib/contextMenu/contextMenu";
 import { eventToKeyCombination } from "./lib/events/keyboardEventUtils";
+import { menuItems } from "./register/context_menu/context_menu_register";
+import { copyToClipboard } from "./utils/copyToClipboard";
+import { helpToastEvent } from "./lib/events/toasterEvent";
 
 const storeState = {
   hoverEnabled: false,
@@ -31,7 +32,6 @@ let storeAnimation = {};
 // Register context menus
 window.AAEAnimPreviewBuilder = {};
 AAEAnimPreviewBuilder.contextMenu = new ContextMenuHandler();
-
 window.WCFFreeAnimBuilder = null;
 WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 
@@ -184,47 +184,25 @@ function receivePageConfig() {
 
 function runPopup() {
   const closeBtn = document.querySelector(".wcfanimb-close-btn");
-  const selectorContent = document.getElementById("wcfanim-popupContent");
-
+  // closing popup when close button clicked.
   closeBtn.addEventListener("click", () => {
     hidePopup();
     disableHover();
   });
-
-  document
-    .getElementById("wcfanim-expendSelector")
-    .addEventListener("click", (e) => {
-      selectorContent.classList.toggle("close");
-
-      if (selectorContent.classList.contains("close")) {
-        document.getElementById("wcfanim-expendSelector").textContent =
-          "Expand";
-      } else {
-        document.getElementById("wcfanim-expendSelector").textContent =
-          "Shrink";
-      }
-    });
-
+  // displaying selector popup
   document.body.addEventListener("click", (event) => {
     event.preventDefault();
-
-    const target = event.target;
-    if (target.closest(".wcfanimb-skip-selector-full")) {
+    const element = event.target;
+    if (element.closest(".wcfanimb-skip-selector-full")) {
       return;
     }
-
-    // collecting element classname
-    const selector = getFullSelector(target);
     enableHover();
-
-    const isSkip = target.classList.contains("wcfanimb-skip-selector");
-
+    const isSkip = element.classList.contains("wcfanimb-skip-selector");
     if (!isSkip) {
-      showPopup(selector, event.clientX + 10, event.clientY + 10);
+      showPopup(element, event.clientX + 10, event.clientY + 10);
       handleCloseMenuEvent(); // closing context menu
     }
   });
-
   // context menu event handler
   document.body.addEventListener("contextmenu", (event) => {
     event.preventDefault();
@@ -240,45 +218,47 @@ function runPopup() {
     window.dispatchEvent(new CustomEvent("wcf-open-context-menu"));
   });
 
-  document
-    .getElementById("wcfanim-copySelector")
-    .addEventListener("click", () => {
-      const textElement = document.getElementById("wcfanim-popupContent");
-      const textToCopy = textElement.textContent;
+  // copy to clipboard content.
+  document.addEventListener("click", async (e) => {
+    const svg = e.target.closest("svg.wcf-ab-selector-action-general");
+    if (!svg) return;
 
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard
-          .writeText(textToCopy)
-          .then(() => {
-            disableHover();
-            hidePopup();
-          })
-          .catch((err) => {
-            console.error("Failed to copy text: ", err);
-          });
-      } else {
-        const tempTextarea = document.createElement("textarea");
-        tempTextarea.value = textToCopy;
+    // differentiating for toast message
+    const isIdBtnPressed = ["wcf-ab-cpid-copy", "wcf-ab-ccid-copy"]?.includes(
+      svg?.id
+    );
 
-        tempTextarea.style.position = "fixed";
-        tempTextarea.style.top = "-9999px";
-        document.body.appendChild(tempTextarea);
+    const targetContentId = copySelectorMap[svg.id];
+    if (!targetContentId) return;
 
-        tempTextarea.focus();
-        tempTextarea.select();
+    const contentEl = document.getElementById(targetContentId);
+    if (!contentEl) return;
 
-        try {
-          if (document.execCommand("copy")) {
-            disableHover();
-            hidePopup();
-          }
-        } catch (err) {
-          console.error("Error copying text: ", err);
-        }
+    const textToCopy = contentEl.dataset.selector?.trim();
+    if (!textToCopy) return;
 
-        document.body.removeChild(tempTextarea);
-      }
-    });
+    try {
+      await copyToClipboard(textToCopy);
+      // triggering toast
+      helpToastEvent({
+        type: "success",
+        message: `Successfully copied element ${
+          isIdBtnPressed ? "id" : "class"
+        }`,
+      });
+      disableHover();
+      hidePopup();
+    } catch (err) {
+      helpToastEvent({
+        type: "error",
+        message: `The selected element ${
+          isIdBtnPressed ? "id" : "class"
+        } not available!`,
+      });
+      disableHover();
+      hidePopup();
+    }
+  });
 }
 
 enableHover();

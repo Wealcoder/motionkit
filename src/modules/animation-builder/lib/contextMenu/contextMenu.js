@@ -1,4 +1,4 @@
-import { getFullSelector } from "@/lib/animationUtils";
+import { getFullSelector } from "@/lib/editor/classSelectorHelper";
 import {
   handleCopyText,
   handleGenerateSampleData,

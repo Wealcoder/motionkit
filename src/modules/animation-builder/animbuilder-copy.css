@@ -1,18 +1,124 @@
-/* Highlight hovered element */
-.wcf-animb--hover-highlight {
-  outline: 2px solid red;
-}
+/* new */
 
 /* Popup styles */
 .wcfanimb-popup {
   position: fixed;
-  background: #1f2124;
-  border-radius: 6px;
-  font-family: Arial, sans-serif;
-  box-shadow: 0px 2px 24px 0px rgba(0, 0, 0, 0.15);
+  width: 494px;
+  min-height: 375px;
+  padding: 15px;
+  background: #27272a;
+  color: #fafafa;
+  font-family: Inter;
+  border-radius: 5px;
+  box-shadow: 0px 0px 15px 5px rgba(39, 39, 42, 0.3);
   z-index: 999999999;
-  width: 328px;
 }
+
+.wcfanimb-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wcf-ab-selector-action-general {
+  cursor: pointer;
+}
+
+.wcf-ab-selector-action-general:hover {
+  scale: 0.8;
+}
+
+#wcf-ab-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#wcf-ab-selector-header-left {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+}
+
+.wcf-ab-selector-title {
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.wcf-ab-selector-description {
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+
+.wcf-ab-selector-content {
+  width: 100%;
+  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.wcf-ab-slsingle-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wcf-ab-selector-content-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0%;
+}
+
+.wcfanimb-popup .wcfanimb-wrapper .wcfanimb-classes {
+  min-height: 34px;
+  padding: 8px 10px;
+  background-color: #3f3f46;
+  border-radius: 5px;
+}
+
+.wcfanimb-popup .wcfanimb-wrapper .wcfanimb-classes-long {
+  min-height: 119px;
+  padding: 8px 10px;
+  background-color: #3f3f46;
+  border-radius: 5px;
+}
+
+.wcf-ab-ccl-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: 0%;
+}
+
+.wcfanimb-popup .wcfanimb-wrapper .wcfanimb-classes .wcfanimb-popupContent {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: 0%;
+}
+
+/* old */
+/* Highlight hovered element */
+/* .wcf-animb--hover-highlight {
+  outline: 2px solid red;
+}
+
 .wcfanimb-popup .wcfanimb-wrapper {
   position: relative;
   padding: 16px;
@@ -35,11 +141,7 @@
   margin-bottom: 6px;
   font-size: 14px;
 }
-.wcfanimb-popup .wcfanimb-wrapper .wcfanimb-classes {
-  padding: 10px 8px;
-  background-color: #2b2c31;
-  border-radius: 6px;
-}
+
 .wcfanimb-popup .wcfanimb-wrapper .wcfanimb-classes .wcfanimb-popupContent {
   margin: 0;
   padding: 0;
@@ -95,4 +197,4 @@
   .wcfanimb-select-btn:hover {
   background-color: #fc6848;
   color: white;
-}
+} */

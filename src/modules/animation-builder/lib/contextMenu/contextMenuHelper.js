@@ -1,4 +1,4 @@
-import { getClosestAnimId } from "@/lib/animationUtils";
+import { getClosestAnimId } from "@/lib/editor/classSelectorHelper";
 import { generateUniqueId } from "../../../../utils/generateUniqueId";
 import { ABCustomPresetData } from "@/config/animationPresetData";
 import { handleCloseMenuEvent } from "./contextMenu";

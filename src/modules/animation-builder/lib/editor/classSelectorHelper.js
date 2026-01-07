@@ -35,14 +35,12 @@ export function getUniqueSelector(element) {
   if (element.id) {
     return `${tag}#${CSS.escape(element.id)}`;
   }
-
   if (element.dataset.id) {
     let customClass = `.elementor-element-${element.dataset.id}`;
     if (document.querySelectorAll(customClass).length === 1) {
       return `${customClass}`;
     }
   }
-
   const classList = Array.from(element.classList).filter(
     (cls) =>
       cls !== "wcf-animb--hover-highlight" &&
@@ -53,7 +51,6 @@ export function getUniqueSelector(element) {
   if (classList.length > 0) {
     return `${tag}.${classList.join(".")}`;
   }
-
   return tag;
 }
 
@@ -74,29 +71,84 @@ export function extractLastSelector(selector) {
   return { full: lastPart, tag, classes, id };
 }
 
-export function showPopup(selector, x, y) {
+export function showPopup(element = null, x = 0, y = 0) {
+  if (!element) return;
+
+  const iframeDoc = element.ownerDocument;
+  const iframeBody = iframeDoc.body;
+
   const popup = document.getElementById("wcfanim-selectorPopup");
-  const content = document.getElementById("wcfanim-popupContent");
+  if (!popup) {
+    console.error("Animation Builder popup wrapper not found!");
+    return;
+  }
 
-  content.textContent = selector;
+  const parent = element.parentElement;
+  if (!parent || parent === iframeBody) {
+    console.warn("Parent selection blocked (BODY or null)");
+    return;
+  }
 
+  // --- Parent info ---
+  const parentId = parent.id || "N/A";
+  const parentUniqueSelector = getUniqueSelector(parent) || "N/A";
+
+  // --- Current element info ---
+  const currentId = element.id || "N/A";
+  const currentUniqueSelector = getUniqueSelector(element) || "N/A";
+  const currentFullSelector = getFullSelector(element) || "N/A";
+
+  // --- Insert data into popup (truncated for display) ---
+  const parentClassEl = document.getElementById(
+    "wcfanimb-parent-class-content"
+  );
+  parentClassEl.textContent =
+    parentUniqueSelector.length > 25
+      ? parentUniqueSelector.slice(0, 25) + "..."
+      : parentUniqueSelector;
+  parentClassEl.dataset.selector = parentUniqueSelector;
+
+  const parentIdEl = document.getElementById("wcfanimb-parent-id-content");
+  parentIdEl.textContent = parentId;
+  parentIdEl.dataset.selector = parentId;
+
+  const currentClassEl = document.getElementById(
+    "wcfanimb-current-class-content"
+  );
+  currentClassEl.textContent =
+    currentUniqueSelector.length > 25
+      ? currentUniqueSelector.slice(0, 25) + "..."
+      : currentUniqueSelector;
+  currentClassEl.dataset.selector = currentUniqueSelector;
+
+  const currentIdEl = document.getElementById("wcfanimb-current-id-content");
+  currentIdEl.textContent = currentId;
+  currentIdEl.dataset.selector = currentId;
+
+  const currentLongClassEl = document.getElementById(
+    "wcfanimb-current-long-class-content"
+  );
+  currentLongClassEl.textContent =
+    currentFullSelector.length > 100
+      ? currentFullSelector.slice(0, 100) + "..."
+      : currentFullSelector;
+  currentLongClassEl.dataset.selector = currentFullSelector;
+
+  // --- Position popup inside viewport ---
   const popupWidth = popup.offsetWidth;
   const popupHeight = popup.offsetHeight;
-
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
   if (x + popupWidth > viewportWidth) {
     x = viewportWidth - popupWidth - 10;
   }
-
   if (y + popupHeight > viewportHeight) {
     y = viewportHeight - popupHeight - 10;
   }
 
   popup.style.left = `${x}px`;
   popup.style.top = `${y}px`;
-
   popup.style.display = "block";
 }
 

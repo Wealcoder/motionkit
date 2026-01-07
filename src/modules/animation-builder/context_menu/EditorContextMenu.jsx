@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 // import { IoIosArrowForward } from "react-icons/io"; // use huge icon instead
 import "./editorContextMenu.css";
-import { hidePopup } from "@/lib/animationUtils";
+import { hidePopup } from "@/lib/editor/classSelectorHelper";
 
 const clamp = (v, min, max) => {
   return Math.min(Math.max(v, min), max);

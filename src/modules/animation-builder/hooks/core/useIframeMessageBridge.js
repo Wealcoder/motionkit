@@ -2,7 +2,8 @@
 import { useEffect, useCallback } from "react";
 import { useAnimationControl, useKernel, usePageConfig } from "../app.hooks";
 import { validateKeyCombination } from "@/lib/events/keyboardEventUtils";
-import { handleSetOrResetAnimation } from "@/lib/editor/editor";
+import { handleSetOrResetAnimation } from "@/lib/animations/animations";
+import { generateToast } from "@/lib/editor/editor";
 
 // This hook use to manage events actions through editor kernel context or animation context. For helper methods please follow lib directory.
 
@@ -26,20 +27,26 @@ export const useIframeMessageBridge = () => {
     (e) => {
       if (e.origin !== window.location.origin) return;
       const data = e.data || {};
-      const { type, value } = data;
+      const { type } = data;
 
       if (!type) return;
       switch (type) {
+        case "WCF-AB-TOAST-TRIGGER":
+          const toasttype = data.toastType ?? "info";
+          const message = data.message ?? "";
+          generateToast(toasttype, message);
+          break;
+
         case "WCF_AB_WHEEL_EVENT":
-          setEditorZoomLevel(value);
+          setEditorZoomLevel(data?.value ?? "");
           break;
 
         case "WCF_AB_WHEEL_EVENT_X_PLACEMENT":
-          setEditorXPlacement(value);
+          setEditorXPlacement(data?.value ?? 0);
           break;
 
         case "WCF_AB_KEYDOWN_EVENT":
-          validateKeyCombination(value, keyboardActions);
+          validateKeyCombination(data?.value ?? "", keyboardActions);
           break;
 
         case "wcf-animation-builder":
