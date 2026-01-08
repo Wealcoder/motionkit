@@ -78,6 +78,9 @@ export function showPopup(element = null, x = 0, y = 0) {
   const iframeBody = iframeDoc.body;
 
   const popup = document.getElementById("wcfanim-selectorPopup");
+  popup.style.display = "fixed";
+  popup.classList.add("is-visible");
+
   if (!popup) {
     console.error("Animation Builder popup wrapper not found!");
     return;
@@ -153,8 +156,10 @@ export function showPopup(element = null, x = 0, y = 0) {
 }
 
 export function hidePopup() {
-  const popup = document.getElementById("wcfanim-selectorPopup");
-  popup.style.display = "none";
+  setTimeout(() => {
+    const popup = document.getElementById("wcfanim-selectorPopup");
+    popup.style.display = "none";
+  }, 150);
 }
 
 export function handleMouseOver(event) {

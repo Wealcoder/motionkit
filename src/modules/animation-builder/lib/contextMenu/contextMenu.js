@@ -19,8 +19,10 @@ const verifyContextCallback = (callback = () => {}) => {
 
 // closing context menu event dispatcher
 export const handleCloseMenuEvent = () => {
-  window.dispatchEvent(new Event("wcf-close-context-menu"));
-  return;
+  setTimeout(
+    () => window.dispatchEvent(new Event("wcf-close-context-menu")),
+    150
+  );
 };
 
 // ##################### Context Menu Callbacks #####################

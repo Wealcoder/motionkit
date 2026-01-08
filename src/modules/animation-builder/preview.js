@@ -39,6 +39,9 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 window.addEventListener(
   "wheel",
   (e) => {
+    // closing selector when scroll.
+    disableHover();
+    hidePopup();
     if (e.shiftKey) {
       e.preventDefault();
       e.stopPropagation();

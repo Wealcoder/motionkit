@@ -1,3 +1,16 @@
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Bookmark02Icon,
+  Copy01Icon,
+  Copy02Icon,
+  Delete01Icon,
+  FileAttachmentIcon,
+  Link04Icon,
+  PencilEdit02Icon,
+  PlayCircleIcon,
+  PlusSignCircleIcon,
+} from "@hugeicons/core-free-icons/index";
+
 import {
   handleAddContextMenu,
   handleContextMenuCopyClass,
@@ -14,6 +27,7 @@ import {
 export const menuItems = [
   {
     contextMenuKey: "wcf-cmb-copy-class",
+    icon: <HugeiconsIcon icon={Copy01Icon} />,
     title: "Copy Class",
     trigger: [],
     options: [],
@@ -21,6 +35,7 @@ export const menuItems = [
   },
   {
     contextMenuKey: "wcf-cmb-copy-parent-class",
+    icon: <HugeiconsIcon icon={Copy02Icon} />,
     title: "Copy Parent Class",
     trigger: [],
     options: [],
@@ -28,16 +43,19 @@ export const menuItems = [
   },
   {
     contextMenuKey: "wcf-cmb-add-animation",
+    icon: <HugeiconsIcon icon={PlusSignCircleIcon} />,
     title: "Add Animation",
     trigger: [],
     options: [
       {
         contextMenuKey: "wcf-cmb-add-anim-current",
+        icon: "",
         title: "Current Animation",
         trigger: [],
         options: [
           {
             contextMenuKey: "wcf-ab-ca-classic",
+            icon: "",
             title: "Classic Animation",
             trigger: [],
             options: [],
@@ -45,6 +63,7 @@ export const menuItems = [
           },
           {
             contextMenuKey: "wcf-ab-ca-preset",
+            icon: "",
             title: "Preset Animation",
             trigger: [],
             options: [],
@@ -52,6 +71,7 @@ export const menuItems = [
           },
           {
             contextMenuKey: "wcf-ab-ca-custom",
+            icon: "",
             title: "Custom Animation",
             trigger: [],
             options: [],
@@ -62,9 +82,35 @@ export const menuItems = [
       },
       {
         contextMenuKey: "wcf-cmb-add-anim-current",
+        icon: "",
         title: "Global Animation",
         trigger: [],
-        options: [],
+        options: [
+          {
+            contextMenuKey: "wcf-ab-ca-classic",
+            icon: "",
+            title: "Classic Animation",
+            trigger: [],
+            options: [],
+            callback: handleAddContextMenu,
+          },
+          {
+            contextMenuKey: "wcf-ab-ca-preset",
+            icon: "",
+            title: "Preset Animation",
+            trigger: [],
+            options: [],
+            callback: handleAddContextMenu,
+          },
+          {
+            contextMenuKey: "wcf-ab-ca-custom",
+            icon: "",
+            title: "Custom Animation",
+            trigger: [],
+            options: [],
+            callback: handleAddContextMenu,
+          },
+        ],
         callback: (e) => {
           console.log("global animation", e);
         },
@@ -74,6 +120,7 @@ export const menuItems = [
   },
   {
     contextMenuKey: "wcf-cmb-edit-animation",
+    icon: <HugeiconsIcon icon={PencilEdit02Icon} />,
     title: "Edit Animation",
     trigger: [],
     options: [],
@@ -81,6 +128,7 @@ export const menuItems = [
   },
   {
     contextMenuKey: "wcf-cmb-preview-animation",
+    icon: <HugeiconsIcon icon={PlayCircleIcon} />,
     title: "Preview Animation",
     trigger: [],
     options: [],
@@ -88,6 +136,7 @@ export const menuItems = [
   },
   {
     contextMenuKey: "wcf-cmb-copy-animation",
+    icon: <HugeiconsIcon icon={Link04Icon} />,
     title: "Copy Animation",
     trigger: [],
     options: [],
@@ -95,6 +144,7 @@ export const menuItems = [
   },
   {
     contextMenuKey: "wcf-cmb-paste-animation",
+    icon: <HugeiconsIcon icon={FileAttachmentIcon} />,
     title: "Paste Animation",
     trigger: [],
     options: [],
@@ -102,6 +152,7 @@ export const menuItems = [
   },
   {
     contextMenuKey: "wcf-cmb-delete-animation",
+    icon: <HugeiconsIcon icon={Delete01Icon} />,
     title: "Delete Animation",
     trigger: [],
     options: [],
@@ -109,16 +160,10 @@ export const menuItems = [
   },
   {
     contextMenuKey: "wcf-cmb-save-animation",
+    icon: <HugeiconsIcon icon={Bookmark02Icon} />,
     title: "Save Animation",
     trigger: [],
     options: [],
     callback: handleSaveAnimContextMenu,
-  },
-  {
-    contextMenuKey: "wcf-cmb-inspect-devtools",
-    title: "Inspect",
-    trigger: [],
-    options: [],
-    callback: handleInspect,
   },
 ];
