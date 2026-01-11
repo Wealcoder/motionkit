@@ -1,12 +1,16 @@
-import { Button, buttonVariants } from "@/components/ui/button";
-import { useAnimationControl, usePageConfig } from "@/hooks/app.hooks";
-import { toast } from "sonner";
-import DeleteConfirmDialog from "../../../components/common/DeleteConfirmDialog";
-import { cn } from "@/lib/utils";
-// import { RiResetRightLine } from "react-icons/ri";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { PlayCircleIcon } from "@hugeicons/core-free-icons";
+import {
+  FullScreenIcon,
+  PlayCircleIcon,
+  Settings03Icon,
+} from "@hugeicons/core-free-icons";
+import DeleteConfirmDialog from "../../../components/common/DeleteConfirmDialog";
+import { usePageConfig } from "@/hooks/app.hooks";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { ButtonGroup } from "@/components/ui/button-group";
 
 const ControllerFooter = ({
   contentStep = {},
@@ -65,76 +69,97 @@ const ControllerFooter = ({
   };
 
   return (
-    <>
-      <div className="p-3 border-t border-border">
-        {activeReset ? (
-          <Button variant="play" size="play" onClick={() => resetPreview()}>
-            {/* <RiResetRightLine /> Reply */}Reply
-          </Button>
-        ) : (
-          <Button variant="play" size="play" onClick={() => showPreview()}>
-            <HugeiconsIcon icon={PlayCircleIcon} /> Play
-          </Button>
-        )}
+    <div className="flex justify-between items-center">
+      <Button className="min-h-9 min-w-[135px] px-4 py-2 bg-button-primary text-15 font-medium leading-5 tracking-normal text-white rounded-5 border-none outline-none">
+        <HugeiconsIcon icon={FullScreenIcon} strokeWidth={2} />
+        Full Preview
+      </Button>
+      <div className={"flex justify-between items-center gap-2"}>
+        <Button className="min-h-9 min-w-[184px] px-4 py-2 bg-button-action hover:bg-button-action-hover text-15 font-medium leading-5 tracking-normal text-white rounded-5 border-none outline-none">
+          <HugeiconsIcon icon={PlayCircleIcon} strokeWidth={2} />
+          Play
+        </Button>
+        <Button
+          size="icon"
+          className=" bg-button-primary text-white rounded-5 border-none outline-none"
+        >
+          <HugeiconsIcon icon={Settings03Icon} strokeWidth={2} />
+        </Button>
       </div>
-      {contentStep.step > 1 ? (
-        <div className="p-3 pb-4 border-t border-border flex justify-between items-center gap-1.5">
-          <div>
-            <a
-              href={params.get("builder_url")}
-              target="_blank"
-              className={cn(
-                buttonVariants({ variant: "secondary" }),
-                "py-[5px] no-underline"
-              )}
-            >
-              Preview
-            </a>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="secondary"
-              className="py-[5px]"
-              onClick={() =>
-                setContentStep(
-                  contentStep.step === 1
-                    ? { step: 1, data: {} }
-                    : { step: contentStep.step - 1, data: {} }
-                )
-              }
-            >
-              Go Back
-            </Button>
-            <Button className="px-4 py-[5px]" onClick={() => updateAnimation()}>
-              Save
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="p-3 pb-4 border-t border-border flex justify-between items-center gap-1.5">
-          <div>
-            <a
-              href={params.get("builder_url")}
-              target="_blank"
-              className={cn(
-                buttonVariants({ variant: "secondary" }),
-                "py-[5px] no-underline"
-              )}
-            >
-              Preview
-            </a>
-          </div>
-          <DeleteConfirmDialog
-            className="flex justify-center items-center cursor-pointer"
-            deleteFn={deleteAllAnimation}
-            id={"hi-wcf"}
-          >
-            <Button className="px-4 py-[5px]">Delete All Animation</Button>
-          </DeleteConfirmDialog>
-        </div>
-      )}
-    </>
+    </div>
   );
 };
 
 export default ControllerFooter;
+
+{
+  /* <div className="p-3 border-t border-border">
+  {activeReset ? (
+    <Button variant="play" size="play" onClick={() => resetPreview()}>
+     Reply
+    </Button>
+  ) : (
+    <Button variant="play" size="play" onClick={() => showPreview()}>
+      <HugeiconsIcon icon={PlayCircleIcon} /> Play
+    </Button>
+  )}
+</div>;
+{
+  contentStep.step > 1 ? (
+    <div className="p-3 pb-4 border-t border-border flex justify-between items-center gap-1.5">
+      <div>
+        <a
+          href={params.get("builder_url")}
+          target="_blank"
+          className={cn(
+            buttonVariants({ variant: "secondary" }),
+            "py-[5px] no-underline"
+          )}
+        >
+          Preview
+        </a>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <Button
+          variant="secondary"
+          className="py-[5px]"
+          onClick={() =>
+            setContentStep(
+              contentStep.step === 1
+                ? { step: 1, data: {} }
+                : { step: contentStep.step - 1, data: {} }
+            )
+          }
+        >
+          Go Back
+        </Button>
+        <Button className="px-4 py-[5px]" onClick={() => updateAnimation()}>
+          Save
+        </Button>
+      </div>
+    </div>
+  ) : (
+    <div className="p-3 pb-4 border-t border-border flex justify-between items-center gap-1.5">
+      <div>
+        <a
+          href={params.get("builder_url")}
+          target="_blank"
+          className={cn(
+            buttonVariants({ variant: "secondary" }),
+            "py-[5px] no-underline"
+          )}
+        >
+          Preview
+        </a>
+      </div>
+      <DeleteConfirmDialog
+        className="flex justify-center items-center cursor-pointer"
+        deleteFn={deleteAllAnimation}
+        id={"hi-wcf"}
+      >
+        <Button className="px-4 py-[5px]">Delete All Animation</Button>
+      </DeleteConfirmDialog>
+    </div>
+  );
+} */
+}

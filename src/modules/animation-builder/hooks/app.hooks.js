@@ -16,6 +16,7 @@ export const useKernel = () => {
   const isLoading = settings.isEditorLoading ?? false;
   return {
     isLoading,
+    mainState: currentKernelData?.mainState, // for testing purpose only
     settings,
     setIsEditorLoading,
     setEditorZoomLevel,

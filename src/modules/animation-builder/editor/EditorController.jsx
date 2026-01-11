@@ -22,18 +22,24 @@ const Controller = ({ isLoading }) => {
     createAnimation(config);
   };
 
-  console.log({ contentStep, allAnimation });
-
   return (
-    <div className="p-[15px] bg-background-sidebar h-full flex flex-col justify-between relative rounded-l-[10px] border-red-dev">
-      <ControllerHeader
-        isLoading={isLoading}
-        handleAddAnimation={handleAddAnimation}
-        contentStep={contentStep}
-      />
-      <div className="flex-1">
-        <ControllerBody contentStep={contentStep} />
-      </div>
+    <div className="p-[15px] bg-background-sidebar h-full flex flex-col justify-between relative rounded-l-[10px] ">
+      {/* for creating new animation */}
+      {contentStep?.step === 1 && (
+        <ControllerHeader
+          isLoading={isLoading}
+          handleAddAnimation={handleAddAnimation}
+          contentStep={contentStep}
+          setContentStep={setContentStep}
+        />
+      )}
+      {/* display properties of new animation or lisitng all animations */}
+      {contentStep?.step === 2 && (
+        <div className="flex-1">
+          <ControllerBody contentStep={contentStep} />
+        </div>
+      )}
+      {/* controlling animations */}
       <ControllerFooter
         contentStep={contentStep}
         allAnimation={allAnimation}

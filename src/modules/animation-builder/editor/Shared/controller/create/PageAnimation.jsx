@@ -1,5 +1,4 @@
 import PremiumBadge from "@/components/common/PremiumBadge";
-import { isPremiumUser } from "@/lib/validationCheck";
 import { AssetImage } from "../../../../../../assets/AssetImage";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +13,7 @@ import {
   CancelCircleIcon,
 } from "@hugeicons/core-free-icons/index";
 import { cn } from "@/lib/utils";
+import { isPremiumUser } from "@/lib/subscription/subscription";
 
 // animation preset data
 const animationPresetTypes = [
@@ -70,12 +70,12 @@ const PageAnimation = ({ handleAddAnimation = () => {} }) => {
             icon={AddCircleIcon}
             size={16}
             color="currentColor"
-            strokeWidth={1.5}
+            strokeWidth={2}
           />
           Add New Animation
         </Button>
       </CollapsibleTrigger>
-      <CollapsibleContent className="flex flex-nowrap justify-between items-center gap-2">
+      <CollapsibleContent className="grid grid-cols-3 gap-2">
         {animationPresetTypes?.map((preset, index) => (
           <AnimationPresetCard
             key={index}
@@ -120,7 +120,7 @@ const AnimationPresetCard = ({
         }
         return;
       }}
-      className="h-[122px] w-[124px] px-[26px] py-4 relative flex flex-col justify-center items-center gap-[10px] bg-button-primary hover:bg-button-primary-hover rounded-5 border-none cursor-pointer"
+      className="h-[122px]  px-[26px] py-4 relative flex flex-col justify-center items-center gap-[10px] bg-button-primary hover:bg-button-primary-hover rounded-5 border-none cursor-pointer"
     >
       {/* //TODO: need to work on premium badge modal. Ask designer */}
       {preset?.isPro && isPremium && (

@@ -5,16 +5,17 @@ import PresetAnimation from "./create/animation/PresetAnimation";
 import CustomAnimation from "./create/animation/CustomAnimation";
 
 const RenderContent = (item) => {
-  switch (item.step) {
+  const currentStep = item?.step || 1;
+  switch (currentStep) {
     case 1:
       return (
-        <ScrollArea className="h-[78vh] min-w-[280px] max-w-[450px]">
+        <ScrollArea>
           <AllAnimationList />
         </ScrollArea>
       );
     case 2:
       return (
-        <ScrollArea className="h-[83vh] min-w-[280px] max-w-[450px]">
+        <ScrollArea>
           {item?.data?.type == "free_animation" ? (
             <FreePresetAnimation />
           ) : item?.data?.type === "preset" ? (

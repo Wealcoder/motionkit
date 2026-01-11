@@ -14,17 +14,31 @@ const tabContent = [
 const ControllerHeader = ({
   handleAddAnimation = () => {},
   contentStep = {},
+  setContentStep = () => {},
 }) => {
   const [currentTab, setCurrentTab] = useState("page_anim");
   const { allAnimation, createAnimation } = useAnimationControl();
 
+  // reset content step when switching tab
+  const handleSwitchTab = (currentTab) => {
+    setCurrentTab((prev) => {
+      if (currentTab === prev) return prev;
+      // reset to default content step.
+      setContentStep({
+        step: 1,
+        data: {},
+      });
+      return currentTab;
+    });
+  };
+
   return (
-    <div className="p-[15px] bg-background-sidebar h-full flex flex-col justify-between relative rounded-l-[10px] border-red-dev">
+    <div>
       {contentStep?.step === 1 && (
         <div className="px-[10px] py-[15px] bg-background rounded-5">
           <Tabs
             defaultValue="page_anim"
-            onValueChange={(value) => setCurrentTab(value)}
+            onValueChange={(value) => handleSwitchTab(value)}
           >
             <TabsList>
               {tabContent?.map((content, index) => (

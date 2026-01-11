@@ -22,6 +22,7 @@ const Editor = () => {
   // Editor
   const {
     isLoading,
+    mainState,
     settings,
     toggleController,
     setEditorZoomLevel,
@@ -29,6 +30,8 @@ const Editor = () => {
   } = useKernel();
   const { selectedDevice } = useDeviceConfig();
   const device = getScreenSize(selectedDevice) || {};
+
+  console.log({ mainState });
 
   const handleWheel = (e) => {
     e.preventDefault();
@@ -156,9 +159,9 @@ const Editor = () => {
           collapsedSize={0}
           className="rounded-l-[10px]"
           style={{
-            flexBasis: settings?.isControllerOpen ? "440px" : "5px",
+            flexBasis: settings?.isControllerOpen ? "405px" : "5px",
             transition: "flex-basis 0.3s linear",
-            maxWidth: "440px",
+            maxWidth: "405px",
             overflow: "hidden",
             cursor: "pointer !important",
           }}
