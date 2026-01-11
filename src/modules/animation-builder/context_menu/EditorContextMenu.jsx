@@ -16,9 +16,7 @@ const EditorContextMenu = () => {
   const [targetElement, setTargetElement] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [activePath, setActivePath] = useState([]);
-
   const { menus } = AAEAnimPreviewBuilder.contextMenu.getProps() || {};
-
   const tagName = targetElement?.tagName?.toLowerCase() ?? "";
   const firstClassName = targetElement?.classList?.[0] ?? "";
 
@@ -141,8 +139,6 @@ function MenuItem({
       setDirection("right");
     }
   };
-
-  console.log({ direction });
 
   return (
     <li

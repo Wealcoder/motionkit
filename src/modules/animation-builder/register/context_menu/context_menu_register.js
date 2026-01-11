@@ -22,7 +22,7 @@ import {
   handlePasteAnimContextMenu,
   handlePreviewAnimContextMenu,
   handleSaveAnimContextMenu,
-} from "../../lib/contextMenu/contextMenu";
+} from "../../lib/contextMenu/contextMenuEventTrigger";
 
 export const menuItems = [
   {

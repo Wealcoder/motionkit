@@ -31,7 +31,9 @@ const RenderContent = (item) => {
 
 const EditorBody = ({ contentStep }) => {
   return (
-    <div className="flex flex-col divide-y">{RenderContent(contentStep)}</div>
+    <div className="flex flex-col divide-y text-white">
+      {RenderContent(contentStep)}
+    </div>
   );
 };
 

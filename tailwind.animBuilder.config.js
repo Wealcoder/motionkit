@@ -1,4 +1,8 @@
 /** @type {import('tailwindcss').Config} */
+
+// for testing purpose
+const plugin = require("tailwindcss/plugin");
+
 module.exports = {
   darkMode: ["class"],
   content: [
@@ -31,11 +35,9 @@ module.exports = {
           primary: "var(--btn-primary)",
           "primary-hover": "var(--btn-primary-hover)",
           action: "var(--btn-bg-action)",
+          "action-hover": "var(--btn-bg-action-hover)",
           cancel: "var(--btn-bg-cancel)",
-          rd: "var(--btn-bg-responsive-device)",
-        },
-        borderRadius: {
-          btn: "5px",
+          "cancel-hover": "var(--btn-bg-cancel-hover)",
         },
       },
       borderRadius: {
@@ -43,5 +45,16 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(function ({ addUtilities }) {
+      addUtilities({
+        ".border-red-dev": {
+          border: "2px solid red",
+        },
+        ".border-white-dev": {
+          border: "2px solid white",
+        },
+      });
+    }),
+  ],
 };

@@ -1,6 +1,11 @@
 // useIframeMessageBridge.ts
 import { useEffect, useCallback } from "react";
-import { useAnimationControl, useKernel, usePageConfig } from "../app.hooks";
+import {
+  useAnimationControl,
+  useContentStep,
+  useKernel,
+  usePageConfig,
+} from "../app.hooks";
 import { validateKeyCombination } from "@/lib/events/keyboardEventUtils";
 import { handleSetOrResetAnimation } from "@/lib/animations/animations";
 import { generateToast } from "@/lib/editor/editor";
@@ -14,7 +19,8 @@ export const useIframeMessageBridge = () => {
     setEditorXPlacement,
     toggleController,
   } = useKernel();
-  const { setAllAnimation } = useAnimationControl();
+  const { setContentStep } = useContentStep();
+  const { setAllAnimation, createAnimation } = useAnimationControl();
   const { setPageConfig } = usePageConfig();
 
   // listing
@@ -28,7 +34,7 @@ export const useIframeMessageBridge = () => {
       if (e.origin !== window.location.origin) return;
       const data = e.data || {};
       const { type } = data;
-
+      console.log("Log: useIframeMessageBridge | type =>", type);
       if (!type) return;
       switch (type) {
         case "WCF-AB-TOAST-TRIGGER":
@@ -56,6 +62,35 @@ export const useIframeMessageBridge = () => {
             setIsEditorLoading(false);
           });
           break;
+
+        // context menu helper
+        case "WCF_AB_CREATE_ANIMATION":
+          // WORKING: check how you can add itemclass on animation data. i can store it temporary inside sessionstorage and clear when animation preset selected.
+          const { sampleData, itemClass, contextMenuKey } = data.payload;
+          if (!sampleData || !sampleData.id || !contextMenuKey) return;
+          setContentStep({
+            step: 2,
+            data: sampleData,
+          });
+          createAnimation(sampleData);
+          break;
+
+        case "WCF_AB_PREVIEW_ANIMATION":
+          console.log("preview");
+          break;
+
+        case "WCF_AB_COPY_ANIMATION":
+          console.log("copy");
+          break;
+
+        case "WCF_AB_PASTE_ANIMATION":
+          console.log("paste");
+          break;
+
+        case "WCF_AB_DELETE_ANIMATION":
+          console.log("delete");
+          break;
+
         default:
           break;
       }

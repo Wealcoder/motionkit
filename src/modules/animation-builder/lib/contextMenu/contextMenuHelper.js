@@ -1,7 +1,9 @@
 import { getClosestAnimId } from "@/lib/editor/classSelectorHelper";
 import { generateUniqueId } from "../../../../utils/generateUniqueId";
 import { ABCustomPresetData } from "@/config/animationPresetData";
-import { handleCloseMenuEvent } from "./contextMenu";
+import { handleCloseMenuEvent } from "./contextMenuEventTrigger";
+import { copyToClipboard } from "@/utils/copyToClipboard";
+import { helpToastEvent } from "../events/toasterEvent";
 
 // ##################### Context Menu Helper Functions #####################
 // get animation id
@@ -17,44 +19,17 @@ export const handleGetAnimId = (element) => {
 };
 
 // copy clipboard helper
-export const handleCopyText = (text) => {
-  if (navigator.clipboard && window.isSecureContext) {
-    // Modern API for copying
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        handleCloseMenuEvent();
-      })
-      .catch((err) => {
-        console.error("Failed to copy text: ", err);
-        handleCloseMenuEvent();
-      });
-  } else {
-    // Fallback to manual method for older browsers
-    const tempTextarea = document.createElement("textarea");
-    tempTextarea.value = text;
-
-    // Style the textarea to be offscreen
-    tempTextarea.style.position = "fixed";
-    tempTextarea.style.top = "-9999px";
-    document.body.appendChild(tempTextarea);
-
-    // Select the text inside the textarea
-    tempTextarea.focus();
-    tempTextarea.select();
-
-    try {
-      if (document.execCommand("copy")) {
-        handleCloseMenuEvent();
-      } else {
-        handleCloseMenuEvent();
-      }
-    } catch (err) {
-      console.error("Failed to copy text!");
-      handleCloseMenuEvent(); // Close menu on error
-    }
-    // Clean up by removing the temporary textarea
-    document.body.removeChild(tempTextarea);
+export const handleCopyText = async (textToCopy) => {
+  try {
+    await copyToClipboard(textToCopy);
+    helpToastEvent({
+      type: "success",
+      message: `Successfully copied element class`,
+    });
+  } catch (_) {
+    console.warn("Unable to copy element class!");
+  } finally {
+    handleCloseMenuEvent();
   }
 };
 

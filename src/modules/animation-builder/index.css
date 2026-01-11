@@ -18,9 +18,10 @@
     /* button */
     --btn-primary: #3f3f46;
     --btn-primary-hover: #3f3f467c;
-    --btn-bg-responsive-device: #3f3f46;
     --btn-bg-action: #3c7a1f;
+    --btn-bg-action-hover: #48ac19;
     --btn-bg-cancel: #b34a32;
+    --btn-bg-cancel-hover: #cb4527;
   }
 }
 

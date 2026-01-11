@@ -13,7 +13,7 @@ import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelpe
 import { handleMediaQuery } from "./lib/utils";
 import { copySelectorMap } from "./config/editorConfig";
 import ContextMenuHandler from "./context_menu/contextmenu";
-import { handleCloseMenuEvent } from "./lib/contextMenu/contextMenu";
+import { handleCloseMenuEvent } from "./lib/contextMenu/contextMenuEventTrigger";
 import { eventToKeyCombination } from "./lib/events/keyboardEventUtils";
 import { menuItems } from "./register/context_menu/context_menu_register";
 import { copyToClipboard } from "./utils/copyToClipboard";

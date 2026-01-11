@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/resizable";
 import Controller from "@/editor/Controller";
 import { useIframeMessageBridge } from "@/hooks/core/useIframeMessageBridge";
-import { disableIframeLinks } from "@/lib/editor";
 import { cn, getScreenSize } from "@/lib/utils";
 import { PlusSignIcon, Remove01Icon } from "@hugeicons/core-free-icons/index";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -15,7 +14,7 @@ import { useEffect } from "react";
 import { useDeviceConfig, useKernel } from "../hooks/app.hooks";
 import EditorHeader from "./EditorHeader";
 import { editorConfig } from "@/config/editorConfig";
-import { handleEditorZoom } from "@/lib/editor/editor";
+import { disableIframeLinks, handleEditorZoom } from "@/lib/editor/editor";
 
 const Editor = () => {
   // MAJOR (DO NOT DELETE THIS) : initiating iframe and editor communication
@@ -65,110 +64,109 @@ const Editor = () => {
   }, []);
 
   return (
-    <ResizablePanelGroup
-      direction="horizontal"
-      className="!h-screen max-w-full"
-      // blocking browser zoom outside iframe section.
-    >
-      {/* Left panel */}
-      <ResizablePanel
-        // defaultSize={85}
-        className="flex flex-col justify-center items-center bg-[#EBEBEB] "
-      >
-        <EditorHeader />
-        <div
-          className=" relative h-full flex justify-center items-start overflow-hidden"
+    <div className="h-screen max-w-full">
+      <ResizablePanelGroup direction="horizontal">
+        {/* Left panel */}
+        <ResizablePanel className="flex flex-col justify-center items-center bg-[#EBEBEB]">
+          <EditorHeader />
+          <div
+            className=" relative h-full flex justify-center items-start overflow-hidden"
+            style={{
+              width: "100%",
+              margin: "0 auto",
+              transition: "all 0.3s ease-out",
+            }}
+          >
+            {/* zoom indicator */}
+            <div className="absolute top-2 right-4 z-10 px-4 py-2 min-h-[34px]  grid grid-cols-[50px,1fr] justify-center items-center gap-4 bg-background text-white text-sm font-normal leading-none border-none rounded-5">
+              <span>{(settings?.editorZoomLevel * 100).toFixed(0)}%</span>
+              <ButtonGroup className={"gap-2"}>
+                <Button
+                  onClick={() => handleEditorZoom("negative", settings)}
+                  size="icon"
+                  className={cn(
+                    "border-none outline-none !rounded-5 hover:bg-button-primary-hover hover:text-white",
+                    settings?.editorZoomLevel === editorConfig?.minZoom
+                      ? "!cursor-not-allowed"
+                      : "!cursor-pointer"
+                  )}
+                  disabled={settings?.editorZoomLevel === editorConfig?.minZoom}
+                >
+                  <HugeiconsIcon
+                    icon={Remove01Icon}
+                    stroke="currentColor"
+                    size={16}
+                    strokeWidth={2}
+                  />
+                </Button>
+                <Button
+                  onClick={() => handleEditorZoom("positive", settings)}
+                  size="icon"
+                  className={cn(
+                    "border-none outline-none !rounded-5 hover:bg-button-primary-hover hover:text-white",
+                    settings?.editorZoomLevel === editorConfig?.maxZoom
+                      ? "!cursor-not-allowed"
+                      : "!cursor-pointer"
+                  )}
+                  disabled={settings?.editorZoomLevel === editorConfig?.maxZoom}
+                >
+                  <HugeiconsIcon
+                    icon={PlusSignIcon}
+                    size={16}
+                    strokeWidth={2}
+                  />
+                </Button>
+                <Button
+                  onClick={() => resetEditorPreview()}
+                  className="min-h-9 min-w-[63px] border-none outline-none !rounded-5"
+                >
+                  Reset
+                </Button>
+              </ButtonGroup>
+            </div>
+            {/* live site iframe preview */}
+            <iframe
+              className="wcf--animation-builder-editor-iframe h-full border-0 bg-white"
+              id="wcf--animation-builder--animation--preview"
+              style={{
+                width: device?.key === "desktop" ? "100%" : device?.viewWidth,
+                transform: `translateX(${settings?.xPlacement || 0}px) scale(${
+                  settings?.editorZoomLevel
+                })`,
+                transition: "all 0.3s ease-out",
+                zIndex: 1,
+                borderRadius: "3px",
+                boxShadow: "rgba(149, 157, 165, 0.2) 0px 8px 24px",
+              }}
+              src={WCF_ANIMATION_BUILDER.iframe_url}
+            />
+          </div>
+        </ResizablePanel>
+        {/* Handle */}
+        <ResizableHandle
+          className={"!cursor-pointer"}
+          withHandle
+          onClick={() => toggleController()}
+        />
+
+        {/* Right panel */}
+        <ResizablePanel
+          defaultSize={0}
+          collapsible
+          collapsedSize={0}
+          className="rounded-l-[10px] border-white-dev"
           style={{
-            width: "100%",
-            margin: "0 auto",
-            transition: "all 0.3s ease-out",
+            flexBasis: settings?.isControllerOpen ? "440px" : "5px",
+            transition: "flex-basis 0.3s linear",
+            maxWidth: "440px",
+            overflow: "hidden",
+            cursor: "pointer !important",
           }}
         >
-          {/* zoom indicator */}
-          <div className="absolute top-2 right-4 z-10 px-4 py-2 min-h-[34px]  grid grid-cols-[50px,1fr] justify-center items-center gap-4 bg-background text-white text-sm font-normal leading-none border-none rounded-5">
-            <span>{(settings?.editorZoomLevel * 100).toFixed(0)}%</span>
-            <ButtonGroup className={"gap-2"}>
-              <Button
-                onClick={() => handleEditorZoom("negative", settings)}
-                size="icon"
-                className={cn(
-                  "border-none outline-none !rounded-5 hover:bg-button-primary-hover hover:text-white",
-                  settings?.editorZoomLevel === editorConfig?.minZoom
-                    ? "!cursor-not-allowed"
-                    : "!cursor-pointer"
-                )}
-                disabled={settings?.editorZoomLevel === editorConfig?.minZoom}
-              >
-                <HugeiconsIcon
-                  icon={Remove01Icon}
-                  stroke="currentColor"
-                  size={16}
-                  strokeWidth={2}
-                />
-              </Button>
-              <Button
-                onClick={() => handleEditorZoom("positive", settings)}
-                size="icon"
-                className={cn(
-                  "border-none outline-none !rounded-5 hover:bg-button-primary-hover hover:text-white",
-                  settings?.editorZoomLevel === editorConfig?.maxZoom
-                    ? "!cursor-not-allowed"
-                    : "!cursor-pointer"
-                )}
-                disabled={settings?.editorZoomLevel === editorConfig?.maxZoom}
-              >
-                <HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />
-              </Button>
-              <Button
-                onClick={() => resetEditorPreview()}
-                className="min-h-9 min-w-[63px] border-none outline-none !rounded-5"
-              >
-                Reset
-              </Button>
-            </ButtonGroup>
-          </div>
-          {/* live site iframe preview */}
-          <iframe
-            className="wcf--animation-builder-editor-iframe h-full border-0 bg-white"
-            id="wcf--animation-builder--animation--preview"
-            style={{
-              width: device?.key === "desktop" ? "100%" : device?.viewWidth,
-              transform: `translateX(${settings?.xPlacement || 0}px) scale(${
-                settings?.editorZoomLevel
-              })`,
-              transition: "all 0.3s ease-out",
-              zIndex: 1,
-              borderRadius: "3px",
-              boxShadow: "rgba(149, 157, 165, 0.2) 0px 8px 24px",
-            }}
-            src={WCF_ANIMATION_BUILDER.iframe_url}
-          />
-        </div>
-      </ResizablePanel>
-      {/* Handle */}
-      <ResizableHandle
-        className={"!cursor-pointer"}
-        withHandle
-        onClick={() => toggleController()}
-      />
-
-      {/* Right panel */}
-      <ResizablePanel
-        defaultSize={0} // disable default side for collapsible funcitonality
-        collapsible
-        collapsedSize={0}
-        className="rounded-l-[10px]"
-        style={{
-          flexBasis: settings?.isControllerOpen ? "440px" : "5px",
-          transition: "flex-basis 0.3s linear",
-          maxWidth: "440px",
-          overflow: "hidden",
-          cursor: "pointer !important",
-        }}
-      >
-        <Controller isLoading={isLoading} />
-      </ResizablePanel>
-    </ResizablePanelGroup>
+          <Controller isLoading={isLoading} />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
   );
 };
 
