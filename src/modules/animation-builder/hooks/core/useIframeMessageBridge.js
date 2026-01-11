@@ -34,7 +34,7 @@ export const useIframeMessageBridge = () => {
       if (e.origin !== window.location.origin) return;
       const data = e.data || {};
       const { type } = data;
-      console.log("Log: useIframeMessageBridge | type =>", type);
+
       if (!type) return;
       switch (type) {
         case "WCF-AB-TOAST-TRIGGER":
