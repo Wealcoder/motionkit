@@ -206,17 +206,6 @@ export function handleMediaQuery(mediaQuery = "", callback = () => {}) {
   }
 }
 
-export const debounceFn = (mainFunction, delay = 300) => {
-  let timer;
-
-  return function (...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      mainFunction(...args);
-    }, delay);
-  };
-};
-
 export const getScreenSize = (value) => {
   let result = WCF_ANIMATION_BUILDER?.device_config.find(
     (el) => el.key === value
