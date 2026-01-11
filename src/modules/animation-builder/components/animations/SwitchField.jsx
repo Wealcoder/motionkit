@@ -1,16 +1,7 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Delete01Icon,
-  InformationCircleIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import ToolTipWrapper from "../common/ToolTipWrapper";
+import DeleteBtn from "./shared/DeleteBtn";
 
 const SwitchField = ({
   label = "Label",
@@ -34,19 +25,7 @@ const SwitchField = ({
         {/* left label + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <h2 className="text-[#FAFAFA] text-[15px]">{label}</h2>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button>
-                <HugeiconsIcon
-                  icon={InformationCircleIcon}
-                  className="w-2.5 h-2.5"
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{tooltipContent}</p>
-            </TooltipContent>
-          </Tooltip>
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* right toggle button*/}
@@ -61,15 +40,7 @@ const SwitchField = ({
           </div>
 
           {/* delete icon */}
-          {isCustomAnim && (
-            <Button>
-              <HugeiconsIcon
-                icon={Delete01Icon}
-                onClick={onDelete}
-                className="text-[#A1A1AA]"
-              />
-            </Button>
-          )}
+          <div>{isCustomAnim && <DeleteBtn onDelete={onDelete} />}</div>
         </div>
       </div>
       {/* required message */}

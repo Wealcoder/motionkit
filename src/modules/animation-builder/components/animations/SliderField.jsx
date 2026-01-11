@@ -1,14 +1,9 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import {
-  Delete01Icon,
-  InformationCircleIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { debounceFn } from "../lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import ToolTipWrapper from "../common/ToolTipWrapper";
+import DeleteBtn from "./shared/DeleteBtn";
 
 const SliderField = ({
   label = "Scale",
@@ -20,10 +15,9 @@ const SliderField = ({
     step: 1,
   },
   isRequired = false,
-  isValid = () => {},
   onUpdateValue = () => {},
   onDisabledUpdate = () => {},
-  onDelete,
+  onDelete = () => {},
   isCustomAnim = true,
 }) => {
   const [inputValue, setInputValue] = useState(value ?? 0);
@@ -54,19 +48,7 @@ const SliderField = ({
         {/* left label + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <h2 className="text-white text-sm">{label}</h2>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button>
-                <HugeiconsIcon
-                  icon={InformationCircleIcon}
-                  className="w-2.5 h-2.5"
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{tooltipContent}</p>
-            </TooltipContent>
-          </Tooltip>
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* middle slider */}
@@ -97,15 +79,7 @@ const SliderField = ({
               handleInput(value);
             }}
           />
-          {isCustomAnim && (
-            <Button>
-              <HugeiconsIcon
-                icon={Delete01Icon}
-                onClick={onDelete}
-                className="text-[#A1A1AA]"
-              />
-            </Button>
-          )}
+          <div>{isCustomAnim && <DeleteBtn onDelete={onDelete} />}</div>
         </div>
       </div>
       {/* required message */}

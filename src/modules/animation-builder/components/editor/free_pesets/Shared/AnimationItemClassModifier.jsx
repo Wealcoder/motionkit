@@ -1,5 +1,5 @@
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-const { Input } = require("@/components/ui/input");
+import { Input } from "@/components/ui/input";
 
 const TextInput = ({
   onChange = () => {},

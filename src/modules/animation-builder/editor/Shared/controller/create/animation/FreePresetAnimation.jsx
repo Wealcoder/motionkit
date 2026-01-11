@@ -12,6 +12,7 @@ import AllResponsiveControl from "../../../../../components/common/AllResponsive
 import SingleResponsiveControl from "../../../../../components/common/SingleResponsiveControl";
 import { useState } from "react";
 import RenderComponent from "../../../../../components/editor/RenderComponent";
+import TextField from "@/components/animations/TextField";
 
 const FreePresetAnimation = () => {
   const { contentStep, updateContentData } = useContentStep();
@@ -24,7 +25,16 @@ const FreePresetAnimation = () => {
     contentStep?.data?.preset || ""
   );
 
-  return <div className="border-2 border-solid border-red-500"></div>;
+  return (
+    <div className="border-2 border-solid border-red-500">
+      <TextField
+        label="title"
+        tooltipContent=""
+        value={contentStep?.data?.title}
+        onUpdateValue={(value) => updateContentData(value)}
+      />
+    </div>
+  );
 };
 
 export default FreePresetAnimation;

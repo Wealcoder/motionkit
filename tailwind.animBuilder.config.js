@@ -30,6 +30,7 @@ module.exports = {
           disable: "var(--background-disable)",
           sidebar: "var(--background-sidebar)",
           card: "var(--card-background)",
+          input: "var(--background-input)",
         },
         button: {
           primary: "var(--btn-primary)",
@@ -38,6 +39,14 @@ module.exports = {
           "action-hover": "var(--btn-bg-action-hover)",
           cancel: "var(--btn-bg-cancel)",
           "cancel-hover": "var(--btn-bg-cancel-hover)",
+        },
+        input: {
+          DEFAULT: "var(--background-input)",
+          hover: "var(--background-input-hover)",
+          focus: "var(--background-input-focus)",
+          placeholder: "var(--text-input)",
+          "text-hover": "var(--text-input-hover)",
+          "text-focus": "var(--text-input-focus)",
         },
       },
       borderRadius: {

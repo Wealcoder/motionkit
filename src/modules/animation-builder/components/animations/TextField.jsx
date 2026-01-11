@@ -1,16 +1,8 @@
 import React, { useState } from "react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  InformationCircleFreeIcons,
-  Delete01Icon,
-} from "@hugeicons/core-free-icons";
 import { debounceFn } from "@/utils/utils";
+import ToolTipWrapper from "../common/ToolTipWrapper";
+import DeleteBtn from "./shared/DeleteBtn";
 
 const TextField = ({
   label = "label",
@@ -22,11 +14,11 @@ const TextField = ({
   onDisabledUpdate = () => {},
   onUpdateValue = () => {},
 }) => {
-  const [value, setValue] = useState(value ?? "");
+  const [currentValue, setCurrentValue] = useState(value ?? "");
   const [isDataValid, setIsDataValid] = useState(false);
 
   const handleUpdate = debounceFn((newValue) => {
-    setValue(newValue);
+    setCurrentValue(newValue);
     onUpdateValue(newValue);
   }, 150);
 
@@ -36,19 +28,7 @@ const TextField = ({
         {/* left label + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <h2 className="text-white text-sm">{label}</h2>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button>
-                <HugeiconsIcon
-                  icon={InformationCircleFreeIcons}
-                  className="w-2.5 h-2.5"
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{tooltipContent}</p>
-            </TooltipContent>
-          </Tooltip>
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* right add + delete button */}
@@ -56,22 +36,14 @@ const TextField = ({
           <Input
             placeholder=".start_trigger"
             className="flex items-center justify-center w-62.75"
-            value={value}
+            value={currentValue}
             type="text"
             onChange={(e) => {
               const value = e.target.value;
               handleUpdate(value);
             }}
           />
-          {isCustomAnim && (
-            <Button size="icon">
-              <HugeiconsIcon
-                icon={Delete01Icon}
-                onClick={onDelete}
-                className="text-[#A1A1AA]"
-              />
-            </Button>
-          )}
+          <div>{isCustomAnim && <DeleteBtn onDelete={onDelete} />}</div>
         </div>
       </div>
       {/* required message */}

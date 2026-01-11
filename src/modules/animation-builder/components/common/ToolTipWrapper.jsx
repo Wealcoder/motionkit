@@ -5,17 +5,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { IconHelp } from "../../../../assets/icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { InformationCircleFreeIcons } from "@hugeicons/core-free-icons/index";
 
-const ToolTipWrapper = ({ text }) => {
+const ToolTipWrapper = ({ text = "" }) => {
   return (
     <TooltipProvider delayDuration={100}>
       <Tooltip delayDuration={100}>
         <TooltipTrigger asChild>
           <div className="cursor-pointer flex justify-center items-center">
-            <IconHelp
-              className={"fill-placeholder hover:fill-text-2"}
-              size="12"
+            <HugeiconsIcon
+              icon={InformationCircleFreeIcons}
+              size={16}
+              strokeWidth={2}
             />
           </div>
         </TooltipTrigger>

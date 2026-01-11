@@ -1,17 +1,8 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "./ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Delete01Icon,
-  InformationCircleIcon,
-} from "@hugeicons/core-free-icons";
 import { debounceFn } from "@/utils/utils";
+import ToolTipWrapper from "../common/ToolTipWrapper";
+import DeleteBtn from "./shared/DeleteBtn";
 
 const NumberField = ({
   label = "Label",
@@ -51,19 +42,7 @@ const NumberField = ({
         {/* left label + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <h2 className="text-white text-sm w-16.5 h-4.5">{label}</h2>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button>
-                <HugeiconsIcon
-                  icon={InformationCircleIcon}
-                  className="w-2.5 h-2.5"
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{tooltipContent}</p>
-            </TooltipContent>
-          </Tooltip>
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* right add + delete button */}
@@ -81,15 +60,7 @@ const NumberField = ({
               handleInput(value);
             }}
           />
-          {isCustomAnim && (
-            <Button size="icon">
-              <HugeiconsIcon
-                icon={Delete01Icon}
-                onClick={onDelete}
-                className="text-[#A1A1AA]"
-              />
-            </Button>
-          )}
+          <div>{isCustomAnim && <DeleteBtn onDelete={onDelete} />}</div>
         </div>
       </div>
 

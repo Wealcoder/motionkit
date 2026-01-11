@@ -1,17 +1,8 @@
 import React, { useState } from "react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Delete01Icon,
-  InformationCircleFreeIcons,
-} from "@hugeicons/core-free-icons";
 import { debounceFn } from "@/utils/utils";
+import ToolTipWrapper from "../common/ToolTipWrapper";
+import DeleteBtn from "./shared/DeleteBtn";
 
 const ClassSelectionField = ({
   label = "Target Class Name",
@@ -36,19 +27,7 @@ const ClassSelectionField = ({
         {/* label + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7] mb-2">
           <h2 className="text-white text-sm">{label}</h2>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button>
-                <HugeiconsIcon
-                  icon={InformationCircleFreeIcons}
-                  className="w-2.5 h-2.5"
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{tooltipContent}</p>
-            </TooltipContent>
-          </Tooltip>
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/*input field*/}
@@ -75,13 +54,7 @@ const ClassSelectionField = ({
           </div>
 
           {/* delete icon */}
-          <div>
-            {isCustomAnim && (
-              <Button size="icon" onClick={onDelete}>
-                <HugeiconsIcon icon={Delete01Icon} className="text-[#A1A1AA]" />
-              </Button>
-            )}
-          </div>
+          <div>{isCustomAnim && <DeleteBtn onDelete={onDelete} />}</div>
         </div>
       </div>
 

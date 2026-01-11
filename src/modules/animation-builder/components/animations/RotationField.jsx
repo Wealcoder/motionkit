@@ -1,23 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Wheeler from "./Wheeler";
-import {
-  Delete01Icon,
-  InformationCircleIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { debounceFn } from "@/utils/utils";
+import ToolTipWrapper from "../common/ToolTipWrapper";
+import DeleteBtn from "./shared/DeleteBtn";
 
 const RotationField = ({
   label = "Rotate",
@@ -55,17 +46,7 @@ const RotationField = ({
         {/* label */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <h2 className="text-white text-sm">{label}</h2>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button>
-                <HugeiconsIcon
-                  icon={InformationCircleIcon}
-                  className="w-2.5 h-2.5"
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>{tooltipContent}</TooltipContent>
-          </Tooltip>
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* controls */}
@@ -95,11 +76,7 @@ const RotationField = ({
             onChange={(e) => handleInput(e.target.value)}
           />
 
-          {isCustomAnim && (
-            <Button onClick={onDelete}>
-              <HugeiconsIcon icon={Delete01Icon} className="text-[#A1A1AA]" />
-            </Button>
-          )}
+          <div>{isCustomAnim && <DeleteBtn onDelete={onDelete} />}</div>
         </div>
       </div>
 

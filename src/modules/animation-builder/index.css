@@ -15,6 +15,7 @@
 
     /* Card bg */
     --card-background: #3f3f46;
+
     /* button */
     --btn-primary: #3f3f46;
     --btn-primary-hover: #3f3f467c;
@@ -22,6 +23,14 @@
     --btn-bg-action-hover: #48ac19;
     --btn-bg-cancel: #b34a32;
     --btn-bg-cancel-hover: #cb4527;
+
+    /* input */
+    --background-input: #3f3f46;
+    --background-input-hover: #52525b;
+    --background-input-focus: #52525b;
+    --text-input: #a1a1aa;
+    --text-input-hover: white;
+    --text-input-focus: white;
   }
 }
 
