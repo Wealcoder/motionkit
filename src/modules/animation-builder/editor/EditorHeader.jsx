@@ -10,19 +10,7 @@ import DraftAnimation from "./Shared/header/right/DraftAnimation";
 import SavedAnimation from "./Shared/header/right/SavedAnimation";
 import GlobalSettings from "./Shared/header/right/GlobalSettings";
 
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
-import { cn } from "@/lib/utils";
-import { useAnimationControl, useDeviceConfig } from "@/hooks/app.hooks";
+import { useAnimationControl } from "@/hooks/app.hooks";
 
 import { useEffect, useState } from "react";
 

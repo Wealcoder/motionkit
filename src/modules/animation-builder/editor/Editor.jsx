@@ -5,7 +5,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import Controller from "@/editor/Controller";
+import Controller from "@/editor/EditorController";
 import { useIframeMessageBridge } from "@/hooks/core/useIframeMessageBridge";
 import { cn, getScreenSize } from "@/lib/utils";
 import { PlusSignIcon, Remove01Icon } from "@hugeicons/core-free-icons/index";
@@ -14,7 +14,7 @@ import { useEffect } from "react";
 import { useDeviceConfig, useKernel } from "../hooks/app.hooks";
 import EditorHeader from "./EditorHeader";
 import { editorConfig } from "@/config/editorConfig";
-import { disableIframeLinks, handleEditorZoom } from "@/lib/editor/editor";
+import { disableIframeLinks } from "@/lib/editor/editor";
 
 const Editor = () => {
   // MAJOR (DO NOT DELETE THIS) : initiating iframe and editor communication
@@ -154,7 +154,7 @@ const Editor = () => {
           defaultSize={0}
           collapsible
           collapsedSize={0}
-          className="rounded-l-[10px] border-white-dev"
+          className="rounded-l-[10px]"
           style={{
             flexBasis: settings?.isControllerOpen ? "440px" : "5px",
             transition: "flex-basis 0.3s linear",

@@ -1,5 +1,5 @@
 import { useContentStep, useDeviceConfig } from "@/hooks/app.hooks";
-import { Input } from "../ui/input";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -8,10 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import AllResponsiveControl from "../common/AllResponsiveControl";
-import SingleResponsiveControl from "../common/SingleResponsiveControl";
+import AllResponsiveControl from "../../../../../components/common/AllResponsiveControl";
+import SingleResponsiveControl from "../../../../../components/common/SingleResponsiveControl";
 import { useState } from "react";
-import RenderComponent from "./RenderComponent";
+import RenderComponent from "../../../../../components/editor/RenderComponent";
 
 const FreePresetAnimation = () => {
   const { contentStep, updateContentData } = useContentStep();

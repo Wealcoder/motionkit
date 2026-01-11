@@ -1,8 +1,8 @@
-import { ScrollArea } from "../ui/scroll-area";
-import AllAnimationList from "./AllAnimationList";
-import CustomAnimation from "./CustomAnimation";
-import FreePresetAnimation from "./FreePresetAnimation";
-import PresetAnimation from "./PresetAnimation";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import AllAnimationList from "./browse/AllAnimationList";
+import FreePresetAnimation from "./create/animation/FreePresetAnimation";
+import PresetAnimation from "./create/animation/PresetAnimation";
+import CustomAnimation from "./create/animation/CustomAnimation";
 
 const RenderContent = (item) => {
   switch (item.step) {
@@ -29,7 +29,7 @@ const RenderContent = (item) => {
   }
 };
 
-const EditorBody = ({ contentStep }) => {
+const ControllerBody = ({ contentStep }) => {
   return (
     <div className="flex flex-col divide-y text-white">
       {RenderContent(contentStep)}
@@ -37,4 +37,4 @@ const EditorBody = ({ contentStep }) => {
   );
 };
 
-export default EditorBody;
+export default ControllerBody;

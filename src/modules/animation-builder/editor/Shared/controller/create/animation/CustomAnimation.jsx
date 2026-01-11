@@ -1,11 +1,11 @@
 import { useContentStep, useDeviceConfig } from "@/hooks/app.hooks";
-import { Input } from "../ui/input";
-import EditorAnimation from "./animation/EditorAnimation";
-import EditorScrollTrigger from "./scrollTrigger/EditorScrollTrigger";
-import EditorTimeline from "./timeline/EditorTimeline";
+import { Input } from "@/components/ui/input";
+import EditorAnimation from "../../../../../components/editor/animation/EditorAnimation";
+import EditorScrollTrigger from "../../../../../components/editor/scrollTrigger/EditorScrollTrigger";
+import EditorTimeline from "../../../../../components/editor/timeline/EditorTimeline";
 
-import AllResponsiveControl from "../common/AllResponsiveControl";
-import SingleResponsiveControl from "../common/SingleResponsiveControl";
+import AllResponsiveControl from "../../../../../components/common/AllResponsiveControl";
+import SingleResponsiveControl from "../../../../../components/common/SingleResponsiveControl";
 
 const CustomAnimation = () => {
   const { contentStep, updateContentData } = useContentStep();

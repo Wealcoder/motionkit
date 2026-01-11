@@ -21,7 +21,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import AnimationCard from "./AnimationCard";
+import AnimationCard from "../../../../components/editor/AnimationCard";
 
 const AllAnimationList = () => {
   const { allAnimation, updateAnimation, setAllAnimation } =

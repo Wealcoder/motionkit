@@ -1,20 +1,20 @@
-import { IconPlay } from "../../../../assets/icons";
-import { Button, buttonVariants } from "../ui/button";
-import {
-  useAnimationControl,
-  useContentStep,
-  usePageConfig,
-} from "@/hooks/app.hooks";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { useAnimationControl, usePageConfig } from "@/hooks/app.hooks";
 import { toast } from "sonner";
-import DeleteConfirmDialog from "../common/DeleteConfirmDialog";
+import DeleteConfirmDialog from "../../../components/common/DeleteConfirmDialog";
 import { cn } from "@/lib/utils";
 // import { RiResetRightLine } from "react-icons/ri";
 import { useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlayCircleIcon } from "@hugeicons/core-free-icons";
 
-const EditorFooter = () => {
-  const { contentStep, setContentStep } = useContentStep();
-  const { updateAnimation, allAnimation, setAllAnimation } =
-    useAnimationControl();
+const ControllerFooter = ({
+  contentStep = {},
+  allAnimation = [],
+  setContentStep = () => {},
+  updateAnimation = () => {},
+  setAllAnimation = () => {},
+}) => {
   const { pageConfig } = usePageConfig();
   const [activeReset, setActiveReset] = useState(false);
   const params = new URLSearchParams(window.location.search);
@@ -73,7 +73,7 @@ const EditorFooter = () => {
           </Button>
         ) : (
           <Button variant="play" size="play" onClick={() => showPreview()}>
-            <IconPlay /> Play
+            <HugeiconsIcon icon={PlayCircleIcon} /> Play
           </Button>
         )}
       </div>
@@ -137,4 +137,4 @@ const EditorFooter = () => {
   );
 };
 
-export default EditorFooter;
+export default ControllerFooter;
