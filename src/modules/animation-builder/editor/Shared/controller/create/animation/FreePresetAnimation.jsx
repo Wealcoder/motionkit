@@ -1,5 +1,4 @@
 import { useContentStep, useDeviceConfig } from "@/hooks/app.hooks";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -10,14 +9,18 @@ import {
 } from "@/components/ui/select";
 import AllResponsiveControl from "../../../../../components/common/AllResponsiveControl";
 import SingleResponsiveControl from "../../../../../components/common/SingleResponsiveControl";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import RenderComponent from "../../../../../components/editor/RenderComponent";
-import TextField from "@/components/animations/TextField";
+import { Input } from "@/components/ui/input";
 
 const FreePresetAnimation = () => {
   const { contentStep, updateContentData } = useContentStep();
   const { selectedDevice } = useDeviceConfig();
-  const animationPresets = AAEAnimBuilder?.freePresets || {};
+
+  // getting information about register presets and preset groups
+  const animationPresets = useMemo(() => AAEAnimBuilder?.freePresets || {}, []);
+
+  // storing preset and preset group information
   const [selectedPresetGroup, setSelectedPresetGroup] = useState(
     contentStep?.data?.presetGroup || ""
   );
@@ -25,130 +28,127 @@ const FreePresetAnimation = () => {
     contentStep?.data?.preset || ""
   );
 
+  // collecting free presets and preset groups
+  const allPresetGroup = useMemo(
+    () => animationPresets?.getAllFreePresetGroups?.() || [],
+    [animationPresets]
+  );
+  const presetList = useMemo(() => {
+    if (!selectedPresetGroup) return [];
+    return (
+      animationPresets?.getAllFreePresets(selectedPresetGroup?.toLowerCase()) ||
+      []
+    );
+  }, [animationPresets, selectedPresetGroup]);
+
+  // updating preset information
+  const handleUpdatePresetGroup = (value) => {
+    if (!value || !contentStep?.data?.type) return;
+    const currentPresetGroup = value?.toLowerCase();
+    updateContentData({
+      ...contentStep,
+      data: {
+        ...contentStep.data,
+        presetGroup: currentPresetGroup,
+        preset: "",
+      },
+    });
+    setSelectedPresetGroup(value);
+    setSelectedPreset(""); // reset on preset group changes
+  };
+
+  const handleUpdatePreset = (value) => {
+    if (!value || !contentStep?.data?.type) return;
+    updateContentData({
+      ...contentStep,
+      data: {
+        ...contentStep.data,
+        preset: value,
+      },
+    });
+    setSelectedPreset(value);
+  };
+
   return (
-    <div className="border-2 border-solid border-red-500">
-      <TextField
-        label="title"
-        tooltipContent=""
-        value={contentStep?.data?.title}
-        onUpdateValue={(value) => updateContentData(value)}
-      />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 bg-background px-3 py-[15px] rounded-5">
+        {/* title */}
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-normal leading-5 tracking-normal">
+            Title
+          </span>
+          <Input
+            value={contentStep?.data?.title}
+            onChange={(e) => updateContentData(e.target.value, "title")}
+            placeholder="Title Animation"
+            className="h-[34px] max-w-52 px-3 py-2 bg-background-input hover:bg-input-hover focus:bg-input-focus text-input-placeholder placeholder:text-input-placeholder hover:text-input-text-hover focus:text-input-text-focus text-sm font-medium leading-[18px] border-none outline-none ring-0 focus:ring-0 rounded-5 cursor-text"
+          />
+        </div>
+        {/* preset group */}
+        {contentStep?.data?.type && (
+          <div className="flex justify-between items-center ">
+            <span className="text-sm font-normal leading-5 tracking-normal">
+              Preset
+            </span>
+            <Select
+              value={selectedPresetGroup}
+              onValueChange={handleUpdatePresetGroup}
+            >
+              <SelectTrigger className="h-[34px] max-w-52 px-3 py-2 bg-background-input hover:bg-input-hover focus:bg-input-focus text-input-placeholder placeholder:text-input-placeholder hover:text-input-text-hover focus:text-input-text-focus text-sm font-medium leading-[18px] border-none outline-none rounded-5 cursor-pointer">
+                <SelectValue placeholder="Option" className="line-clamp-1" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {allPresetGroup?.map((preset, index) => (
+                    <SelectItem
+                      key={`${preset}-${index}`}
+                      value={preset}
+                      className="capitalize "
+                    >
+                      {preset}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {/* preset type */}
+        {selectedPresetGroup && (
+          <div className="flex justify-between items-center ">
+            <span className="text-sm font-normal leading-5 tracking-normal">
+              Type
+            </span>
+            <Select value={selectedPreset} onValueChange={handleUpdatePreset}>
+              <SelectTrigger className="h-[34px] max-w-52 px-3 py-2 bg-background-input hover:bg-input-hover focus:bg-input-focus text-input-placeholder placeholder:text-input-placeholder hover:text-input-text-hover focus:text-input-text-focus text-sm font-medium leading-[18px] border-none outline-none rounded-5 cursor-pointer">
+                <SelectValue placeholder="Option" className="line-clamp-1" />
+              </SelectTrigger>
+              <SelectContent className="min-w-[90px]">
+                <SelectGroup>
+                  {presetList?.map((preset) => (
+                    <SelectItem key={preset.presetKey} value={preset.presetKey}>
+                      {preset.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+      {/* rendering preset properties */}
+      {selectedPresetGroup && selectedPreset && (
+        <div className="flex flex-col gap-2 bg-background px-3 py-[15px] rounded-5">
+          <RenderComponent
+            selectedPresetGroup={contentStep?.data?.presetGroup ?? ""}
+            selectedPreset={contentStep?.data?.preset ?? ""}
+            contentStep={contentStep}
+            updateContentData={updateContentData}
+          />
+        </div>
+      )}
     </div>
   );
 };
 
 export default FreePresetAnimation;
-
-//  <div className="p-3 border-b border-border flex flex-col gap-3">
-//    {/* title */}
-//    <div className="flex justify-between items-center gap-2">
-//      <div className="w-[56px]">
-//        <h3 className="text-xs text-text-2">Title</h3>
-//      </div>
-//      <div className="flex-1">
-//        <Input
-//          value={contentStep?.data?.title ?? ""}
-//          onChange={(e) => updateContentData(e.target.value, "title")}
-//          placeholder="Title Animation"
-//          className="h-[28px]"
-//        />
-//      </div>
-//    </div>
-//    {/* Preset group and preset selection */}
-//    <div className="flex justify-between items-center gap-2">
-//      <div className="w-[56px]">
-//        <h3 className="text-xs text-text-2">Preset</h3>
-//      </div>
-//      <div className="flex-1">
-//        <Select
-//          value={selectedPresetGroup ?? ""}
-//          onValueChange={(value) => {
-//            updateContentData({
-//              ...contentStep,
-//              data: {
-//                ...contentStep.data,
-//                presetGroup: value,
-//              },
-//            });
-//            setSelectedPresetGroup(value);
-//          }}
-//        >
-//          <SelectTrigger className="min-w-[90px] capitalize">
-//            <SelectValue placeholder="Option" className="line-clamp-1" />
-//          </SelectTrigger>
-//          <SelectContent className="min-w-[90px]">
-//            <SelectGroup>
-//              {animationPresets.getAllFreePresetGroups().map((preset, i) => (
-//                <SelectItem
-//                  key={`${preset}-${i}`}
-//                  value={preset}
-//                  className="capitalize"
-//                >
-//                  {preset}
-//                </SelectItem>
-//              ))}
-//            </SelectGroup>
-//          </SelectContent>
-//        </Select>
-//      </div>
-//    </div>
-//    {selectedPresetGroup ? (
-//      <div className="flex justify-between items-center gap-2">
-//        <div className="w-[56px]">
-//          <h3 className="text-xs text-text-2">Type</h3>
-//        </div>
-//        <div className="flex-1">
-//          <Select
-//            value={selectedPreset}
-//            onValueChange={(value) => {
-//              updateContentData({
-//                ...contentStep,
-//                data: {
-//                  ...contentStep.data,
-//                  preset: value,
-//                },
-//              });
-//              setSelectedPreset(value);
-//            }}
-//          >
-//            <SelectTrigger className="min-w-[90px]">
-//              <SelectValue placeholder="Option" className="line-clamp-1" />
-//            </SelectTrigger>
-//            <SelectContent className="min-w-[90px]">
-//              <SelectGroup>
-//                {animationPresets
-//                  .getAllFreePresets(selectedPresetGroup)
-//                  .map((preset) => (
-//                    <SelectItem
-//                      key={preset.presetKey}
-//                      value={preset.presetKey}
-//                    >
-//                      {preset.name}
-//                    </SelectItem>
-//                  ))}
-//              </SelectGroup>
-//            </SelectContent>
-//          </Select>
-//        </div>
-//      </div>
-//    ) : (
-//      ""
-//    )}
-//  </div>;
-//  {
-//    /* Rendering preset configuration */
-//  }
-//  <div>
-//    <RenderComponent
-//      selectedPresetGroup={selectedPresetGroup}
-//      selectedPreset={selectedPreset}
-//      contentStep={contentStep}
-//      updateContentData={updateContentData}
-//    />
-
-//    {selectedDevice === "desktop" ? (
-//      <AllResponsiveControl id={contentStep?.data?.id} />
-//    ) : (
-//      <SingleResponsiveControl id={contentStep?.data?.id} />
-//    )}
-//  </div>;

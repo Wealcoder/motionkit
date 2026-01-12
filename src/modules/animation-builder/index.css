@@ -31,6 +31,10 @@
     --text-input: #a1a1aa;
     --text-input-hover: white;
     --text-input-focus: white;
+
+    /* popover */
+    --background-popover: #52525b;
+    --text-popover-foregorund: #fafafa;
   }
 }
 

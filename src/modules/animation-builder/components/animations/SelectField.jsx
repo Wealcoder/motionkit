@@ -13,6 +13,7 @@ const SelectField = ({
   label = "Method",
   tooltipContent = "Select Method",
   value = "",
+  config = {},
   fieldData = [],
   isRequired = false,
   isCustomAnim = true,
@@ -21,13 +22,17 @@ const SelectField = ({
   onUpdateValue = () => {},
 }) => {
   const [selectedValue, setSelectedValue] = useState(value ?? "");
-  // console.log(selectedValue);
   const [isDataValid, setIsDataValid] = useState(false);
 
   const handleSelect = (value) => {
     setSelectedValue(value);
     onUpdateValue(value);
   };
+
+  if (!fieldData?.length) {
+    console.error("Field data required!");
+    return;
+  }
 
   return (
     <div className="p-2">

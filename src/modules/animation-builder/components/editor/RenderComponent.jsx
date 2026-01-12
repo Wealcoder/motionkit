@@ -29,6 +29,15 @@ const RenderComponent = ({
     preset = animationPresets.getPreset(selectedPresetGroup, selectedPreset);
   }
 
+  console.log({
+    selectedPreset,
+    selectedPresetGroup,
+    contentStep,
+    updateContentData,
+    animationPresets,
+    preset,
+  });
+
   if (!preset) return null;
 
   const { component } = preset;

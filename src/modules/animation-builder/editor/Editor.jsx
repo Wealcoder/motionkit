@@ -60,7 +60,7 @@ const Editor = () => {
     // initialized editor. Do not delete this.
     disableIframeLinks();
     // controlling editor preview pane interaction
-    window.addEventListener("wheel", handleWheel, { passive: false });
+    // window.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
       window.removeEventListener("wheel", handleWheel);
     };
@@ -88,7 +88,7 @@ const Editor = () => {
                   onClick={() => handleEditorZoom("negative", settings)}
                   size="icon"
                   className={cn(
-                    "border-none outline-none !rounded-5 hover:bg-button-primary-hover hover:text-white",
+                    "border-none outline-none !rounded-5 hover:bg-button-primary-hover text-white ",
                     settings?.editorZoomLevel === editorConfig?.minZoom
                       ? "!cursor-not-allowed"
                       : "!cursor-pointer"
@@ -97,7 +97,6 @@ const Editor = () => {
                 >
                   <HugeiconsIcon
                     icon={Remove01Icon}
-                    stroke="currentColor"
                     size={16}
                     strokeWidth={2}
                   />
@@ -106,7 +105,7 @@ const Editor = () => {
                   onClick={() => handleEditorZoom("positive", settings)}
                   size="icon"
                   className={cn(
-                    "border-none outline-none !rounded-5 hover:bg-button-primary-hover hover:text-white",
+                    "border-none outline-none !rounded-5 hover:bg-button-primary-hover text-white",
                     settings?.editorZoomLevel === editorConfig?.maxZoom
                       ? "!cursor-not-allowed"
                       : "!cursor-pointer"
@@ -121,7 +120,7 @@ const Editor = () => {
                 </Button>
                 <Button
                   onClick={() => resetEditorPreview()}
-                  className="min-h-9 min-w-[63px] border-none outline-none !rounded-5"
+                  className="min-h-9 min-w-[63px] border-none outline-none text-white !rounded-5"
                 >
                   Reset
                 </Button>

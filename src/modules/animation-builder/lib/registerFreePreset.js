@@ -159,7 +159,9 @@ class RegisterFreePreset {
   }
 
   getAllFreePresetGroups() {
-    return Object.keys(this.#freePreset);
+    return Object.keys(this.#freePreset)?.map(
+      (name) => name?.charAt(0)?.toUpperCase() + name.slice(1).toLowerCase()
+    );
   }
 
   findGroupByPresetKey(presetKey) {

@@ -48,6 +48,10 @@ module.exports = {
           "text-hover": "var(--text-input-hover)",
           "text-focus": "var(--text-input-focus)",
         },
+        popover: {
+          DEFAULT: "var(--background-popover)",
+          foreground: "var(--text-popover-foregorund)",
+        },
       },
       borderRadius: {
         5: "0.3125rem",
