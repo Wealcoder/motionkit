@@ -11,7 +11,7 @@ import {
 import AllResponsiveControl from "../../../../../components/common/AllResponsiveControl";
 import SingleResponsiveControl from "../../../../../components/common/SingleResponsiveControl";
 import { useEffect, useState } from "react";
-import RenderComponent from "../../../../../components/editor/RenderComponent";
+import RenderComponent from "../../animation_handler/RenderComponent";
 
 const PresetAnimation = () => {
   const { contentStep, updateContentData } = useContentStep();

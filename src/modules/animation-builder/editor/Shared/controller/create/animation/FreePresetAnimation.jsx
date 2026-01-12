@@ -10,8 +10,9 @@ import {
 import AllResponsiveControl from "../../../../../components/common/AllResponsiveControl";
 import SingleResponsiveControl from "../../../../../components/common/SingleResponsiveControl";
 import { useMemo, useState } from "react";
-import RenderComponent from "../../../../../components/editor/RenderComponent";
+import RenderComponent from "../../animation_handler/RenderComponent";
 import { Input } from "@/components/ui/input";
+import AnimationPropsHanlder from "../../animation_handler/AnimationPropsHanlder";
 
 const FreePresetAnimation = () => {
   const { contentStep, updateContentData } = useContentStep();
@@ -138,12 +139,16 @@ const FreePresetAnimation = () => {
       </div>
       {/* rendering preset properties */}
       {selectedPresetGroup && selectedPreset && (
-        <div className="flex flex-col gap-2 bg-background px-3 py-[15px] rounded-5">
-          <RenderComponent
+        <div>
+          {/* <RenderComponent
             selectedPresetGroup={contentStep?.data?.presetGroup ?? ""}
             selectedPreset={contentStep?.data?.preset ?? ""}
             contentStep={contentStep}
             updateContentData={updateContentData}
+          /> */}
+          <AnimationPropsHanlder
+            selectedPresetGroup={contentStep?.data?.presetGroup ?? ""}
+            selectedPreset={contentStep?.data?.preset ?? ""}
           />
         </div>
       )}

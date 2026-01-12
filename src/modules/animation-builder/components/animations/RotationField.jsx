@@ -5,24 +5,27 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import Wheeler from "./Wheeler";
 import { debounceFn } from "@/utils/utils";
-import ToolTipWrapper from "../common/ToolTipWrapper";
-import DeleteBtn from "./shared/DeleteBtn";
+import ToolTipWrapper from "@/components/common/ToolTipWrapper";
+import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
 const RotationField = ({
-  label = "Rotate",
-  tooltipContent = "Adjust Rotate Value",
+  property = {
+    title: "Rotate",
+    tooltipContent: "Adjust Rotate Value",
+    isRequired: false,
+    isCustomAnim: true,
+    min: 0,
+    max: 360,
+    ...rest,
+  },
   value = 0,
-  config = { min: 0, max: 360 },
-  isRequired = false,
-  onUpdateValue = () => {},
-  isValid = () => {},
+  onDelete = () => {},
   onDisabledUpdate = () => {},
-  onDelete,
-  isCustomAnim = true,
+  onUpdateValue = () => {},
 }) => {
   const [inputValue, setInputValue] = useState(value ?? 0);
+  const [isDataValid, setIsDataValid] = useState(false);
 
   const clamp = (num, min, max) => Math.min(max, Math.max(min, num));
 
@@ -30,7 +33,7 @@ const RotationField = ({
     let currentValue = Number(rawValue);
     if (Number.isNaN(currentValue)) return;
 
-    currentValue = clamp(currentValue, config.min, config.max);
+    currentValue = clamp(currentValue, property?.min, property?.max);
     setInputValue(currentValue);
     onUpdateValue(currentValue);
   };
@@ -41,16 +44,20 @@ const RotationField = ({
   }, 150);
 
   return (
-    <div className="p-2">
+    <div>
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        {/* label */}
+        {/* title */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
-          <h2 className="text-white text-sm">{label}</h2>
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
+          <span className="text-white text-15 font-normal leading-5 tracking-normal">
+            {property?.title}
+          </span>
+          {property?.tooltipContent && (
+            <ToolTipWrapper text={property?.tooltipContent} />
+          )}
         </div>
 
         {/* controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex-1 flex justify-end items-center gap-3">
           <Popover>
             <PopoverTrigger asChild>
               <div className="relative flex items-center justify-center rounded-full bg-[#A1A1AA] shadow-sm w-5 h-5">
@@ -59,8 +66,8 @@ const RotationField = ({
             </PopoverTrigger>
             <PopoverContent>
               <Wheeler
-                min={config?.min}
-                max={config?.max}
+                min={property?.min}
+                max={property?.max}
                 value={inputValue}
                 onChange={handleInput}
               />
@@ -70,17 +77,19 @@ const RotationField = ({
           <Input
             type="number"
             value={inputValue}
-            min={config?.min}
-            max={config?.max}
+            min={property?.min}
+            max={property?.max}
             className="w-28"
             onChange={(e) => handleInput(e.target.value)}
           />
 
-          <div>{isCustomAnim && <DeleteBtn onDelete={onDelete} />}</div>
+          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 
-      {isRequired && <p className="text-white text-sm">Field is Required</p>}
+      {property?.isRequired && isDataValid && (
+        <p className="text-white text-sm">Field is Required</p>
+      )}
     </div>
   );
 };

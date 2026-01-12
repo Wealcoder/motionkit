@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
-import ToolTipWrapper from "../common/ToolTipWrapper";
-import DeleteBtn from "./shared/DeleteBtn";
+import ToolTipWrapper from "@/components/common/ToolTipWrapper";
+import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
 const SwitchField = ({
-  label = "Label",
-  tooltipContent = "Enable functionality",
+  property = {
+    title: "title",
+    tooltipContent: "Enable functionality",
+    isRequired: false,
+    isCustomAnim: true,
+    ...rest,
+  },
   value = false,
-  isRequired = false,
-  isCustomAnim = true,
   onUpdateValue = () => {},
   onDisabledUpdate = () => {},
   onDelete = () => {},
@@ -20,16 +23,20 @@ const SwitchField = ({
     onUpdateValue(checked);
   };
   return (
-    <div className="p-2">
+    <div>
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
-        {/* left label + tooltip */}
+        {/* left title + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
-          <h2 className="text-[#FAFAFA] text-[15px]">{label}</h2>
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
+          <span className="text-white text-15 font-normal leading-5 tracking-normal">
+            {property?.title}
+          </span>
+          {property?.tooltipContent && (
+            <ToolTipWrapper text={property?.tooltipContent} />
+          )}
         </div>
 
         {/* right toggle button*/}
-        <div className="flex items-center gap-3">
+        <div className="flex-1 flex justify-end items-center gap-3">
           <div className="flex items-center space-x-2">
             <Switch
               checked={toggleValue}
@@ -40,15 +47,13 @@ const SwitchField = ({
           </div>
 
           {/* delete icon */}
-          <div>{isCustomAnim && <DeleteBtn onDelete={onDelete} />}</div>
+          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </div>
       </div>
       {/* required message */}
-      <div>
-        <p className="text-white text-sm">
-          {isRequired && "Field is Required"}
-        </p>
-      </div>
+      {property?.isRequired && isDataValid && (
+        <p className="text-white text-sm">Field is Required</p>
+      )}
     </div>
   );
 };

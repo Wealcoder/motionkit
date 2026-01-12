@@ -1,20 +1,23 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import ToolTipWrapper from "../common/ToolTipWrapper";
-import DeleteBtn from "./shared/DeleteBtn";
+import ToolTipWrapper from "@/components/common/ToolTipWrapper";
+import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
-export default function ColorPickerField({
-  label = "Background",
-  tooltipContent = "Select your color.",
+const ColorPickerField = ({
+  property = {
+    title: "Background",
+    tooltipContent: "Select your color.",
+    isRequired: false,
+    isCustomAnim: true,
+    ...rest,
+  },
   value = "#000000",
-  config = { defaultValue: "#000000" },
-  isRequired = false,
-  isValid = () => {},
-  onDelete,
-  isCustomAnim = true,
-}) {
-  const [color, setColor] = useState(value || config.defaultValue || "#FFFFFF");
+  onDelete = () => {},
+  onDisabledUpdate = () => {},
+  onUpdateValue = () => {},
+}) => {
+  const [color, setColor] = useState(value || "#FFFFFF");
   const [isValidColorCode, setIsValidColorCode] = useState("");
   const colorInputRef = useRef(null);
 
@@ -31,10 +34,14 @@ export default function ColorPickerField({
   return (
     <div className="p-2">
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
-        {/* left label + tooltip */}
+        {/* left title + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
-          <h2 className="text-white text-sm">{label}</h2>
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
+          <span className="text-white text-15 font-normal leading-5 tracking-normal">
+            {property?.title}
+          </span>
+          {property?.tooltipContent && (
+            <ToolTipWrapper text={property?.tooltipContent} />
+          )}
         </div>
 
         {/* right input + delete button */}
@@ -73,16 +80,18 @@ export default function ColorPickerField({
               className="w-28 uppercase"
             />
           </div>
-          <div>{isCustomAnim && <DeleteBtn onDelete={onDelete} />}</div>
+          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </div>
       </div>
       {/* required message */}
       <div>
         <p className="text-white text-sm">
-          {isRequired && "Field is Required"}
+          {property?.isRequired && "Field is Required"}
         </p>
         <p>{isValidColorCode}</p>
       </div>
     </div>
   );
-}
+};
+
+export default ColorPickerField;

@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { debounceFn } from "@/utils/utils";
-import ToolTipWrapper from "../common/ToolTipWrapper";
-import DeleteBtn from "./shared/DeleteBtn";
+import ToolTipWrapper from "@/components/common/ToolTipWrapper";
+import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
 const ClassSelectionField = ({
-  label = "Target Class Name",
-  tooltipContent = "Enter target class name.",
+  property = {
+    title: "Target Class Name",
+    tooltipContent: "Enter target class name.",
+    isRequired: false,
+    isCustomAnim: true,
+    ...rest,
+  },
   value = "",
-  isRequired = false,
-  isCustomAnim = true,
   onDelete = () => {},
   onDisabledUpdate = () => {},
   onUpdateValue = () => {},
@@ -24,10 +27,14 @@ const ClassSelectionField = ({
   return (
     <div className="p-2">
       <div>
-        {/* label + tooltip */}
+        {/* title + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7] mb-2">
-          <h2 className="text-white text-sm">{label}</h2>
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
+          <span className="text-white text-15 font-normal leading-5 tracking-normal">
+            {property?.title}
+          </span>
+          {property?.tooltipContent && (
+            <ToolTipWrapper text={property?.tooltipContent} />
+          )}
         </div>
 
         {/*input field*/}
@@ -54,14 +61,14 @@ const ClassSelectionField = ({
           </div>
 
           {/* delete icon */}
-          <div>{isCustomAnim && <DeleteBtn onDelete={onDelete} />}</div>
+          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 
       {/* required message */}
       <div>
         <p className="text-white text-sm">
-          {isRequired && "Field is Required"}
+          {property?.isRequired && "Field is Required"}
         </p>
       </div>
     </div>

@@ -1,0 +1,29 @@
+export const triggerTypes = [
+  { title: "On Scroll", value: "on_scroll" },
+  { title: "On Page Load", value: "page_load" },
+  { title: "Play With Scroll", value: "play_with_scroll" },
+  { title: "Hover", value: "hover" },
+  { title: "Click", value: "click" },
+];
+
+export const easeTypes = [
+  { title: "Power 2 out", value: "power2.out" },
+  { title: "Power 2 in", value: "power2.in" },
+  { title: "Power 2 in out", value: "power2.inOut" },
+  { title: "Power 3 out", value: "power3.out" },
+  { title: "Power 3 in", value: "power3.in" },
+  { title: "Power 3 in out", value: "power3.inOut" },
+  { title: "Power 4 out", value: "power4.out" },
+  { title: "Power 4 in", value: "power4.in" },
+  { title: "Power 4 in out", value: "power4.inOut" },
+  { title: "Back", value: "back" },
+  { title: "Bounce", value: "bounce" },
+  { title: "Circ", value: "circ" },
+  { title: "Elastic", value: "elastic" },
+  { title: "Expo", value: "expo" },
+  { title: "Sine", value: "sine" },
+  { title: "Steps", value: "steps" },
+  { title: "Rough", value: "rough" },
+  { title: "Slow", value: "slow" },
+  { title: "None", value: "none" },
+];
