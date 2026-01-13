@@ -52,6 +52,10 @@ module.exports = {
           DEFAULT: "var(--background-popover)",
           foreground: "var(--text-popover-foregorund)",
         },
+        slider: {
+          DEFAULT: "var(--bg-slider-track)",
+          thumb: "var(--bg-slider-thumb)",
+        },
       },
       borderRadius: {
         5: "0.3125rem",

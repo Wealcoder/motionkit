@@ -35,6 +35,10 @@
     /* popover */
     --background-popover: #52525b;
     --text-popover-foregorund: #fafafa;
+
+    /* slider */
+    --bg-slider-track: #3f3f46;
+    --bg-slider-thumb: #64964c;
   }
 }
 

@@ -21,7 +21,6 @@ const SliderField = ({
   onDelete = () => {},
 }) => {
   const [inputValue, setInputValue] = useState(value ?? 0);
-  console.log(inputValue);
   const [isDataValid, setIsDataValid] = useState(false);
 
   // input handler
@@ -48,13 +47,15 @@ const SliderField = ({
         {/* left title + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {title}
+            {property?.title}
           </span>
-          {property?.tooltipContent && <ToolTipWrapper text={tooltipContent} />}
+          {property?.tooltipContent && (
+            <ToolTipWrapper text={property?.tooltipContent} />
+          )}
         </div>
 
-        {/* middle slider */}
-        <div className="flex-1">
+        {/* right add + delete button */}
+        <div className="flex-1 flex justify-end items-center gap-3">
           <Slider
             value={[inputValue]}
             min={property?.min === 0 ? Infinity : property?.min}
@@ -64,10 +65,6 @@ const SliderField = ({
             onValueChange={(v) => setInputValue(v[0])}
             className="flex-1"
           />
-        </div>
-
-        {/* right add + delete button */}
-        <div className="flex-1 flex justify-end items-center gap-3">
           <Input
             placeholder="Add Value"
             className="flex items-center justify-center w-28"
