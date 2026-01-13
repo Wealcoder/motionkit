@@ -5,6 +5,7 @@ import AnimationStructure from "@/components/common/AnimationStructure";
 import EditorContextMenu from "./context_menu/EditorContextMenu";
 import "./index.css";
 import {
+  clearAllHighlights,
   handleMouseOver,
   hidePopup,
   showPopup,
@@ -18,6 +19,8 @@ import { eventToKeyCombination } from "./lib/events/keyboardEventUtils";
 import { menuItems } from "./register/context_menu/context_menu_register";
 import { copyToClipboard } from "./utils/copyToClipboard";
 import { helpToastEvent } from "./lib/events/toasterEvent";
+
+// todo: organized this js.  and classSelectorHelper. create single event and handle function accordingly
 
 const storeState = {
   hoverEnabled: false,
@@ -98,10 +101,14 @@ function enableHover() {
     storeState.hoverEnabled = true;
   }
 }
+enableHover();
 
 function disableHover() {
   if (storeState.hoverEnabled) {
-    document.body.removeEventListener("mouseover", handleMouseOver);
+    document.body.removeEventListener("wheel", (e) => {
+      e.stopPropagation();
+      clearAllHighlights(e.target.ownerDocument, e.target);
+    });
     storeState.hoverEnabled = false;
   }
 }
@@ -264,7 +271,6 @@ function runPopup() {
   });
 }
 
-enableHover();
 runPopup();
 receivePageConfig();
 

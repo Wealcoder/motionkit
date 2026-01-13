@@ -1,8 +1,6 @@
-const assetUrl = `${window.location.origin}/wp-content/plugins/gsap-animation-builder-for-wordpress/public`;
-
 export const AssetImage = {
-  logo: `${assetUrl}/images/Logo.png`,
-  classAnimationLogo: `${assetUrl}/images/ClassicAnim.png`,
-  customAnimationLogo: `${assetUrl}/images/CustomAnim.png`,
-  presetAnimationLogo: `${assetUrl}/images/PresetAnim.png`,
+  logo: `${WCF_ANIMATION_BUILDER?.base_path}/assets/images/Logo.png`,
+  classAnimationLogo: `${WCF_ANIMATION_BUILDER?.base_path}/assets/images/ClassicAnim.png`,
+  customAnimationLogo: `${WCF_ANIMATION_BUILDER?.base_path}/assets/images/CustomAnim.png`,
+  presetAnimationLogo: `${WCF_ANIMATION_BUILDER?.base_path}/assets/images/PresetAnim.png`,
 };

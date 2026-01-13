@@ -72,6 +72,9 @@ export function extractLastSelector(selector) {
 }
 
 export function showPopup(element = null, x = 0, y = 0) {
+  // TODO: popup should open from selector code button.
+  return;
+
   if (!element) return;
 
   const iframeDoc = element.ownerDocument;
@@ -162,28 +165,92 @@ export function hidePopup() {
   }, 150);
 }
 
+// overlay element. (creating overlay anchor to avoid layout breaking of iframe)
+function getOverlayRoot(currentTarget) {
+  const doc = currentTarget?.ownerDocument;
+  if (!doc) return null;
+  const body = doc.body;
+  if (!body) return null;
+  let root = doc.getElementById("wcf-animb-overlay-root");
+  if (!root) {
+    root = doc.createElement("div");
+    root.id = "wcf-animb-overlay-root";
+    root.style.position = "fixed";
+    root.style.inset = "0";
+    root.style.pointerEvents = "none";
+    root.style.zIndex = "999999";
+    body.appendChild(root);
+  }
+  return root;
+}
+
+export function clearAllHighlights(iframeDocument, exceptEl) {
+  const highlighted = iframeDocument.querySelectorAll(
+    ".wcf-animb--hover-highlight"
+  );
+  highlighted.forEach((el) => {
+    if (el !== exceptEl) {
+      el.classList.remove("wcf-animb--hover-highlight");
+    }
+  });
+}
+
 export function handleMouseOver(event) {
   const target = event.target;
-
-  if (target.classList.contains("wcfanimb-skip-selector")) {
+  event.stopPropagation();
+  const overlayRoot = getOverlayRoot(target);
+  if (!overlayRoot) return;
+  if (
+    target.classList.contains("wcfanimb-skip-selector") ||
+    target.closest(".wcfanimb-skip-selector-full") ||
+    target.closest("[data-wcf-anim-id]") ||
+    target.closest(".wcf-animb-wrapper")
+  ) {
     return;
   }
 
-  if (target.closest(".wcfanimb-skip-selector-full")) {
-    return;
-  }
+  // clearing all highlighted class
+  clearAllHighlights(target.ownerDocument, target);
 
-  // prevent child element selection if parent has wcf-anim-id attribute for paste animation from context menu
-  if (target.closest("[data-wcf-anim-id]")) {
-    return;
-  }
+  // extracting target information
+  const hasAnimation = target.closest("[data-wcf-anim-id]") ?? false;
+  const targetTag = `&lt;${target.tagName.toLowerCase()}&gt;`;
 
+  // getting target element position
+  const rect = target.getBoundingClientRect();
+  // injecting target inside overlay.
+
+  // todo: fix animation name, animation name div and selector action btn not stay with the element.
+  // todo: apply button functionality and animation detection on the component.
+
+  overlayRoot.innerHTML = `
+    <div class="wcf-animb-overlay" style="
+      position: absolute;
+      top: ${rect.top}px;
+      left: ${rect.left}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+      min-width:250px;
+      background: #7da76926;
+      outline: 2px solid #a6c398;
+    ">
+      <div class="wcf-animb-label">
+        ${hasAnimation ? "Animation Name" : `${targetTag}`}
+      </div>
+      <div class="wcf-animb-actions">
+        <button class="wcf-animb-color-btn">
+          <img style="hight:40px;width:40px" src="${`${wcf_anim_preview_object?.base_path}/assets/images/Logo.png`}" alt="Animation Builder"/>
+        </button>
+        <button class="wcf-animb-code-btn">
+          <svg width="30" height="30" viewBox="0 0 30 30" fill="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <path d="M18.3337 21.6663C19.8738 21.6663 21.1225 20.8135 21.1225 19.7615C21.1225 17.7272 21.1452 16.889 22.9253 15.6732C23.4698 15.3012 23.4698 14.6982 22.9253 14.3262C21.1452 13.1103 21.1225 12.2722 21.1225 10.2378C21.1225 9.18579 19.8738 8.33301 18.3337 8.33301M11.667 21.6663C10.1268 21.6663 8.87821 20.8135 8.87821 19.7615C8.87821 17.7272 8.85552 16.889 7.07541 15.6732C6.53086 15.3012 6.53086 14.6982 7.07539 14.3262C8.85552 13.1103 8.87821 12.2722 8.87821 10.2378C8.87821 9.18579 10.1268 8.33301 11.667 8.33301"
+              stroke="#27272A" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `;
   target.classList.add("wcf-animb--hover-highlight");
-  target.addEventListener(
-    "mouseleave",
-    () => {
-      target.classList.remove("wcf-animb--hover-highlight");
-    },
-    { once: true }
-  );
 }

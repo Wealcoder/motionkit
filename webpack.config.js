@@ -27,7 +27,7 @@ module.exports = {
 
       // assets entries
       "assets/AssetImage": "./src/assets/AssetImage.js",
-      "assets/AssetImage": "./src/assets/icons.jsx",
+      // "assets/AssetImage": "./src/assets/icons.jsx",
 
       // manual entries
 
