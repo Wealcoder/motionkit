@@ -1,9 +1,9 @@
 import { getClosestAnimId } from "@/lib/editor/classSelectorHelper";
-import { generateUniqueId } from "../../../../utils/generateUniqueId";
+import { generateUniqueId } from "../../../../../utils/generateUniqueId";
 import { ABCustomPresetData } from "@/config/animationPresetData";
 import { handleCloseMenuEvent } from "./contextMenuEventTrigger";
 import { copyToClipboard } from "@/utils/copyToClipboard";
-import { helpToastEvent } from "../events/toasterEvent";
+import { handleToastEventFromIframe } from "@/lib/editor/core/iframe_events/toasterEvent";
 
 // ##################### Context Menu Helper Functions #####################
 // get animation id
@@ -22,7 +22,7 @@ export const handleGetAnimId = (element) => {
 export const handleCopyText = async (textToCopy) => {
   try {
     await copyToClipboard(textToCopy);
-    helpToastEvent({
+    handleToastEventFromIframe({
       type: "success",
       message: `Successfully copied element class`,
     });

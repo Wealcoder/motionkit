@@ -1,10 +1,41 @@
-/* new */
-
-/* Popup styles */
-/* TODO: Check animaiton property for smooth menu open and close. */
-.wcfanimb-popup {
+#wcf-ab-iframe-overlay-root {
   position: fixed;
-  display: none;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  pointer-events: none !important;
+}
+
+#wcf-ab-iframe-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  pointer-events: none !important;
+}
+
+/* new modal design */
+.wcf-ab-modal-overlay {
+  position: fixed;
+  z-index: 999999;
+  inset: 0;
+  background: rgb(39, 39, 42, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
+  animation: wcf-modal-overlay 1500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes wcf-modal-overlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.wcf-ab-iframe-modal-wrapper {
   width: 494px;
   min-height: 375px;
   padding: 15px;
@@ -18,22 +49,30 @@
   /* animation base */
   opacity: 0;
   transform: scale(0.95) translateY(6px);
-  transform-origin: top left;
-  animation: selectorKeyFrames 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform-origin: center;
+  animation: wcf-dialog-in 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes selectorKeyFrames {
-  0% {
-    opacity: 0.7;
-    transform: scale(0.95) translateX(0px) translateY(0px);
+@keyframes wcf-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(6px);
   }
-  50% {
-    opacity: 0.85;
-    transform: scale(1.02) translateX(5px) translateY(5px);
-  }
-  100% {
+  to {
     opacity: 1;
-    transform: scale(1) translateX(0px) translateY(0px);
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* todo: apply on exits */
+@keyframes wcf-dialog-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(6px);
   }
 }
 
@@ -42,18 +81,45 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
+  gap: 30px;
+}
+
+.wcf-ab-modal-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .wcf-ab-selector-action-general {
-  cursor: pointer;
-}
-
-.wcf-ab-selector-action-general {
+  cursor: pointer !important;
+  height: 20px;
+  width: 20px;
+  padding: 0px;
+  background: #3f3f46;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  border: 0px;
+  outline: 0px;
   transition: all 100ms ease-out;
 }
 
+.wcf-ab-selector-action-general > svg {
+  pointer-events: none;
+}
+
+.wcf-ab-selector-action-general:hover {
+  background: #3f3f46;
+}
+
+.wcf-ab-selector-action-general:focus {
+  background: #3f3f46;
+}
+
 .wcf-ab-selector-action-general:active {
+  background: #3f3f46;
   transform: scaleX(0.95) scaleY(0.9) translateY(1px);
   opacity: 0.9;
 }
@@ -140,17 +206,31 @@
   letter-spacing: 0%;
 }
 
-/* Highlight hovered element */
-/* wrapper */
-.wcf-animb-wrapper {
-  position: relative;
+.wcf-animb-overlay::before {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: -5px;
+  height: 10px;
+  width: 10px;
+  background: #a6c398;
+}
+
+.wcf-animb-overlay::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  height: 10px;
+  width: 10px;
+  background: #a6c398;
 }
 
 /* wrapper title */
 .wcf-animb-label {
   position: absolute;
   top: -36px;
-  left: 0px;
+  left: 5px;
   height: 36px;
   width: auto;
   padding: 8px;
@@ -162,11 +242,21 @@
   letter-spacing: 0%;
 }
 
+.wcf-animb-label::before {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: -10px;
+  height: 10px;
+  width: 10px;
+  background: #a6c398;
+}
+
 /* wrapper actions buttons wrapper */
 .wcf-animb-actions {
   position: absolute;
   top: -36px;
-  right: 0px;
+  right: 5px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -174,23 +264,58 @@
 
 .wcf-animb-color-btn,
 .wcf-animb-code-btn {
+  position: relative;
   height: 36px;
   width: 36px;
-  padding: 10px;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
   border: none;
+  border-radius: 0px;
   outline: none;
   box-shadow: none;
+  pointer-events: auto;
+}
+
+.wcf-animb-actions::after {
+  content: "";
+  position: absolute;
+  bottom: -12px;
+  height: 50px;
+  width: 36px;
+  background: transparent;
+  border: none;
+  outline: none;
 }
 
 .wcf-animb-color-btn {
   background: #a6c39833;
+  padding: 10px;
+}
+
+.wcf-animb-color-btn:hover {
+  background-color: #c3d6ba;
 }
 
 .wcf-animb-code-btn {
+  background: #a6c398;
+  color: #27272a;
+  padding: 5px;
+}
+
+.wcf-animb-code-btn:hover {
+  color: white;
+  background: #a6c398;
+}
+
+.wcf-animb-code-btn::before {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  right: -10px;
+  height: 10px;
+  width: 10px;
   background: #a6c398;
 }
 
@@ -204,7 +329,6 @@
   position: absolute;
   z-index: 1;
   inset: 0;
-
   pointer-events: none;
 }
 

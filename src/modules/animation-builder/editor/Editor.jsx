@@ -6,7 +6,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import Controller from "@/editor/EditorController";
-import { useIframeMessageBridge } from "@/hooks/core/useIframeMessageBridge";
+import { useIframeMessageBridge } from "@/lib/editor/core/dispatch_events/useIframeMessageBridge";
 import { cn, getScreenSize } from "@/lib/utils";
 import { PlusSignIcon, Remove01Icon } from "@hugeicons/core-free-icons/index";
 import { HugeiconsIcon } from "@hugeicons/react";

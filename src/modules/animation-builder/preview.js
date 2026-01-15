@@ -1,34 +1,20 @@
-/**
- * This file is used for editor preview only.
- */
 import AnimationStructure from "@/components/common/AnimationStructure";
-import EditorContextMenu from "./context_menu/EditorContextMenu";
+import EditorContextMenu from "@/editor/Shared/context_menu/EditorContextMenu";
 import "./index.css";
 import {
-  clearAllHighlights,
   handleMouseOver,
-  hidePopup,
-  showPopup,
-} from "./lib/editor/classSelectorHelper";
-import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelper";
-import { handleMediaQuery } from "./lib/utils";
-import { copySelectorMap } from "./config/editorConfig";
-import ContextMenuHandler from "./context_menu/contextmenu";
-import { handleCloseMenuEvent } from "./lib/contextMenu/contextMenuEventTrigger";
-import { eventToKeyCombination } from "./lib/events/keyboardEventUtils";
-import { menuItems } from "./register/context_menu/context_menu_register";
-import { copyToClipboard } from "./utils/copyToClipboard";
-import { helpToastEvent } from "./lib/events/toasterEvent";
-
-// todo: organized this js.  and classSelectorHelper. create single event and handle function accordingly
-
-const storeState = {
-  hoverEnabled: false,
-  maxZoom: 1.5,
-  minZoom: 0.7,
-  zoom: 1,
-  xplacement: 0,
-};
+  initOverlayRoot,
+} from "@/lib/editor/classSelectorHelper";
+import FreeAnimationEventHelperClass from "@/lib/FreeAnimation/previewEventHelper";
+import { handleMediaQuery } from "@/lib/utils";
+import ContextMenuHandler from "@/lib/registerContextMenu";
+import { handleIframeKeyboardEvent } from "@/lib/editor/core/iframe_events/keyboardEvents";
+import { handleIframeZoom } from "@/lib/editor/core/iframe_events/zoomEvent";
+import {
+  dispathContextMenu,
+  registerContextMenu,
+} from "@/lib/editor/contextMenu/contextMenu";
+import { handleClickEvent } from "@/lib/editor/core/iframe_events/clickEvents";
 
 let storeAnimation = {};
 
@@ -37,81 +23,6 @@ window.AAEAnimPreviewBuilder = {};
 AAEAnimPreviewBuilder.contextMenu = new ContextMenuHandler();
 window.WCFFreeAnimBuilder = null;
 WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
-
-// zoom and x axis placement event handler
-window.addEventListener(
-  "wheel",
-  (e) => {
-    // closing selector when scroll.
-    disableHover();
-    hidePopup();
-    if (e.shiftKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      storeState.xplacement += e.deltaY < 0 ? 10 : -10;
-      window.parent.postMessage(
-        {
-          type: "WCF_AB_WHEEL_EVENT_X_PLACEMENT",
-          value: storeState.xplacement,
-        },
-        "*"
-      );
-    } else if (e.ctrlKey) {
-      e.preventDefault();
-      storeState.zoom += e.deltaY < 0 ? 0.1 : -0.1;
-      storeState.zoom = Math.min(
-        storeState.maxZoom,
-        Math.max(storeState.minZoom, Number(storeState.zoom.toFixed(2)))
-      );
-      window.parent.postMessage(
-        {
-          type: "WCF_AB_WHEEL_EVENT",
-          value: storeState.zoom,
-        },
-        "*"
-      );
-    }
-  },
-  { passive: false }
-);
-
-// keyboard event handler
-window.addEventListener("keydown", (e) => {
-  const pressetKeys = eventToKeyCombination(e);
-  window.parent.postMessage(
-    {
-      type: "WCF_AB_KEYDOWN_EVENT",
-      value: pressetKeys,
-    },
-    "*"
-  );
-});
-
-// context menus handler
-function handleAddContextMenus() {
-  menuItems?.forEach((menu) =>
-    AAEAnimPreviewBuilder.contextMenu.register(menu)
-  );
-}
-handleAddContextMenus();
-
-function enableHover() {
-  if (!storeState.hoverEnabled) {
-    document.body.addEventListener("mouseover", handleMouseOver);
-    storeState.hoverEnabled = true;
-  }
-}
-enableHover();
-
-function disableHover() {
-  if (storeState.hoverEnabled) {
-    document.body.removeEventListener("wheel", (e) => {
-      e.stopPropagation();
-      clearAllHighlights(e.target.ownerDocument, e.target);
-    });
-    storeState.hoverEnabled = false;
-  }
-}
 
 function receivePageConfig() {
   window.addEventListener(
@@ -192,89 +103,36 @@ function receivePageConfig() {
   }, 1000);
 }
 
-function runPopup() {
-  const closeBtn = document.querySelector(".wcfanimb-close-btn");
-  // closing popup when close button clicked.
-  closeBtn.addEventListener("click", () => {
-    hidePopup();
-    disableHover();
-  });
-  // displaying selector popup
-  document.body.addEventListener("click", (event) => {
-    event.preventDefault();
-    const element = event.target;
-    if (element.closest(".wcfanimb-skip-selector-full")) {
-      return;
-    }
-    enableHover();
-    const isSkip = element.classList.contains("wcfanimb-skip-selector");
-    if (!isSkip) {
-      showPopup(element, event.clientX + 10, event.clientY + 10);
-      handleCloseMenuEvent(); // closing context menu
-    }
-  });
-  // context menu event handler
-  document.body.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-    hidePopup();
+// intialized iframe events
+function init() {
+  // context menus handler
+  registerContextMenu();
 
-    const target = event.target;
-    if (target.closest(".wcfanimb-skip-selector-full")) return;
-    AAEAnimPreviewBuilder.contextMenu.updateContextMenu({
-      target,
-      x: event.clientX,
-      y: event.clientY,
-    });
-    window.dispatchEvent(new CustomEvent("wcf-open-context-menu"));
+  // zoom and x axis placement event handler
+  window.addEventListener("wheel", handleIframeZoom, {
+    passive: false,
   });
 
-  // copy to clipboard content.
-  document.addEventListener("click", async (e) => {
-    const svg = e.target.closest("svg.wcf-ab-selector-action-general");
-    if (!svg) return;
+  // keyboard event handler
+  window.addEventListener("keydown", handleIframeKeyboardEvent);
 
-    // differentiating for toast message
-    const isIdBtnPressed = ["wcf-ab-cpid-copy", "wcf-ab-ccid-copy"]?.includes(
-      svg?.id
-    );
+  // displaying element selector
+  document.body.addEventListener("mouseover", handleMouseOver);
 
-    const targetContentId = copySelectorMap[svg.id];
-    if (!targetContentId) return;
+  // handling element selector button actions
+  document.addEventListener("click", handleClickEvent);
 
-    const contentEl = document.getElementById(targetContentId);
-    if (!contentEl) return;
+  // event for context menu
+  document.addEventListener("contextmenu", dispathContextMenu);
 
-    const textToCopy = contentEl.dataset.selector?.trim();
-    if (!textToCopy) return;
-
-    try {
-      await copyToClipboard(textToCopy);
-      // triggering toast
-      helpToastEvent({
-        type: "success",
-        message: `Successfully copied element ${
-          isIdBtnPressed ? "id" : "class"
-        }`,
-      });
-      disableHover();
-      hidePopup();
-    } catch (err) {
-      helpToastEvent({
-        type: "error",
-        message: `The selected element ${
-          isIdBtnPressed ? "id" : "class"
-        } not available!`,
-      });
-      disableHover();
-      hidePopup();
-    }
-  });
+  receivePageConfig();
 }
 
-runPopup();
-receivePageConfig();
+window.addEventListener("load", (e) => {
+  // mounting overlay root ,overlay modal root and iframe and editor kernel communications
+  initOverlayRoot(e);
+  init();
 
-window.addEventListener("load", () => {
   const structure_panel = document.getElementById("wcf-anim-builder-structure");
   const context_menu = document.getElementById("wcf-ab-context-menu-wrapper");
   if (structure_panel) {

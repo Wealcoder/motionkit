@@ -1,7 +1,7 @@
 import {
   eventToKeyCombination,
   normalizeKeyCombination,
-} from "@/lib/events/keyboardEventUtils";
+} from "@/lib/editor/core/iframe_events/keyboardEvents";
 import { useEffect, useRef } from "react";
 
 export function useKeyboardTrigger(combination, callback) {

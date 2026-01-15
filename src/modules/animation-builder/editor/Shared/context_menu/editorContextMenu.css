@@ -1,5 +1,6 @@
 .wcf-context-menu-wrapper {
   position: fixed;
+  z-index: 999999;
   width: 265px;
   background: #27272a;
   color: white;

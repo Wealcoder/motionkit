@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import "./editorContextMenu.css";
-import { hidePopup } from "@/lib/editor/classSelectorHelper";
+import { hideClassSelector } from "@/lib/editor/classSelectorHelper";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowDown01Icon,
@@ -27,7 +27,7 @@ const EditorContextMenu = () => {
   };
 
   const handleStartMenu = () => {
-    hidePopup();
+    hideClassSelector();
     const { target, position } =
       AAEAnimPreviewBuilder.contextMenu.getProps() || {};
     if (!target) return;

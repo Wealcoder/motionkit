@@ -4,7 +4,7 @@ import { useAnimationControl, useContentStep } from "@/hooks/app.hooks";
 import {
   handleCopyText,
   handleFilterAnimation,
-} from "@/lib/contextMenu/contextMenuHelper";
+} from "@/lib/contextMenu/contextMenuEventHelper";
 import { getResponsiveAndBelow } from "@/lib/utils";
 import { generateUniqueId } from "../../../utils/generateUniqueId";
 

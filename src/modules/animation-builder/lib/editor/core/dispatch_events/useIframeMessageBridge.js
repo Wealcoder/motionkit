@@ -1,14 +1,13 @@
-// useIframeMessageBridge.ts
 import { useEffect, useCallback } from "react";
 import {
   useAnimationControl,
   useContentStep,
   useKernel,
   usePageConfig,
-} from "../app.hooks";
-import { validateKeyCombination } from "@/lib/events/keyboardEventUtils";
+} from "../../../../hooks/app.hooks";
+import { validateKeyCombination } from "@/lib/editor/core/iframe_events/keyboardEvents";
 import { handleSetOrResetAnimation } from "@/lib/animations/animations";
-import { generateToast } from "@/lib/editor/editor";
+import { generateToast } from "@/lib/editor/core/iframe_events/toasterEvent";
 
 // This hook use to manage events actions through editor kernel context or animation context. For helper methods please follow lib directory.
 
