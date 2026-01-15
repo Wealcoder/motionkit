@@ -8,7 +8,7 @@ import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 const SliderField = ({
   property = {},
   value = 0,
-  onUpdateValue = () => {},
+  onValueChange = () => {},
   onDisabledUpdate = () => {},
   onDelete = () => {},
 }) => {
@@ -16,7 +16,7 @@ const SliderField = ({
     title = "Scale",
     tooltipContent = "Adjust scale value",
     isRequired = false,
-    isCustomAnim = true,
+    isCustomAnim = false,
     min = 0,
     max = 0,
     step = 1,
@@ -37,11 +37,11 @@ const SliderField = ({
       if (currentValue < min) currentValue = min;
       if (currentValue > max) currentValue = max;
       setInputValue(currentValue);
-      onUpdateValue(currentValue);
+      onValueChange(currentValue);
       return;
     }
     setInputValue(currentValue);
-    onUpdateValue(currentValue);
+    onValueChange(currentValue);
   }, 150);
 
   return (

@@ -41,6 +41,7 @@ const AnimationPropsHanlder = ({
             defaultData={defaultData}
             accordion={accordion}
             isCustomAnim={isCustomAnim}
+            contentStep={contentStep}
             updateContentData={updateContentData}
           />
         ))}
@@ -55,6 +56,8 @@ const SingleAccordion = ({
   defaultData = {},
   accordion = {},
   isCustomAnim = false,
+  contentStep = {},
+  updateContentData = () => {},
 }) => {
   const { title = "", properties = [] } = accordion;
   const hasProperties = properties.length > 0;
@@ -84,6 +87,8 @@ const SingleAccordion = ({
                 key={index}
                 property={property}
                 defaultData={defaultData}
+                contentStep={contentStep}
+                updateContentData={updateContentData}
               />
             ))}
           </AccordionContent>

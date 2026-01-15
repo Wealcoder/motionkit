@@ -174,6 +174,8 @@ const useMainContext = (state) => {
 
   const createAnimation = useCallback(
     async (data) => {
+      console.log("hit create animation");
+
       const responsiveData = getResponsiveAndBelow(mainState.selectedDevice);
       const result = { ...mainState.allAnimation };
 
@@ -212,6 +214,7 @@ const useMainContext = (state) => {
 
   const updateAnimation = useCallback(
     async (allAnimation) => {
+      console.log("hit update animation");
       const cfg = mainState.pageConfig;
 
       await fetch(cfg?.ajaxurl, {
@@ -393,6 +396,7 @@ const useMainContext = (state) => {
 
   const deleteAnimation = useCallback(
     async (id) => {
+      console.log("hit delete animation");
       const result = {};
 
       for (const device in mainState.allAnimation) {

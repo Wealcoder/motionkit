@@ -15,13 +15,13 @@ const SelectField = ({
   value = "",
   onDelete = () => {},
   onDisabledUpdate = () => {},
-  onUpdateValue = () => {},
+  onValueChange = () => {},
 }) => {
   const {
     title = "Label",
     tooltipContent = "Select Method",
     isRequired = false,
-    isCustomAnim = true,
+    isCustomAnim = false,
     fieldData = [],
     ...rest
   } = property || {};
@@ -32,7 +32,7 @@ const SelectField = ({
   const handleSelect = (value) => {
     console.log({ value });
     setSelectedValue(value);
-    onUpdateValue(value);
+    onValueChange(value);
   };
 
   if (!fieldData?.length) {

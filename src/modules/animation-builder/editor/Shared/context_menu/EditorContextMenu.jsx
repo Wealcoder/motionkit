@@ -160,7 +160,7 @@ function MenuItem({
       }}
       onMouseDown={(e) => e.preventDefault()}
     >
-      <div className="menu-row transition-all duration-100 ease-out active:scale-x-95 active:scale-y-90 active:translate-y-[1px] active:opacity-90">
+      <div className="text-sm menu-row transition-all duration-100 ease-out active:scale-x-95 active:scale-y-90 active:translate-y-[1px] active:opacity-90">
         <span className="menu-title">
           {menu.icon ?? ""}
           {menu.title}

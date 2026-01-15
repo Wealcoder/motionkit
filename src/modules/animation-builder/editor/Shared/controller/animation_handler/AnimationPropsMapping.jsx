@@ -8,129 +8,148 @@ import RotationField from "@/components/animations/RotationField";
 import SelectField from "@/components/animations/SelectField";
 import SliderField from "@/components/animations/SliderField";
 import SwitchField from "@/components/animations/SwitchField";
+import { useCallback } from "react";
 
-const AnimationPropsMapping = ({ property = {}, defaultData = {} }) => {
-  const { path = null, fieldType = null } = property || {};
-  if (!path || !fieldType) return null;
+const AnimationPropsMapping = React.memo(
+  ({
+    property = {},
+    defaultData = {},
+    contentStep = {},
+    updateContentData = () => {},
+  }) => {
+    const { path = null, fieldType = null } = property || {};
+    if (!path || !fieldType) return null;
 
-  const handleSetValueByPath = (value) => {
-    console.log(value);
-    const result = setValueByPath(defaultData, property?.path, value);
-    console.log(result);
-  };
+    console.log("re render");
 
-  const value = getValueFromPath(defaultData, property?.path) ?? "";
+    // updating animation properties.
+    const handleSetValueByPath = useCallback(
+      (value) => {
+        const newData = structuredClone(defaultData);
+        setValueByPath(newData, path, value);
+        updateContentData({
+          ...contentStep,
+          data: { ...contentStep.data, ...newData },
+        });
+      },
+      [defaultData, path, contentStep, updateContentData]
+    );
 
-  switch (fieldType) {
-    case "text-field":
-      return (
-        <TextField
-          property={property}
-          value={value}
-          onDelete={() => {}}
-          onDisabledUpdate={() => {}}
-          onValueChange={handleSetValueByPath}
-        />
-      );
+    // extracting latest value
+    const value = getValueFromPath(defaultData, path) ?? "";
 
-    case "number-field":
-      return (
-        <NumberField
-          property={property}
-          value={value}
-          onDelete={() => {}}
-          onDisabledUpdate={() => {}}
-          onValueChange={(value) => console.log(value)}
-        />
-      );
+    switch (fieldType) {
+      case "text-field":
+        return (
+          <TextField
+            property={property}
+            value={value}
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            onValueChange={handleSetValueByPath}
+          />
+        );
 
-    case "number-field-2":
-      return (
-        <NumberField2
-          property={property}
-          value={value}
-          onDelete={() => {}}
-          onDisabledUpdate={() => {}}
-          onValueChange={handleSetValueByPath}
-        />
-      );
+      case "number-field":
+        return (
+          <NumberField
+            property={property}
+            value={value}
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            onValueChange={handleSetValueByPath}
+          />
+        );
 
-    case "class-selection-field":
-      return (
-        <ClassSelectionField
-          property={property}
-          value={value}
-          onValueChang
-          onDelete={() => {}}
-          onDisabledUpdate={() => {}}
-          e={() => {}}
-        />
-      );
+      case "number-field-2":
+        return (
+          <NumberField2
+            property={property}
+            value={value}
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            onValueChange={handleSetValueByPath}
+          />
+        );
 
-    case "code-block-field":
-      // todo: add code block field leter;
-      break;
+      case "class-selection-field":
+        return (
+          <ClassSelectionField
+            property={property}
+            value={value}
+            onValueChang
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            e={() => {}}
+          />
+        );
 
-    case "color-picker":
-      return (
-        <ColorPickerField
-          property={property}
-          value={value}
-          onValueChang
-          onDelete={() => {}}
-          onDisabledUpdate={() => {}}
-          e={() => {}}
-        />
-      );
+      case "code-block-field":
+        // todo: add code block field leter;
+        break;
 
-    case "rotation-field":
-      return (
-        <RotationField
-          property={property}
-          value={value}
-          onValueChang
-          onDelete={() => {}}
-          onDisabledUpdate={() => {}}
-          e={() => {}}
-        />
-      );
+      case "color-picker":
+        return (
+          <ColorPickerField
+            property={property}
+            value={value}
+            onValueChang
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            e={() => {}}
+          />
+        );
 
-    case "select-field":
-      return (
-        <SelectField
-          property={property}
-          value={value}
-          onDelete={() => {}}
-          onDisabledUpdate={() => {}}
-          onValueChange={handleSetValueByPath}
-        />
-      );
+      case "rotation-field":
+        return (
+          <RotationField
+            property={property}
+            value={value}
+            onValueChang
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            e={() => {}}
+          />
+        );
 
-    case "slider-field":
-      return (
-        <SliderField
-          property={property}
-          value={value}
-          onDelete={() => {}}
-          onDisabledUpdate={() => {}}
-          onValueChange={handleSetValueByPath}
-        />
-      );
+      case "select-field":
+        return (
+          <SelectField
+            property={property}
+            value={value}
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            onValueChange={handleSetValueByPath}
+          />
+        );
 
-    case "switch-field":
-      return (
-        <SwitchField
-          property={property}
-          value={value}
-          onDelete={() => {}}
-          onDisabledUpdate={() => {}}
-          onValueChange={handleSetValueByPath}
-        />
-      );
+      case "slider-field":
+        return (
+          <SliderField
+            property={property}
+            value={value}
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            onValueChange={handleSetValueByPath}
+          />
+        );
 
-    default:
-      return null;
-  }
-};
+      case "switch-field":
+        return (
+          <SwitchField
+            property={property}
+            value={value}
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            onValueChange={handleSetValueByPath}
+          />
+        );
+
+      default:
+        return null;
+    }
+  },
+  (prev, next) => prev?.defaultData === next?.defaultData // if true memorized it
+);
 
 export default AnimationPropsMapping;

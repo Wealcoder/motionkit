@@ -143,6 +143,8 @@ const FreePresetAnimation = () => {
           <AnimationPropsHanlder
             selectedPresetGroup={contentStep?.data?.presetGroup ?? ""}
             selectedPreset={contentStep?.data?.preset ?? ""}
+            contentStep={contentStep}
+            updateContentData={updateContentData}
           />
         </div>
       )}

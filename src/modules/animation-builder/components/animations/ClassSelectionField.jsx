@@ -9,13 +9,13 @@ const ClassSelectionField = ({
   value = "",
   onDelete = () => {},
   onDisabledUpdate = () => {},
-  onUpdateValue = () => {},
+  onValueChange = () => {},
 }) => {
   const {
     title = "Target Class Name",
     tooltipContent = "Enter target class name.",
     isRequired = false,
-    isCustomAnim = true,
+    isCustomAnim = false,
     ...rest
   } = property || {};
 
@@ -23,7 +23,7 @@ const ClassSelectionField = ({
   const [isDataValid, setIsDataValid] = useState(false);
 
   const handleInput = debounceFn((newValue) => {
-    onUpdateValue(newValue);
+    onValueChange(newValue);
   }, 150);
 
   return (

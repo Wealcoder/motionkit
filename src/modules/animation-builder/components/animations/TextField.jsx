@@ -9,13 +9,13 @@ const TextField = ({
   value = "",
   onDelete = () => {},
   onDisabledUpdate = () => {},
-  onUpdateValue = () => {},
+  onValueChange = () => {},
 }) => {
   const {
     title = "title",
     tooltipContent = "Enter the value.",
     isRequired = false,
-    isCustomAnim = true,
+    isCustomAnim = false,
     ...rest
   } = property || {};
 
@@ -24,7 +24,7 @@ const TextField = ({
 
   const handleUpdate = debounceFn((newValue) => {
     setCurrentValue(newValue);
-    onUpdateValue(newValue);
+    onValueChange(newValue);
   }, 150);
 
   return (

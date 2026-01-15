@@ -9,7 +9,7 @@ const NumberField = ({
   value = 0,
   onDelete = () => {},
   onDisabledUpdate = () => {},
-  onUpdateValue = () => {},
+  onValueChange = () => {},
 }) => {
   // default value
   const {
@@ -31,15 +31,14 @@ const NumberField = ({
     let currentValue = Number(newValue);
     if (isNaN(currentValue)) return;
     if (min !== 0 || max !== 0) {
-      console.log({ newValue, currentValue, property });
       if (currentValue < min) currentValue = min;
       if (currentValue > max) currentValue = max;
       setInputValue(currentValue);
-      onUpdateValue(currentValue);
+      onValueChange(currentValue);
       return;
     }
     setInputValue(currentValue);
-    onUpdateValue(currentValue);
+    onValueChange(currentValue);
   }, 150);
 
   return (
@@ -62,11 +61,7 @@ const NumberField = ({
             min={min === 0 ? Infinity : min}
             max={max === 0 ? Infinity : max}
             type="number"
-            onChange={(e) => {
-              const value = e.target.value;
-              setInputValue(value);
-              handleInput(value);
-            }}
+            onChange={(e) => handleInput(e.target.value)}
           />
           {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </div>

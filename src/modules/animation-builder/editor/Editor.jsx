@@ -31,7 +31,7 @@ const Editor = () => {
   const { selectedDevice } = useDeviceConfig();
   const device = getScreenSize(selectedDevice) || {};
 
-  // console.log({ mainState });
+  console.log({ mainState });
 
   const handleWheel = (e) => {
     e.preventDefault();

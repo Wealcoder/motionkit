@@ -9,13 +9,13 @@ const ColorPickerField = ({
   value = "#000000",
   onDelete = () => {},
   onDisabledUpdate = () => {},
-  onUpdateValue = () => {},
+  onValueChange = () => {},
 }) => {
   const {
     title = "Background",
     tooltipContent = "Select your color.",
     isRequired = false,
-    isCustomAnim = true,
+    isCustomAnim = false,
     ...rest
   } = property || {};
 

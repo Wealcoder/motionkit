@@ -12,13 +12,13 @@ const NumberField2 = ({
   value = 0,
   onDelete = () => {},
   onDisabledUpdate = () => {},
-  onUpdateValue = () => {},
+  onValueChange = () => {},
 }) => {
   const {
     title = "title",
     tooltipContent = "Enter the value.",
     isRequired = false,
-    isCustomAnim = true,
+    isCustomAnim = false,
     min = 0,
     max = 0,
     step = 0.1,
@@ -39,7 +39,7 @@ const NumberField2 = ({
     updateValue = round(updateValue);
 
     setInputValue(updateValue);
-    onUpdateValue(updateValue);
+    onValueChange(updateValue);
   };
 
   // input handler

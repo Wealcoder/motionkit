@@ -15,7 +15,7 @@ export const getValueFromPath = (data, path) => {
 };
 
 export const setValueByPath = (data, path, value) => {
-  if (!data || !path) return;
+  if (!data || !path) return data;
   const splitedPath = path.split(".");
   splitedPath.reduce((current, key, index) => {
     if (index === splitedPath.length - 1) {

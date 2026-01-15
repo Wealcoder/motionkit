@@ -6,7 +6,7 @@ import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 const SwitchField = ({
   property = {},
   value = false,
-  onUpdateValue = () => {},
+  onValueChange = () => {},
   onDisabledUpdate = () => {},
   onDelete = () => {},
 }) => {
@@ -14,7 +14,7 @@ const SwitchField = ({
     title = "title",
     tooltipContent = "Enable functionality",
     isRequired = false,
-    isCustomAnim = true,
+    isCustomAnim = false,
     ...rest
   } = property || {};
 
@@ -22,7 +22,7 @@ const SwitchField = ({
   const [isDataValid, setIsDataValid] = useState(false);
   const handleToggle = (checked) => {
     setToggleValue(checked);
-    onUpdateValue(checked);
+    onValueChange(checked);
   };
   return (
     <div>

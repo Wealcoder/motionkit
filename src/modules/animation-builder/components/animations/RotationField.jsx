@@ -14,13 +14,13 @@ const RotationField = ({
   value = 0,
   onDelete = () => {},
   onDisabledUpdate = () => {},
-  onUpdateValue = () => {},
+  onValueChange = () => {},
 }) => {
   const {
     title = "Rotate",
     tooltipContent = "Adjust Rotate Value",
     isRequired = false,
-    isCustomAnim = true,
+    isCustomAnim = false,
     min = 0,
     max = 360,
     ...rest
@@ -37,7 +37,7 @@ const RotationField = ({
 
     currentValue = clamp(currentValue, min, max);
     setInputValue(currentValue);
-    onUpdateValue(currentValue);
+    onValueChange(currentValue);
   };
 
   // input handler
