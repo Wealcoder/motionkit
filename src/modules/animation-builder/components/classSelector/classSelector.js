@@ -53,8 +53,8 @@ export function getClassSelectorInnerHTML(data) {
             <div id="wcf-ab-selector-header-left" class="wcfanimb-skip-selector">
               <!-- icon -->
               <svg class="wcfanimb-skip-selector" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle class="wcfanimb-skip-selector" cx="20" cy="20" r="20" fill="#1C7E92" />
-                <path class="wcfanimb-skip-selector" d="M24.4452 28.8889C26.4988 28.8889 28.1636 27.7517 28.1636 26.3491C28.1636 23.6366 28.1939 22.5191 30.5674 20.898C31.2934 20.402 31.2934 19.598 30.5674 19.102C28.1939 17.4809 28.1636 16.3633 28.1636 13.6508C28.1636 12.2481 26.4988 11.1111 24.4452 11.1111M15.5563 28.8889C13.5027 28.8889 11.8379 27.7517 11.8379 26.3491C11.8379 23.6366 11.8077 22.5191 9.4342 20.898C8.70813 20.402 8.70813 19.598 9.43418 19.102C11.8077 17.4809 11.8379 16.3633 11.8379 13.6508C11.8379 12.2481 13.5027 11.1111 15.5563 11.1111" stroke="#FAFAFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <circle class="wcfanimb-skip-selector" cx="20" cy="20" r="20" fill="#64964C"/>
+              <path class="wcfanimb-skip-selector" d="M24.4452 28.8889C26.4988 28.8889 28.1636 27.7517 28.1636 26.3491C28.1636 23.6366 28.1939 22.5191 30.5674 20.898C31.2934 20.402 31.2934 19.598 30.5674 19.102C28.1939 17.4809 28.1636 16.3633 28.1636 13.6508C28.1636 12.2481 26.4988 11.1111 24.4452 11.1111M15.5563 28.8889C13.5027 28.8889 11.8379 27.7517 11.8379 26.3491C11.8379 23.6366 11.8077 22.5191 9.4342 20.898C8.70813 20.402 8.70813 19.598 9.43418 19.102C11.8077 17.4809 11.8379 16.3633 11.8379 13.6508C11.8379 12.2481 13.5027 11.1111 15.5563 11.1111" stroke="#FAFAFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               <div class="wcfanimb-skip-selector">
                 <!-- Title -->
