@@ -10,20 +10,22 @@ import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
 const RotationField = ({
-  property = {
-    title: "Rotate",
-    tooltipContent: "Adjust Rotate Value",
-    isRequired: false,
-    isCustomAnim: true,
-    min: 0,
-    max: 360,
-    ...rest,
-  },
+  property = {},
   value = 0,
   onDelete = () => {},
   onDisabledUpdate = () => {},
   onUpdateValue = () => {},
 }) => {
+  const {
+    title = "Rotate",
+    tooltipContent = "Adjust Rotate Value",
+    isRequired = false,
+    isCustomAnim = true,
+    min = 0,
+    max = 360,
+    ...rest
+  } = property || {};
+
   const [inputValue, setInputValue] = useState(value ?? 0);
   const [isDataValid, setIsDataValid] = useState(false);
 
@@ -33,7 +35,7 @@ const RotationField = ({
     let currentValue = Number(rawValue);
     if (Number.isNaN(currentValue)) return;
 
-    currentValue = clamp(currentValue, property?.min, property?.max);
+    currentValue = clamp(currentValue, min, max);
     setInputValue(currentValue);
     onUpdateValue(currentValue);
   };
@@ -49,11 +51,9 @@ const RotationField = ({
         {/* title */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {property?.title}
+            {title}
           </span>
-          {property?.tooltipContent && (
-            <ToolTipWrapper text={property?.tooltipContent} />
-          )}
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* controls */}
@@ -66,8 +66,8 @@ const RotationField = ({
             </PopoverTrigger>
             <PopoverContent>
               <Wheeler
-                min={property?.min}
-                max={property?.max}
+                min={min}
+                max={max}
                 value={inputValue}
                 onChange={handleInput}
               />
@@ -77,17 +77,17 @@ const RotationField = ({
           <Input
             type="number"
             value={inputValue}
-            min={property?.min}
-            max={property?.max}
+            min={min}
+            max={max}
             className="w-28"
             onChange={(e) => handleInput(e.target.value)}
           />
 
-          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 
-      {property?.isRequired && isDataValid && (
+      {isRequired && isDataValid && (
         <p className="text-white text-sm">Field is Required</p>
       )}
     </div>

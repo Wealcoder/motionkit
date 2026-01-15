@@ -6,20 +6,23 @@ import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
 const SliderField = ({
-  property = {
-    title: "Scale",
-    tooltipContent: "Adjust scale value",
-    isRequired: false,
-    isCustomAnim: true,
-    min: 0,
-    max: 0,
-    step: 1,
-  },
+  property = {},
   value = 0,
   onUpdateValue = () => {},
   onDisabledUpdate = () => {},
   onDelete = () => {},
 }) => {
+  const {
+    title = "Scale",
+    tooltipContent = "Adjust scale value",
+    isRequired = false,
+    isCustomAnim = true,
+    min = 0,
+    max = 0,
+    step = 1,
+    ...rest
+  } = property || {};
+
   const [inputValue, setInputValue] = useState(value ?? 0);
   const [isDataValid, setIsDataValid] = useState(false);
 
@@ -30,9 +33,9 @@ const SliderField = ({
     let currentValue = Number(rewValue);
     if (isNaN(currentValue)) return;
 
-    if (property?.min !== 0 || property?.max !== 0) {
-      if (currentValue < property?.min) currentValue = property?.min;
-      if (currentValue > property?.max) currentValue = property?.max;
+    if (min !== 0 || max !== 0) {
+      if (currentValue < min) currentValue = min;
+      if (currentValue > max) currentValue = max;
       setInputValue(currentValue);
       onUpdateValue(currentValue);
       return;
@@ -47,21 +50,19 @@ const SliderField = ({
         {/* left title + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {property?.title}
+            {title}
           </span>
-          {property?.tooltipContent && (
-            <ToolTipWrapper text={property?.tooltipContent} />
-          )}
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* right add + delete button */}
         <div className="flex-1 flex justify-end items-center gap-3">
           <Slider
             value={[inputValue]}
-            min={property?.min === 0 ? Infinity : property?.min}
-            max={property?.max === 0 ? Infinity : property?.max}
+            min={min === 0 ? Infinity : min}
+            max={max === 0 ? Infinity : max}
             type="number"
-            step={property?.step}
+            step={step}
             onValueChange={(v) => setInputValue(v[0])}
             className="flex-1"
           />
@@ -69,8 +70,8 @@ const SliderField = ({
             placeholder="Add Value"
             className="flex items-center justify-center w-28"
             value={inputValue}
-            min={property?.min === 0 ? Infinity : property?.min}
-            max={property?.max === 0 ? Infinity : property?.max}
+            min={min === 0 ? Infinity : min}
+            max={max === 0 ? Infinity : max}
             type="number"
             onChange={(e) => {
               const value = e.target.value;
@@ -78,11 +79,11 @@ const SliderField = ({
               handleInput(value);
             }}
           />
-          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </div>
       </div>
       {/* required message */}
-      {property?.isRequired && isDataValid && (
+      {isRequired && isDataValid && (
         <p className="text-white text-sm">Field is Required</p>
       )}
     </div>

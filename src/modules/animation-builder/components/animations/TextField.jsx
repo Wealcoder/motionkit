@@ -5,18 +5,20 @@ import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
 const TextField = ({
-  property = {
-    title: "title",
-    tooltipContent: "Enter the value.",
-    isRequired: false,
-    isCustomAnim: true,
-    ...rest,
-  },
+  property = {},
   value = "",
   onDelete = () => {},
   onDisabledUpdate = () => {},
   onUpdateValue = () => {},
 }) => {
+  const {
+    title = "title",
+    tooltipContent = "Enter the value.",
+    isRequired = false,
+    isCustomAnim = true,
+    ...rest
+  } = property || {};
+
   const [currentValue, setCurrentValue] = useState(value ?? "");
   const [isDataValid, setIsDataValid] = useState(false);
 

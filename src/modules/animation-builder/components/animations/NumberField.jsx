@@ -5,20 +5,24 @@ import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
 const NumberField = ({
-  property = {
-    title: "title",
-    tooltipContent: "Enter the value.",
-    isRequired: false,
-    isCustomAnim: true,
-    min: 0,
-    max: 0,
-    ...rest,
-  },
+  property = {},
   value = 0,
   onDelete = () => {},
   onDisabledUpdate = () => {},
   onUpdateValue = () => {},
 }) => {
+  // default value
+  const {
+    title = "title",
+    tooltipContent = "Enter the value.",
+    isRequired = false,
+    isCustomAnim = false,
+    min = 0,
+    max = 0,
+    path = "",
+    ...rest
+  } = property || {};
+
   const [inputValue, setInputValue] = useState(value ?? 0);
   const [isDataValid, setIsDataValid] = useState(false);
 
@@ -26,9 +30,10 @@ const NumberField = ({
     if (newValue === "" || newValue === "-") return;
     let currentValue = Number(newValue);
     if (isNaN(currentValue)) return;
-    if (property?.min !== 0 || property?.max !== 0) {
-      if (currentValue < property?.min) currentValue = property?.min;
-      if (currentValue > property?.max) currentValue = property?.max;
+    if (min !== 0 || max !== 0) {
+      console.log({ newValue, currentValue, property });
+      if (currentValue < min) currentValue = min;
+      if (currentValue > max) currentValue = max;
       setInputValue(currentValue);
       onUpdateValue(currentValue);
       return;
@@ -43,11 +48,9 @@ const NumberField = ({
         {/* left title + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {property?.title}
+            {title}
           </span>
-          {property?.tooltipContent && (
-            <ToolTipWrapper text={property?.tooltipContent} />
-          )}
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* right add + delete button */}
@@ -56,8 +59,8 @@ const NumberField = ({
             placeholder="Add Value"
             className="h-[34px] max-w-52 px-3 py-2 bg-background-input hover:bg-input-hover focus:bg-input-focus text-input-placeholder placeholder:text-input-placeholder hover:text-input-text-hover focus:text-input-text-focus text-sm font-medium leading-[18px] border-none outline-none ring-0 focus:ring-0 rounded-5 cursor-text"
             value={inputValue}
-            min={property?.min === 0 ? Infinity : property?.min}
-            max={property?.max === 0 ? Infinity : property?.max}
+            min={min === 0 ? Infinity : min}
+            max={max === 0 ? Infinity : max}
             type="number"
             onChange={(e) => {
               const value = e.target.value;
@@ -65,12 +68,12 @@ const NumberField = ({
               handleInput(value);
             }}
           />
-          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 
       {/* required message */}
-      {property?.isRequired && isDataValid && (
+      {isRequired && isDataValid && (
         <p className="text-white text-sm">Field is Required</p>
       )}
     </div>

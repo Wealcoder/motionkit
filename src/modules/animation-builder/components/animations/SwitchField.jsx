@@ -4,18 +4,20 @@ import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
 const SwitchField = ({
-  property = {
-    title: "title",
-    tooltipContent: "Enable functionality",
-    isRequired: false,
-    isCustomAnim: true,
-    ...rest,
-  },
+  property = {},
   value = false,
   onUpdateValue = () => {},
   onDisabledUpdate = () => {},
   onDelete = () => {},
 }) => {
+  const {
+    title = "title",
+    tooltipContent = "Enable functionality",
+    isRequired = false,
+    isCustomAnim = true,
+    ...rest
+  } = property || {};
+
   const [toggleValue, setToggleValue] = useState(Boolean(value));
   const [isDataValid, setIsDataValid] = useState(false);
   const handleToggle = (checked) => {

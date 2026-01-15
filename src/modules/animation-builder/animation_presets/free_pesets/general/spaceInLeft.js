@@ -3,7 +3,7 @@ import { easeTypes, triggerTypes } from "@/config/animationsProperties";
 const defaultData = {
   triggerType: "on_scroll",
   itemClass: "",
-  delay: 0,
+  delay: 0.01,
   duration: 1,
   repeat: 0,
 };
@@ -20,33 +20,33 @@ const config = {
           title: "Trigger Type",
           fieldType: "select-field",
           fieldData: triggerTypes,
-          path: "defaultData.triggerType",
+          path: "triggerType",
         },
         {
           title: "Item Class",
           fieldType: "class-selector-field",
-          path: "defaultData.itemClass",
+          path: "itemClass",
         },
         {
           title: "Delay",
           fieldType: "number-field",
-          path: "defaultData.delay",
+          path: "delay",
         },
         {
           title: "Duration",
           fieldType: "number-field",
-          path: "defaultData.duration",
+          path: "duration",
         },
         {
           title: "Ease",
           fieldType: "select-field",
           fieldData: easeTypes,
-          path: "defaultData.triggerType",
+          path: "triggerType",
         },
         {
           title: "Repeat",
           fieldType: "number-field",
-          path: "defaultData.repeat",
+          path: "repeat",
         },
       ],
     },

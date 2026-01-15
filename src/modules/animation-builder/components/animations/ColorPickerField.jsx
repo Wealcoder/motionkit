@@ -5,18 +5,20 @@ import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
 const ColorPickerField = ({
-  property = {
-    title: "Background",
-    tooltipContent: "Select your color.",
-    isRequired: false,
-    isCustomAnim: true,
-    ...rest,
-  },
+  property = {},
   value = "#000000",
   onDelete = () => {},
   onDisabledUpdate = () => {},
   onUpdateValue = () => {},
 }) => {
+  const {
+    title = "Background",
+    tooltipContent = "Select your color.",
+    isRequired = false,
+    isCustomAnim = true,
+    ...rest
+  } = property || {};
+
   const [color, setColor] = useState(value || "#FFFFFF");
   const [isValidColorCode, setIsValidColorCode] = useState("");
   const colorInputRef = useRef(null);
@@ -37,11 +39,9 @@ const ColorPickerField = ({
         {/* left title + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {property?.title}
+            {title}
           </span>
-          {property?.tooltipContent && (
-            <ToolTipWrapper text={property?.tooltipContent} />
-          )}
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* right input + delete button */}
@@ -80,13 +80,13 @@ const ColorPickerField = ({
               className="w-28 uppercase"
             />
           </div>
-          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </div>
       </div>
       {/* required message */}
       <div>
         <p className="text-white text-sm">
-          {property?.isRequired && "Field is Required"}
+          {isRequired && "Field is Required"}
         </p>
         <p>{isValidColorCode}</p>
       </div>

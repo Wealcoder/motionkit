@@ -11,19 +11,21 @@ import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 import { toCamelCase } from "@/utils/utils";
 
 const SelectField = ({
-  property = {
-    title: "Label",
-    tooltipContent: "Select Method",
-    isRequired: false,
-    isCustomAnim: true,
-    fieldData: [],
-    ...rest,
-  },
+  property = {},
   value = "",
   onDelete = () => {},
   onDisabledUpdate = () => {},
   onUpdateValue = () => {},
 }) => {
+  const {
+    title = "Label",
+    tooltipContent = "Select Method",
+    isRequired = false,
+    isCustomAnim = true,
+    fieldData = [],
+    ...rest
+  } = property || {};
+
   const [selectedValue, setSelectedValue] = useState(value ?? "");
   const [isDataValid, setIsDataValid] = useState(false);
 
@@ -33,7 +35,7 @@ const SelectField = ({
     onUpdateValue(value);
   };
 
-  if (!property?.fieldData?.length) {
+  if (!fieldData?.length) {
     console.error("Field data required!");
     return null;
   }
@@ -44,11 +46,9 @@ const SelectField = ({
         {/* left title + tooltip */}
         <div className="flex items-center gap-3 text-[#E4E4E7]">
           <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {property?.title}
+            {title}
           </span>
-          {property?.tooltipContent && (
-            <ToolTipWrapper text={property?.tooltipContent} />
-          )}
+          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
         <div className="flex-1 flex justify-end items-center gap-3">
           <Select value={selectedValue} onValueChange={handleSelect}>
@@ -56,7 +56,7 @@ const SelectField = ({
               <SelectValue placeholder="Select Method" />
             </SelectTrigger>
             <SelectContent>
-              {property?.fieldData?.map((field, index) => {
+              {fieldData?.map((field, index) => {
                 // if field does not contain value use title (formatting camel case) as value
                 const isObjectType =
                   !Array.isArray(field) && typeof field === "object";
@@ -72,12 +72,12 @@ const SelectField = ({
               })}
             </SelectContent>
           </Select>
-          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 
       {/* required message */}
-      {property?.isRequired && isDataValid && (
+      {isRequired && isDataValid && (
         <p className="text-white text-sm">Field is Required</p>
       )}
     </div>

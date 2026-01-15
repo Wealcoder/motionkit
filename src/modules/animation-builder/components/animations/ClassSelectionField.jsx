@@ -5,18 +5,20 @@ import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
 const ClassSelectionField = ({
-  property = {
-    title: "Target Class Name",
-    tooltipContent: "Enter target class name.",
-    isRequired: false,
-    isCustomAnim: true,
-    ...rest,
-  },
+  property = {},
   value = "",
   onDelete = () => {},
   onDisabledUpdate = () => {},
   onUpdateValue = () => {},
 }) => {
+  const {
+    title = "Target Class Name",
+    tooltipContent = "Enter target class name.",
+    isRequired = false,
+    isCustomAnim = true,
+    ...rest
+  } = property || {};
+
   const [inputValue, setInputValue] = useState(value ?? "");
   const [isDataValid, setIsDataValid] = useState(false);
 
