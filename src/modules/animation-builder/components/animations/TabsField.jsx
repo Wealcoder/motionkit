@@ -1,10 +1,6 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
-import { Delete01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 
 const TabsField = ({
   property = {},
@@ -27,8 +23,6 @@ const TabsField = ({
     isCustomAnim = false,
     ...rest
   } = property || {};
-  console.log("first");
-  return;
 
   const [activeTab, setActiveTab] = useState(tabsTrigger?.[0]?.value);
 
@@ -47,33 +41,16 @@ const TabsField = ({
 
   const hasProperties = !!matchedTabContent?.fields?.length;
 
-  console.log(matchedTabContent);
-
   return (
-    <div className="p-2 space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-white">{title}</span>
-
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
-        </div>
-
-        {isCustomAnim && (
-          <Button size="icon" onClick={onDelete}>
-            <HugeiconsIcon icon={Delete01Icon} className="text-[#A1A1AA]" />
-          </Button>
-        )}
-      </div>
-
+    <div className="space-y-3 w-87.75">
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="w-full grid grid-cols-2 overflow-y-auto bg-background-sidebar shadow-none">
+        <TabsList className="w-full h-9 p-1 grid grid-cols-2 gap-1 overflow-y-auto bg-background-sidebar">
           {tabsTrigger.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="whitespace-nowrap data-[state=active]:bg-background-card"
+              className="max-w-[157px] h-7 text-[11.5px] font-normal leading-4.5 px-3 py-1.5 border-none bg-transparent shadow-none text-input-placeholder data-[state=active]:bg-background-card data-[state=active]:text-popover-foreground"
             >
               {tab.title}
             </TabsTrigger>

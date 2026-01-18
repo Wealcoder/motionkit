@@ -53,7 +53,7 @@ module.exports = {
   			},
   			popover: {
   				DEFAULT: 'var(--background-popover)',
-  				foreground: 'var(--text-popover-foregorund)'
+  				foreground: 'var(--text-popover-foreground)'
   			},
   			slider: {
   				DEFAULT: 'var(--bg-slider-track)',
