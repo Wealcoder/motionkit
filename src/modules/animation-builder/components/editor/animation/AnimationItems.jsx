@@ -1,9 +1,9 @@
 import {
-  Accordion2,
-  AccordionContent2,
-  AccordionItem2,
-  AccordionTrigger2,
-} from "@/components/ui/accordion2";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AProperties } from "@/config/timelineProperties";
@@ -122,7 +122,7 @@ const AnimationItems = ({ item, timelines }) => {
   };
 
   return (
-    <Accordion2
+    <Accordion
       type="multiple"
       value={accValue}
       onValueChange={setAccValue}
@@ -131,11 +131,11 @@ const AnimationItems = ({ item, timelines }) => {
       style={style}
       {...attributes}
     >
-      <AccordionItem2 value="animation" className="group">
+      <AccordionItem value="animation" className="group">
         <div className="flex justify-between items-center [&>h3]:w-full">
-          <AccordionTrigger2>
+          <AccordionTrigger>
             <p>{animationData?.title}</p>
-          </AccordionTrigger2>
+          </AccordionTrigger>
           <div className="w-[80px] pe-2">
             <div className="hidden group-hover:flex justify-center items-center gap-1">
               <div
@@ -159,7 +159,7 @@ const AnimationItems = ({ item, timelines }) => {
             </div>
           </div>
         </div>
-        <AccordionContent2 className="px-2 py-2.5 border-t border-border-2">
+        <AccordionContent className="px-2 py-2.5 border-t border-border-2">
           <div>
             <div className="pb-2.5 border-b border-border-2 flex flex-col gap-2.5">
               <div className="grid grid-cols-3 justify-between items-center gap-2">
@@ -238,7 +238,6 @@ const AnimationItems = ({ item, timelines }) => {
                       <SelectGroup>
                         <SelectItem value="to">To</SelectItem>
                         <SelectItem value="from">From</SelectItem>
-                        {/* <SelectItem value="fromTo">From To</SelectItem> */}
                         <SelectItem value="set">Set</SelectItem>
                       </SelectGroup>
                     </SelectContent>
@@ -548,9 +547,9 @@ const AnimationItems = ({ item, timelines }) => {
               </Button>
             </div>
           </div>
-        </AccordionContent2>
-      </AccordionItem2>
-    </Accordion2>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 };
 

@@ -11,7 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { InputWithShape } from "@/components/ui/input-with-shape";
+// import { InputWithShape } from "@/components/ui/input-with-shape";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -81,11 +81,13 @@ const PropertiesControl = ({
     } else if (item.type === "number") {
       if (item?.unit === "s") {
         return (
-          <InputWithShape
-            value={item?.value}
-            onChange={(e) => updateProperties(e.target.value, item)}
-            placeholder="add value"
-          />
+          // TODO: update component
+          // <InputWithShape
+          //   value={item?.value}
+          //   onChange={(e) => updateProperties(e.target.value, item)}
+          //   placeholder="add value"
+          // />
+          ""
         );
       } else {
         return (

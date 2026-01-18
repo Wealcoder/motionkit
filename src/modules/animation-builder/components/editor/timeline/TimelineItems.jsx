@@ -1,9 +1,9 @@
 import {
-  Accordion2,
-  AccordionContent2,
-  AccordionItem2,
-  AccordionTrigger2,
-} from "@/components/ui/accordion2";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TProperties } from "@/config/timelineProperties";
@@ -69,18 +69,18 @@ const TimelineItems = ({ item }) => {
   };
 
   return (
-    <Accordion2
+    <Accordion
       type="multiple"
       collapsible
       value={accValue}
       onValueChange={setAccValue}
       className="w-full bg-background-hover border border-border-2 rounded"
     >
-      <AccordionItem2 value="timeline" className="group">
+      <AccordionItem value="timeline" className="group">
         <div className="flex justify-between items-center [&>h3]:w-full">
-          <AccordionTrigger2>
+          <AccordionTrigger>
             <p>{tTitle}</p>
-          </AccordionTrigger2>
+          </AccordionTrigger>
           <div className="w-[54px]">
             <div className="hidden group-hover:flex justify-center items-center">
               <div
@@ -98,7 +98,7 @@ const TimelineItems = ({ item }) => {
             </div>
           </div>
         </div>
-        <AccordionContent2 className="px-2 py-2.5 border-t border-border-2">
+        <AccordionContent className="px-2 py-2.5 border-t border-border-2">
           <div>
             <div className="pb-2.5 border-b border-border-2 grid grid-cols-2 justify-between items-center gap-2">
               <div className="flex items-center gap-1">
@@ -129,9 +129,9 @@ const TimelineItems = ({ item }) => {
               </Button>
             </div>
           </div>
-        </AccordionContent2>
-      </AccordionItem2>
-    </Accordion2>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 };
 
