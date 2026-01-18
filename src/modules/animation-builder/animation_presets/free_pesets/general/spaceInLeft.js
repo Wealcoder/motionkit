@@ -54,12 +54,12 @@ const config = {
           fieldType: "tabs-field",
           path: "repeat",
           tabsTrigger: [
-            { title: "Default", value: 'default' },
-            { title: "Custom", value: 'custom' },
-            { title: "Tab 1", value: 'tab1' },
-            { title: "Tab 2", value: 'tab2' },
-            { title: "Tab 3", value: 'tab3' },
-            { title: "Tab 4", value: 'tab4' },
+            { title: "Default", value: "default" },
+            { title: "Custom", value: "custom" },
+            { title: "Tab 1", value: "tab1" },
+            { title: "Tab 2", value: "tab2" },
+            { title: "Tab 3", value: "tab3" },
+            { title: "Tab 4", value: "tab4" },
           ],
           tabsContent: [
             {
@@ -76,7 +76,7 @@ const config = {
                   fieldType: "number-field",
                   path: "repeat",
                 },
-              ]
+              ],
             },
             {
               key: "custom",
@@ -103,9 +103,8 @@ const config = {
                   fieldType: "number-field",
                   path: "repeat",
                 },
-              ]
-            }
-            // others fields
+              ],
+            },
           ],
         },
       ],

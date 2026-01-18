@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ToolTipWrapper from "@/components/common/ToolTipWrapper";
+import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 import { Delete01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "../ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import ToolTipWrapper from "../common/ToolTipWrapper";
-import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 
 const TabsField = ({
   property = {},
@@ -15,6 +15,8 @@ const TabsField = ({
     {
     }
   },
+  contentStep = {},
+  updateContentData = () => {},
 }) => {
   const {
     title = "title",
@@ -27,7 +29,6 @@ const TabsField = ({
   } = property || {};
 
   const [activeTab, setActiveTab] = useState(tabsTrigger?.[0]?.value);
-  console.log(activeTab);
 
   // handle tab click
   const handleTabChange = (tabValue) => {
@@ -42,7 +43,7 @@ const TabsField = ({
   // find matched content
   const matchedTabContent = tabsContent.find((item) => item.key === activeTab);
 
-  const hasProperties= !!matchedTabContent?.fields?.length
+  const hasProperties = !!matchedTabContent?.fields?.length;
 
   console.log(matchedTabContent);
 
@@ -78,19 +79,19 @@ const TabsField = ({
         </TabsList>
 
         <TabsContent value={activeTab}>
-           {hasProperties && (
-          <div className="flex flex-col gap-2">
-            {matchedTabContent?.fields?.map((property, index) => (
-              <AnimationPropsMapping
-                key={index}
-                property={property}
-                defaultData={defaultData}
-                contentStep={contentStep}
-                updateContentData={updateContentData}
-              />
-            ))}
-          </div>
-        )}
+          {hasProperties && (
+            <div className="flex flex-col gap-2">
+              {matchedTabContent?.fields?.map((property, index) => (
+                <AnimationPropsMapping
+                  key={index}
+                  property={property}
+                  defaultData={value}
+                  contentStep={contentStep}
+                  updateContentData={updateContentData}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

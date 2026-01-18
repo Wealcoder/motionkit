@@ -1,6 +1,5 @@
 import {
   Tooltip,
-  ToolTipArrow,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
@@ -21,10 +20,7 @@ const ToolTipWrapper = ({ text = "" }) => {
             />
           </div>
         </TooltipTrigger>
-        <TooltipContent align="start">
-          {text}
-          <ToolTipArrow className="fill-[#474852] -mt-[0.5px] ml-5" />
-        </TooltipContent>
+        <TooltipContent align="start">{text}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
