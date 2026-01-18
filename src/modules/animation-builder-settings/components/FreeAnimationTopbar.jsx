@@ -1,5 +1,4 @@
 // import { RiCloseLine, RiCommandLine, RiSearchLine } from "react-icons/ri";
-import { Dot } from "lucide-react";
 import { Switch } from "@@/components/ui/switch";
 import { Label } from "@@/components/ui/label";
 import { Input } from "@@/components/ui/input";
@@ -21,7 +20,7 @@ const FreeAnimationTopbar = ({ searchKey, setSearchKey, presetCount }) => {
             <p className="text-sm text-label ">
               {presetCount?.total ?? 0} Total Presets
             </p>
-            <Dot className="w-4 h-4 text-icon-secondary" strokeWidth={4} />
+            <div className="w-4 h-4 bg-white rounded-full" strokeWidth={4} />
             <p className="text-sm text-label ">
               {presetCount?.active ?? 0} Active Presets
             </p>

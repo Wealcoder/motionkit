@@ -16,76 +16,86 @@ module.exports = {
     container: false,
   },
   theme: {
-  	extend: {
-  		fontSize: {
-  			'15': '0.9375rem'
-  		},
-  		fontFamily: {
-  			inter: [
-  				'Inter',
-  				'sans-serif'
-  			]
-  		},
-  		colors: {
-  			background: {
-  				DEFAULT: 'var(--background)',
-  				hover: 'var(--background-hover)',
-  				disable: 'var(--background-disable)',
-  				sidebar: 'var(--background-sidebar)',
-  				card: 'var(--card-background)',
-  				input: 'var(--background-input)'
-  			},
-  			button: {
-  				primary: 'var(--btn-primary)',
-  				'primary-hover': 'var(--btn-primary-hover)',
-  				action: 'var(--btn-bg-action)',
-  				'action-hover': 'var(--btn-bg-action-hover)',
-  				cancel: 'var(--btn-bg-cancel)',
-  				'cancel-hover': 'var(--btn-bg-cancel-hover)'
-  			},
-  			input: {
-  				DEFAULT: 'var(--background-input)',
-  				hover: 'var(--background-input-hover)',
-  				focus: 'var(--background-input-focus)',
-  				placeholder: 'var(--text-input)',
-  				'text-hover': 'var(--text-input-hover)',
-  				'text-focus': 'var(--text-input-focus)'
-  			},
-  			popover: {
-  				DEFAULT: 'var(--background-popover)',
-  				foreground: 'var(--text-popover-foregorund)'
-  			},
-  			slider: {
-  				DEFAULT: 'var(--bg-slider-track)',
-  				thumb: 'var(--bg-slider-thumb)'
-  			}
-  		},
-  		borderRadius: {
-  			'5': '0.3125rem'
-  		},
-  		keyframes: {
-  			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
-  			},
-  			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
-  			}
-  		},
-  		animation: {
-  			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
-  	}
+    extend: {
+      fontSize: {
+        15: "0.9375rem",
+      },
+      fontFamily: {
+        inter: ["Inter", "sans-serif"],
+      },
+      colors: {
+        background: "var(--background)",
+        topbar: "var(--background-topbar)",
+        foreground: "var(--foreground)",
+
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
+        },
+
+        popover: {
+          DEFAULT: "var(--popover)",
+          foreground: "var(--popover-foreground)",
+        },
+
+        primary: {
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
+        },
+
+        secondary: {
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
+        },
+
+        muted: {
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
+        },
+
+        accent: {
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
+        },
+
+        destructive: {
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
+        },
+
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "5px",
+        sm: "4px",
+      },
+
+      keyframes: {
+        "accordion-down": {
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
+        },
+        "accordion-up": {
+          from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+    },
   },
   plugins: [
     plugin(function ({ addUtilities }) {

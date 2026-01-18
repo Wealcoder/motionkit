@@ -1,4 +1,3 @@
-import { Dot, Settings } from "lucide-react";
 import { Badge } from "@@/components/ui/badge";
 import { Switch } from "@@/components/ui/switch";
 import { cn } from "@@/lib/utils";
@@ -42,7 +41,7 @@ const PresetCard = ({
                   "border rounded-full h-11 w-11 flex justify-center items-center shadow-common text-[20px]"
                 )}
               >
-                <Settings size={18} />
+                <HugeiconsIcon icon={Settings01Icon} size={18} />
               </div>
               {/* <div
                 className={cn(
@@ -56,10 +55,11 @@ const PresetCard = ({
                   <h2 className="text-[15px] leading-6 font-medium">{label}</h2>
                   {is_upcoming ? (
                     <>
-                      <Dot
-                        className="w-3.5 h-3.5 text-icon-secondary"
-                        strokeWidth={2}
+                      <div
+                        className="w-4 h-4 bg-white rounded-full"
+                        strokeWidth={4}
                       />
+
                       <Badge variant="pro">COMING</Badge>
                     </>
                   ) : (
@@ -82,9 +82,9 @@ const PresetCard = ({
 
                   {preview && (
                     <>
-                      <Dot
-                        className="w-3.5 h-3.5 text-icon-secondary"
-                        strokeWidth={2}
+                      <div
+                        className="w-4 h-4 bg-white rounded-full"
+                        strokeWidth={4}
                       />
                       <a
                         href={demo_url}

@@ -5,40 +5,38 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
 @layer base {
-  /* uses for dark styles */
   :root {
-    /* background */
-    --background: #27272a;
-    --background-hover: #27272a;
-    --background-disable: #27272a;
-    --background-sidebar: #18181b;
+    /* editor */
+    --background: #18181b;
+    --background-topbar: #27272a;
+    --foreground: #ffffff;
 
-    /* Card bg */
-    --card-background: #3f3f46;
+    --card: #161a20;
+    --card-foreground: #ffffff;
 
-    /* button */
-    --btn-primary: #3f3f46;
-    --btn-primary-hover: #27272a;
-    --btn-bg-action: #3c7a1f;
-    --btn-bg-action-hover: #48ac19;
-    --btn-bg-cancel: #b34a32;
-    --btn-bg-cancel-hover: #cb4527;
+    --popover: #161a20;
+    --popover-foreground: #ffffff;
 
-    /* input */
-    --background-input: #3f3f46;
-    --background-input-hover: #52525b;
-    --background-input-focus: #52525b;
-    --text-input: #a1a1aa;
-    --text-input-hover: white;
-    --text-input-focus: white;
+    --primary: #3f3f46;
+    --primary-foreground: #ffffff;
 
-    /* popover */
-    --background-popover: #52525b;
-    --text-popover-foregorund: #fafafa;
+    --secondary: #1c2129;
+    --secondary-foreground: #ffffff;
 
-    /* slider */
-    --bg-slider-track: #3f3f46;
-    --bg-slider-thumb: #64964c;
+    --muted: #1c2129;
+    --muted-foreground: #9ca3af;
+
+    --accent: #a855f7;
+    --accent-foreground: #0f1115;
+
+    --destructive: #f97316;
+    --destructive-foreground: #ffffff;
+
+    --border: #2a2f38;
+    --input: #2a2f38;
+    --ring: #9333ea;
+
+    --radius: 8px;
   }
 }
 

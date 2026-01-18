@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { IconCross } from "../../../../assets/icons";
-import { Search, SearchX } from "lucide-react";
 import { Input } from "../ui/input";
 import {
   Accordion,
@@ -21,6 +20,11 @@ import {
 import { ScrollArea } from "../ui/scroll-area";
 import STAnimNotFound from "../notFound/STAnimNotFound";
 import SeAnimNotFound from "../notFound/SeAnimNotFound";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Search01Icon,
+  SearchMinusIcon,
+} from "@hugeicons/core-free-icons/index";
 
 export default function AnimationStructure() {
   const [offPanel, setOffPanel] = useState(true);
@@ -531,9 +535,9 @@ export default function AnimationStructure() {
                   onClick={() => setIsOpenSearch((prev) => !prev)}
                 >
                   {isOpenSearch ? (
-                    <SearchX size={14} color="#D5D8DC" />
+                    <HugeiconsIcon icon={SearchMinusIcon} />
                   ) : (
-                    <Search size={14} color="#D5D8DC" />
+                    <HugeiconsIcon icon={Search01Icon} />
                   )}
                 </Button>
               )}
@@ -546,7 +550,7 @@ export default function AnimationStructure() {
               {isOpenSearch ? (
                 <div className="flex items-center gap-[8px] px-[6px] border-[1px] border-border-2 rounded-[4px] me-[8px]">
                   <Button className="h-[14px] w-[14px] bg-transparent hover:bg-transparent [&_svg]:size-[14px] cursor-default">
-                    <Search size="14" color="#D5D8DC" />
+                    <HugeiconsIcon icon={Search01Icon} />
                   </Button>
 
                   <Input
