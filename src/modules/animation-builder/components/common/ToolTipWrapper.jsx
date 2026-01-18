@@ -20,9 +20,7 @@ const ToolTipWrapper = ({ text = "" }) => {
             />
           </div>
         </TooltipTrigger>
-        <TooltipContent align="start">
-          {text}
-        </TooltipContent>
+        <TooltipContent align="start">{text}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

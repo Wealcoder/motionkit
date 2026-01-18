@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ToolTipWrapper from "@/components/common/ToolTipWrapper";
+import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 import { Delete01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "../ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import ToolTipWrapper from "../common/ToolTipWrapper";
-import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 
 const TabsField = ({
   property = {},
@@ -31,7 +31,6 @@ const TabsField = ({
   return;
 
   const [activeTab, setActiveTab] = useState(tabsTrigger?.[0]?.value);
-  console.log(activeTab);
 
   // handle tab click
   const handleTabChange = (tabValue) => {
