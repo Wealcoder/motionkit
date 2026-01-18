@@ -19,7 +19,7 @@ export const freeAnimClassMapping = (preset) => {
         "wcf-free-ab-freeAnimGeneral",
         "wcf-free-ab-vanishIn",
       ];
-    case "wcf-general-sil-free-animation":
+    case "wcf-ab-gen-sil-fa":
       return [
         "wcf-free-ab-25",
         "wcf-free-ab-freeAnimGeneral",

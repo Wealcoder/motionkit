@@ -15,6 +15,7 @@ const AnimationPropsHanlder = ({
   updateContentData = () => {},
 }) => {
   if (!selectedPreset || !selectedPresetGroup) return;
+
   const isCustomAnim = contentStep?.data?.type === "custom";
 
   // collecting preset configuration
@@ -27,7 +28,8 @@ const AnimationPropsHanlder = ({
     );
   }, [selectedPreset, selectedPresetGroup]);
 
-  if (!config || !defaultData) {
+  // validating preset configuration
+  if (selectedPreset !== config?.key || !config || !defaultData) {
     console.warn("Preset configuration not found!");
     return null;
   }

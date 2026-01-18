@@ -10,9 +10,9 @@ const defaultData = {
 };
 
 const config = {
-  title: "Space In Left",
+  title: "Space In Right",
   description: "",
-  key: "wcf-ab-gen-sil-fa",
+  key: "wcf-text-clip-reveal-free-animation",
   properties: [
     {
       accordionTitle: "Properties",

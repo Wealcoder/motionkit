@@ -234,7 +234,7 @@ return [
   // ############## FREE ANIMATIONS ##############
   "freePresets" => [
     // ############## GENERAL ############## //
-    'wcf-general-sil-free-animation' => [
+    'wcf-ab-gen-sil-fa' => [
       'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpaceInLeftAnim.js',
       'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSpeceInLeftAnim.js',
       'deps' => [],

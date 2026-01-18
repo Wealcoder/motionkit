@@ -1,8 +1,11 @@
-import GeneralSpaceInLeftFreeAnim from "@/components/editor/free_pesets/GeneralSpaceInLeftFreeAnim";
+import {
+  config,
+  defaultData,
+} from "@/animation_presets/free_pesets/general/spaceInLeft";
 
 AAEAnimBuilder.freePresets.register({
   groupName: "general",
-  presetKey: "wcf-general-sil-free-animation", // space in left = sil
+  presetKey: "wcf-ab-gen-sil-fa",
   name: "Space In Left",
-  component: GeneralSpaceInLeftFreeAnim,
+  configuration: { defaultData, config },
 });

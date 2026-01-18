@@ -9,7 +9,7 @@ export function generalSpaceInLeftAnim() {
   let allElements;
 
   function handler(e) {
-    const sections = e.detail["wcf-general-sil-free-animation"] || [];
+    const sections = e.detail["wcf-ab-gen-sil-fa"] || [];
 
     // Organizing elements data by trigger type.
     allElements = handleOrganizedSectionByTriggerType(sections);

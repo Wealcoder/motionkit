@@ -1,7 +1,7 @@
 import {
   config,
   defaultData,
-} from "@/animation_presets/free_pesets/general/spaceInLeft";
+} from "@/animation_presets/free_pesets/image/swashIn";
 
 AAEAnimBuilder.freePresets.register({
   groupName: "image",

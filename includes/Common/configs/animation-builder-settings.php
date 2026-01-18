@@ -255,7 +255,7 @@ return array(
             'youtube_url' => '',
             'description' => 'Vanish In brings elements into focus with a bold blur-to-clarity transition, offering a powerful, cinematic entrance that feels instantly impactful.',
           ),
-          'wcf-general-sil-free-animation' => array(
+          'wcf-ab-gen-sil-fa' => array(
             'label'       => 'Space In Left',
             'is_active'   => false,
             'is_upcoming' => false,

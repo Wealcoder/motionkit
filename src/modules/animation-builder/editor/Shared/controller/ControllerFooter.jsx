@@ -75,7 +75,10 @@ const ControllerFooter = ({
         Full Preview
       </Button>
       <div className={"flex justify-between items-center gap-2"}>
-        <Button className="min-h-9 min-w-[184px] px-4 py-2 bg-button-action hover:bg-button-action-hover text-15 font-medium leading-5 tracking-normal text-white rounded-5 border-none outline-none">
+        <Button
+          onClick={() => showPreview()}
+          className="min-h-9 min-w-[184px] px-4 py-2 bg-button-action hover:bg-button-action-hover text-15 font-medium leading-5 tracking-normal text-white rounded-5 border-none outline-none"
+        >
           <HugeiconsIcon icon={PlayCircleIcon} strokeWidth={2} />
           Play
         </Button>

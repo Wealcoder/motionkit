@@ -72,15 +72,14 @@ const AnimationPropsMapping = React.memo(
           />
         );
 
-      case "class-selection-field":
+      case "class-selector-field":
         return (
           <ClassSelectionField
             property={property}
             value={value}
-            onValueChang
             onDelete={() => {}}
             onDisabledUpdate={() => {}}
-            e={() => {}}
+            onValueChange={() => {}}
           />
         );
 
