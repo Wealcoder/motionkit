@@ -7,6 +7,7 @@ const defaultData = {
   animationDuration: 1,
   animationIterationCount: 0,
   animationTimingFunction: "ease",
+  tabs:{}
 };
 
 const config = {
@@ -52,7 +53,7 @@ const config = {
         {
           title: "Tabs",
           fieldType: "tabs-field",
-          path: "repeat",
+          path: "tabs",
           tabsTrigger: [
             { title: "Default", value: 'default' },
             { title: "Custom", value: 'custom' },

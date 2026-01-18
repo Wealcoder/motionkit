@@ -33,7 +33,7 @@ const AnimationPropsMapping = React.memo(
           data: { ...contentStep.data, ...newData },
         });
       },
-      [defaultData, path, contentStep, updateContentData]
+      [defaultData, path, contentStep, updateContentData],
     );
 
     // extracting latest value
@@ -145,7 +145,7 @@ const AnimationPropsMapping = React.memo(
           />
         );
 
-         case "tabs-field":
+      case "tabs-field":
         return (
           <TabsField
             property={property}
@@ -159,7 +159,7 @@ const AnimationPropsMapping = React.memo(
         return null;
     }
   },
-  (prev, next) => prev?.defaultData === next?.defaultData // if true memorized it
+  (prev, next) => prev?.defaultData === next?.defaultData, // if true memorized it
 );
 
 export default AnimationPropsMapping;

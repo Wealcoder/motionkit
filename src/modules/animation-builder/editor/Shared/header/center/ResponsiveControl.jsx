@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
-  ToolTipArrow,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
@@ -90,7 +89,6 @@ const ResponsiveControl = () => {
             </TooltipTrigger>
             <TooltipContent align="center" className="mr-0">
               <p>{device.viewWidth}</p>
-              <ToolTipArrow className="fill-[#474852] -mt-[0.5px]" />
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

@@ -15,6 +15,8 @@ const TabsField = ({
     {
     }
   },
+  contentStep = {},
+  updateContentData = () => {},
 }) => {
   const {
     title = "title",
@@ -25,6 +27,8 @@ const TabsField = ({
     isCustomAnim = false,
     ...rest
   } = property || {};
+  console.log("first");
+  return;
 
   const [activeTab, setActiveTab] = useState(tabsTrigger?.[0]?.value);
   console.log(activeTab);
@@ -42,7 +46,7 @@ const TabsField = ({
   // find matched content
   const matchedTabContent = tabsContent.find((item) => item.key === activeTab);
 
-  const hasProperties= !!matchedTabContent?.fields?.length
+  const hasProperties = !!matchedTabContent?.fields?.length;
 
   console.log(matchedTabContent);
 
@@ -78,19 +82,19 @@ const TabsField = ({
         </TabsList>
 
         <TabsContent value={activeTab}>
-           {hasProperties && (
-          <div className="flex flex-col gap-2">
-            {matchedTabContent?.fields?.map((property, index) => (
-              <AnimationPropsMapping
-                key={index}
-                property={property}
-                defaultData={defaultData}
-                contentStep={contentStep}
-                updateContentData={updateContentData}
-              />
-            ))}
-          </div>
-        )}
+          {hasProperties && (
+            <div className="flex flex-col gap-2">
+              {matchedTabContent?.fields?.map((property, index) => (
+                <AnimationPropsMapping
+                  key={index}
+                  property={property}
+                  defaultData={value}
+                  contentStep={contentStep}
+                  updateContentData={updateContentData}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
