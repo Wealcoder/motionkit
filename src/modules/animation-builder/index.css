@@ -6,36 +6,41 @@
 
 @layer base {
   :root {
-    /* editor */
-    --background: #18181b;
-    --background-topbar: #27272a;
+    /* text */
     --foreground: #ffffff;
+
+    /* editor */
+    --sidebar: #18181b;
+    --topbar: #27272a;
+
+    /* button */
+    --button-primary: #3f3f46;
+    --button-primary-hover: #52525b;
+    --button-primary-active: #3f3f46;
+    --button-action: #2c76e6;
+    --button-action-hover: #599bfd;
+    --button-action-active: #1a488b;
+    --button-destructive: #b34a33;
+    --button-destructive-hover: #e55f42;
+    --button-destructive-active: #b34a33;
+
+    /* others */
 
     --card: #161a20;
     --card-foreground: #ffffff;
-
     --popover: #161a20;
     --popover-foreground: #ffffff;
-
-    --primary: #3f3f46;
-    --primary-foreground: #ffffff;
-
     --secondary: #1c2129;
     --secondary-foreground: #ffffff;
-
     --muted: #1c2129;
     --muted-foreground: #9ca3af;
-
     --accent: #a855f7;
     --accent-foreground: #0f1115;
-
     --destructive: #f97316;
     --destructive-foreground: #ffffff;
-
     --border: #2a2f38;
     --input: #2a2f38;
     --ring: #9333ea;
-
     --radius: 8px;
   }
 }

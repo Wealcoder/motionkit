@@ -24,15 +24,31 @@ module.exports = {
         inter: ["Inter", "sans-serif"],
       },
       colors: {
-        background: "var(--background)",
-        topbar: "var(--background-topbar)",
-        foreground: "var(--foreground)",
+        primary: {
+          DEFAULT: "var(--primary)",
+          foreground: "var(--foreground)", // for text
+        },
 
+        background: {
+          DEFAULT: "var(--background)",
+          sidebar: "var(--sidebar)",
+          topbar: "var(--topbar)",
+        },
         card: {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
         },
-
+        button: {
+          primary: "var(--button-primary)",
+          "primary-hover": "var(--button-primary-hover)",
+          "primary-active": "var(--button-primary-active)",
+          action: "var(--button-action)",
+          "action-hover": "var(--button-action-hover)",
+          "action-active": "var(--button-action-active)",
+          destructive: "var(--button-destructive)",
+          "destructive-hover": "var(--button-destructive-hover)",
+          "destructive-active": "var(--button-destructive-active)",
+        },
         popover: {
           DEFAULT: "var(--popover)",
           foreground: "var(--popover-foreground)",
