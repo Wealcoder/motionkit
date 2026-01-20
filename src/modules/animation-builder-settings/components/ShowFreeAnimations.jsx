@@ -33,7 +33,7 @@ const ShowFreeAnimations = ({ searchKey, setPresetCount }) => {
         ([key, value]) => ({
           title: value?.title,
           value: key,
-        })
+        }),
       );
       setPresetTabList(result);
     }
@@ -42,7 +42,7 @@ const ShowFreeAnimations = ({ searchKey, setPresetCount }) => {
   // Filter presets based on search and tab
   useEffect(() => {
     if (!allFreeAnimations?.elements) return;
-    let filtered = allFreeAnimations.elements;
+    let filtered = allFreeAnimations?.elements;
     if (searchKey) {
       filtered = findSearchResult();
       setNoResult(!Object.keys(filtered).length);
@@ -64,12 +64,12 @@ const ShowFreeAnimations = ({ searchKey, setPresetCount }) => {
         .map(([key, value]) => {
           const filteredElements = Object.fromEntries(
             Object.entries(value.elements || {}).filter(([, v]) =>
-              v.label.toLowerCase().includes(searchKey.toLowerCase())
-            )
+              v.label.toLowerCase().includes(searchKey.toLowerCase()),
+            ),
           );
           return [key, { ...value, elements: filteredElements }];
         })
-        .filter(([, value]) => Object.keys(value.elements).length > 0)
+        .filter(([, value]) => Object.keys(value.elements).length > 0),
     );
   };
 
