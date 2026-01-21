@@ -13,8 +13,8 @@
     --sidebar: #18181b;
     --topbar: #27272a;
 
-    /* button */
-    --button-primary: #3f3f46;
+    /* button field */
+    --button-primary: #303033;
     --button-primary-hover: #52525b;
     --button-primary-active: #3f3f46;
     --button-action: #2c76e6;
@@ -23,13 +23,42 @@
     --button-destructive: #b34a33;
     --button-destructive-hover: #e55f42;
     --button-destructive-active: #b34a33;
+    --text-button-color: #fafafa;
+    --text-button-color-hover: #fafafa;
+    --text-button-color-active: #fafafa;
+
+    /* input field */
+    --background-input: #303033;
+    --background-input-hover: #3f3f46;
+    --background-input-focus: #3f3f46;
+    --text-input-color: #fafafa;
+    --text-input-color-hover: #fafafa;
+    --text-input-color-active: #fafafa;
+
+    /* switch field */
+    --switch-button-primary: #52525b;
+    --switch-button-track: #e7f4e8;
+    --switch-button-primary-active: #2c76e6;
+
+    /* select field */
+    --select-primary: #303033;
+    --select-secondary: #52525b;
+    --select-primary-hover: #52525b;
+    --select-primary-active: #3f3f46;
+    --text-select-color: #fafafa;
+    --text-select-color-hover: #fafafa;
+    --text-select-color-active: #fafafa;
+
+    /* popup */
+    --popover: #303033;
+    --popover-foreground: #ffffff;
+
+    /* text placeholder */
+    --input-placeholder: #d4d4d8;
 
     /* others */
-
     --card: #161a20;
     --card-foreground: #ffffff;
-    --popover: #161a20;
-    --popover-foreground: #ffffff;
     --secondary: #1c2129;
     --secondary-foreground: #ffffff;
     --muted: #1c2129;
@@ -42,12 +71,179 @@
     --input: #2a2f38;
     --ring: #9333ea;
     --radius: 8px;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
-}
+  .dark {
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
 
-@layer base {
   body {
     @apply m-0 p-0;
+  }
+
+  /* dynamic properties field styles */
+  .wcf-ab-title {
+    @apply text-white
+    text-label
+    font-semibold
+    leading-5
+    tracking-normal
+    text-nowrap;
+  }
+
+  /* dynamic properties input box */
+  .wcf-ab-dynamic-field-input {
+    @apply min-h-[28px]
+    max-w-[150px]
+    px-[12px]
+    py-[5px]
+    !bg-input
+    hover:bg-input-hover
+    focus:bg-input-focus
+    font-inter
+    text-input-color
+    hover:text-input-hover-color
+    focus:text-input-focus-color
+    active:text-input-focus-color
+    !text-[12px]
+    font-normal
+    leading-18
+    tracking-normal
+    placeholder:text-placeholder
+    border-none
+    outline-none
+    ring-0
+    focus:ring-0
+    rounded-5
+    cursor-text;
+  }
+
+  /* button */
+  .wcf-ab-button-general {
+    @apply min-h-[28px]
+    px-2
+    py-1
+    font-inter
+    text-button-color
+    hover:text-button-hover-color
+    focus:text-button-focus-color
+    active:text-button-focus-color
+    !text-button-font-size
+    font-medium
+    leading-18
+    tracking-normal
+    outline-none
+    outline-transparent
+    active:outline-white
+    ring-0
+    !rounded-5
+    cursor-pointer;
+  }
+
+  .wcf-ab-button-primary {
+    @apply bg-button
+    hover:bg-button-hover
+    focus:bg-button-focus
+    border
+    border-transparent
+    hover:border-[#fafafa];
+  }
+
+  .wcf-ab-button-action {
+    @apply bg-button-action
+    hover:bg-button-action-hover
+    focus:bg-button-action-focus
+     border
+    border-transparent
+    hover:border-[#fafafa];
+  }
+
+  .wcf-ab-button-destructive {
+    @apply bg-button-destructive
+    hover:bg-button-destructive-hover
+    focus:bg-button-destructive-focus
+     border
+    border-transparent
+    hover:border-[#fafafa];
+  }
+
+  .wcf-ab-button-icon {
+    @apply !h-[28px]
+    w-[28px]
+    !p-3
+    bg-button
+    hover:bg-button-hover
+    focus:bg-button-focus
+    active:bg-button-action
+    text-button-color
+    hover:text-button-hover-color
+    focus:text-button-focus-color
+    active:text-button-focus-color
+    text-button-icon-size
+    border-none
+    outline-1
+    outline-transparent
+    hover:outline-transparent
+    focus:outline-white
+    active:outline-transparent
+    ring-0
+    focus:ring-0
+    rounded-5
+    cursor-pointer;
+  }
+
+  /* switch field  */
+  .wcf-ab-switch-field {
+    @apply bg-switch
+    data-[state=checked]:bg-switch-active
+    [&>span]:bg-switch-thumb
+    data-[state=checked]:[&>span]:bg-switch-thumb-active
+    px-0;
+  }
+
+  /* Select field */
+  .wcf-ab-select-trigger {
+    @apply h-[34px]
+    max-w-[150px]
+    px-[10px]
+    py-[5px]
+    !bg-select
+    text-select-color
+    !text-select-font-size
+    font-medium
+    leading-18
+    border-none
+    outline-none
+    rounded-5
+    cursor-pointer;
+  }
+
+  .wcf-ab-select-content {
+    @apply max-w-[200px]
+    p-[10px]
+    !bg-select-secondary
+    text-select-color
+    !text-select-font-size
+    font-normal
+    leading-5
+    tracking-normal
+    border-none
+    outline-none
+    rounded-5;
   }
 }
 
@@ -55,6 +251,7 @@
   @apply font-inter box-border;
 }
 
+/* scrollbar styles */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(120, 120, 120, 0.5) transparent;
@@ -72,7 +269,7 @@
 *::-webkit-scrollbar-thumb {
   background-color: rgba(120, 120, 120, 0.5);
   border-radius: 999px;
-  border: 2px solid transparent; /* creates padding */
+  border: 2px solid transparent;
   background-clip: content-box;
 }
 

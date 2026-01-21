@@ -8,7 +8,7 @@ const ActivateBorderBtn = () => {
 
   const updateActiveBorder = (value) => {
     const iframe = document.getElementById(
-      "wcf--animation-builder--animation--preview"
+      "wcf--animation-builder--animation--preview",
     );
     setActiveBorder(value);
     localStorage.setItem("aae_selected_border", value);
@@ -20,7 +20,7 @@ const ActivateBorderBtn = () => {
 
   return (
     <Button
-      className={`h-[36px] w-[36px] bg-button-primary border-none text-white rounded-5`}
+      className={`wcf-ab-button-icon`}
       onClick={() => updateActiveBorder(!activeBorder)}
     >
       <HugeiconsIcon icon={ViewIcon} size={16} strokeWidth={2} />

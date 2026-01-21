@@ -23,16 +23,16 @@ const FreePresetAnimation = () => {
 
   // storing preset and preset group information
   const [selectedPresetGroup, setSelectedPresetGroup] = useState(
-    contentStep?.data?.presetGroup || ""
+    contentStep?.data?.presetGroup || "",
   );
   const [selectedPreset, setSelectedPreset] = useState(
-    contentStep?.data?.preset || ""
+    contentStep?.data?.preset || "",
   );
 
   // collecting free presets and preset groups
   const allPresetGroup = useMemo(
     () => animationPresets?.getAllFreePresetGroups?.() || [],
-    [animationPresets]
+    [animationPresets],
   );
   const presetList = useMemo(() => {
     if (!selectedPresetGroup) return [];
@@ -72,33 +72,29 @@ const FreePresetAnimation = () => {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2 bg-background px-3 py-[15px] rounded-5">
+      <div className="flex flex-col gap-2 bg-background  rounded-5">
         {/* title */}
         <div className="flex justify-between items-center">
-          <span className="text-sm font-normal leading-5 tracking-normal">
-            Title
-          </span>
+          <span className="wcf-ab-title">Title</span>
           <Input
             value={contentStep?.data?.title}
             onChange={(e) => updateContentData(e.target.value, "title")}
             placeholder="Title Animation"
-            className="h-[34px] max-w-52 px-3 py-2 bg-background-input hover:bg-input-hover focus:bg-input-focus text-input-placeholder placeholder:text-input-placeholder hover:text-input-text-hover focus:text-input-text-focus text-sm font-medium leading-[18px] border-none outline-none ring-0 focus:ring-0 rounded-5 cursor-text"
+            className="wcf-ab-dynamic-field-input"
           />
         </div>
         {/* preset group */}
         {contentStep?.data?.type && (
           <div className="flex justify-between items-center ">
-            <span className="text-sm font-normal leading-5 tracking-normal">
-              Preset
-            </span>
+            <span className="wcf-ab-title">Preset</span>
             <Select
               value={selectedPresetGroup}
               onValueChange={handleUpdatePresetGroup}
             >
-              <SelectTrigger className="h-[34px] max-w-52 px-3 py-2 bg-background-input hover:bg-input-hover focus:bg-input-focus text-input-placeholder placeholder:text-input-placeholder hover:text-input-text-hover focus:text-input-text-focus text-sm font-medium leading-[18px] border-none outline-none rounded-5 cursor-pointer">
+              <SelectTrigger className="wcf-ab-select-trigger">
                 <SelectValue placeholder="Option" className="line-clamp-1" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="wcf-ab-select-content">
                 <SelectGroup>
                   {allPresetGroup?.map((preset, index) => (
                     <SelectItem
@@ -117,14 +113,12 @@ const FreePresetAnimation = () => {
         {/* preset type */}
         {selectedPresetGroup && (
           <div className="flex justify-between items-center ">
-            <span className="text-sm font-normal leading-5 tracking-normal">
-              Type
-            </span>
+            <span className="wcf-ab-title">Type</span>
             <Select value={selectedPreset} onValueChange={handleUpdatePreset}>
-              <SelectTrigger className="h-[34px] max-w-52 px-3 py-2 bg-background-input hover:bg-input-hover focus:bg-input-focus text-input-placeholder placeholder:text-input-placeholder hover:text-input-text-hover focus:text-input-text-focus text-sm font-medium leading-[18px] border-none outline-none rounded-5 cursor-pointer">
+              <SelectTrigger className="wcf-ab-select-trigger">
                 <SelectValue placeholder="Option" className="line-clamp-1" />
               </SelectTrigger>
-              <SelectContent className="min-w-[90px]">
+              <SelectContent className="wcf-ab-select-content">
                 <SelectGroup>
                   {presetList?.map((preset) => (
                     <SelectItem key={preset.presetKey} value={preset.presetKey}>

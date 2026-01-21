@@ -28,10 +28,8 @@ const SwitchField = ({
     <div>
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
-        <div className="flex items-center gap-3 text-[#E4E4E7]">
-          <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {property?.title}
-          </span>
+        <div className="flex items-center gap-[6px]">
+          <span className="wcf-ab-title">{property?.title}</span>
           {property?.tooltipContent && (
             <ToolTipWrapper text={property?.tooltipContent} />
           )}
@@ -44,7 +42,7 @@ const SwitchField = ({
               checked={toggleValue}
               onCheckedChange={handleToggle}
               id="airplane-mode"
-              className="cursor-pointer"
+              className="wcf-ab-switch-field"
             />
           </div>
 

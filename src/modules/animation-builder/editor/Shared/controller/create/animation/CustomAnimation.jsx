@@ -16,14 +16,14 @@ const CustomAnimation = () => {
       <div className="p-3 border-b border-border flex flex-col gap-3">
         <div className="flex justify-between items-center gap-2">
           <div className="w-[56px]">
-            <h3 className="text-xs text-text-2">Title</h3>
+            <h3 className="wcf-ab-title">Title</h3>
           </div>
           <div className="flex-1">
             <Input
               value={contentStep?.data?.title}
               onChange={(e) => updateContentData(e.target.value, "title")}
               placeholder="Title Animation"
-              className="h-[28px]"
+              className="wcf-ab-dynamic-field-input"
             />
           </div>
         </div>

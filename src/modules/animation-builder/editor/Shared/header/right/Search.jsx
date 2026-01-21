@@ -4,9 +4,7 @@ import { Search01Icon } from "@hugeicons/core-free-icons";
 
 const Search = () => {
   return (
-    <Button
-      className={`h-[36px] w-[36px] bg-button-primary border-none text-white rounded-5`}
-    >
+    <Button className={"wcf-ab-button-icon"}>
       <HugeiconsIcon icon={Search01Icon} size={16} strokeWidth={2} />
     </Button>
   );

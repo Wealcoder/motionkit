@@ -49,10 +49,8 @@ const RotationField = ({
     <div>
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         {/* title */}
-        <div className="flex items-center gap-3 text-[#E4E4E7]">
-          <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {title}
-          </span>
+        <div className="flex items-center gap-3">
+          <span className="wcf-ab-title">{title}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
@@ -60,9 +58,7 @@ const RotationField = ({
         <div className="flex-1 flex justify-end items-center gap-3">
           <Popover>
             <PopoverTrigger asChild>
-              <div className="relative flex items-center justify-center rounded-full bg-[#A1A1AA] shadow-sm w-5 h-5">
-                <div className="absolute top-1 h-2 w-0.5 rounded bg-primary" />
-              </div>
+              <div className="!h-[21px] !min-w-[21px] !max-w-[21px] bg-[#A1A1AA] rounded-full border-[1px] border-dashed border-[#A1A1AA]" />
             </PopoverTrigger>
             <PopoverContent>
               <Wheeler
@@ -79,7 +75,7 @@ const RotationField = ({
             value={inputValue}
             min={min}
             max={max}
-            className="w-28"
+            className="wcf-ab-dynamic-field-input"
             onChange={(e) => handleInput(e.target.value)}
           />
 
@@ -104,12 +100,12 @@ const Wheeler = ({ min, max, value, size = 70, onChange = () => {} }) => {
 
   const valueToAngle = useCallback(
     (v) => ((clamp(v, min, max) - min) / (max - min)) * 360,
-    [min, max]
+    [min, max],
   );
 
   const angleToValue = useCallback(
     (a) => min + (a / 360) * (max - min),
-    [min, max]
+    [min, max],
   );
 
   const [angle, setAngle] = useState(() => valueToAngle(value));
@@ -140,7 +136,7 @@ const Wheeler = ({ min, max, value, size = 70, onChange = () => {} }) => {
       const nextValue = angleToValue(normalized);
       onChange(Math.round(nextValue));
     },
-    [angleToValue, onChange]
+    [angleToValue, onChange],
   );
 
   const onPointerDown = useCallback(
@@ -153,7 +149,7 @@ const Wheeler = ({ min, max, value, size = 70, onChange = () => {} }) => {
       // IMPORTANT: update immediately on click
       updateFromPointer(e.clientX, e.clientY);
     },
-    [updateFromPointer]
+    [updateFromPointer],
   );
 
   const onPointerMove = useCallback(
@@ -162,7 +158,7 @@ const Wheeler = ({ min, max, value, size = 70, onChange = () => {} }) => {
       e.preventDefault();
       updateFromPointer(e.clientX, e.clientY);
     },
-    [updateFromPointer]
+    [updateFromPointer],
   );
 
   const onPointerUp = useCallback((e) => {

@@ -1,6 +1,7 @@
 import { Badge } from "@@/components/ui/badge";
 import { Switch } from "@@/components/ui/switch";
 import { cn } from "@@/lib/utils";
+import { Settings01Icon } from "@hugeicons/core-free-icons/index";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 const PresetCard = ({

@@ -23,7 +23,7 @@ const AnimationPropsHanlder = ({
     return (
       AAEAnimBuilder.freePresets?.getSingleFreePresets(
         selectedPresetGroup,
-        selectedPreset
+        selectedPreset,
       )?.configuration || {}
     );
   }, [selectedPreset, selectedPresetGroup]);
@@ -70,16 +70,14 @@ const SingleAccordion = ({
       type="single"
       collapsible={isCustomAnim}
       value={accordionValue}
-      className="flex flex-col gap-2 bg-background px-3 py-[15px] rounded-5"
+      className="flex flex-col gap-2 bg-background rounded-5"
     >
       <AccordionItem value="item-1">
-        {isCustomAnim && (
-          <AccordionTrigger>
-            <span className="text-white text-base font-medium leading-5 tracking-normal">
-              {title}
-            </span>
-          </AccordionTrigger>
-        )}
+        <AccordionTrigger>
+          <span className="text-white text-[13px] font-semibold leading-5 tracking-normal">
+            {title}
+          </span>
+        </AccordionTrigger>
 
         {/* mapping each property */}
         {hasProperties && (

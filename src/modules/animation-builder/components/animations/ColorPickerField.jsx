@@ -20,27 +20,25 @@ const ColorPickerField = ({
   } = property || {};
 
   const [color, setColor] = useState(value || "#FFFFFF");
-  const [isValidColorCode, setIsValidColorCode] = useState("");
+  const [isValidColorCode, setIsValidColorCode] = useState(true);
   const colorInputRef = useRef(null);
 
   //   validate hex (3 or 6 chars)
   const isValidHex = (value) =>
     /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(value);
 
-  if (!isValid) {
+  if (!isValidColorCode) {
     return setIsValidColorCode(
-      "Hex Color Code is not valid. Give a Valid Color Code"
+      "Hex Color Code is not valid. Give a Valid Color Code",
     );
   }
 
   return (
-    <div className="p-2">
+    <div>
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
-        <div className="flex items-center gap-3 text-[#E4E4E7]">
-          <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {title}
-          </span>
+        <div className="flex items-center gap-[6px]">
+          <span className="wcf-ab-title">{title}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
@@ -58,9 +56,8 @@ const ColorPickerField = ({
             {/* Color swatch button */}
             <Button
               type="button"
-              size="icon"
               onClick={() => colorInputRef.current?.click()}
-              className="h-6 w-6 rounded-full border-2 border-[#3F3F46]"
+              className="!h-[22px] !min-w-[22px] p-0 rounded-full border-none"
               style={{ backgroundColor: color }}
             />
 
@@ -77,7 +74,7 @@ const ColorPickerField = ({
                 }
               }}
               placeholder="Add Value"
-              className="w-28 uppercase"
+              className="wcf-ab-dynamic-field-input"
             />
           </div>
           {isCustomAnim && <DeleteBtn onDelete={onDelete} />}

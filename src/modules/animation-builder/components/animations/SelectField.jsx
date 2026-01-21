@@ -44,18 +44,16 @@ const SelectField = ({
     <div>
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
-        <div className="flex items-center gap-3 text-[#E4E4E7]">
-          <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {title}
-          </span>
+        <div className="flex items-center gap-[6px]">
+          <span className="wcf-ab-title">{title}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
         <div className="flex-1 flex justify-end items-center gap-3">
           <Select value={selectedValue} onValueChange={handleSelect}>
-            <SelectTrigger className="h-[34px] max-w-52 px-3 py-2 bg-background-input hover:bg-input-hover focus:bg-input-focus text-input-placeholder placeholder:text-input-placeholder hover:text-input-text-hover focus:text-input-text-focus text-sm font-medium leading-[18px] border-none outline-none rounded-5 cursor-pointer">
+            <SelectTrigger className="wcf-ab-select-trigger">
               <SelectValue placeholder="Select Method" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="wcf-ab-select-content">
               {fieldData?.map((field, index) => {
                 // if field does not contain value use title (formatting camel case) as value
                 const isObjectType =

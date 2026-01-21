@@ -1,6 +1,5 @@
 import {
   Tooltip,
-  ToolTipArrow,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
@@ -16,15 +15,12 @@ const ToolTipWrapper = ({ text = "" }) => {
           <div className="cursor-pointer flex justify-center items-center">
             <HugeiconsIcon
               icon={InformationCircleFreeIcons}
-              size={16}
+              size={10}
               strokeWidth={2}
             />
           </div>
         </TooltipTrigger>
-        <TooltipContent align="start">
-          {text}
-          <ToolTipArrow className="fill-[#474852] -mt-[0.5px] ml-5" />
-        </TooltipContent>
+        <TooltipContent align="start">{text}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

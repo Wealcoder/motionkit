@@ -31,10 +31,8 @@ const TextField = ({
     <div>
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
-        <div className="flex items-center gap-3 text-[#E4E4E7]">
-          <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {property?.title ?? ""}
-          </span>
+        <div className="flex items-center gap-[6px]">
+          <span className="wcf-ab-title">{property?.title ?? ""}</span>
           {property?.tooltipContent && (
             <ToolTipWrapper text={property?.tooltipContent} />
           )}
@@ -44,7 +42,7 @@ const TextField = ({
         <div className="flex-1 flex justify-end items-center gap-3">
           <Input
             placeholder=".start_trigger"
-            className="h-[34px] max-w-52 px-3 py-2 bg-background-input hover:bg-input-hover focus:bg-input-focus text-input-placeholder placeholder:text-input-placeholder hover:text-input-text-hover focus:text-input-text-focus text-sm font-medium leading-[18px] border-none outline-none ring-0 focus:ring-0 rounded-5 cursor-text"
+            className="wcf-ab-dynamic-field-input"
             value={currentValue}
             type="text"
             onChange={(e) => {
@@ -57,7 +55,7 @@ const TextField = ({
       </div>
       {/* required message */}
       {property?.isRequired && isDataValid && (
-        <p className="text-white text-sm">Field is Required</p>
+        <p className="text-white text-message">Field is Required</p>
       )}
     </div>
   );

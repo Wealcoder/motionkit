@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
-  ToolTipArrow,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
@@ -82,7 +81,7 @@ const ResponsiveControl = () => {
                   selectedDevice === device?.key
                     ? "bg-button-primary  text-white"
                     : "bg-transparent hover:bg-button-primary text-[#A1A1AA] hover:text-white",
-                  "h-[36px] w-[36px] rounded-full border-none"
+                  "h-[36px] w-[36px] rounded-full border-none",
                 )}
               >
                 {ResponsiveIcons[device.key]}
@@ -90,7 +89,6 @@ const ResponsiveControl = () => {
             </TooltipTrigger>
             <TooltipContent align="center" className="mr-0">
               <p>{device.viewWidth}</p>
-              <ToolTipArrow className="fill-[#474852] -mt-[0.5px]" />
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

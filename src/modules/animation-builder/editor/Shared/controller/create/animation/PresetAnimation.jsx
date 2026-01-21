@@ -39,7 +39,7 @@ const PresetAnimation = () => {
               value={contentStep?.data?.title}
               onChange={(e) => updateContentData(e.target.value, "title")}
               placeholder="Title Animation"
-              className="h-[28px]"
+              className="wcf-ab-dynamic-field-input"
             />
           </div>
         </div>
