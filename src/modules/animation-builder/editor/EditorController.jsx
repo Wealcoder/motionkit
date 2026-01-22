@@ -33,7 +33,11 @@ export default function EditorController() {
   };
 
   return (
-    <Sidebar side="right" collapsible="icon">
+    <Sidebar
+      side="right"
+      collapsible="icon"
+      className="outline-l-4 outline-red-dev"
+    >
       <SidebarHeader>
         {/* for creating new animation */}
         {contentStep?.step === 1 && (

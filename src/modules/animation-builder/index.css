@@ -16,7 +16,7 @@
     /* button field */
     --button-primary: #303033;
     --button-primary-hover: #52525b;
-    --button-primary-active: #3f3f46;
+    --button-primary-active: #303033;
     --button-action: #2c76e6;
     --button-action-hover: #599bfd;
     --button-action-active: #1a488b;
@@ -53,10 +53,8 @@
     --popover: #303033;
     --popover-foreground: #ffffff;
 
-    /* text placeholder */
+    /* shadcn generation */
     --input-placeholder: #d4d4d8;
-
-    /* others */
     --card: #161a20;
     --card-foreground: #ffffff;
     --secondary: #1c2129;
@@ -80,6 +78,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -134,21 +133,24 @@
 
   /* button */
   .wcf-ab-button-general {
-    @apply min-h-[28px]
+    @apply min-h-[28px] max-h-[28px]
     px-2
-    py-1
+    py-[5px]
     font-inter
     text-button-color
     hover:text-button-hover-color
     focus:text-button-focus-color
     active:text-button-focus-color
-    !text-button-font-size
+    text-button-font-size
     font-medium
     leading-18
     tracking-normal
-    outline-none
+    border-none
+    outline
+    outline-1
     outline-transparent
-    active:outline-white
+    hover:outline-transparent
+    active:outline-[#fafafa]
     ring-0
     !rounded-5
     cursor-pointer;
@@ -157,34 +159,24 @@
   .wcf-ab-button-primary {
     @apply bg-button
     hover:bg-button-hover
-    focus:bg-button-focus
-    border
-    border-transparent
-    hover:border-[#fafafa];
+    focus:bg-button-focus;
   }
 
   .wcf-ab-button-action {
     @apply bg-button-action
     hover:bg-button-action-hover
-    focus:bg-button-action-focus
-     border
-    border-transparent
-    hover:border-[#fafafa];
+    focus:bg-button-action-focus;
   }
 
   .wcf-ab-button-destructive {
     @apply bg-button-destructive
     hover:bg-button-destructive-hover
-    focus:bg-button-destructive-focus
-     border
-    border-transparent
-    hover:border-[#fafafa];
+    focus:bg-button-destructive-focus;
   }
 
   .wcf-ab-button-icon {
-    @apply !h-[28px]
-    w-[28px]
-    !p-3
+    @apply !h-[28px] !w-[28px]
+    px-3 py-3
     bg-button
     hover:bg-button-hover
     focus:bg-button-focus
@@ -195,10 +187,11 @@
     active:text-button-focus-color
     text-button-icon-size
     border-none
+    outline
     outline-1
     outline-transparent
     hover:outline-transparent
-    focus:outline-white
+    focus:outline-[#fafafa]
     active:outline-transparent
     ring-0
     focus:ring-0

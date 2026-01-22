@@ -71,27 +71,20 @@ const ResponsiveControl = () => {
 
   return (
     <div className="flex items-center justify-center gap-4">
-      {WCF_ANIMATION_BUILDER?.device_config?.map((device) => (
-        <TooltipProvider delayDuration={100} key={device.key}>
-          <Tooltip delayDuration={100}>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={() => handleSetSelectedDevice(device.key)}
-                className={cn(
-                  selectedDevice === device?.key
-                    ? "bg-button-primary  text-white"
-                    : "bg-transparent hover:bg-button-primary text-[#A1A1AA] hover:text-white",
-                  "h-[36px] w-[36px] rounded-full border-none",
-                )}
-              >
-                {ResponsiveIcons[device.key]}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent align="center" className="mr-0">
-              <p>{device.viewWidth}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      {WCF_ANIMATION_BUILDER?.device_config?.map((device, index) => (
+        <Button
+          key={index}
+          size={"icon"}
+          onClick={() => handleSetSelectedDevice(device.key)}
+          className={cn(
+            selectedDevice === device?.key
+              ? "bg-button text-white"
+              : "bg-transparent hover:bg-button-hover text-white",
+            "rounded-full border-none focus:outline focus:outline-1 focus:outline-[#fafafa]",
+          )}
+        >
+          {ResponsiveIcons[device.key]}
+        </Button>
       ))}
     </div>
   );

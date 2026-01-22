@@ -17,7 +17,7 @@ export default function Editor() {
   useEffect(() => {
     disableIframeLinks();
     // controlling editor preview pane interaction
-    window.addEventListener("wheel", handleWheel, { passive: false });
+    // window.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
       window.removeEventListener("wheel", handleWheel);
     };

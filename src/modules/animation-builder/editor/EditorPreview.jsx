@@ -33,38 +33,37 @@ const EditorPreview = () => {
   return (
     <div className="h-full bg-[#404040] relative min-w-full flex justify-center">
       {/* zoom indicator */}
-      <div className="absolute top-2 right-4 z-10 px-4 py-2 min-h-[34px]  grid grid-cols-[50px,1fr] justify-center items-center gap-4 bg-background text-white text-sm font-normal leading-none border-none rounded-5">
+      <div className="absolute top-2 right-4 z-10 px-4 py-2 min-h-[34px] grid grid-cols-[50px,1fr] justify-center items-center gap-4 bg-[#202024] text-white text-sm font-normal leading-none border border-solid border-button rounded-5">
         <span>{(settings?.editorZoomLevel * 100).toFixed(0)}%</span>
         <ButtonGroup className={"gap-2"}>
           <Button
             onClick={() => handleEditorZoom("negative", settings)}
-            size="icon"
             className={cn(
-              "wcf-ab-button-general wcf-ab-button-primary ",
+              "wcf-ab-button-general wcf-ab-button-icon p-[7px]",
               settings?.editorZoomLevel === editorConfig?.minZoom
                 ? "!cursor-not-allowed"
                 : "!cursor-pointer",
             )}
             disabled={settings?.editorZoomLevel === editorConfig?.minZoom}
           >
-            <HugeiconsIcon icon={Remove01Icon} size={16} strokeWidth={2} />
+            <HugeiconsIcon icon={Remove01Icon} size={16} strokeWidth={2.1} />
           </Button>
           <Button
             onClick={() => handleEditorZoom("positive", settings)}
             size="icon"
             className={cn(
-              "wcf-ab-button-general wcf-ab-button-primary ",
+              "wcf-ab-button-general wcf-ab-button-icon p-[7px]",
               settings?.editorZoomLevel === editorConfig?.maxZoom
                 ? "!cursor-not-allowed"
                 : "!cursor-pointer",
             )}
             disabled={settings?.editorZoomLevel === editorConfig?.maxZoom}
           >
-            <HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />
+            <HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2.1} />
           </Button>
           <Button
             onClick={() => resetEditorPreview()}
-            className="wcf-ab-button-general wcf-ab-button-primary "
+            className="wcf-ab-button-general wcf-ab-button-primary !h-5 py-1 px-3"
           >
             Reset
           </Button>

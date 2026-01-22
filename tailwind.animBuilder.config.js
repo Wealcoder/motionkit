@@ -17,6 +17,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        foreground: "var(--foreground)",
         background: {
           sidebar: "var(--sidebar)",
           topbar: "var(--topbar)",
@@ -64,7 +65,6 @@ module.exports = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // TODO: apply popover bg
         popover: {
           DEFAULT: "var(--popover)",
         },

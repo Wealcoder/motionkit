@@ -61,7 +61,7 @@ const ControllerHeader = ({
                     className={cn(
                       "size-3 rounded-full",
                       currentTab === content.value
-                        ? "bg-[#4CA1B3]"
+                        ? "bg-button-action"
                         : "bg-[#303033]",
                     )}
                   />

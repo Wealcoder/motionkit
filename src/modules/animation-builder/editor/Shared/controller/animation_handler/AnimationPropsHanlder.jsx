@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -5,7 +6,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useMemo } from "react";
 import AnimationPropsMapping from "./AnimationPropsMapping";
 
 const AnimationPropsHanlder = ({
@@ -37,16 +37,24 @@ const AnimationPropsHanlder = ({
   return (
     <ScrollArea className="w-full h-full">
       <div className="flex flex-col gap-3">
-        {config?.properties?.map((accordion, index) => (
-          <SingleAccordion
-            key={index}
-            defaultData={defaultData}
-            accordion={accordion}
-            isCustomAnim={isCustomAnim}
-            contentStep={contentStep}
-            updateContentData={updateContentData}
-          />
-        ))}
+        <Accordion
+          type="single"
+          collapsible
+          defaultValue="item-0"
+          className="flex flex-col gap-2 bg-background rounded-5"
+        >
+          {config?.properties?.map((accordion, index) => (
+            <SingleAccordion
+              key={index}
+              accordionItemValue={index}
+              defaultData={defaultData}
+              accordion={accordion}
+              isCustomAnim={isCustomAnim}
+              contentStep={contentStep}
+              updateContentData={updateContentData}
+            />
+          ))}
+        </Accordion>
       </div>
     </ScrollArea>
   );
@@ -55,45 +63,38 @@ const AnimationPropsHanlder = ({
 export default AnimationPropsHanlder;
 
 const SingleAccordion = ({
+  accordionItemValue = 0,
   defaultData = {},
   accordion = {},
   isCustomAnim = false,
   contentStep = {},
   updateContentData = () => {},
 }) => {
-  const { title = "", properties = [] } = accordion;
+  const { accordionTitle = "", properties = [] } = accordion;
   const hasProperties = properties.length > 0;
-  const accordionValue = isCustomAnim ? undefined : "item-1";
-
   return (
-    <Accordion
-      type="single"
-      collapsible={isCustomAnim}
-      value={accordionValue}
-      className="flex flex-col gap-2 bg-background rounded-5"
+    <AccordionItem
+      value={`item-${accordionItemValue}`}
+      style={{ borderBottom: "1px solid #202024" }}
     >
-      <AccordionItem value="item-1">
-        <AccordionTrigger>
-          <span className="text-white text-[13px] font-semibold leading-5 tracking-normal">
-            {title}
-          </span>
-        </AccordionTrigger>
+      <AccordionTrigger className="wcf-ab-button-general bg-transparent text-[13px] font-semibold hover:no-underline p-0 active:outline-none">
+        {accordionTitle}
+      </AccordionTrigger>
 
-        {/* mapping each property */}
-        {hasProperties && (
-          <AccordionContent className="flex flex-col gap-2">
-            {properties.map((property, index) => (
-              <AnimationPropsMapping
-                key={index}
-                property={property}
-                defaultData={defaultData}
-                contentStep={contentStep}
-                updateContentData={updateContentData}
-              />
-            ))}
-          </AccordionContent>
-        )}
-      </AccordionItem>
-    </Accordion>
+      {/* mapping each property */}
+      {hasProperties && (
+        <AccordionContent className="flex flex-col gap-2">
+          {properties.map((property, index) => (
+            <AnimationPropsMapping
+              key={index}
+              property={property}
+              defaultData={defaultData}
+              contentStep={contentStep}
+              updateContentData={updateContentData}
+            />
+          ))}
+        </AccordionContent>
+      )}
+    </AccordionItem>
   );
 };
