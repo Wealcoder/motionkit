@@ -65,7 +65,7 @@ const NumberField2 = ({
           <InputGroup className="wcf-ab-dynamic-field-input px-1">
             <InputGroupInput
               placeholder="Add Value"
-              className="!text-white text-input-font-size font-normal leading-18 tracking-normal"
+              className="!text-foreground !text-input-font-size font-normal leading-18 tracking-normal"
               value={inputValue}
               min={min}
               max={max}
@@ -79,21 +79,26 @@ const NumberField2 = ({
             {/* plus - minus icon */}
             <InputGroupAddon align="inline-end" className={"pr-[6px]"}>
               <InputGroupButton
-                className="wcf-ab-button-icon hover:bg-background-topbar active:bg-background-topbar border-r-[1px] border-r-[#71717A] rounded-r-none"
+                className="wcf-ab-button-icon bg-[--background-secondary] hover:bg-[--button-primary-hover] active:bg-[--button-primary-hover] border-r-[1px] border-r-[#71717A] rounded-r-none rounded-l-5"
                 onClick={() => updateValue(inputValue - step)}
               >
                 <HugeiconsIcon
                   icon={MinusSignIcon}
-                  className="text-[#E4E4E7]"
+                  strokeWidth={2}
+                  className="text-foreground"
                 />
               </InputGroupButton>
             </InputGroupAddon>
             <InputGroupAddon align="inline-end">
               <InputGroupButton
-                className="wcf-ab-button-icon hover:bg-background-topbar active:bg-background-topbar border-l-[1px]  border-l-[#71717A] rounded-l-none"
+                className="wcf-ab-button-icon bg-[--background-secondary] hover:bg-[--button-primary-hover] active:bg-[--button-primary-hover] border-l-[1px]  border-l-[#71717A] rounded-l-none rounded-r-5"
                 onClick={() => updateValue(inputValue + step)}
               >
-                <HugeiconsIcon icon={PlusSignIcon} className="text-[#E4E4E7]" />
+                <HugeiconsIcon
+                  icon={PlusSignIcon}
+                  strokeWidth={2}
+                  className="text-foreground"
+                />
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>

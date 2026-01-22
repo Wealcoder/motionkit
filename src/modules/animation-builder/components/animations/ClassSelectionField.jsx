@@ -48,7 +48,7 @@ const ClassSelectionField = ({
         <InputGroup className="wcf-ab-dynamic-field-input max-w-none px-[10px] ">
           <InputGroupInput
             placeholder="h1.hero_title"
-            className="p-0 !text-white text-input-font-size font-normal leading-18 tracking-normal"
+            className="p-0 !text-foreground !text-input-font-size font-normal leading-18 tracking-normal"
             value={inputValue}
             type="text"
             onChange={(e) => {
@@ -60,10 +60,15 @@ const ClassSelectionField = ({
           <InputGroupAddon align="inline-end" className="pr-0">
             <InputGroupButton
               className={
-                " bg-transparent border-none outline-none shadow-none cursor-pointer"
+                "bg-transparent border-none outline-none shadow-none hover:rounded-full cursor-pointer hover:scale-125"
               }
             >
-              <HugeiconsIcon icon={Target03Icon} size={11.67} color="#fafafa" />
+              <HugeiconsIcon
+                icon={Target03Icon}
+                size={12}
+                strokeWidth={2}
+                color="#fafafa"
+              />
             </InputGroupButton>
           </InputGroupAddon>
           {/* delete icon */}
@@ -72,11 +77,9 @@ const ClassSelectionField = ({
       </div>
 
       {/* required message */}
-      <div>
-        <p className="text-white text-sm">
-          {property?.isRequired && "Field is Required"}
-        </p>
-      </div>
+      {isRequired && isDataValid && (
+        <p className="text-white text-sm">Field is Required</p>
+      )}
     </div>
   );
 };

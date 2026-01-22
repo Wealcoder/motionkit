@@ -6,52 +6,34 @@
 
 @layer base {
   :root {
-    /* text */
+    --background-primary: #18181b;
+    --background-secondary: #202024;
     --foreground: #ffffff;
-
-    /* editor */
-    --sidebar: #18181b;
-    --topbar: #27272a;
-
+    --accent-primary: #2c76e6;
+    --accent-primary-hover: #599bfd;
+    --accent-secondary-active: #1a488b;
+    --accent-secondary: #b34a33;
+    --accent-secondary-hover: #e55f42;
+    --accent-secondary-active: #b34a33;
     /* button field */
     --button-primary: #303033;
     --button-primary-hover: #52525b;
     --button-primary-active: #303033;
-    --button-action: #2c76e6;
-    --button-action-hover: #599bfd;
-    --button-action-active: #1a488b;
-    --button-destructive: #b34a33;
-    --button-destructive-hover: #e55f42;
-    --button-destructive-active: #b34a33;
-    --text-button-color: #fafafa;
-    --text-button-color-hover: #fafafa;
-    --text-button-color-active: #fafafa;
-
     /* input field */
-    --background-input: #303033;
-    --background-input-hover: #3f3f46;
-    --background-input-focus: #3f3f46;
-    --text-input-color: #fafafa;
-    --text-input-color-hover: #fafafa;
-    --text-input-color-active: #fafafa;
-
+    --input-primary: #303033;
+    --input-primary-hover: #3f3f46;
+    --input-primary-active: #3f3f46;
     /* switch field */
-    --switch-button-primary: #52525b;
-    --switch-button-track: #e7f4e8;
-    --switch-button-primary-active: #2c76e6;
-
+    --switch-primary: #52525b;
+    --switch-primary-active: #2c76e6;
+    --switch-track: #e7f4e8;
     /* select field */
     --select-primary: #303033;
     --select-secondary: #52525b;
     --select-primary-hover: #52525b;
     --select-primary-active: #3f3f46;
-    --text-select-color: #fafafa;
-    --text-select-color-hover: #fafafa;
-    --text-select-color-active: #fafafa;
-
     /* popup */
     --popover: #303033;
-    --popover-foreground: #ffffff;
 
     /* shadcn generation */
     --input-placeholder: #d4d4d8;
@@ -96,7 +78,7 @@
 
   /* dynamic properties field styles */
   .wcf-ab-title {
-    @apply text-white
+    @apply text-foreground
     text-label
     font-semibold
     leading-5
@@ -108,16 +90,13 @@
   .wcf-ab-dynamic-field-input {
     @apply min-h-[28px]
     max-w-[150px]
-    px-[12px]
+    px-[10px]
     py-[5px]
     !bg-input
     hover:bg-input-hover
     focus:bg-input-focus
     font-inter
-    text-input-color
-    hover:text-input-hover-color
-    focus:text-input-focus-color
-    active:text-input-focus-color
+    text-foreground
     !text-[12px]
     font-normal
     leading-18
@@ -137,10 +116,7 @@
     px-2
     py-[5px]
     font-inter
-    text-button-color
-    hover:text-button-hover-color
-    focus:text-button-focus-color
-    active:text-button-focus-color
+    text-foreground
     text-button-font-size
     font-medium
     leading-18
@@ -181,10 +157,7 @@
     hover:bg-button-hover
     focus:bg-button-focus
     active:bg-button-action
-    text-button-color
-    hover:text-button-hover-color
-    focus:text-button-focus-color
-    active:text-button-focus-color
+    text-foreground
     text-button-icon-size
     border-none
     outline
@@ -201,8 +174,8 @@
 
   /* switch field  */
   .wcf-ab-switch-field {
-    @apply bg-switch
-    data-[state=checked]:bg-switch-active
+    @apply data-[state=unchecked]:!bg-switch
+    data-[state=checked]:!bg-switch-active
     [&>span]:bg-switch-thumb
     data-[state=checked]:[&>span]:bg-switch-thumb-active
     px-0;
@@ -215,7 +188,7 @@
     px-[10px]
     py-[5px]
     !bg-select
-    text-select-color
+    text-foreground
     !text-select-font-size
     font-medium
     leading-18
@@ -226,10 +199,10 @@
   }
 
   .wcf-ab-select-content {
-    @apply max-w-[200px]
+    @apply max-w-[150px]
     p-[10px]
     !bg-select-secondary
-    text-select-color
+    text-foreground
     !text-select-font-size
     font-normal
     leading-5

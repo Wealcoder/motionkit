@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import Brand from "./Shared/header/left/Brand";
 import Structure from "./Shared/header/left/Structure";
 import ActivateBorderBtn from "./Shared/header/left/ActivateBorderBtn";
@@ -9,10 +10,7 @@ import Search from "./Shared/header/right/Search";
 import DraftAnimation from "./Shared/header/right/DraftAnimation";
 import SavedAnimation from "./Shared/header/right/SavedAnimation";
 import GlobalSettings from "./Shared/header/right/GlobalSettings";
-
 import { useAnimationControl } from "@/hooks/app.hooks";
-
-import { useEffect, useState } from "react";
 
 const EditorHeader = () => {
   const [activeStructure, setActiveStructure] = useState(true);
@@ -58,7 +56,7 @@ const EditorHeader = () => {
   };
 
   return (
-    <header className="max-h-[66px] w-full grid grid-cols-3 bg-background-topbar px-[18px] py-[9px] z-[999999]">
+    <header className="max-h-[58px] w-full grid grid-cols-3 bg-background-topbar px-[18px] py-3 ">
       {/* left side */}
       <div className="flex justify-start items-center gap-10">
         <Brand />

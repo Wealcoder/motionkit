@@ -49,7 +49,6 @@ const AnimationPropsHanlder = ({
               accordionItemValue={index}
               defaultData={defaultData}
               accordion={accordion}
-              isCustomAnim={isCustomAnim}
               contentStep={contentStep}
               updateContentData={updateContentData}
             />
@@ -66,7 +65,6 @@ const SingleAccordion = ({
   accordionItemValue = 0,
   defaultData = {},
   accordion = {},
-  isCustomAnim = false,
   contentStep = {},
   updateContentData = () => {},
 }) => {

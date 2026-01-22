@@ -5,6 +5,7 @@ import { useDeviceConfig, useKernel } from "@/hooks/app.hooks";
 import { cn, getScreenSize } from "@/lib/utils";
 import { PlusSignIcon, Remove01Icon } from "@hugeicons/core-free-icons/index";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { SearchAddIcon } from "@hugeicons/core-free-icons";
 
 const EditorPreview = () => {
   const { settings, setEditorZoomLevel, resetEditorPreview } = useKernel();
@@ -33,8 +34,11 @@ const EditorPreview = () => {
   return (
     <div className="h-full bg-[#404040] relative min-w-full flex justify-center">
       {/* zoom indicator */}
-      <div className="absolute top-2 right-4 z-10 px-4 py-2 min-h-[34px] grid grid-cols-[50px,1fr] justify-center items-center gap-4 bg-[#202024] text-white text-sm font-normal leading-none border border-solid border-button rounded-5">
-        <span>{(settings?.editorZoomLevel * 100).toFixed(0)}%</span>
+      <div className="absolute top-2 right-4 z-10 px-3 py-[6px] min-h-[34px] grid grid-cols-[50px,1fr] justify-center items-center gap-4 bg-[#202024] text-white text-sm font-normal leading-none border border-solid border-button rounded-5">
+        <Button className="w-full p-0 bg-transparent text-placeholder text-white leading-5 tracking-normal border-none outline-none">
+          <HugeiconsIcon icon={SearchAddIcon} size={14} strokeWidth={2} />
+          {(settings?.editorZoomLevel * 100).toFixed(0)}%
+        </Button>
         <ButtonGroup className={"gap-2"}>
           <Button
             onClick={() => handleEditorZoom("negative", settings)}
