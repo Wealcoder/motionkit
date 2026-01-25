@@ -32,14 +32,19 @@ const PopoverInputGroup = ({
   //   ...rest
   // } = property || {};
   return (
-    <div>
-      <h3>{title}</h3>
-      <InputGroup>
-        <InputGroupInput />
-        <InputGroupAddon align="inline-end" className="pr-2.5">
-          <Select >
-            <SelectTrigger className="min-w-8 data-[size=default]:h-5.5 pl-1.5 py-0.5 pr-0.5 bg-[#27272A] text-[11.5px] text-[#A1A1AA] gap-0.5">
-              <SelectValue placeholder="px" />
+    <div className="h-[50px] flex flex-col">
+      <h3 className="text-[11px] font-normal leading-4.25 text-[#E4E4E7] h-1">
+        {title}
+      </h3>
+      <InputGroup className="border-none bg-[#18181B] w-[80px] h-[27px] has-[[data-slot=input-group-control]:focus-visible]:ring-0 has-[>[data-align=inline-end]]:[&>input]:-pr-1">
+        <InputGroupInput
+          className=" text-[11.5px] font-normal leading-4.5 text-white"
+          type="number"
+        />
+        <InputGroupAddon align="inline-end" className="pr-1.5">
+          <Select>
+            <SelectTrigger className="data-[size=default]:h-[27px] text-[11px] border-none shadow-none text-[#A1A1AA] gap-0.5">
+              <SelectValue placeholder="px"/>
             </SelectTrigger>
             <SelectContent className="bg-[#3F3F46] w-11.5 h-50.5 p-0.5 rounded-md">
               {cssUnits.map((field, index) => (
