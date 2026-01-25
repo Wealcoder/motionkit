@@ -5,10 +5,9 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
-import { debounceFn } from "@/utils/utils";
+import { debounceFn, trimString } from "@/utils/utils";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
@@ -56,13 +55,13 @@ const NumberField2 = ({
       <div className="flex flex-col justify-between gap-3 w-97 h-8.5 mx-auto rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
         <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{title}</span>
+          <span className="wcf-ab-title">{trimString(title, 15)}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* right add + delete button */}
         <div className="flex-1 flex justify-end items-center gap-3">
-          <InputGroup className="wcf-ab-dynamic-field-input px-1">
+          <InputGroup className="wcf-ab-number-input px-1">
             <InputGroupInput
               placeholder="Add Value"
               className="!text-input-font-size font-normal leading-18 tracking-normal"
@@ -76,7 +75,7 @@ const NumberField2 = ({
             {/* plus - minus icon */}
             <InputGroupAddon align="inline-end" className={"pr-[6px]"}>
               <InputGroupButton
-                className="wcf-ab-button-icon bg-[--background-secondary] hover:bg-[--button-primary-hover] active:bg-[--button-primary-hover] border-r-[1px] border-r-[#71717A] rounded-r-none rounded-l-5"
+                className="wcf-ab-button-icon bg-[--background-secondary] hover:bg-[--button-primary-hover] active:bg-[--button-primary-hover] border-r border-r-[#71717A] rounded-r-none rounded-l-5"
                 onClick={() => updateValue(inputValue - step)}
               >
                 <HugeiconsIcon
@@ -88,7 +87,7 @@ const NumberField2 = ({
             </InputGroupAddon>
             <InputGroupAddon align="inline-end">
               <InputGroupButton
-                className="wcf-ab-button-icon bg-[--background-secondary] hover:bg-[--button-primary-hover] active:bg-[--button-primary-hover] border-l-[1px]  border-l-[#71717A] rounded-l-none rounded-r-5"
+                className="wcf-ab-button-icon bg-[--background-secondary] hover:bg-[--button-primary-hover] active:bg-[--button-primary-hover] border-l  border-l-[#71717A] rounded-l-none rounded-r-5"
                 onClick={() => updateValue(inputValue + step)}
               >
                 <HugeiconsIcon

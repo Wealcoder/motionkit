@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { debounceFn } from "@/utils/utils";
+import { debounceFn, trimString } from "@/utils/utils";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import { INPUT_COMP_VARIANTS } from "./shared/component_styles_conf";
 
 const TextField = ({
+  size = "md",
   property = {},
   value = "",
   onDelete = () => {},
@@ -12,13 +14,14 @@ const TextField = ({
   onValueChange = () => {},
 }) => {
   const {
+    size = "md",
     title = "title",
     tooltipContent = "Enter the value.",
     isRequired = false,
     isCustomAnim = false,
     ...rest
   } = property || {};
-
+  const inputClass = INPUT_COMP_VARIANTS[size];
   const [currentValue, setCurrentValue] = useState(value ?? "");
   const [isDataValid, setIsDataValid] = useState(false);
 
@@ -40,7 +43,7 @@ const TextField = ({
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
         <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{title}</span>
+          <span className={inputClass?.title}>{trimString(title, 15)}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
@@ -48,7 +51,7 @@ const TextField = ({
         <div className="flex-1 flex justify-end items-center gap-3">
           <Input
             placeholder=".start_trigger"
-            className="wcf-ab-dynamic-field-input"
+            className="wcf-ab-general-input"
             value={currentValue}
             type="text"
             onChange={(e) => {

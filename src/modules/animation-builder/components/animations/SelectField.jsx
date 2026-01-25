@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
-import { toCamelCase } from "@/utils/utils";
+import { toCamelCase, trimString } from "@/utils/utils";
 
 const SelectField = ({
   property = {},
@@ -45,12 +45,12 @@ const SelectField = ({
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
         <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{title}</span>
+          <span className="wcf-ab-title">{trimString(title, 15)}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
         <div className="flex-1 flex justify-end items-center gap-3">
           <Select value={selectedValue} onValueChange={handleSelect}>
-            <SelectTrigger className="wcf-ab-select-trigger">
+            <SelectTrigger className="wcf-ab-dc-select-trigger">
               <SelectValue placeholder="Select Method" />
             </SelectTrigger>
             <SelectContent className="wcf-ab-select-content">

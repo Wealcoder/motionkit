@@ -9,6 +9,7 @@ import SelectField from "@/components/animations/SelectField";
 import SliderField from "@/components/animations/SliderField";
 import SwitchField from "@/components/animations/SwitchField";
 import { useCallback } from "react";
+import CodeblockField from "@/components/animations/CodeblockField";
 
 const AnimationPropsMapping = React.memo(
   ({
@@ -46,9 +47,10 @@ const AnimationPropsMapping = React.memo(
     const value = getValueFromPath(defaultData, path) ?? "";
 
     switch (fieldType) {
-      case "text-field":
+      case "text-field-md":
         return (
           <TextField
+            size={property?.size} // sm | md | lg
             property={property}
             value={value}
             onDelete={handleDeleteField}
@@ -91,8 +93,16 @@ const AnimationPropsMapping = React.memo(
         );
 
       case "code-block-field":
-        // todo: add code block field leter;
         break;
+      // return (
+      //   // <CodeblockField
+      //   //   property={property}
+      //   //   value={value}
+      //   //   onDelete={handleDeleteField}
+      //   //   onDisabledUpdate={handleDisabledUpdate}
+      //   //   onValueChange={handleSetValueByPath}
+      //   // />
+      // );
 
       case "color-picker":
         return (

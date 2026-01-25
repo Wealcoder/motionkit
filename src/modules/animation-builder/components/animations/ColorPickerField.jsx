@@ -1,6 +1,7 @@
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
-import ColorPicker from "./shared/ColorPicker";
+import ColorPicker from "./shared/blocks/ColorPicker";
+import { trimString } from "@/utils/utils";
 
 const ColorPickerField = ({
   property = {},
@@ -22,7 +23,7 @@ const ColorPickerField = ({
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
         <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{title}</span>
+          <span className="wcf-ab-title">{trimString(title, 15)}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 

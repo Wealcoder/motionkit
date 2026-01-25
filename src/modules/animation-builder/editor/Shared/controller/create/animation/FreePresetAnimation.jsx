@@ -80,7 +80,7 @@ const FreePresetAnimation = () => {
             value={contentStep?.data?.title}
             onChange={(e) => updateContentData(e.target.value, "title")}
             placeholder="Title Animation"
-            className="wcf-ab-dynamic-field-input"
+            className="wcf-ab-general-input"
           />
         </div>
         {/* preset group */}
@@ -91,7 +91,7 @@ const FreePresetAnimation = () => {
               value={selectedPresetGroup}
               onValueChange={handleUpdatePresetGroup}
             >
-              <SelectTrigger className="wcf-ab-select-trigger">
+              <SelectTrigger className="wcf-ab-gen-select">
                 <SelectValue placeholder="Option" className="line-clamp-1" />
               </SelectTrigger>
               <SelectContent className="wcf-ab-select-content">
@@ -115,7 +115,7 @@ const FreePresetAnimation = () => {
           <div className="flex justify-between items-center ">
             <span className="wcf-ab-title">Type</span>
             <Select value={selectedPreset} onValueChange={handleUpdatePreset}>
-              <SelectTrigger className="wcf-ab-select-trigger">
+              <SelectTrigger className="wcf-ab-gen-select">
                 <SelectValue placeholder="Option" className="line-clamp-1" />
               </SelectTrigger>
               <SelectContent className="wcf-ab-select-content">

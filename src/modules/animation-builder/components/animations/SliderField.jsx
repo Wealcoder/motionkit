@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { debounceFn } from "@/utils/utils";
+import { debounceFn, trimString } from "@/utils/utils";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
@@ -49,23 +49,29 @@ const SliderField = ({
       <div className="flex flex-col gap-3 rounded-lg  sm:flex-row sm:items-center">
         {/* left title + tooltip */}
         <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{title}</span>
+          <span className="wcf-ab-title">{trimString(title, 15)}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* right add + delete button */}
         <div className="flex-1 flex justify-end items-center gap-3">
           <Slider
+            defaultValue={[75]}
+            max={100}
+            step={1}
+            className="mx-auto w-full max-w-xs"
+          />
+          {/* <Slider
             value={[inputValue]}
             min={min === 0 ? Infinity : min}
             max={max === 0 ? Infinity : max}
             step={step}
             onValueChange={(v) => setInputValue(v[0])}
             className="flex-1"
-          />
+          /> */}
           <Input
             placeholder="Add Value"
-            className="wcf-ab-dynamic-field-input"
+            className="wcf-ab-text-input"
             value={inputValue}
             min={min === 0 ? Infinity : min}
             max={max === 0 ? Infinity : max}

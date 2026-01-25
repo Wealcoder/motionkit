@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { debounceFn } from "@/utils/utils";
+import { debounceFn, trimString } from "@/utils/utils";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 
@@ -46,7 +46,7 @@ const NumberField = ({
       <div className="flex flex-col justify-between gap-3 w-97.5 h-8.5 mx-auto rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
         <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{title}</span>
+          <span className="wcf-ab-title">{trimString(title, 15)}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
@@ -54,7 +54,7 @@ const NumberField = ({
         <div className="flex-1 flex justify-end items-center gap-3">
           <Input
             placeholder="Add Value"
-            className="wcf-ab-dynamic-field-input"
+            className="wcf-ab-number-input"
             value={inputValue}
             min={min === 0 ? Infinity : min}
             max={max === 0 ? Infinity : max}
