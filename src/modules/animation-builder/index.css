@@ -9,6 +9,7 @@
     --background-primary: #18181b;
     --background-secondary: #202024;
     --foreground: #ffffff;
+    --foreground-secondary: #a1a1aa;
     --accent-primary: #2c76e6;
     --accent-primary-hover: #599bfd;
     --accent-secondary-active: #1a488b;
@@ -21,8 +22,8 @@
     --button-primary-active: #303033;
     /* input field */
     --input-primary: #303033;
-    --input-primary-hover: #3f3f46;
-    --input-primary-active: #3f3f46;
+    --input-primary-hover: #303033;
+    --input-primary-active: #303033;
     /* switch field */
     --switch-primary: #52525b;
     --switch-primary-active: #2c76e6;
@@ -93,11 +94,14 @@
     px-[10px]
     py-[5px]
     !bg-input
-    hover:bg-input-hover
-    focus:bg-input-focus
+    hover:!bg-input-hover
+    focus:!bg-input-focus
     font-inter
-    text-foreground
-    !text-[12px]
+    text-foreground-secondary
+    hover:text-foreground
+    focus:text-foreground
+    active:text-foreground
+    !text-input-font-size
     font-normal
     leading-18
     tracking-normal
@@ -337,4 +341,12 @@
   > svg
   > path {
   --chrome-arrow-fill: var(--foreground) !important;
+}
+/* hiding increment and decrement button on number field */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  @apply appearance-none m-0;
+}
+input[type="number"] {
+  @apply appearance-none;
 }

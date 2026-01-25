@@ -25,6 +25,7 @@ const AnimationPropsMapping = React.memo(
     // updating animation properties.
     const handleSetValueByPath = useCallback(
       (value) => {
+        console.log(`Current Path: ${property?.path} | Value => ${value}`);
         const newData = structuredClone(defaultData);
         setValueByPath(newData, path, value);
         updateContentData({
@@ -35,6 +36,14 @@ const AnimationPropsMapping = React.memo(
       [defaultData, path, contentStep, updateContentData],
     );
 
+    const handleDeleteField = useCallback(() => {
+      console.log("Deleted");
+    }, []);
+
+    const handleDisabledUpdate = useCallback(() => {
+      console.log("Disabled");
+    }, []);
+
     // extracting latest value
     const value = getValueFromPath(defaultData, path) ?? "";
 
@@ -44,8 +53,8 @@ const AnimationPropsMapping = React.memo(
           <TextField
             property={property}
             value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
             onValueChange={handleSetValueByPath}
           />
         );
@@ -55,8 +64,8 @@ const AnimationPropsMapping = React.memo(
           <NumberField
             property={property}
             value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
             onValueChange={handleSetValueByPath}
           />
         );
@@ -66,8 +75,8 @@ const AnimationPropsMapping = React.memo(
           <NumberField2
             property={property}
             value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
             onValueChange={handleSetValueByPath}
           />
         );
@@ -77,9 +86,9 @@ const AnimationPropsMapping = React.memo(
           <ClassSelectionField
             property={property}
             value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
-            onValueChange={() => {}}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
+            onValueChange={handleSetValueByPath}
           />
         );
 
@@ -93,9 +102,9 @@ const AnimationPropsMapping = React.memo(
             property={property}
             value={value}
             onValueChang
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
-            e={() => {}}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
+            onValueChange={handleSetValueByPath}
           />
         );
 
@@ -105,9 +114,9 @@ const AnimationPropsMapping = React.memo(
             property={property}
             value={value}
             onValueChang
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
-            e={() => {}}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
+            onValueChange={handleSetValueByPath}
           />
         );
 
@@ -116,8 +125,8 @@ const AnimationPropsMapping = React.memo(
           <SelectField
             property={property}
             value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
             onValueChange={handleSetValueByPath}
           />
         );
@@ -127,8 +136,8 @@ const AnimationPropsMapping = React.memo(
           <SliderField
             property={property}
             value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
             onValueChange={handleSetValueByPath}
           />
         );
@@ -138,8 +147,8 @@ const AnimationPropsMapping = React.memo(
           <SwitchField
             property={property}
             value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
             onValueChange={handleSetValueByPath}
           />
         );
@@ -172,7 +181,7 @@ const AnimationPropsMapping = React.memo(
         return null;
     }
   },
-  (prev, next) => prev?.defaultData === next?.defaultData, // if true memorized it
+  (prev, next) => prev?.contentStep === next?.contentStep, // if true memorized it
 );
 
 export default AnimationPropsMapping;

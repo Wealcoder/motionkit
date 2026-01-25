@@ -8,7 +8,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { SearchAddIcon } from "@hugeicons/core-free-icons";
 
 const EditorPreview = () => {
-  const { settings, setEditorZoomLevel, resetEditorPreview } = useKernel();
+  const { mainState, settings, setEditorZoomLevel, resetEditorPreview } =
+    useKernel();
   const { selectedDevice } = useDeviceConfig();
   const device = getScreenSize(selectedDevice) || {};
 
@@ -30,6 +31,8 @@ const EditorPreview = () => {
     }
     return;
   };
+
+  console.log({ mainState });
 
   return (
     <div className="h-full bg-[#404040] relative min-w-full flex justify-center">

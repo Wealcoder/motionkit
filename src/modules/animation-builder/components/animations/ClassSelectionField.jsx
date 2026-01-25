@@ -48,7 +48,7 @@ const ClassSelectionField = ({
         <InputGroup className="wcf-ab-dynamic-field-input max-w-none px-[10px] ">
           <InputGroupInput
             placeholder="h1.hero_title"
-            className="p-0 !text-foreground !text-input-font-size font-normal leading-18 tracking-normal"
+            className="p-0 !text-input-font-size font-normal leading-18 tracking-normal"
             value={inputValue}
             type="text"
             onChange={(e) => {
