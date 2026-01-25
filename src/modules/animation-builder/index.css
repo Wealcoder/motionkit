@@ -247,8 +247,33 @@
 [data-color-mode*="dark"].w-color-swatch {
   --sketch-swatch-border-top: 1px solid #525252 !important;
 }
-.w-color-swatch {
+[inputtype="hexa"].w-color-swatch {
   gap: 4px;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  max-height: 40px;
+  padding: 4px 0;
+  cursor: pointer;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[inputtype="hexa"].w-color-swatch::-webkit-scrollbar {
+  display: none;
+}
+[inputtype="hexa"].w-color-swatch > div {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+[inputtype="hexa"].w-color-swatch > div:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
 [data-color-mode*="dark"].w-color-github {
   width: 100% !important;

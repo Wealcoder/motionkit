@@ -12,7 +12,7 @@ import { hsvaToHexa } from "@uiw/color-convert";
 
 const HEX_REGEX = /^#([0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/;
 const STORAGE_KEY = "wcf-ab-swash-colors";
-const SWASHLIMIT = 18;
+const SWASHLIMIT = 100;
 
 const ColorPicker = ({
   value = "#000000",
