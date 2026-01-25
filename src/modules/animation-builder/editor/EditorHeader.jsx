@@ -56,7 +56,7 @@ const EditorHeader = () => {
   };
 
   return (
-    <header className="max-h-[58px] w-full grid grid-cols-3 bg-background-topbar px-[18px] py-3 ">
+    <header className="max-h-[58px] w-full grid grid-cols-3 bg-background-topbar px-[18px] py-3 z-10">
       {/* left side */}
       <div className="flex justify-start items-center gap-10">
         <Brand />
