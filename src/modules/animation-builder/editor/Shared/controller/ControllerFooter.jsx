@@ -26,7 +26,7 @@ const ControllerFooter = ({
   const showPreview = () => {
     setActiveReset(true);
     const iframe = document.getElementById(
-      "wcf--animation-builder--animation--preview"
+      "wcf--animation-builder--animation--preview",
     );
     const win = iframe.contentWindow;
     win.postMessage({ "wcf-animation-config": allAnimation });
@@ -34,7 +34,7 @@ const ControllerFooter = ({
   const resetPreview = () => {
     setActiveReset(false);
     const iframe = document.getElementById(
-      "wcf--animation-builder--animation--preview"
+      "wcf--animation-builder--animation--preview",
     );
     if (iframe) {
       const win = iframe.contentWindow;
@@ -69,26 +69,21 @@ const ControllerFooter = ({
   };
 
   return (
-    <div className="flex justify-between items-center">
-      <Button className="min-h-9 min-w-[135px] px-4 py-2 bg-button-primary text-15 font-medium leading-5 tracking-normal text-white rounded-5 border-none outline-none">
+    <div className="flex justify-between items-center gap-2">
+      <Button className="wcf-ab-button-general wcf-ab-button-primary text-button-font-size">
         <HugeiconsIcon icon={FullScreenIcon} strokeWidth={2} />
         Full Preview
       </Button>
-      <div className={"flex justify-between items-center gap-2"}>
-        <Button
-          onClick={() => showPreview()}
-          className="min-h-9 min-w-[184px] px-4 py-2 bg-button-action hover:bg-button-action-hover text-15 font-medium leading-5 tracking-normal text-white rounded-5 border-none outline-none"
-        >
-          <HugeiconsIcon icon={PlayCircleIcon} strokeWidth={2} />
-          Play
-        </Button>
-        <Button
-          size="icon"
-          className=" bg-button-primary text-white rounded-5 border-none outline-none"
-        >
-          <HugeiconsIcon icon={Settings03Icon} strokeWidth={2} />
-        </Button>
-      </div>
+      <Button
+        onClick={() => showPreview()}
+        className="wcf-ab-button-general wcf-ab-button-action text-button-font-size min-w-24"
+      >
+        <HugeiconsIcon icon={PlayCircleIcon} strokeWidth={2} />
+        Play
+      </Button>
+      <Button className="wcf-ab-button-general wcf-ab-button-primary text-button-font-size max-w-[28px]">
+        <HugeiconsIcon icon={Settings03Icon} strokeWidth={2} />
+      </Button>
     </div>
   );
 };

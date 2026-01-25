@@ -1,15 +1,23 @@
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAnimationControl, useDeviceConfig } from "@/hooks/app.hooks";
-import { Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
+import {
+  ComputerIcon,
+  LaptopIcon,
+  SmartPhone01Icon,
+  Tablet01Icon,
+} from "@hugeicons/core-free-icons/index";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 
 const ResponsiveIcons = {
-  desktop: <Monitor size={14} />,
-  laptop: <Laptop size={14} />,
-  tab_land: <Tablet style={{ rotate: "90deg" }} size={14} />,
-  tab: <Tablet size={14} />,
-  mobile: <Smartphone size={14} />,
+  desktop: <HugeiconsIcon icon={ComputerIcon} size={14} />,
+  laptop: <HugeiconsIcon icon={LaptopIcon} size={14} />,
+  tab_land: (
+    <HugeiconsIcon icon={Tablet01Icon} style={{ rotate: "90deg" }} size={14} />
+  ),
+  tab: <HugeiconsIcon icon={Tablet01Icon} size={14} />,
+  mobile: <HugeiconsIcon icon={SmartPhone01Icon} size={14} />,
 };
 
 const SingleResponsiveControl = ({ id }) => {

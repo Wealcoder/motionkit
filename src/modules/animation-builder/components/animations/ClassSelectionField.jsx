@@ -1,8 +1,15 @@
 import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { debounceFn } from "@/utils/utils";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Target03Icon } from "@hugeicons/core-free-icons/index";
 
 const ClassSelectionField = ({
   property = {},
@@ -27,23 +34,21 @@ const ClassSelectionField = ({
   }, 150);
 
   return (
-    <div className="p-2">
+    <div>
       <div>
         {/* title + tooltip */}
-        <div className="flex items-center gap-3 text-[#E4E4E7] mb-2">
-          <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {property?.title}
-          </span>
+        <div className="flex items-center gap-[6px] mb-1">
+          <span className="wcf-ab-title">{property?.title}</span>
           {property?.tooltipContent && (
             <ToolTipWrapper text={property?.tooltipContent} />
           )}
         </div>
 
         {/*input field*/}
-        <div className="relative flex items-center gap-2 mb-2 w-92 h-8.5">
-          <Input
+        <InputGroup className="wcf-ab-dynamic-field-input max-w-none px-[10px] ">
+          <InputGroupInput
             placeholder="h1.hero_title"
-            className="flex items-center justify-center w-full"
+            className="p-0 !text-foreground !text-input-font-size font-normal leading-18 tracking-normal"
             value={inputValue}
             type="text"
             onChange={(e) => {
@@ -52,27 +57,29 @@ const ClassSelectionField = ({
               handleInput(value);
             }}
           />
-
-          {/* inside input field- right side circle */}
-          <div className="absolute right-5.5 top-0">
-            <div className="absolute top-1.75 right-2 w-5 h-5 rounded-full border-2 border-[#E4E4E7]" />
-            <div className="absolute top-2.25 right-4.25 h-0.75 w-0.5 bg-[#E4E4E7]" />
-            <div className="absolute top-4 right-2.5 h-0.5 w-0.75 bg-[#E4E4E7]" />
-            <div className="absolute -bottom-6.25 right-4.25 h-0.75 w-0.5 bg-[#E4E4E7]" />
-            <div className="absolute top-4 right-5.75 h-0.5 w-0.75 bg-[#E4E4E7]" />
-          </div>
-
+          <InputGroupAddon align="inline-end" className="pr-0">
+            <InputGroupButton
+              className={
+                "bg-transparent border-none outline-none shadow-none hover:rounded-full cursor-pointer hover:scale-125"
+              }
+            >
+              <HugeiconsIcon
+                icon={Target03Icon}
+                size={12}
+                strokeWidth={2}
+                color="#fafafa"
+              />
+            </InputGroupButton>
+          </InputGroupAddon>
           {/* delete icon */}
           {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
-        </div>
+        </InputGroup>
       </div>
 
       {/* required message */}
-      <div>
-        <p className="text-white text-sm">
-          {property?.isRequired && "Field is Required"}
-        </p>
-      </div>
+      {isRequired && isDataValid && (
+        <p className="text-white text-sm">Field is Required</p>
+      )}
     </div>
   );
 };

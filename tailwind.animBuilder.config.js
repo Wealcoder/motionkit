@@ -7,7 +7,6 @@ module.exports = {
   darkMode: ["class"],
   content: [
     "src/modules/animation-builder/**/*.{js,jsx}",
-    "src/modules/animation-builder/components/**/*.{js,jsx}",
     "src/assets/icons.jsx",
   ],
   prefix: "",
@@ -16,76 +15,74 @@ module.exports = {
     container: false,
   },
   theme: {
-  	extend: {
-  		fontSize: {
-  			'15': '0.9375rem'
-  		},
-  		fontFamily: {
-  			inter: [
-  				'Inter',
-  				'sans-serif'
-  			]
-  		},
-  		colors: {
-  			background: {
-  				DEFAULT: 'var(--background)',
-  				hover: 'var(--background-hover)',
-  				disable: 'var(--background-disable)',
-  				sidebar: 'var(--background-sidebar)',
-  				card: 'var(--card-background)',
-  				input: 'var(--background-input)'
-  			},
-  			button: {
-  				primary: 'var(--btn-primary)',
-  				'primary-hover': 'var(--btn-primary-hover)',
-  				action: 'var(--btn-bg-action)',
-  				'action-hover': 'var(--btn-bg-action-hover)',
-  				cancel: 'var(--btn-bg-cancel)',
-  				'cancel-hover': 'var(--btn-bg-cancel-hover)'
-  			},
-  			input: {
-  				DEFAULT: 'var(--background-input)',
-  				hover: 'var(--background-input-hover)',
-  				focus: 'var(--background-input-focus)',
-  				placeholder: 'var(--text-input)',
-  				'text-hover': 'var(--text-input-hover)',
-  				'text-focus': 'var(--text-input-focus)'
-  			},
-  			popover: {
-  				DEFAULT: 'var(--background-popover)',
-  				foreground: 'var(--text-popover-foreground)'
-  			},
-  			slider: {
-  				DEFAULT: 'var(--bg-slider-track)',
-  				thumb: 'var(--bg-slider-thumb)'
-  			}
-  		},
-  		borderRadius: {
-  			'5': '0.3125rem'
-  		},
-  		keyframes: {
-  			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
-  			},
-  			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
-  			}
-  		},
-  		animation: {
-  			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
-  	}
+    extend: {
+      colors: {
+        foreground: "var(--foreground)",
+        background: {
+          sidebar: "var(--background-primary)",
+          topbar: "var(--background-secondary)",
+        },
+        button: {
+          DEFAULT: "var(--button-primary)",
+          hover: "var(--button-primary-hover)",
+          focus: "var(--button-primary-active)",
+          action: "var(--accent-primary)",
+          "action-hover": "var(--accent-primary-hover)",
+          "action-focus": "var(--accent-primary-active)",
+          destructive: "var(--accent-secondary)",
+          "destructive-hover": "var(--accent-secondary-hover)",
+          "destructive-focus": "var(--accent-secondary-active)",
+        },
+        input: {
+          DEFAULT: "var(--input-primary)",
+          hover: "var(--input-primary-hover)",
+          focus: "var(--input-primary-focus)",
+        },
+        switch: {
+          DEFAULT: "var(--switch-primary)",
+          active: "var(--switch-primary-active)",
+          thumb: "var(--switch-track)",
+          "thumb-active": "var(--switch-track)",
+        },
+        select: {
+          DEFAULT: "var(--select-primary)",
+          hover: "var(--select-primary-hover)",
+          active: "var(--select-primary-active)",
+          secondary: "var(--select-secondary)",
+          color: "var(--text-select-color)",
+        },
+        sidebar: {
+          DEFAULT: "var(--background-primary)",
+          foreground: "var(--foreground)",
+          primary: "var(--background-primary)",
+          "primary-foreground": "var(--foreground)",
+          accent: "var(--accent-primary)",
+          "accent-foreground": "var(--foreground)",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
+        popover: {
+          DEFAULT: "var(--popover)",
+        },
+      },
+      fontFamily: {
+        inter: "Inter, sans-serif",
+      },
+      fontSize: {
+        label: "0.75rem",
+        placeholder: "0.7188rem",
+        "input-font-size": "0.7188rem",
+        "button-font-size": "0.7188rem",
+        "button-icon-size": "1rem",
+        "select-font-size": "0.7188rem",
+      },
+      borderRadius: {
+        5: "0.3125rem",
+      },
+      lineHeight: {
+        18: "1.125rem",
+      },
+    },
   },
   plugins: [
     plugin(function ({ addUtilities }) {

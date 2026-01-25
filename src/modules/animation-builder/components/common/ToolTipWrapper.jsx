@@ -15,7 +15,7 @@ const ToolTipWrapper = ({ text = "" }) => {
           <div className="cursor-pointer flex justify-center items-center">
             <HugeiconsIcon
               icon={InformationCircleFreeIcons}
-              size={16}
+              size={10}
               strokeWidth={2}
             />
           </div>

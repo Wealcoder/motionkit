@@ -7,7 +7,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAnimationControl } from "@/hooks/app.hooks";
-import { Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
+import {
+  ComputerIcon,
+  LaptopIcon,
+  SmartPhone01Icon,
+  Tablet01Icon,
+} from "@hugeicons/core-free-icons/index";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
 
 const AllResponsiveControl = ({ id }) => {
@@ -33,7 +39,7 @@ const AllResponsiveControl = ({ id }) => {
         <AccordionContent className="pb-0 mt-5 flex flex-col gap-4">
           <div className="flex items-center justify-between gap-2 mt-2">
             <Label htmlFor="desktop-enable" className="flex items-center gap-2">
-              Desktop <Monitor size={14} />
+              Desktop <HugeiconsIcon icon={ComputerIcon} size={14} />
             </Label>
             <Switch
               id="desktop-enable"
@@ -46,7 +52,7 @@ const AllResponsiveControl = ({ id }) => {
           </div>
           <div className="flex items-center justify-between gap-2 mt-2">
             <Label htmlFor="laptop-enable" className="flex items-center gap-2">
-              Laptop <Laptop size={14} />
+              Laptop <HugeiconsIcon icon={LaptopIcon} size={14} />
             </Label>
             <Switch
               id="laptop-enable"
@@ -62,7 +68,8 @@ const AllResponsiveControl = ({ id }) => {
               htmlFor="tab_land-enable"
               className="flex items-center gap-2"
             >
-              Tablet Landscape <Tablet style={{ rotate: "90deg" }} size={14} />
+              Tablet Landscape{" "}
+              <HugeiconsIcon icon={Tablet01Icon} rotate={90} size={14} />
             </Label>
             <Switch
               id="tab_land-enable"
@@ -75,7 +82,7 @@ const AllResponsiveControl = ({ id }) => {
           </div>
           <div className="flex items-center justify-between gap-2 mt-2">
             <Label htmlFor="tab-enable" className="flex items-center gap-2">
-              Tablet <Tablet size={14} />
+              Tablet <HugeiconsIcon icon={Tablet01Icon} size={14} />
             </Label>
             <Switch
               id="tab-enable"
@@ -88,7 +95,7 @@ const AllResponsiveControl = ({ id }) => {
           </div>
           <div className="flex items-center justify-between gap-2 mt-2">
             <Label htmlFor="mobile-enable" className="flex items-center gap-2">
-              Mobile <Smartphone size={14} />
+              Mobile <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
             </Label>
             <Switch
               id="mobile-enable"

@@ -5,46 +5,211 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
 @layer base {
-  /* uses for dark styles */
   :root {
-    /* background */
-    --background: #27272a;
-    --background-hover: #27272a;
-    --background-disable: #27272a;
-    --background-sidebar: #18181b;
+    --background-primary: #18181b;
+    --background-secondary: #202024;
+    --foreground: #ffffff;
+    --accent-primary: #2c76e6;
+    --accent-primary-hover: #599bfd;
+    --accent-secondary-active: #1a488b;
+    --accent-secondary: #b34a33;
+    --accent-secondary-hover: #e55f42;
+    --accent-secondary-active: #b34a33;
+    /* button field */
+    --button-primary: #303033;
+    --button-primary-hover: #52525b;
+    --button-primary-active: #303033;
+    /* input field */
+    --input-primary: #303033;
+    --input-primary-hover: #3f3f46;
+    --input-primary-active: #3f3f46;
+    /* switch field */
+    --switch-primary: #52525b;
+    --switch-primary-active: #2c76e6;
+    --switch-track: #e7f4e8;
+    /* select field */
+    --select-primary: #303033;
+    --select-secondary: #52525b;
+    --select-primary-hover: #52525b;
+    --select-primary-active: #3f3f46;
+    /* popup */
+    --popover: #303033;
 
-    /* Card bg */
-    --card-background: #3f3f46;
-
-    /* button */
-    --btn-primary: #3f3f46;
-    --btn-primary-hover: #27272a;
-    --btn-bg-action: #3c7a1f;
-    --btn-bg-action-hover: #48ac19;
-    --btn-bg-cancel: #b34a32;
-    --btn-bg-cancel-hover: #cb4527;
-
-    /* input */
-    --background-input: #3f3f46;
-    --background-input-hover: #52525b;
-    --background-input-focus: #52525b;
-    --text-input: #a1a1aa;
-    --text-input-hover: white;
-    --text-input-focus: white;
-
-    /* popover */
-    --background-popover: #52525b;
-    --text-popover-foreground: #fafafa;
-
-    /* slider */
-    --bg-slider-track: #3f3f46;
-    --bg-slider-thumb: #64964c;
+    /* shadcn generation */
+    --input-placeholder: #d4d4d8;
+    --card: #161a20;
+    --card-foreground: #ffffff;
+    --secondary: #1c2129;
+    --secondary-foreground: #ffffff;
+    --muted: #1c2129;
+    --muted-foreground: #9ca3af;
+    --accent: #a855f7;
+    --accent-foreground: #0f1115;
+    --destructive: #f97316;
+    --destructive-foreground: #ffffff;
+    --border: #2a2f38;
+    --input: #2a2f38;
+    --ring: #9333ea;
+    --radius: 8px;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
-}
 
-@layer base {
+  .dark {
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
   body {
     @apply m-0 p-0;
+  }
+
+  /* dynamic properties field styles */
+  .wcf-ab-title {
+    @apply text-foreground
+    text-label
+    font-semibold
+    leading-5
+    tracking-normal
+    text-nowrap;
+  }
+
+  /* dynamic properties input box */
+  .wcf-ab-dynamic-field-input {
+    @apply min-h-[28px]
+    max-w-[150px]
+    px-[10px]
+    py-[5px]
+    !bg-input
+    hover:bg-input-hover
+    focus:bg-input-focus
+    font-inter
+    text-foreground
+    !text-[12px]
+    font-normal
+    leading-18
+    tracking-normal
+    placeholder:text-placeholder
+    border-none
+    outline-none
+    ring-0
+    focus:ring-0
+    rounded-5
+    cursor-text;
+  }
+
+  /* button */
+  .wcf-ab-button-general {
+    @apply min-h-[28px] max-h-[28px]
+    px-2
+    py-[5px]
+    font-inter
+    text-foreground
+    text-button-font-size
+    font-medium
+    leading-18
+    tracking-normal
+    border-none
+    outline
+    outline-1
+    outline-transparent
+    hover:outline-transparent
+    active:outline-[#fafafa]
+    ring-0
+    !rounded-5
+    cursor-pointer;
+  }
+
+  .wcf-ab-button-primary {
+    @apply bg-button
+    hover:bg-button-hover
+    focus:bg-button-focus;
+  }
+
+  .wcf-ab-button-action {
+    @apply bg-button-action
+    hover:bg-button-action-hover
+    focus:bg-button-action-focus;
+  }
+
+  .wcf-ab-button-destructive {
+    @apply bg-button-destructive
+    hover:bg-button-destructive-hover
+    focus:bg-button-destructive-focus;
+  }
+
+  .wcf-ab-button-icon {
+    @apply !h-[28px] !w-[28px]
+    px-3 py-3
+    bg-button
+    hover:bg-button-hover
+    focus:bg-button-focus
+    active:bg-button-action
+    text-foreground
+    text-button-icon-size
+    border-none
+    outline
+    outline-1
+    outline-transparent
+    hover:outline-transparent
+    focus:outline-[#fafafa]
+    active:outline-transparent
+    ring-0
+    focus:ring-0
+    rounded-5
+    cursor-pointer;
+  }
+
+  /* switch field  */
+  .wcf-ab-switch-field {
+    @apply data-[state=unchecked]:!bg-switch
+    data-[state=checked]:!bg-switch-active
+    [&>span]:bg-switch-thumb
+    data-[state=checked]:[&>span]:bg-switch-thumb-active
+    px-0;
+  }
+
+  /* Select field */
+  .wcf-ab-select-trigger {
+    @apply h-[34px]
+    max-w-[150px]
+    px-[10px]
+    py-[5px]
+    !bg-select
+    text-foreground
+    !text-select-font-size
+    font-medium
+    leading-18
+    border-none
+    outline-none
+    rounded-5
+    cursor-pointer;
+  }
+
+  .wcf-ab-select-content {
+    @apply max-w-[150px]
+    p-[10px]
+    !bg-select-secondary
+    text-foreground
+    !text-select-font-size
+    font-normal
+    leading-5
+    tracking-normal
+    border-none
+    outline-none
+    rounded-5;
   }
 }
 
@@ -52,6 +217,7 @@
   @apply font-inter box-border;
 }
 
+/* scrollbar styles */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(120, 120, 120, 0.5) transparent;
@@ -69,10 +235,106 @@
 *::-webkit-scrollbar-thumb {
   background-color: rgba(120, 120, 120, 0.5);
   border-radius: 999px;
-  border: 2px solid transparent; /* creates padding */
+  border: 2px solid transparent;
   background-clip: content-box;
 }
 
 *::-webkit-scrollbar-thumb:hover {
   background-color: rgba(120, 120, 120, 0.8);
+}
+
+/* color picker component field styles */
+[data-color-mode*="dark"].w-color-swatch {
+  --sketch-swatch-border-top: 1px solid #525252 !important;
+}
+[inputtype="hexa"].w-color-swatch {
+  gap: 4px;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  max-height: 40px;
+  padding: 4px 0;
+  cursor: pointer;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[inputtype="hexa"].w-color-swatch::-webkit-scrollbar {
+  display: none;
+}
+[inputtype="hexa"].w-color-swatch > div {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+[inputtype="hexa"].w-color-swatch > div:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+[data-color-mode*="dark"].w-color-github {
+  width: 100% !important;
+  --github-border: none !important;
+  --github-background-color: var(--popover) !important;
+  --github-box-shadow: none !important;
+  --github-arrow-border-color: none !important;
+}
+[data-color-mode*="dark"].w-color-github > div:nth-child(-n + 2) {
+  display: none;
+}
+[data-color-mode*="dark"].w-color-github > div:nth-child(4) {
+  padding: 10px 4px !important;
+}
+[data-color-mode*="dark"].w-color-github > div:nth-child(5) {
+  padding: 10px 4px !important;
+}
+[data-color-mode*="dark"].w-color-github .w-color-editable-input > input {
+  background: var(--input-primary-hover) !important;
+  min-height: 28px;
+  font-family: "Inter", sans-serif;
+  color: var(--foreground) !important;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: normal;
+  border: none !important;
+  outline: none !important;
+  border-radius: 5px;
+  cursor: text;
+  box-shadow: none !important;
+}
+[data-color-mode*="dark"].w-color-github .w-color-editable-input > input:hover {
+  background: var(--input-primary-hover) !important;
+}
+[data-color-mode*="dark"].w-color-github
+  .w-color-editable-input
+  > input:active {
+  background: var(--input-primary-hover) !important;
+}
+[data-color-mode*="dark"].w-color-github .w-color-editable-input > span {
+  --editable-input-label-color: var(--foreground) !important;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+[data-color-mode*="dark"].w-color-github .w-color-saturation {
+  border-radius: 5px !important;
+}
+[data-color-mode*="dark"].w-color-github > div:nth-child(5) > div:nth-child(2) {
+  background: var(--input-primary-hover) !important;
+  border-radius: 5px !important;
+  height: 28px;
+  width: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+[data-color-mode*="dark"].w-color-github
+  > div:nth-child(5)
+  > div:nth-child(2)
+  > svg
+  > path {
+  --chrome-arrow-fill: var(--foreground) !important;
 }

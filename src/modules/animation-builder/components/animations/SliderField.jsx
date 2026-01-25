@@ -48,10 +48,8 @@ const SliderField = ({
     <div>
       <div className="flex flex-col gap-3 rounded-lg  sm:flex-row sm:items-center">
         {/* left title + tooltip */}
-        <div className="flex items-center gap-3 text-[#E4E4E7]">
-          <span className="text-white text-15 font-normal leading-5 tracking-normal">
-            {title}
-          </span>
+        <div className="flex items-center gap-[6px]">
+          <span className="wcf-ab-title">{title}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
@@ -68,7 +66,7 @@ const SliderField = ({
           />
           <Input
             placeholder="Add Value"
-            className="flex items-center justify-center w-28"
+            className="wcf-ab-dynamic-field-input"
             value={inputValue}
             min={min === 0 ? Infinity : min}
             max={max === 0 ? Infinity : max}

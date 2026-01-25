@@ -22,8 +22,6 @@ const AnimationPropsMapping = React.memo(
     const { path = null, fieldType = null } = property || {};
     if (!path || !fieldType) return null;
 
-    console.log("re render", fieldType);
-
     // updating animation properties.
     const handleSetValueByPath = useCallback(
       (value) => {

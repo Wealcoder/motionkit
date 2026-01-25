@@ -64,7 +64,7 @@ const GlobalAnimation = ({ handleAddAnimation = () => {} }) => {
       <CollapsibleTrigger asChild>
         <Button
           disabled={isOpen}
-          className="min-h-9 w-full px-[6px] py-2 bg-button-action hover:bg-button-action-hover !text-white font-medium text-15 leading-5 tracking-normal rounded-5 border-none outline-none"
+          className="wcf-ab-button-general  wcf-ab-button-action"
         >
           <HugeiconsIcon
             icon={AddCircleIcon}
@@ -89,7 +89,7 @@ const GlobalAnimation = ({ handleAddAnimation = () => {} }) => {
         onClick={onClose}
         className={cn(
           "min-h-9 max-w-[92px] bg-button-cancel px-[6px] py-2 !text-white font-medium text-15 leading-5 tracking-normal rounded-5 border-none outline-none",
-          isOpen ? "flex" : "hidden"
+          isOpen ? "flex" : "hidden",
         )}
       >
         <HugeiconsIcon
@@ -120,16 +120,16 @@ const AnimationPresetCard = ({
         }
         return;
       }}
-      className="h-[122px] px-[26px] py-4 relative flex flex-col justify-center items-center gap-[10px] bg-button-primary hover:bg-button-primary-hover rounded-5 border-none cursor-pointer"
+      className="h-[96px] px-[26px] py-2 relative flex flex-col justify-center items-center gap-[6.5px] bg-button hover:bg-button-hover rounded-5 border-none cursor-pointer"
     >
-      {/* //TODO: need to work on premium badge modal. Ask designer */}
+      {/* //TODO: need to work on premium badge modal. */}
       {preset?.isPro && isPremium && (
         <div className="absolute top-[10px] right-[10px]">
           <PremiumBadge />
         </div>
       )}
-      <img src={preset?.icon} alt={preset?.title} height={"32px"} />
-      <p className="w-[69px] text-white font-normal text-sm leading-[18px] tracking-normal text-center m-0">
+      <img src={preset?.icon} alt={preset?.title} height={"23px"} />
+      <p className="m-0 text-button-font-size text-[#FAFAFA] font-normal leading-18 tracking-normal">
         {preset?.cardtTitle ?? ""}
       </p>
     </button>

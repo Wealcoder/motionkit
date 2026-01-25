@@ -1,7 +1,8 @@
-import { Dot, Settings } from "lucide-react";
 import { Badge } from "@@/components/ui/badge";
 import { Switch } from "@@/components/ui/switch";
 import { cn } from "@@/lib/utils";
+import { Settings01Icon } from "@hugeicons/core-free-icons/index";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 const PresetCard = ({
   preset,
@@ -25,7 +26,7 @@ const PresetCard = ({
       <div
         className={cn(
           "flex items-center justify-between gap-3 px-4 py-[15px] bg-background rounded-lg  box-border shadow-common-2",
-          className
+          className,
         )}
         id={slug || ""}
       >
@@ -34,15 +35,15 @@ const PresetCard = ({
             <div
               className={cn(
                 "flex items-center gap-3",
-                is_upcoming ? "opacity-50 pointer-events-none" : ""
+                is_upcoming ? "opacity-50 pointer-events-none" : "",
               )}
             >
               <div
                 className={cn(
-                  "border rounded-full h-11 w-11 flex justify-center items-center shadow-common text-[20px]"
+                  "border rounded-full h-11 w-11 flex justify-center items-center shadow-common text-[20px]",
                 )}
               >
-                <Settings size={18} />
+                <HugeiconsIcon icon={Settings01Icon} size={18} />
               </div>
               {/* <div
                 className={cn(
@@ -56,10 +57,11 @@ const PresetCard = ({
                   <h2 className="text-[15px] leading-6 font-medium">{label}</h2>
                   {is_upcoming ? (
                     <>
-                      <Dot
-                        className="w-3.5 h-3.5 text-icon-secondary"
-                        strokeWidth={2}
+                      <div
+                        className="w-4 h-4 bg-white rounded-full"
+                        strokeWidth={4}
                       />
+
                       <Badge variant="pro">COMING</Badge>
                     </>
                   ) : (
@@ -74,7 +76,7 @@ const PresetCard = ({
                       "text-sm",
                       doc_url
                         ? "text-label hover:text-text"
-                        : "pointer-events-none text-[#CACFD8]"
+                        : "pointer-events-none text-[#CACFD8]",
                     )}
                   >
                     Documentation
@@ -82,9 +84,9 @@ const PresetCard = ({
 
                   {preview && (
                     <>
-                      <Dot
-                        className="w-3.5 h-3.5 text-icon-secondary"
-                        strokeWidth={2}
+                      <div
+                        className="w-4 h-4 bg-white rounded-full"
+                        strokeWidth={4}
                       />
                       <a
                         href={demo_url}
@@ -93,7 +95,7 @@ const PresetCard = ({
                           "text-sm",
                           demo_url
                             ? "text-label hover:text-text"
-                            : "pointer-events-none text-[#CACFD8]"
+                            : "pointer-events-none text-[#CACFD8]",
                         )}
                       >
                         Preview
