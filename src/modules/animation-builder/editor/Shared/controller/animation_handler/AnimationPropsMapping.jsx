@@ -10,6 +10,7 @@ import SelectField from "@/components/animations/SelectField";
 import SliderField from "@/components/animations/SliderField";
 import SwitchField from "@/components/animations/SwitchField";
 import TabsField from "@/components/animations/TabsField";
+import TransformOriginField from "@/components/animations/TransformOriginField";
 
 const AnimationPropsMapping = React.memo(
   ({
@@ -148,6 +149,18 @@ const AnimationPropsMapping = React.memo(
       case "tabs-field":
         return (
           <TabsField
+            property={property}
+            value={value}
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            onValueChange={handleSetValueByPath}
+            contentStep={contentStep}
+            updateContentData={updateContentData}
+          />
+        );
+      case "transform-origin-field":
+        return (
+          <TransformOriginField
             property={property}
             value={value}
             onDelete={() => {}}

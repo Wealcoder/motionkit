@@ -57,10 +57,6 @@ const config = {
           tabsTrigger: [
             { title: "Default", value: "default" },
             { title: "Custom", value: "custom" },
-            // { title: "Tab 1", value: "tab1" },
-            // { title: "Tab 2", value: "tab2" },
-            // { title: "Tab 3", value: "tab3" },
-            // { title: "Tab 4", value: "tab4" },
           ],
           tabsContent: [
             {
@@ -107,6 +103,11 @@ const config = {
               ],
             },
           ],
+        },
+        {
+          title: "Transform Origin",
+          fieldType: "transform-origin-field",
+          path: "transformOrigin",
         },
       ],
     },

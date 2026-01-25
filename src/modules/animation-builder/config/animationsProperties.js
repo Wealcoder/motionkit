@@ -27,3 +27,14 @@ export const easeTypes = [
   { title: "Slow", value: "slow" },
   { title: "None", value: "none" },
 ];
+
+export const cssUnits = [
+  { title: "px", value: "px" },
+  { title: "em", value: "em" },
+  { title: "rem", value: "rem" },
+  { title: "%", value: "%" },
+  { title: "vw", value: "vw" },
+  { title: "vh", value: "vh" },
+  { title: "vmin", value: "vmin" },
+  { title: "vmax", value: "vmax" },
+]
