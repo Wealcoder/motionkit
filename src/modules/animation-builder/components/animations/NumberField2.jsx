@@ -65,16 +65,13 @@ const NumberField2 = ({
           <InputGroup className="wcf-ab-dynamic-field-input px-1">
             <InputGroupInput
               placeholder="Add Value"
-              className="!text-foreground !text-input-font-size font-normal leading-18 tracking-normal"
+              className="!text-input-font-size font-normal leading-18 tracking-normal"
               value={inputValue}
               min={min}
               max={max}
               step={step}
               type="number"
-              onChange={(e) => {
-                const value = e.target.value;
-                handleInput(value);
-              }}
+              onChange={(e) => handleInput(e.target.value)}
             />
             {/* plus - minus icon */}
             <InputGroupAddon align="inline-end" className={"pr-[6px]"}>

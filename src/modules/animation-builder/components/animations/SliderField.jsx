@@ -59,7 +59,6 @@ const SliderField = ({
             value={[inputValue]}
             min={min === 0 ? Infinity : min}
             max={max === 0 ? Infinity : max}
-            type="number"
             step={step}
             onValueChange={(v) => setInputValue(v[0])}
             className="flex-1"

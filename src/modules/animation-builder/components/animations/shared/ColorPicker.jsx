@@ -141,7 +141,7 @@ const ColorPicker = ({
         }}
       >
         <PopoverTrigger
-          className="h-[22px] w-[22px] rounded-full border border-neutral-400"
+          className="h-[22px] w-[22px] rounded-full border-2 border-solid border-button"
           style={{ backgroundColor: color }}
         />
         <PopoverContent align="end" className="p-2 max-w-[230px]">

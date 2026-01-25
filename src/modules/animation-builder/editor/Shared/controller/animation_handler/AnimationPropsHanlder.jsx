@@ -16,8 +16,6 @@ const AnimationPropsHanlder = ({
 }) => {
   if (!selectedPreset || !selectedPresetGroup) return;
 
-  const isCustomAnim = contentStep?.data?.type === "custom";
-
   // collecting preset configuration
   const { config = null, defaultData = null } = useMemo(() => {
     return (

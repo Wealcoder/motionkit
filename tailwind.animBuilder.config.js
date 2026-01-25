@@ -17,7 +17,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        foreground: "var(--foreground)",
+        foreground: {
+          DEFAULT: "var(--foreground)",
+          secondary: "var(--foreground-secondary)",
+        },
         background: {
           sidebar: "var(--background-primary)",
           topbar: "var(--background-secondary)",
@@ -36,7 +39,7 @@ module.exports = {
         input: {
           DEFAULT: "var(--input-primary)",
           hover: "var(--input-primary-hover)",
-          focus: "var(--input-primary-focus)",
+          focus: "var(--input-primary-active)",
         },
         switch: {
           DEFAULT: "var(--switch-primary)",

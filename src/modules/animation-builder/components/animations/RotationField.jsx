@@ -34,8 +34,8 @@ const RotationField = ({
   const handleRotationValue = (rawValue) => {
     let currentValue = Number(rawValue);
     if (Number.isNaN(currentValue)) return;
-
     currentValue = clamp(currentValue, min, max);
+    console.log({ rawValue, currentValue });
     setInputValue(currentValue);
     onValueChange(currentValue);
   };
@@ -58,9 +58,56 @@ const RotationField = ({
         <div className="flex-1 flex justify-end items-center gap-3">
           <Popover>
             <PopoverTrigger asChild>
-              <div className="!h-[21px] !min-w-[21px] !max-w-[21px] bg-[#A1A1AA] rounded-full border-[1px] border-dashed border-[#A1A1AA]" />
+              <svg
+                width="34"
+                height="34"
+                viewBox="0 0 21 21"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M0 11.1152H1.23047V12.3457H0V11.1152Z"
+                  fill="#A1A1AA"
+                />
+                <path
+                  d="M19.7695 11.1152H21V12.3457H19.7695V11.1152Z"
+                  fill="#A1A1AA"
+                />
+                <path
+                  d="M4.73828 2.97949L5.80404 2.36416L6.41938 3.42992L5.35362 4.04526L4.73828 2.97949Z"
+                  fill="#A1A1AA"
+                />
+                <path
+                  d="M14.623 3.43213L15.2384 2.36637L16.3041 2.9817L15.6888 4.04747L14.623 3.43213Z"
+                  fill="#A1A1AA"
+                />
+                <path
+                  d="M18.2246 6.58154L19.2904 5.96621L19.9057 7.03197L18.8399 7.64731L18.2246 6.58154Z"
+                  fill="#A1A1AA"
+                />
+                <path
+                  d="M1.0957 16.4258L2.16147 15.8104L2.7768 16.8762L1.71104 17.4915L1.0957 16.4258Z"
+                  fill="#A1A1AA"
+                />
+                <path
+                  d="M18.2266 16.8799L18.8419 15.8141L19.9077 16.4295L19.2923 17.4952L18.2266 16.8799Z"
+                  fill="#A1A1AA"
+                />
+                <path
+                  d="M1.09375 7.03467L1.70909 5.9689L2.77485 6.58424L2.15951 7.65L1.09375 7.03467Z"
+                  fill="#A1A1AA"
+                />
+                <path
+                  d="M9.88477 1.27148H11.1152V2.50195H9.88477V1.27148Z"
+                  fill="#A1A1AA"
+                />
+                <path
+                  d="M10.5 3.73242C6.09 3.73242 2.46094 7.32047 2.46094 11.7305C2.46094 16.1405 6.09 19.7285 10.5 19.7285C14.91 19.7285 18.5391 16.1405 18.5391 11.7305C18.5391 7.32047 14.91 3.73242 10.5 3.73242ZM10.5 12.6005L6.58448 8.68494L7.45447 7.81495L11.37 11.7305L10.5 12.6005Z"
+                  fill="#A1A1AA"
+                />
+              </svg>
             </PopoverTrigger>
-            <PopoverContent>
+            <PopoverContent className="w-max p-0 bg-transparent">
               <Wheeler
                 min={min}
                 max={max}
