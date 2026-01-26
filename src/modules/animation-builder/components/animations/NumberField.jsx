@@ -1,10 +1,8 @@
 import { useState } from "react";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
-import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
-import WCFABInput from "@/components/animations/blocks/WCFABInput";
 import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage";
-import { contentWrapper } from "@/components/animations/shared/style";
-import { cn } from "@/lib/utils";
+import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
+import WCFABNumberInput from "./blocks/WCFABNumberInput";
 
 const NumberField = ({
   property = {},
@@ -36,10 +34,9 @@ const NumberField = ({
         <WCFABLabel size={size} title={title} tooltipContent={tooltipContent} />
 
         {/* Input + delete */}
-        <div className={cn(contentWrapper({ size }))}>
-          <WCFABInput
+        <div className={"flex justify-between items-center gap-2"}>
+          <WCFABNumberInput
             size={size}
-            type="number"
             placeholder={placeholder}
             value={value}
             onValueChange={onValueChange}
