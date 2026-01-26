@@ -1,5 +1,6 @@
+import React from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
+import { parseCssValue } from "@/utils/trnasformOriginHelper";
 const GRID = [
   { id: "tl", x: "0%", y: "0%" },
   { id: "tc", x: "50%", y: "0%" },
@@ -12,16 +13,44 @@ const GRID = [
   { id: "br", x: "100%", y: "100%" },
 ];
 
+const SNAP_POINTS = [0, 50, 100];
+
+const nearestSnap = (val) => {
+  let nearest = SNAP_POINTS[0];
+  let minDiff = Math.abs(val - nearest);
+
+  for (const p of SNAP_POINTS) {
+    const diff = Math.abs(val - p);
+    if (diff < minDiff) {
+      minDiff = diff;
+      nearest = p;
+    }
+  }
+  return nearest;
+};
+
+const resolveGridValue = (cssValue) => {
+  if (!cssValue) return "50% 50%";
+
+  const [xRaw, yRaw] = cssValue.split(" ");
+
+  const x = parseCssValue(xRaw).value;
+  const y = parseCssValue(yRaw).value;
+
+  const snappedX = nearestSnap(x);
+  const snappedY = nearestSnap(y);
+
+  return `${snappedX}% ${snappedY}%`;
+};
+
 const TransformOriginGrid = ({ value, onChange }) => {
+  const activeGridValue = resolveGridValue(value);
+
   return (
     <RadioGroup
-      value={value}
+      value={activeGridValue}
       onValueChange={onChange}
-      className="
-        grid grid-cols-3 gap-3
-        bg-[#18181B]
-        p-3 rounded-md
-      "
+      className="w-[108px] h-[108px] grid grid-cols-3 gap-3 bg-[#18181B] p-3 rounded-md"
     >
       {GRID.map((item) => {
         const cssValue = `${item.x} ${item.y}`;
@@ -30,8 +59,7 @@ const TransformOriginGrid = ({ value, onChange }) => {
           <RadioGroupItem
             key={item.id}
             value={cssValue}
-            className="data-[state=checked]:border-[#3B82F6] data-[state=checked]:bg-[#3B82F6]
-              "
+            className="border-none data-[state=checked]:bg-[#2C76E6]"
           />
         );
       })}

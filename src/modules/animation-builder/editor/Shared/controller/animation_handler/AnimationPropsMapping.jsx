@@ -93,7 +93,7 @@ const AnimationPropsMapping = React.memo(
         );
 
       case "code-block-field":
-        // todo: add code block field leter;
+        // todo: add code block field later;
         break;
 
       case "color-picker":

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import PopoverInputGroup from "./shared/PopoverInputGroup";
 import ToolTipWrapper from "../common/ToolTipWrapper";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -13,6 +13,7 @@ import {
   parseCssValue,
   parseTransformOrigin,
 } from "@/utils/trnasformOriginHelper";
+import { Button } from "../ui/button";
 
 const TransformOriginField = ({
   property = {},
@@ -45,34 +46,53 @@ const TransformOriginField = ({
     ...rest
   } = property || {};
 
-  const [origin, setOrigin] = useState({ x: "50%", y: "50%" });
-  // console.log(origin)
+  const [origin, setOrigin] = useState(() => parseTransformOrigin(value));
+  // console.log(origin);
 
-  const parsedOrigin = {
-    x: parseCssValue(origin.x),
-    y: parseCssValue(origin.y),
-  };
+  // parse "50%" into "value = 50" and "unit = %"
+  const parsedOrigin = useMemo(
+    () => ({
+      x: parseCssValue(origin.x),
+      y: parseCssValue(origin.y),
+    }),
+    [origin],
+  );
+
+  // sync incoming value
   useEffect(() => {
-    if (!value) return;
-
-    const [x = "50%", y = "50%"] = value.split(" ");
-    setOrigin({ x, y });
+    setOrigin(parseTransformOrigin(value));
   }, [value]);
 
-  const commitOrigin = (next) => {
-    // console.log(next);
+  // helper to update onChangeValue
+  const updateOrigin = (next) => {
+    // console.log(next)
     setOrigin(next);
+
     const originValue = {
       transformOrigin: buildTransformOrigin(next),
     };
-    // console.log(originValue)
+
+    console.log(originValue);
     onValueChange(originValue);
   };
 
+  // input value change handler
   const updateField = (side, val) => {
-    commitOrigin({
+    const { unit } = parsedOrigin[side];
+
+    updateOrigin({
       ...origin,
-      [side]: val,
+      [side]: `${val}${unit}`,
+    });
+  };
+
+  // unit change handler
+  const updateUnit = (side, newUnit) => {
+    const parsed = parseCssValue(origin[side]);
+
+    updateOrigin({
+      ...origin,
+      [side]: `${parsed.value}${newUnit}`,
     });
   };
 
@@ -85,38 +105,36 @@ const TransformOriginField = ({
       </div>
       {/* right side popover button */}
       <Popover>
-        <PopoverTrigger className="w-7 h-7 rounded-md bg-[#303033] p-1 flex items-center justify-center cursor-pointer">
-          <HugeiconsIcon
-            icon={Settings03Icon}
-            color="#A1A1AA"
-            strokeWidth={1.5}
-            className="w-3.5 h-3.5"
-          />
+        <PopoverTrigger asChild>
+          <Button className="wcf-ab-button-general wcf-ab-button-primary text-button-font-size max-w-[28px]">
+            <HugeiconsIcon
+              icon={Settings03Icon}
+              color="#A1A1AA"
+              strokeWidth={1.5}
+              className="w-3.5 h-3.5 text-white"
+            />
+          </Button>
         </PopoverTrigger>
-        <PopoverContent className="bg-[#303033] w-[228px] h-[160px] p-3">
+        <PopoverContent className="bg-[#303033] w-[228px] min-h-[160px] p-3 mr-5 flex flex-col gap-2.5">
           {/* modal title and cancel button */}
-          <div className="flex items-center justify-between">
-            <h1 className="text-white text-[11px] font-normal leading-4.25 tracking-normal">
+          <div className="flex items-center justify-between w-full h-3">
+            <h2 className="text-white text-[11px] font-normal leading-4.25 tracking-normal">
               {title}
-            </h1>
-            <HugeiconsIcon icon={CancelCircleIcon} className="text-[#A1A1AA]" />
+            </h2>
+            <HugeiconsIcon icon={CancelCircleIcon} size={15} className="text-[#A1A1AA] w-3 h-3" />
           </div>
           <div className="flex items-center gap-4">
             {/* left radio selection grid */}
             <TransformOriginGrid
               value={buildTransformOrigin(origin)}
               onChange={(cssValue) =>
-                commitOrigin(parseTransformOrigin(cssValue))
+                updateOrigin(parseTransformOrigin(cssValue))
               }
             />
 
             {/* right input fields */}
-            <div className="flex flex-col gap-[9px] w-[80px] h-[109px]">
+            <div className="flex flex-col gap-[9px] w-[80px] max-h-[109px]">
               {properties.map((field) => {
-                // console.log("field.key:", field.key);
-                // console.log("origin:", origin);
-                // console.log("value:", origin[field.key]);
-
                 const parsed = parsedOrigin[field.key];
                 return (
                   <PopoverInputGroup
@@ -125,6 +143,7 @@ const TransformOriginField = ({
                     value={parsed.value}
                     unit={parsed.unit}
                     onValueChange={(val) => updateField(field.key, val)}
+                    onUnitChange={(unit) => updateUnit(field.key, unit)}
                   />
                 );
               })}
