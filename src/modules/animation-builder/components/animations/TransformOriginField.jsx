@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import PopoverInputGroup from "./shared/PopoverInputGroup";
 import ToolTipWrapper from "../common/ToolTipWrapper";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -14,6 +13,8 @@ import {
   parseTransformOrigin,
 } from "@/utils/trnasformOriginHelper";
 import { Button } from "../ui/button";
+import TransformOriginInputGroup from "./shared/TransformOriginInputGroup";
+import PopoverModalInputGroup from "./shared/PopoverModalInputGroup";
 
 const TransformOriginField = ({
   property = {},
@@ -106,7 +107,7 @@ const TransformOriginField = ({
       {/* right side popover button */}
       <Popover>
         <PopoverTrigger asChild>
-          <Button className="wcf-ab-button-general wcf-ab-button-primary text-button-font-size max-w-[28px]">
+          <Button className="wcf-ab-button-icon">
             <HugeiconsIcon
               icon={Settings03Icon}
               color="#A1A1AA"
@@ -118,7 +119,7 @@ const TransformOriginField = ({
         <PopoverContent className="bg-[#303033] w-[228px] min-h-[160px] p-3 mr-5 flex flex-col gap-2.5">
           {/* modal title and cancel button */}
           <div className="flex items-center justify-between w-full h-3">
-            <h2 className="text-white text-[11px] font-normal leading-4.25 tracking-normal">
+            <h2 className="text-white text-[11px] font-normal leading-4.25 font-inter">
               {title}
             </h2>
             <HugeiconsIcon icon={CancelCircleIcon} size={15} className="text-[#A1A1AA] w-3 h-3" />
@@ -137,7 +138,7 @@ const TransformOriginField = ({
               {properties.map((field) => {
                 const parsed = parsedOrigin[field.key];
                 return (
-                  <PopoverInputGroup
+                  <TransformOriginInputGroup
                     key={field.key}
                     title={field.title}
                     value={parsed.value}
@@ -148,6 +149,9 @@ const TransformOriginField = ({
                 );
               })}
             </div>
+          </div>
+          <div>
+            <PopoverModalInputGroup/>
           </div>
         </PopoverContent>
       </Popover>

@@ -9,8 +9,9 @@ import RotationField from "@/components/animations/RotationField";
 import SelectField from "@/components/animations/SelectField";
 import SliderField from "@/components/animations/SliderField";
 import SwitchField from "@/components/animations/SwitchField";
-import { useCallback } from "react";
-import CodeblockField from "@/components/animations/CodeblockField";
+import TransformOriginField from "@/components/animations/TransformOriginField";
+import TabsField from "@/components/animations/TabsField";
+// import CodeblockField from "@/components/animations/CodeblockField";
 
 const AnimationPropsMapping = React.memo(
   ({

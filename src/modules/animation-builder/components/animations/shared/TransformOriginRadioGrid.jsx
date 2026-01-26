@@ -1,6 +1,7 @@
 import React from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { parseCssValue } from "@/utils/trnasformOriginHelper";
+import { cn } from "@/lib/utils";
 const GRID = [
   { id: "tl", x: "0%", y: "0%" },
   { id: "tc", x: "50%", y: "0%" },
@@ -50,7 +51,7 @@ const TransformOriginGrid = ({ value, onChange }) => {
     <RadioGroup
       value={activeGridValue}
       onValueChange={onChange}
-      className="w-[108px] h-[108px] grid grid-cols-3 gap-3 bg-[#18181B] p-3 rounded-md"
+      className="w-[108px] h-[108px] grid grid-cols-3 items-center justify-center gap-8 bg-[#18181B] p-3 rounded-md"
     >
       {GRID.map((item) => {
         const cssValue = `${item.x} ${item.y}`;
@@ -59,7 +60,9 @@ const TransformOriginGrid = ({ value, onChange }) => {
           <RadioGroupItem
             key={item.id}
             value={cssValue}
-            className="border-none data-[state=checked]:bg-[#2C76E6]"
+            className={cn(
+              "border-none h-1.5 w-1.5 rounded-full !p-0 bg-[#A1A1AA] data-[state=checked]:w-3 data-[state=checked]:h-3 data-[state=checked]:bg-[#2C76E6] [&>span]:hidden"
+            )}
           />
         );
       })}
