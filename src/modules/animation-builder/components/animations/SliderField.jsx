@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { debounceFn, trimString } from "@/utils/utils";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 
 const SliderField = ({
   property = {},
@@ -82,7 +82,7 @@ const SliderField = ({
               handleInput(value);
             }}
           />
-          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
       {/* required message */}

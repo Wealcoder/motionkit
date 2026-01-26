@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import { toCamelCase, trimString } from "@/utils/utils";
 
 const SelectField = ({
@@ -70,7 +70,7 @@ const SelectField = ({
               })}
             </SelectContent>
           </Select>
-          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 

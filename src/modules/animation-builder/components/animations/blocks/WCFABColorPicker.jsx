@@ -32,7 +32,7 @@ function validateHSL(h, s, l) {
   return inRange(h, 0, 360) && inRange(s, 0, 100) && inRange(l, 0, 100);
 }
 
-const ColorPicker = ({
+const WCFABColorPicker = ({
   value = "#000000",
   onValueChange = () => {},
   ...rest
@@ -86,7 +86,6 @@ const ColorPicker = ({
     const next = e.target.value;
     setInputValue(next);
     const isValid = validateColor(next);
-    console.log(isValid);
     if (validateColor(next)) {
       commitColor(next);
     }
@@ -173,4 +172,4 @@ const ColorPicker = ({
   );
 };
 
-export default ColorPicker;
+export default WCFABColorPicker;

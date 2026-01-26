@@ -17,11 +17,11 @@ const FreeAnimationTopbar = ({ searchKey, setSearchKey, presetCount }) => {
             <h2 className="text-[18px] font-medium ">Free Animations</h2>
           </div>
           <div className="flex items-center">
-            <p className="text-sm text-label ">
+            <p className="text-sm text-xs ">
               {presetCount?.total ?? 0} Total Presets
             </p>
             <div className="w-4 h-4 bg-white rounded-full" strokeWidth={4} />
-            <p className="text-sm text-label ">
+            <p className="text-sm text-xs ">
               {presetCount?.active ?? 0} Active Presets
             </p>
           </div>

@@ -47,7 +47,7 @@ const AnimationPropsMapping = React.memo(
     const value = getValueFromPath(defaultData, path) ?? "";
 
     switch (fieldType) {
-      case "text-field-md":
+      case "text-field":
         return (
           <TextField
             size={property?.size} // sm | md | lg

@@ -129,7 +129,7 @@ const AnimationPresetCard = ({
         </div>
       )}
       <img src={preset?.icon} alt={preset?.title} height={"23px"} />
-      <p className="m-0 text-button-font-size text-[#FAFAFA] font-normal leading-18 tracking-normal">
+      <p className="m-0 text-xss text-[#FAFAFA] font-normal leading-18 tracking-normal">
         {preset?.cardtTitle ?? ""}
       </p>
     </button>

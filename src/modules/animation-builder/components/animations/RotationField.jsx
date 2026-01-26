@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/popover";
 import { debounceFn, trimString } from "@/utils/utils";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 
 const RotationField = ({
   property = {},
@@ -126,7 +126,7 @@ const RotationField = ({
             onChange={(e) => handleInput(e.target.value)}
           />
 
-          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 

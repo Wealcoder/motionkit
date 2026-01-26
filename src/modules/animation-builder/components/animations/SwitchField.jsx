@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import { trimString } from "@/utils/utils";
 
 const SwitchField = ({
@@ -48,7 +48,7 @@ const SwitchField = ({
           </div>
 
           {/* delete icon */}
-          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {property?.isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
       {/* required message */}

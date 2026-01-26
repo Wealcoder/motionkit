@@ -72,12 +72,12 @@ module.exports = {
         inter: "Inter, sans-serif",
       },
       fontSize: {
-        label: "0.75rem",
-        placeholder: "0.7188rem",
-        "input-font-size": "0.7188rem",
-        "button-font-size": "0.7188rem",
+        xss: "0.7188rem",
         "button-icon-size": "1rem",
-        "select-font-size": "0.7188rem",
+      },
+      lineHeight: {
+        4.25: "1.0625rem",
+        4.5: "1.125rem",
       },
       borderRadius: {
         5: "0.3125rem",

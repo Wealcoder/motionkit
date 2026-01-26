@@ -1,15 +1,9 @@
-import React, { useState } from "react";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
-import { debounceFn, trimString } from "@/utils/utils";
-import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
+import WCFABNumInputWithBtn from "@/components/animations/blocks/WCFABNumInputWithBtn";
+import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage";
+import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
+import { contentWrapper } from "@/components/animations/shared/style";
+import { cn } from "@/lib/utils";
 
 const NumberField2 = ({
   property = {},
@@ -19,92 +13,44 @@ const NumberField2 = ({
   onValueChange = () => {},
 }) => {
   const {
+    size = "sm",
     title = "title",
     tooltipContent = "Enter the value.",
     isRequired = false,
     isCustomAnim = false,
+    placeholder = "Add Value",
     min = 0,
     max = 0,
     step = 0.1,
     ...rest
   } = property || {};
 
-  const [inputValue, setInputValue] = useState(value || 0);
-  const [isDataValid, setIsDataValid] = useState(false);
-
-  // value handler
-  const commitValue = (rawValue) => {
-    let updateValue = Number(rawValue);
-    if (Number.isNaN(updateValue)) return;
-    setInputValue(updateValue);
-    onValueChange(updateValue);
-  };
-
-  // input handler
-  const handleInput = debounceFn((value) => {
-    commitValue(Number(value)?.toFixed(2));
-  }, 150);
-
-  // plus minus button click handler
-  const updateValue = (value) => {
-    commitValue(Number(value)?.toFixed(2));
-  };
-
   return (
     <div>
-      <div className="flex flex-col justify-between gap-3 w-97 h-8.5 mx-auto rounded-lg sm:flex-row sm:items-center">
-        {/* left title + tooltip */}
-        <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{trimString(title, 15)}</span>
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
-        </div>
+      <div className={"flex justify-between items-center"}>
+        {/* Label + tooltip */}
+        <WCFABLabel size={size} title={title} tooltipContent={tooltipContent} />
 
-        {/* right add + delete button */}
-        <div className="flex-1 flex justify-end items-center gap-3">
-          <InputGroup className="wcf-ab-number-input px-1">
-            <InputGroupInput
-              placeholder="Add Value"
-              className="!text-input-font-size font-normal leading-18 tracking-normal"
-              value={inputValue}
-              min={min}
-              max={max}
-              step={step}
-              type="number"
-              onChange={(e) => handleInput(e.target.value)}
-            />
-            {/* plus - minus icon */}
-            <InputGroupAddon align="inline-end" className={"pr-[6px]"}>
-              <InputGroupButton
-                className="wcf-ab-button-icon bg-[--background-secondary] hover:bg-[--button-primary-hover] active:bg-[--button-primary-hover] border-r border-r-[#71717A] rounded-r-none rounded-l-5"
-                onClick={() => updateValue(inputValue - step)}
-              >
-                <HugeiconsIcon
-                  icon={MinusSignIcon}
-                  strokeWidth={2}
-                  className="text-foreground"
-                />
-              </InputGroupButton>
-            </InputGroupAddon>
-            <InputGroupAddon align="inline-end">
-              <InputGroupButton
-                className="wcf-ab-button-icon bg-[--background-secondary] hover:bg-[--button-primary-hover] active:bg-[--button-primary-hover] border-l  border-l-[#71717A] rounded-l-none rounded-r-5"
-                onClick={() => updateValue(inputValue + step)}
-              >
-                <HugeiconsIcon
-                  icon={PlusSignIcon}
-                  strokeWidth={2}
-                  className="text-foreground"
-                />
-              </InputGroupButton>
-            </InputGroupAddon>
-          </InputGroup>
-          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+        {/* Input + delete */}
+        <div
+          className={"max-w-[160px] flex justify-between items-center gap-2"}
+        >
+          <WCFABNumInputWithBtn
+            size={size}
+            type="number"
+            placeholder={placeholder}
+            value={value}
+            onValueChange={onValueChange}
+            min={min}
+            max={max}
+          />
+          {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 
       {/* required message */}
       {isRequired && isDataValid && (
-        <p className="text-white text-sm">Field is Required</p>
+        <WCFABErrorMessage message={"This field is required"} />
       )}
     </div>
   );
