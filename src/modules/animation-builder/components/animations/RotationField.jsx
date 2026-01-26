@@ -12,7 +12,6 @@ const RotationField = ({
   onValueChange = () => {},
 }) => {
   const {
-    size = "sm",
     title = "Rotate",
     tooltipContent = "Adjust Rotate Value",
     isRequired = false,
@@ -26,12 +25,11 @@ const RotationField = ({
     <div>
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         {/* title */}
-        <WCFABLabel size={size} title={title} tooltipContent={tooltipContent} />
+        <WCFABLabel title={title} tooltipContent={tooltipContent} />
 
         {/* controls */}
         <div className="flex-1 flex justify-end items-center gap-2">
           <WCFABRotationPicker
-            size={size}
             value={value}
             property={property}
             onValueChange={onValueChange}
