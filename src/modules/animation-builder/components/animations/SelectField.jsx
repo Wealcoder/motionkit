@@ -1,14 +1,8 @@
 import React, { useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
-import { toCamelCase, trimString } from "@/utils/utils";
+import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
+import WCFABSelect from "@/components/animations/blocks/WCFABSelect";
+import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage";
 
 const SelectField = ({
   property = {},
@@ -18,65 +12,37 @@ const SelectField = ({
   onValueChange = () => {},
 }) => {
   const {
+    size = "custom",
     title = "Label",
     tooltipContent = "Select Method",
     isRequired = false,
     isCustomAnim = false,
-    fieldData = [],
+    placeholder = "Select Value",
     ...rest
   } = property || {};
 
-  const [selectedValue, setSelectedValue] = useState(value ?? "");
   const [isDataValid, setIsDataValid] = useState(false);
-
-  const handleSelect = (value) => {
-    console.log({ value });
-    setSelectedValue(value);
-    onValueChange(value);
-  };
-
-  if (!fieldData?.length) {
-    console.error("Field data required!");
-    return null;
-  }
 
   return (
     <div>
-      <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
-        {/* left title + tooltip */}
-        <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{trimString(title, 15)}</span>
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
-        </div>
-        <div className="flex-1 flex justify-end items-center gap-3">
-          <Select value={selectedValue} onValueChange={handleSelect}>
-            <SelectTrigger className="wcf-ab-dc-select-trigger">
-              <SelectValue placeholder="Select Method" />
-            </SelectTrigger>
-            <SelectContent className="wcf-ab-select-content">
-              {fieldData?.map((field, index) => {
-                // if field does not contain value use title (formatting camel case) as value
-                const isObjectType =
-                  !Array.isArray(field) && typeof field === "object";
-                const currentValue = isObjectType
-                  ? field?.value
-                  : toCamelCase(field);
-                const title = isObjectType ? field?.title : field;
-                return (
-                  <SelectItem key={index} value={currentValue ?? undefined}>
-                    {title ?? ""}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+      <div className={"flex justify-between items-center"}>
+        {/* Label + tooltip */}
+        <WCFABLabel size={size} title={title} tooltipContent={tooltipContent} />
+
+        {/* Input + delete */}
+        <div className={"flex justify-between items-center gap-2"}>
+          <WCFABSelect
+            property={property}
+            value={value}
+            onValueChange={onValueChange}
+          />
           {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 
-      {/* required message */}
+      {/* Required message */}
       {isRequired && isDataValid && (
-        <p className="text-white text-sm">Field is Required</p>
+        <WCFABErrorMessage message={"This field is required"} />
       )}
     </div>
   );

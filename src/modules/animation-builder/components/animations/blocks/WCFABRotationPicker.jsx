@@ -36,7 +36,7 @@ const WCFABRotationPicker = ({
   );
 
   return (
-    <div className="flex-1 flex justify-end items-center gap-1">
+    <div className="flex-1 flex justify-end items-center gap-2">
       <Popover>
         <PopoverTrigger className="!h-[21px] !w-[21px] p-0 m-0 hover:scale-105 bg-transparent border-none outline-none shadow-none focus-within:ring-0 cursor-pointer">
           <Knob />

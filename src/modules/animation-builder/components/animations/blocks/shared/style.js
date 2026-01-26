@@ -11,7 +11,7 @@ export const inputVariants = cva(
       },
     },
     defaultVariants: {
-      sm: "sm",
+      size: "sm",
     },
   },
 );
