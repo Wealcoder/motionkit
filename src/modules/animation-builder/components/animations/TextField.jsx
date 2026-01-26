@@ -1,8 +1,9 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { debounceFn } from "@/utils/utils";
-import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
+import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
+import WCFABInput from "@/components/animations/blocks/WCFABInput";
+import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage";
+import { contentWrapper } from "@/components/animations/shared/style";
+import { cn } from "@/lib/utils";
 
 const TextField = ({
   property = {},
@@ -12,58 +13,36 @@ const TextField = ({
   onValueChange = () => {},
 }) => {
   const {
+    size = "sm",
     title = "title",
     tooltipContent = "Enter the value.",
+    placeholder = "Add Value",
     isRequired = false,
     isCustomAnim = false,
-    ...rest
   } = property || {};
-
-  const [currentValue, setCurrentValue] = useState(value ?? "");
-  const [isDataValid, setIsDataValid] = useState(false);
-
-  const handleDebouncedChange = useCallback(
-    debounceFn((val) => {
-      onValueChange(val);
-    }, 150),
-    [onValueChange],
-  );
-
-  useEffect(() => {
-    return () => {
-      if (handleDebouncedChange.cancel) handleDebouncedChange.cancel();
-    };
-  }, [handleDebouncedChange]);
 
   return (
     <div>
-      <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
-        {/* left title + tooltip */}
-        <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{title}</span>
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
-        </div>
+      <div className={"flex justify-between items-center"}>
+        {/* Label + tooltip */}
+        <WCFABLabel size={size} title={title} tooltipContent={tooltipContent} />
 
-        {/* right input + delete button */}
-        <div className="flex-1 flex justify-end items-center gap-3">
-          <Input
-            placeholder=".start_trigger"
-            className="wcf-ab-dynamic-field-input"
-            value={currentValue}
+        {/* Input + delete */}
+        <div className={cn(contentWrapper({ size }))}>
+          <WCFABInput
+            size={size}
             type="text"
-            onChange={(e) => {
-              const val = e.target.value;
-              setCurrentValue(val);
-              handleDebouncedChange(val);
-            }}
+            placeholder={placeholder}
+            value={value}
+            onValueChange={onValueChange}
           />
-          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 
-      {/* required message */}
+      {/* Required message */}
       {isRequired && isDataValid && (
-        <p className="text-white text-message">Field is Required</p>
+        <WCFABErrorMessage message={"This field is required"} />
       )}
     </div>
   );

@@ -6,8 +6,14 @@ const defaultData = {
   animationDelay: 0,
   animationDuration: 1,
   animationIterationCount: 0,
-  animationTimingFunction: "ease",
-  tabs:{}
+  animationTimingFunction: "expo",
+  // test
+  test: "",
+  colorPicker: "#000000",
+  rotation: 360,
+  slider: -150,
+  switch: true,
+  code: "",
 };
 
 const config = {
@@ -15,43 +21,7 @@ const config = {
   description: "",
   key: "wcf-ab-gen-sil-fa",
   properties: [
-    // {
-    //   accordionTitle: "Properties",
-    //   properties: [
-    //     {
-    //       title: "Trigger Type",
-    //       fieldType: "select-field",
-    //       fieldData: triggerTypes,
-    //       path: "triggerType",
-    //     },
-    //     {
-    //       title: "Item Class",
-    //       fieldType: "class-selector-field",
-    //       path: "itemClass",
-    //     },
-    //     {
-    //       title: "Delay",
-    //       fieldType: "number-field",
-    //       path: "animationDelay",
-    //     },
-    //     {
-    //       title: "Duration",
-    //       fieldType: "number-field",
-    //       path: "animationDuration",
-    //     },
-    //     {
-    //       title: "Ease",
-    //       fieldType: "select-field",
-    //       fieldData: easeTypes,
-    //       path: "animationTimingFunction",
-    //     },
-    //     {
-    //       title: "Repeat",
-    //       fieldType: "number-field",
-    //       path: "animationIterationCount",
-    //     },
-    //   ],
-    // },
+    // todo: apply space in left property
     {
       accordionTitle: "Test Component",
       properties: [
@@ -59,47 +29,62 @@ const config = {
           title: "Text field",
           fieldType: "text-field",
           path: "test",
+          isCustomAnim: true,
         },
         {
           title: "Number field",
           fieldType: "number-field",
           path: "animationDuration",
+          isCustomAnim: true,
         },
         {
-          title: "Stagger",
+          title: "Number  2",
           fieldType: "number-field-2",
           path: "animationDuration",
+          isCustomAnim: true,
         },
         {
           title: "Class selector field",
           fieldType: "class-selector-field",
           path: "itemClass",
+          isCustomAnim: true,
         },
         {
           title: "Color picker",
           fieldType: "color-picker",
           path: "colorPicker",
+          isCustomAnim: true,
         },
         {
           title: "Rotation Field",
           fieldType: "rotation-field",
           path: "rotation",
+          isCustomAnim: true,
         },
         {
           title: "Select Field",
           fieldType: "select-field",
           fieldData: easeTypes,
           path: "animationTimingFunction",
+          isCustomAnim: true,
         },
         {
-          title: "Slider Field",
+          title: "Repeat",
           fieldType: "slider-field",
           path: "slider",
+          isCustomAnim: true,
         },
         {
           title: "Switch Field",
           fieldType: "switch-field",
           path: "switch",
+          isCustomAnim: true,
+        },
+        {
+          title: "Code Block Field",
+          fieldType: "code-block-field",
+          path: "code",
+          isCustomAnim: true,
         },
         {
           title: "Tabs",

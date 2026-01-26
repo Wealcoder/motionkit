@@ -77,10 +77,14 @@
     @apply m-0 p-0;
   }
 
+  /* new class */
+  /* dynamic component class */
+
+  /* old props */
   /* dynamic properties field styles */
   .wcf-ab-title {
     @apply text-foreground
-    text-label
+    text-xs
     font-semibold
     leading-5
     tracking-normal
@@ -88,11 +92,12 @@
   }
 
   /* dynamic properties input box */
-  .wcf-ab-dynamic-field-input {
-    @apply min-h-[28px]
+  .wcf-ab-general-input {
+    @apply max-h-[28px]
+    min-w-[150px]
     max-w-[150px]
-    px-[10px]
-    py-[5px]
+    !px-[10px]
+    !py-[5px]
     !bg-input
     hover:!bg-input-hover
     focus:!bg-input-focus
@@ -101,11 +106,11 @@
     hover:text-foreground
     focus:text-foreground
     active:text-foreground
-    !text-input-font-size
+    !text-xss
     font-normal
     leading-18
     tracking-normal
-    placeholder:text-placeholder
+    placeholder:text-xss
     border-none
     outline-none
     ring-0
@@ -113,7 +118,58 @@
     rounded-5
     cursor-text;
   }
-
+  .wcf-ab-text-input {
+    @apply max-h-[28px]
+    min-w-[100px]
+    max-w-[100px]
+    !px-[10px]
+    !py-[5px]
+    !bg-input
+    hover:!bg-input-hover
+    focus:!bg-input-focus
+    font-inter
+    text-foreground-secondary
+    hover:text-foreground
+    focus:text-foreground
+    active:text-foreground
+    !text-xss
+    font-normal
+    leading-18
+    tracking-normal
+    placeholder:text-xss
+    border-none
+    outline-none
+    ring-0
+    focus:ring-0
+    rounded-5
+    cursor-text;
+  }
+  .wcf-ab-number-input {
+    @apply max-h-[28px]
+    min-w-[150px]
+    max-w-[150px]
+    !px-[10px]
+    !py-[5px]
+    !bg-input
+    hover:!bg-input-hover
+    focus:!bg-input-focus
+    font-inter
+    text-foreground-secondary
+    hover:text-foreground
+    focus:text-foreground
+    active:text-foreground
+    !text-xss
+    font-normal
+    leading-18
+    tracking-normal
+    placeholder:text-xss
+    border-none
+    outline-none
+    ring-0
+    focus:ring-0
+    rounded-5
+    cursor-text;
+  }
   /* button */
   .wcf-ab-button-general {
     @apply min-h-[28px] max-h-[28px]
@@ -121,7 +177,7 @@
     py-[5px]
     font-inter
     text-foreground
-    text-button-font-size
+    text-xss
     font-medium
     leading-18
     tracking-normal
@@ -135,25 +191,21 @@
     !rounded-5
     cursor-pointer;
   }
-
   .wcf-ab-button-primary {
     @apply bg-button
     hover:bg-button-hover
     focus:bg-button-focus;
   }
-
   .wcf-ab-button-action {
     @apply bg-button-action
     hover:bg-button-action-hover
     focus:bg-button-action-focus;
   }
-
   .wcf-ab-button-destructive {
     @apply bg-button-destructive
     hover:bg-button-destructive-hover
     focus:bg-button-destructive-focus;
   }
-
   .wcf-ab-button-icon {
     @apply !h-[28px] !w-[28px]
     px-3 py-3
@@ -175,7 +227,6 @@
     rounded-5
     cursor-pointer;
   }
-
   /* switch field  */
   .wcf-ab-switch-field {
     @apply data-[state=unchecked]:!bg-switch
@@ -184,16 +235,16 @@
     data-[state=checked]:[&>span]:bg-switch-thumb-active
     px-0;
   }
-
   /* Select field */
-  .wcf-ab-select-trigger {
-    @apply h-[34px]
+  .wcf-ab-gen-select {
+    @apply max-h-[28px]
+    min-w-[150px]
     max-w-[150px]
-    px-[10px]
-    py-[5px]
+    !px-[10px]
+    !py-[5px]
     !bg-select
     text-foreground
-    !text-select-font-size
+    !text-xss
     font-medium
     leading-18
     border-none
@@ -201,13 +252,28 @@
     rounded-5
     cursor-pointer;
   }
-
+  .wcf-ab-dc-select-trigger {
+    @apply max-h-[28px]
+    min-w-[100px]
+    max-w-[100px]
+    !px-[10px]
+    !py-[5px]
+    !bg-select
+    text-foreground
+    !text-xss
+    font-medium
+    leading-18
+    border-none
+    outline-none
+    rounded-5
+    cursor-pointer;
+  }
   .wcf-ab-select-content {
     @apply max-w-[150px]
     p-[10px]
     !bg-select-secondary
     text-foreground
-    !text-select-font-size
+    !text-xss
     font-normal
     leading-5
     tracking-normal

@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { debounceFn } from "@/utils/utils";
-import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
+import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
+import WCFABInput from "@/components/animations/blocks/WCFABInput";
+import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage";
+import { contentWrapper } from "@/components/animations/shared/style";
+import { cn } from "@/lib/utils";
 
 const NumberField = ({
   property = {},
@@ -13,61 +15,44 @@ const NumberField = ({
 }) => {
   // default value
   const {
+    size = "sm",
     title = "title",
     tooltipContent = "Enter the value.",
     isRequired = false,
     isCustomAnim = false,
+    placeholder = "Add Value",
     min = 0,
     max = 0,
     path = "",
     ...rest
   } = property || {};
 
-  const [inputValue, setInputValue] = useState(value ?? 0);
   const [isDataValid, setIsDataValid] = useState(false);
-
-  const handleInput = debounceFn((newValue) => {
-    if (newValue === "" || newValue === "-") return;
-    let currentValue = Number(newValue);
-    if (isNaN(currentValue)) return;
-    if (min !== 0 || max !== 0) {
-      if (currentValue < min) currentValue = min;
-      if (currentValue > max) currentValue = max;
-      setInputValue(currentValue);
-      onValueChange(currentValue);
-      return;
-    }
-    setInputValue(currentValue);
-    onValueChange(currentValue);
-  }, 150);
 
   return (
     <div>
-      <div className="flex flex-col justify-between gap-3 w-97.5 h-8.5 mx-auto rounded-lg sm:flex-row sm:items-center">
-        {/* left title + tooltip */}
-        <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{title}</span>
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
-        </div>
+      <div className={"flex justify-between items-center"}>
+        {/* Label + tooltip */}
+        <WCFABLabel size={size} title={title} tooltipContent={tooltipContent} />
 
-        {/* right add + delete button */}
-        <div className="flex-1 flex justify-end items-center gap-3">
-          <Input
-            placeholder="Add Value"
-            className="wcf-ab-dynamic-field-input"
-            value={inputValue}
-            min={min === 0 ? Infinity : min}
-            max={max === 0 ? Infinity : max}
+        {/* Input + delete */}
+        <div className={cn(contentWrapper({ size }))}>
+          <WCFABInput
+            size={size}
             type="number"
-            onChange={(e) => handleInput(e.target.value)}
+            placeholder={placeholder}
+            value={value}
+            onValueChange={onValueChange}
+            min={min}
+            max={max}
           />
-          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 
       {/* required message */}
       {isRequired && isDataValid && (
-        <p className="text-white text-sm">Field is Required</p>
+        <WCFABErrorMessage message={"This field is required"} />
       )}
     </div>
   );

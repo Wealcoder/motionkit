@@ -32,7 +32,7 @@ function validateHSL(h, s, l) {
   return inRange(h, 0, 360) && inRange(s, 0, 100) && inRange(l, 0, 100);
 }
 
-const ColorPicker = ({
+const WCFABColorPicker = ({
   value = "#000000",
   onValueChange = () => {},
   ...rest
@@ -86,7 +86,6 @@ const ColorPicker = ({
     const next = e.target.value;
     setInputValue(next);
     const isValid = validateColor(next);
-    console.log(isValid);
     if (validateColor(next)) {
       commitColor(next);
     }
@@ -141,7 +140,7 @@ const ColorPicker = ({
         }}
       >
         <PopoverTrigger
-          className="h-[22px] w-[22px] rounded-full border-2 border-solid border-button"
+          className="h-[22px] w-[22px] hover:scale-105 rounded-full border-2 border-solid border-button cursor-pointer"
           style={{ backgroundColor: color }}
         />
         <PopoverContent align="end" className="p-2 max-w-[230px]">
@@ -164,7 +163,7 @@ const ColorPicker = ({
         value={inputValue}
         onChange={handleInputChange}
         className={`
-          wcf-ab-dynamic-field-input
+          wcf-ab-text-input
           ${isInvalid ? "border-red-500 focus-visible:ring-red-500" : ""}
         `}
         placeholder="#000000"
@@ -173,4 +172,4 @@ const ColorPicker = ({
   );
 };
 
-export default ColorPicker;
+export default WCFABColorPicker;

@@ -23,7 +23,7 @@ const CustomAnimation = () => {
               value={contentStep?.data?.title}
               onChange={(e) => updateContentData(e.target.value, "title")}
               placeholder="Title Animation"
-              className="wcf-ab-dynamic-field-input"
+              className="wcf-ab-general-input"
             />
           </div>
         </div>

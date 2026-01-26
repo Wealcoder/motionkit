@@ -5,9 +5,8 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { debounceFn } from "@/utils/utils";
+import { debounceFn, trimString } from "@/utils/utils";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import DeleteBtn from "@/components/animations/shared/DeleteBtn";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Target03Icon } from "@hugeicons/core-free-icons/index";
 
@@ -38,17 +37,17 @@ const ClassSelectionField = ({
       <div>
         {/* title + tooltip */}
         <div className="flex items-center gap-[6px] mb-1">
-          <span className="wcf-ab-title">{property?.title}</span>
+          <span className="wcf-ab-title">{trimString(title, 15)}</span>
           {property?.tooltipContent && (
             <ToolTipWrapper text={property?.tooltipContent} />
           )}
         </div>
 
         {/*input field*/}
-        <InputGroup className="wcf-ab-dynamic-field-input max-w-none px-[10px] ">
+        <InputGroup className="wcf-ab-text-input max-w-none px-[10px] ">
           <InputGroupInput
             placeholder="h1.hero_title"
-            className="p-0 !text-input-font-size font-normal leading-18 tracking-normal"
+            className="p-0 !text-xss font-normal leading-18 tracking-normal"
             value={inputValue}
             type="text"
             onChange={(e) => {
@@ -71,8 +70,6 @@ const ClassSelectionField = ({
               />
             </InputGroupButton>
           </InputGroupAddon>
-          {/* delete icon */}
-          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
         </InputGroup>
       </div>
 

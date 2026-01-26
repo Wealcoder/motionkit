@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
+import { trimString } from "@/utils/utils";
 
 const SwitchField = ({
   property = {},
@@ -29,7 +30,7 @@ const SwitchField = ({
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
         <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{property?.title}</span>
+          <span className="wcf-ab-title">{trimString(title, 15)}</span>
           {property?.tooltipContent && (
             <ToolTipWrapper text={property?.tooltipContent} />
           )}
@@ -47,7 +48,7 @@ const SwitchField = ({
           </div>
 
           {/* delete icon */}
-          {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {property?.isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
       {/* required message */}

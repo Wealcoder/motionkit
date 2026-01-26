@@ -75,7 +75,7 @@ const PresetCard = ({
                     className={cn(
                       "text-sm",
                       doc_url
-                        ? "text-label hover:text-text"
+                        ? "text-xs hover:text-text"
                         : "pointer-events-none text-[#CACFD8]",
                     )}
                   >
@@ -94,7 +94,7 @@ const PresetCard = ({
                         className={cn(
                           "text-sm",
                           demo_url
-                            ? "text-label hover:text-text"
+                            ? "text-xs hover:text-text"
                             : "pointer-events-none text-[#CACFD8]",
                         )}
                       >

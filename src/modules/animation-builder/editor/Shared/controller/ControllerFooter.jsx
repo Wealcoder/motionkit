@@ -70,18 +70,18 @@ const ControllerFooter = ({
 
   return (
     <div className="flex justify-between items-center gap-2">
-      <Button className="wcf-ab-button-general wcf-ab-button-primary text-button-font-size">
+      <Button className="wcf-ab-button-general wcf-ab-button-primary text-xss">
         <HugeiconsIcon icon={FullScreenIcon} strokeWidth={2} />
         Full Preview
       </Button>
       <Button
         onClick={() => showPreview()}
-        className="wcf-ab-button-general wcf-ab-button-action text-button-font-size min-w-24"
+        className="wcf-ab-button-general wcf-ab-button-action text-xss min-w-24"
       >
         <HugeiconsIcon icon={PlayCircleIcon} strokeWidth={2} />
         Play
       </Button>
-      <Button className="wcf-ab-button-general wcf-ab-button-primary text-button-font-size max-w-[28px]">
+      <Button className="wcf-ab-button-general wcf-ab-button-primary text-xss max-w-[28px]">
         <HugeiconsIcon icon={Settings03Icon} strokeWidth={2} />
       </Button>
     </div>

@@ -39,7 +39,7 @@ const PresetAnimation = () => {
               value={contentStep?.data?.title}
               onChange={(e) => updateContentData(e.target.value, "title")}
               placeholder="Title Animation"
-              className="wcf-ab-dynamic-field-input"
+              className="wcf-ab-general-input"
             />
           </div>
         </div>
@@ -61,7 +61,7 @@ const PresetAnimation = () => {
                 setSelectedPresetGroup(value);
               }}
             >
-              <SelectTrigger className="min-w-[90px] capitalize">
+              <SelectTrigger className="wcf-ab-gen-select">
                 <SelectValue placeholder="Option" className="line-clamp-1" />
               </SelectTrigger>
               <SelectContent className="min-w-[90px]">
@@ -99,7 +99,7 @@ const PresetAnimation = () => {
                   setSelectedPreset(value);
                 }}
               >
-                <SelectTrigger className="min-w-[90px]">
+                <SelectTrigger className="wcf-ab-gen-select">
                   <SelectValue placeholder="Option" className="line-clamp-1" />
                 </SelectTrigger>
                 <SelectContent className="min-w-[90px]">

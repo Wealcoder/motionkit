@@ -79,7 +79,7 @@ const SingleAccordion = ({
 
       {/* mapping each property */}
       {hasProperties && (
-        <AccordionContent className="flex flex-col gap-2">
+        <AccordionContent className="flex flex-col gap-2 max-w-[256px] overflow-hidden">
           {properties.map((property, index) => (
             <AnimationPropsMapping
               key={index}

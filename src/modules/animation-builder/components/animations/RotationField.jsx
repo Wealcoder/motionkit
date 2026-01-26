@@ -5,9 +5,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { debounceFn } from "@/utils/utils";
+import { debounceFn, trimString } from "@/utils/utils";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import DeleteBtn from "@/components/animations/shared/DeleteBtn";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 
 const RotationField = ({
   property = {},
@@ -50,17 +50,17 @@ const RotationField = ({
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         {/* title */}
         <div className="flex items-center gap-3">
-          <span className="wcf-ab-title">{title}</span>
+          <span className="wcf-ab-title">{trimString(title, 15)}</span>
           {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
         </div>
 
         {/* controls */}
-        <div className="flex-1 flex justify-end items-center gap-3">
+        <div className="flex-1 flex justify-end items-center gap-1">
           <Popover>
-            <PopoverTrigger asChild>
+            <PopoverTrigger asChild className="hover:scale-105 cursor-pointer">
               <svg
-                width="34"
-                height="34"
+                width="24"
+                height="24"
                 viewBox="0 0 21 21"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -122,11 +122,11 @@ const RotationField = ({
             value={inputValue}
             min={min}
             max={max}
-            className="wcf-ab-dynamic-field-input"
+            className="wcf-ab-text-input"
             onChange={(e) => handleInput(e.target.value)}
           />
 
-          {isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+          {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
 
