@@ -21,13 +21,11 @@ const labelVariant = cva(
 
 const WCFABLabel = ({ size = "sm", title = "", tooltipContent = "" }) => {
   return (
-    <div>
-      <div className="flex items-center gap-[6px]">
-        <span className={cn(labelVariant({ size }))}>
-          {trimString(title, 15)}
-        </span>
-        {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
-      </div>
+    <div className="flex items-center gap-[6px] min-w-0">
+      <span className={cn(labelVariant({ size }), "select-none")}>
+        {trimString(title, 15)}
+      </span>
+      {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
     </div>
   );
 };

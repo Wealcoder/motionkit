@@ -17,7 +17,7 @@ const inputGroupVariants = cva(
   {
     variants: {
       size: {
-        sm: "h-7 min-w-[80px] max-w-[150px]",
+        sm: "h-7 min-w-[80px] max-w-[100px]",
         md: "h-8 min-w-[120px] max-w-[150px]",
         lg: "h-9 w-full",
       },
@@ -67,19 +67,22 @@ const buttonVariants = cva(
 );
 
 const WCFABNumInputWithBtn = ({
-  size = "sm",
-  placeholder = "Add Value",
+  property = {},
   value = 0,
   onValueChange = () => {},
-  min,
-  max,
-  step = 1,
-  precision = 2,
-  ...rest
 }) => {
+  const {
+    size = "sm",
+    placeholder = "Add Value",
+    min,
+    max,
+    step = 1,
+    precision = 2,
+    ...rest
+  } = property;
+
   const [currentValue, setCurrentValue] = useState(value);
 
-  // Clamp a value within min/max
   const clampValue = (val) => {
     let num = Number(val);
     if (Number.isNaN(num)) return "";
@@ -88,20 +91,17 @@ const WCFABNumInputWithBtn = ({
     return Number(num.toFixed(precision));
   };
 
-  // Commit value to state and callback
   const commitValue = (val) => {
     const clamped = clampValue(val);
     setCurrentValue(clamped);
     onValueChange(clamped);
   };
 
-  // Debounced input change handler
   const handleInput = useCallback(
     debounceFn((val) => commitValue(val), 150),
     [min, max, precision, onValueChange],
   );
 
-  // Handle manual typing
   const handleChange = (e) => {
     const val = e.target.value;
     if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
