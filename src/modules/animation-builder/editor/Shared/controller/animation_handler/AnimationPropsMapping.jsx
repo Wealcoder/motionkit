@@ -27,7 +27,7 @@ const AnimationPropsMapping = React.memo(
     // updating animation properties.
     const handleSetValueByPath = useCallback(
       (value) => {
-        console.log(`Current Path: ${property?.path} | Value => ${value}`);
+        // console.log(`Current Path: ${property?.path} | Value => ${value}`);
         const newData = structuredClone(defaultData);
         setValueByPath(newData, path, value);
         updateContentData({

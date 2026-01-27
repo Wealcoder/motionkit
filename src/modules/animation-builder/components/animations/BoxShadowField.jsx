@@ -19,7 +19,7 @@ import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import { buildDropShadow, parseDropShadow } from "@/utils/dropShadowHelper";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 
-const DropShadowField = ({
+const BoxShadowField = ({
   property = {},
   value = "",
   onDisabledUpdate = () => {},
@@ -171,4 +171,4 @@ const DropShadowField = ({
   );
 };
 
-export default DropShadowField;
+export default BoxShadowField;

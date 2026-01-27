@@ -118,7 +118,7 @@ const TransformOriginField = ({
               />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="bg-popover w-[228px] min-h-[160px] p-3 mr-5 flex flex-col gap-2.5">
+          <PopoverContent align="end" className="bg-popover w-[228px] min-h-[160px] p-3 flex flex-col gap-2.5">
             {/* modal title and cancel button */}
             <div className="flex items-center justify-between w-full h-3">
               <h2 className="text-white text-[11px] font-normal leading-4.25 font-inter">

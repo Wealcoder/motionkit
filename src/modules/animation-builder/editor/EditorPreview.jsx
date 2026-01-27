@@ -32,7 +32,7 @@ const EditorPreview = () => {
     return;
   };
 
-  console.log({ mainState });
+  // console.log({ mainState });
 
   return (
     <div className="h-full bg-[#404040] relative min-w-full flex justify-center">

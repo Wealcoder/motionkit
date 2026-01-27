@@ -23,7 +23,6 @@ const PopoverModalInputGroup = ({
           className="!text-[11px] !placeholder:text-[11px] placeholder:text-foreground-secondary font-normal leading-4.25 text-[#FAFAFA] p-0 h-[27px]"
           type="number"
           value={value}
-          placeholder={value}
           onChange={(e) => onValueChange(e.target.value)}
         />
         <InputGroupAddon className="mr-1.5 p-0 w-[13px] h-[13px]">
