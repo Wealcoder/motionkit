@@ -5,7 +5,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const deleteBtnVariants = cva(
-  "bg-transparent text-foreground-secondary hover:text-foreground border-none outline-none rounded-5 transition-colors duration-200 ease-in-out cursor-pointer",
+  "bg-transparent text-foreground-secondary hover:text-button-destructive-hover hover:scale-105 border-none outline-none rounded-5 transition-colors duration-200 ease-in-out cursor-pointer",
   {
     variants: {
       size: {

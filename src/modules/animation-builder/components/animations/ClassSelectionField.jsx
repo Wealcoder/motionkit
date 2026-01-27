@@ -5,10 +5,11 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { debounceFn, trimString } from "@/utils/utils";
-import ToolTipWrapper from "@/components/common/ToolTipWrapper";
+import { debounceFn } from "@/utils/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Target03Icon } from "@hugeicons/core-free-icons/index";
+import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 
 const ClassSelectionField = ({
   property = {},
@@ -36,11 +37,9 @@ const ClassSelectionField = ({
     <div>
       <div>
         {/* title + tooltip */}
-        <div className="flex items-center gap-[6px] mb-1">
-          <span className="wcf-ab-title">{trimString(title, 15)}</span>
-          {property?.tooltipContent && (
-            <ToolTipWrapper text={property?.tooltipContent} />
-          )}
+        <div className="w-full mb-2 flex justify-between items-center">
+          <WCFABLabel title="Item Class" tooltipContent={tooltipContent} />
+          <WCFABDeleteBtn onDelete={onDelete} />
         </div>
 
         {/*input field*/}

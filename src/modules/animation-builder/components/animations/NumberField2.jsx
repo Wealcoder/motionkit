@@ -2,8 +2,6 @@ import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import WCFABNumInputWithBtn from "@/components/animations/blocks/WCFABNumInputWithBtn";
 import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
-import { contentWrapper } from "@/components/animations/shared/style";
-import { cn } from "@/lib/utils";
 
 const NumberField2 = ({
   property = {},
@@ -32,9 +30,7 @@ const NumberField2 = ({
         <WCFABLabel size={size} title={title} tooltipContent={tooltipContent} />
 
         {/* Input + delete */}
-        <div
-          className={"max-w-[160px] flex justify-between items-center gap-2"}
-        >
+        <div className={"flex justify-between items-center gap-2"}>
           <WCFABNumInputWithBtn
             size={size}
             type="number"

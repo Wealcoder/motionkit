@@ -140,7 +140,7 @@ const WCFABColorPicker = ({
         }}
       >
         <PopoverTrigger
-          className="h-[22px] w-[22px] hover:scale-105 rounded-full border-2 border-solid border-button cursor-pointer"
+          className="h-[21px] w-[21px] p-0 m-0 hover:scale-105 rounded-full border-2 border-solid border-button cursor-pointer"
           style={{ backgroundColor: color }}
         />
         <PopoverContent align="end" className="p-2 max-w-[230px]">
