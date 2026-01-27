@@ -150,6 +150,11 @@ const config = {
           fieldType: "drop-shadow-field",
           path: "dropShadow",
         },
+        {
+          title: "Box Shadow",
+          fieldType: "box-shadow-field",
+          path: "boxShadow",
+        },
       ],
     },
   ],

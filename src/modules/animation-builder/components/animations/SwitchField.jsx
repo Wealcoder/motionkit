@@ -21,6 +21,7 @@ const SwitchField = ({
 
   const [toggleValue, setToggleValue] = useState(Boolean(value));
   const [isDataValid, setIsDataValid] = useState(false);
+  
   const handleToggle = (checked) => {
     setToggleValue(checked);
     onValueChange(checked);

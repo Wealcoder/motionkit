@@ -26,6 +26,10 @@ const DropShadowField = ({
   onValueChange = () => {},
   onDelete = () => {},
 }) => {
+  const buildDropShadow = ({ offsetX, offsetY, blur, spread, color }) => {
+    return `drop-shadow(${offsetX}px ${offsetY}px ${blur}px ${spread}px ${color})`;
+  };
+
   const properties = [
     {
       key: "offsetX",
@@ -107,9 +111,11 @@ const DropShadowField = ({
     setShadow((prev) => {
       const updatedValues = { ...prev, ...next };
 
-      onValueChange({
+      const result = {
         dropShadow: buildDropShadow(updatedValues),
-      });
+      };
+
+      onValueChange(result);
 
       return updatedValues;
     });

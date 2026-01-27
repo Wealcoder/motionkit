@@ -16,8 +16,9 @@ import {
 import PopoverModalInputGroup from "@/components/animations/shared/PopoverModalInputGroup";
 import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
-import { buildDropShadow, parseDropShadow } from "@/utils/dropShadowHelper";
+import { parseDropShadow } from "@/utils/dropShadowHelper";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
+import { Switch } from "../ui/switch";
 
 const BoxShadowField = ({
   property = {},
@@ -26,6 +27,12 @@ const BoxShadowField = ({
   onValueChange = () => {},
   onDelete = () => {},
 }) => {
+  const buildBoxShadow = ({ offsetX, offsetY, blur, spread, color, inset }) => {
+    if (inset)
+      return `box-shadow(inset ${offsetX}px ${offsetY}px ${blur}px ${spread}px ${color})`;
+    return `box-shadow(${offsetX}px ${offsetY}px ${blur}px ${spread}px ${color})`;
+  };
+
   const properties = [
     {
       key: "offsetX",
@@ -107,9 +114,10 @@ const BoxShadowField = ({
     setShadow((prev) => {
       const updatedValues = { ...prev, ...next };
 
-      onValueChange({
-        dropShadow: buildDropShadow(updatedValues),
-      });
+      const result = {
+        boxShadow: buildBoxShadow(updatedValues),
+      };
+      onValueChange(result);
 
       return updatedValues;
     });
@@ -135,7 +143,7 @@ const BoxShadowField = ({
           </PopoverTrigger>
           <PopoverContent
             align="end"
-            className="bg-popover w-[204px] h-[195px] p-3 flex flex-col gap-2.5"
+            className="bg-popover w-[204px] h-[233px] p-3 flex flex-col gap-2.5"
           >
             {/* popover input fields */}
             <div className="grid grid-cols-2 gap-2.5">
@@ -159,6 +167,19 @@ const BoxShadowField = ({
               <WCFABColorPicker
                 value={shadow.color}
                 onValueChange={(val) => updateShadow({ color: val })}
+              />
+            </div>
+            {/* switch field */}
+            <div className="flex items-center justify-between h-7">
+              <div>
+                <h2 className="text-[11px] font-normal text-[#E4E4E7] m-0 font-inter">
+                  Inner Shadow
+                </h2>
+              </div>
+              <Switch
+                onCheckedChange={(val) => updateShadow({ inset: val })}
+                id="airplane-mode"
+                className="wcf-ab-switch-field"
               />
             </div>
           </PopoverContent>

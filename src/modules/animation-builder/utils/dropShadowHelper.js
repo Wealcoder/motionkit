@@ -24,8 +24,3 @@ export const parseDropShadow = (cssValue) => {
     color: parts.slice(4).join(" ") || DEFAULT_SHADOW.color,
   };
 };
-
-
-export const buildDropShadow = ({ offsetX, offsetY, blur, spread, color }) => {
-  return `drop-shadow(${offsetX}px ${offsetY}px ${blur}px ${spread}px ${color})`;
-};

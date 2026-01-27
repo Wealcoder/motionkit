@@ -12,6 +12,7 @@ import SwitchField from "@/components/animations/SwitchField";
 import TransformOriginField from "@/components/animations/TransformOriginField";
 import TabsField from "@/components/animations/TabsField";
 import DropShadowField from "@/components/animations/DropShadowField";
+import BoxShadowField from "@/components/animations/BoxShadowField";
 // import CodeblockField from "@/components/animations/CodeblockField";
 
 const AnimationPropsMapping = React.memo(
@@ -199,6 +200,18 @@ const AnimationPropsMapping = React.memo(
       case "drop-shadow-field":
         return (
           <DropShadowField
+            property={property}
+            value={value}
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            onValueChange={handleSetValueByPath}
+            contentStep={contentStep}
+            updateContentData={updateContentData}
+          />
+        );
+      case "box-shadow-field":
+        return (
+          <BoxShadowField
             property={property}
             value={value}
             onDelete={() => {}}
