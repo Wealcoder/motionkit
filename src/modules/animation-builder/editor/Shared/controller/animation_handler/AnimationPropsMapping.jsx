@@ -11,6 +11,7 @@ import SliderField from "@/components/animations/SliderField";
 import SwitchField from "@/components/animations/SwitchField";
 import TransformOriginField from "@/components/animations/TransformOriginField";
 import TabsField from "@/components/animations/TabsField";
+import DropShadowField from "@/components/animations/DropShadowField";
 // import CodeblockField from "@/components/animations/CodeblockField";
 
 const AnimationPropsMapping = React.memo(
@@ -186,6 +187,18 @@ const AnimationPropsMapping = React.memo(
       case "transform-origin-field":
         return (
           <TransformOriginField
+            property={property}
+            value={value}
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            onValueChange={handleSetValueByPath}
+            contentStep={contentStep}
+            updateContentData={updateContentData}
+          />
+        );
+      case "drop-shadow-field":
+        return (
+          <DropShadowField
             property={property}
             value={value}
             onDelete={() => {}}

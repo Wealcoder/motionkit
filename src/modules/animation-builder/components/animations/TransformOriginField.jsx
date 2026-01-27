@@ -14,7 +14,7 @@ import {
 } from "@/utils/trnasformOriginHelper";
 import { Button } from "../ui/button";
 import TransformOriginInputGroup from "./shared/TransformOriginInputGroup";
-import PopoverModalInputGroup from "./shared/PopoverModalInputGroup";
+import WCFABDeleteBtn from "./blocks/WCFABDeleteBtn";
 
 const TransformOriginField = ({
   property = {},
@@ -40,7 +40,7 @@ const TransformOriginField = ({
     title = "title",
     tooltipContent = "Enter the value.",
     isRequired = false,
-    isCustomAnim = false,
+    isCustomAnim = true,
     min = 0,
     max = 0,
     path = "",
@@ -104,57 +104,64 @@ const TransformOriginField = ({
         <span className="wcf-ab-title">{title}</span>
         {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
       </div>
-      {/* right side popover button */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button className="wcf-ab-button-icon">
-            <HugeiconsIcon
-              icon={Settings03Icon}
-              color="#A1A1AA"
-              strokeWidth={1.5}
-              className="w-3.5 h-3.5 text-white"
-            />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="bg-[#303033] w-[228px] min-h-[160px] p-3 mr-5 flex flex-col gap-2.5">
-          {/* modal title and cancel button */}
-          <div className="flex items-center justify-between w-full h-3">
-            <h2 className="text-white text-[11px] font-normal leading-4.25 font-inter">
-              {title}
-            </h2>
-            <HugeiconsIcon icon={CancelCircleIcon} size={15} className="text-[#A1A1AA] w-3 h-3" />
-          </div>
-          <div className="flex items-center gap-4">
-            {/* left radio selection grid */}
-            <TransformOriginGrid
-              value={buildTransformOrigin(origin)}
-              onChange={(cssValue) =>
-                updateOrigin(parseTransformOrigin(cssValue))
-              }
-            />
 
-            {/* right input fields */}
-            <div className="flex flex-col gap-[9px] w-[80px] max-h-[109px]">
-              {properties.map((field) => {
-                const parsed = parsedOrigin[field.key];
-                return (
-                  <TransformOriginInputGroup
-                    key={field.key}
-                    title={field.title}
-                    value={parsed.value}
-                    unit={parsed.unit}
-                    onValueChange={(val) => updateField(field.key, val)}
-                    onUnitChange={(unit) => updateUnit(field.key, unit)}
-                  />
-                );
-              })}
+      {/* right side popover and delete button */}
+      <div className="flex items-center gap-3">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button className="wcf-ab-button-icon">
+              <HugeiconsIcon
+                icon={Settings03Icon}
+                color="#A1A1AA"
+                strokeWidth={1.5}
+                className="w-3.5 h-3.5 text-white"
+              />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="bg-popover w-[228px] min-h-[160px] p-3 mr-5 flex flex-col gap-2.5">
+            {/* modal title and cancel button */}
+            <div className="flex items-center justify-between w-full h-3">
+              <h2 className="text-white text-[11px] font-normal leading-4.25 font-inter">
+                {title}
+              </h2>
+              <HugeiconsIcon
+                icon={CancelCircleIcon}
+                size={15}
+                className="text-foreground-secondary w-3 h-3"
+              />
             </div>
-          </div>
-          <div>
-            <PopoverModalInputGroup/>
-          </div>
-        </PopoverContent>
-      </Popover>
+            <div className="flex items-center gap-4">
+              {/* left radio selection grid */}
+              <TransformOriginGrid
+                value={buildTransformOrigin(origin)}
+                onChange={(cssValue) =>
+                  updateOrigin(parseTransformOrigin(cssValue))
+                }
+              />
+
+              {/* right input fields */}
+              <div className="flex flex-col gap-[9px] w-[80px] max-h-[109px]">
+                {properties.map((field) => {
+                  const parsed = parsedOrigin[field.key];
+                  return (
+                    <TransformOriginInputGroup
+                      key={field.key}
+                      title={field.title}
+                      value={parsed.value}
+                      unit={parsed.unit}
+                      onValueChange={(val) => updateField(field.key, val)}
+                      onUnitChange={(unit) => updateUnit(field.key, unit)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* delete button */}
+        {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
+      </div>
     </div>
   );
 };

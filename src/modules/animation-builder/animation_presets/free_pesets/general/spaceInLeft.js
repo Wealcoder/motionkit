@@ -145,6 +145,11 @@ const config = {
           fieldType: "transform-origin-field",
           path: "transformOrigin",
         },
+        {
+          title: "Drop Shadow",
+          fieldType: "drop-shadow-field",
+          path: "dropShadow",
+        },
       ],
     },
   ],

@@ -80,7 +80,7 @@ const WCFABSelect = ({
   }
 
   return (
-    <Select open={true} value={selectedValue} onValueChange={handleSelect}>
+    <Select open={false} value={selectedValue} onValueChange={handleSelect}>
       <SelectTrigger
         aria-expanded="true"
         data-state="open"
