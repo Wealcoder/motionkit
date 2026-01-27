@@ -5,20 +5,20 @@ import { cn } from "@/lib/utils";
 import { inputVariants } from "@/components/animations/blocks/shared/style";
 
 const clamp = (num, min, max) => {
-  if (min !== undefined && num < min) return min;
-  if (max !== undefined && num > max) return max;
+  if (typeof min === "number" && num < min) return min;
+  if (typeof max === "number" && num > max) return max;
   return num;
 };
 
-const normalizeNumber = (value) => {
-  if (value === "" || value === null || value === undefined) return null;
+const parseNumber = (value) => {
+  if (value === "" || value === "-" || value === null) return null;
   const num = Number(value);
   return Number.isNaN(num) ? null : num;
 };
 
 const WCFABNumberInput = ({
   property = {},
-  value = 0,
+  value = null,
   onValueChange = () => {},
 }) => {
   const {
@@ -30,29 +30,31 @@ const WCFABNumberInput = ({
     ...rest
   } = property;
 
-  const [currentValue, setCurrentValue] = useState(value ?? "");
+  // IMPORTANT: keep raw input string for typing UX
+  const [inputValue, setInputValue] = useState(
+    value === null || value === undefined ? "" : String(value),
+  );
 
-  // Debounced callback for parent
   const onDebounceChange = useCallback(
     debounceFn((raw) => {
-      const num = normalizeNumber(raw);
+      const num = parseNumber(raw);
+
       if (num === null) {
         onValueChange(null);
         return;
       }
+
       onValueChange(clamp(num, min, max));
     }, 150),
     [min, max, onValueChange],
   );
 
   const handleInputChange = (e) => {
-    let val = e.target.value;
+    const val = e.target.value;
 
-    // Allow empty & valid numeric typing
-    if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
-      // Clamp immediately for display
-      const num = normalizeNumber(val);
-      setCurrentValue(num === null ? "" : clamp(num, min, max));
+    // ✅ Allow: "", "-", "-10", "10", "10.5"
+    if (/^-?\d*\.?\d*$/.test(val)) {
+      setInputValue(val);
       onDebounceChange(val);
     }
   };
@@ -60,13 +62,12 @@ const WCFABNumberInput = ({
   // Sync external value → input
   useEffect(() => {
     if (value === null || value === undefined) {
-      setCurrentValue("");
+      setInputValue("");
     } else {
-      setCurrentValue(String(clamp(value, min, max)));
+      setInputValue(String(clamp(value, min, max)));
     }
   }, [value, min, max]);
 
-  // Cleanup debounce
   useEffect(() => {
     return () => onDebounceChange?.cancel?.();
   }, [onDebounceChange]);
@@ -74,7 +75,7 @@ const WCFABNumberInput = ({
   return (
     <Input
       type="number"
-      value={currentValue}
+      value={inputValue}
       placeholder={placeholder}
       min={min}
       max={max}
