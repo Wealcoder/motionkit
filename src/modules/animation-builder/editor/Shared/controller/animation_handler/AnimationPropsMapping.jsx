@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { getValueFromPath, setValueByPath } from "@/lib/animations/animations";
 import TextField from "@/components/animations/TextField";
 import NumberField from "@/components/animations/NumberField";
@@ -8,8 +9,8 @@ import RotationField from "@/components/animations/RotationField";
 import SelectField from "@/components/animations/SelectField";
 import SliderField from "@/components/animations/SliderField";
 import SwitchField from "@/components/animations/SwitchField";
-import { useCallback } from "react";
 import CodeblockField from "@/components/animations/CodeblockField";
+import RepeatField from "@/components/animations/RepeatField";
 
 const AnimationPropsMapping = React.memo(
   ({
@@ -150,6 +151,17 @@ const AnimationPropsMapping = React.memo(
       case "switch-field":
         return (
           <SwitchField
+            property={property}
+            value={value}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
+            onValueChange={handleSetValueByPath}
+          />
+        );
+
+      case "repeat-field":
+        return (
+          <RepeatField
             property={property}
             value={value}
             onDelete={handleDeleteField}

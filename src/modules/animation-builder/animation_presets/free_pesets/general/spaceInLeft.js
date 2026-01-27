@@ -14,6 +14,7 @@ const defaultData = {
   slider: -150,
   switch: true,
   code: "",
+  repeat: -1,
 };
 
 const config = {
@@ -84,6 +85,12 @@ const config = {
           title: "Code Block Field",
           fieldType: "code-block-field",
           path: "code",
+          isCustomAnim: true,
+        },
+        {
+          title: "Repeat",
+          fieldType: "repeat-field",
+          path: "repeat",
           isCustomAnim: true,
         },
       ],
