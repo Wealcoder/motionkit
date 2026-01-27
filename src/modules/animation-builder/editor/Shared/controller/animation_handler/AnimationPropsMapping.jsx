@@ -50,7 +50,6 @@ const AnimationPropsMapping = React.memo(
       case "text-field":
         return (
           <TextField
-            size={property?.size}
             property={property}
             value={value}
             onDelete={handleDeleteField}
@@ -62,7 +61,6 @@ const AnimationPropsMapping = React.memo(
       case "number-field":
         return (
           <NumberField
-            size={property?.size}
             property={property}
             value={value}
             onDelete={handleDeleteField}
@@ -74,7 +72,6 @@ const AnimationPropsMapping = React.memo(
       case "number-field-2":
         return (
           <NumberField2
-            size={property?.size}
             property={property}
             value={value}
             onDelete={handleDeleteField}
@@ -86,7 +83,6 @@ const AnimationPropsMapping = React.memo(
       case "class-selector-field":
         return (
           <ClassSelectionField
-            size={property?.size}
             property={property}
             value={value}
             onDelete={handleDeleteField}
@@ -96,22 +92,19 @@ const AnimationPropsMapping = React.memo(
         );
 
       case "code-block-field":
-        break;
-      // return (
-      //   // <CodeblockField
-      //  size={property?.size} //
-      // property={property}
-      //   //   value={value}
-      //   //   onDelete={handleDeleteField}
-      //   //   onDisabledUpdate={handleDisabledUpdate}
-      //   //   onValueChange={handleSetValueByPath}
-      //   // />
-      // );
+        return (
+          <CodeblockField
+            property={property}
+            value={value}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
+            onValueChange={handleSetValueByPath}
+          />
+        );
 
       case "color-picker":
         return (
           <ColorPickerField
-            size={property?.size}
             property={property}
             value={value}
             onValueChang
@@ -124,7 +117,6 @@ const AnimationPropsMapping = React.memo(
       case "rotation-field":
         return (
           <RotationField
-            size={property?.size}
             property={property}
             value={value}
             onDelete={handleDeleteField}
@@ -136,7 +128,6 @@ const AnimationPropsMapping = React.memo(
       case "select-field":
         return (
           <SelectField
-            size={property?.size}
             property={property}
             value={value}
             onDelete={handleDeleteField}
@@ -148,7 +139,6 @@ const AnimationPropsMapping = React.memo(
       case "slider-field":
         return (
           <SliderField
-            size={property?.size}
             property={property}
             value={value}
             onDelete={handleDeleteField}
@@ -160,7 +150,6 @@ const AnimationPropsMapping = React.memo(
       case "switch-field":
         return (
           <SwitchField
-            size={property?.size}
             property={property}
             value={value}
             onDelete={handleDeleteField}
