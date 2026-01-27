@@ -38,6 +38,7 @@ module.exports = {
         },
         input: {
           DEFAULT: "var(--input-primary)",
+          secondary: "var(--input-secondary)",
           hover: "var(--input-primary-hover)",
           focus: "var(--input-primary-active)",
         },

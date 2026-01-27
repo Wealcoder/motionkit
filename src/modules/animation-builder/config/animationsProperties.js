@@ -27,3 +27,55 @@ export const easeTypes = [
   { title: "Slow", value: "slow" },
   { title: "None", value: "none" },
 ];
+
+// for grouping select options (select field)
+// export const easeTypes = [
+//   {
+//     label: "Power Eases",
+//     options: [
+//       { title: "Power 2 In", value: "power2.in" },
+//       { title: "Power 2 Out", value: "power2.out" },
+//       { title: "Power 2 In Out", value: "power2.inOut" },
+
+//       { title: "Power 3 In", value: "power3.in" },
+//       { title: "Power 3 Out", value: "power3.out" },
+//       { title: "Power 3 In Out", value: "power3.inOut" },
+
+//       { title: "Power 4 In", value: "power4.in" },
+//       { title: "Power 4 Out", value: "power4.out" },
+//       { title: "Power 4 In Out", value: "power4.inOut" },
+//     ],
+//   },
+
+//   {
+//     label: "Natural Motion",
+//     options: [
+//       { title: "Sine", value: "sine" },
+//       { title: "Circ", value: "circ" },
+//       { title: "Expo", value: "expo" },
+//     ],
+//   },
+
+//   {
+//     label: "Spring & Bounce",
+//     options: [
+//       { title: "Back", value: "back" },
+//       { title: "Elastic", value: "elastic" },
+//       { title: "Bounce", value: "bounce" },
+//     ],
+//   },
+
+//   {
+//     label: "Special Effects",
+//     options: [
+//       { title: "Steps", value: "steps" },
+//       { title: "Rough", value: "rough" },
+//       { title: "Slow", value: "slow" },
+//     ],
+//   },
+
+//   {
+//     label: "Utility",
+//     options: [{ title: "None", value: "none" }],
+//   },
+// ];

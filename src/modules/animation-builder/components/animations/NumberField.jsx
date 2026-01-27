@@ -18,10 +18,6 @@ const NumberField = ({
     tooltipContent = "Enter the value.",
     isRequired = false,
     isCustomAnim = false,
-    placeholder = "Add Value",
-    min = 0,
-    max = 0,
-    path = "",
     ...rest
   } = property || {};
 
@@ -36,12 +32,9 @@ const NumberField = ({
         {/* Input + delete */}
         <div className={"flex justify-between items-center gap-2"}>
           <WCFABNumberInput
-            size={size}
-            placeholder={placeholder}
+            property={property}
             value={value}
             onValueChange={onValueChange}
-            min={min}
-            max={max}
           />
           {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>

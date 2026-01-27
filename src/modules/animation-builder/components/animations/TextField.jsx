@@ -14,7 +14,6 @@ const TextField = ({
     size = "sm",
     title = "title",
     tooltipContent = "Enter the value.",
-    placeholder = "Add Value",
     isRequired = false,
     isCustomAnim = false,
   } = property || {};
@@ -28,8 +27,7 @@ const TextField = ({
         {/* Input + delete */}
         <div className={"flex justify-between items-center gap-2"}>
           <WCFABTextInput
-            size={size}
-            placeholder={placeholder}
+            property={property}
             value={value}
             onValueChange={onValueChange}
           />

@@ -17,15 +17,19 @@ const normalizeNumber = (value) => {
 };
 
 const WCFABNumberInput = ({
-  size = "sm",
-  placeholder = "Add Value",
-  value,
+  property = {},
+  value = 0,
   onValueChange = () => {},
-  min,
-  max,
-  step,
-  ...rest
 }) => {
+  const {
+    size = "sm",
+    placeholder = "Add Value",
+    min,
+    max,
+    step,
+    ...rest
+  } = property;
+
   const [currentValue, setCurrentValue] = useState(value ?? "");
 
   // Debounced callback for parent

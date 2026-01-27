@@ -5,12 +5,11 @@ import { debounceFn } from "@/utils/utils";
 import { inputVariants } from "@/components/animations/blocks/shared/style";
 
 const WCFABTextInput = ({
-  size = "sm",
-  placeholder = "Add Value",
+  property = {},
   value = "",
   onValueChange = () => {},
-  ...rest
 }) => {
+  const { size = "sm", placeholder = "Add Value", ...rest } = property;
   const [currentValue, setCurrentValue] = useState(value || "");
 
   const handleInputChange = (e) => {

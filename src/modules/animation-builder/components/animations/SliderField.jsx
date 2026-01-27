@@ -1,9 +1,21 @@
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
-import { debounceFn, trimString } from "@/utils/utils";
-import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
+import WCFABSlider from "@/components/animations/blocks/WCFABSlider";
+import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage";
+import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
+import WCFABNumberInput from "@/components/animations/blocks/WCFABNumberInput";
+import { debounceFn } from "@/utils/utils";
+
+const clamp = (n, min, max) => {
+  let value = n;
+  if (typeof min === "number" && min !== 0) {
+    value = Math.max(min, value);
+  }
+  if (typeof max === "number" && max !== 0) {
+    value = Math.min(max, value);
+  }
+  return value;
+};
 
 const SliderField = ({
   property = {},
@@ -13,81 +25,63 @@ const SliderField = ({
   onDelete = () => {},
 }) => {
   const {
+    size = "sm",
     title = "Scale",
     tooltipContent = "Adjust scale value",
     isRequired = false,
     isCustomAnim = false,
     min = 0,
     max = 0,
-    step = 1,
     ...rest
   } = property || {};
 
-  const [inputValue, setInputValue] = useState(value ?? 0);
+  const [currentValue, setCurrentValue] = useState(value || 0);
   const [isDataValid, setIsDataValid] = useState(false);
 
   // input handler
-  const handleInput = debounceFn((rewValue) => {
-    if (rewValue === "" || rewValue === "-") return;
-
-    let currentValue = Number(rewValue);
-    if (isNaN(currentValue)) return;
-
-    if (min !== 0 || max !== 0) {
-      if (currentValue < min) currentValue = min;
-      if (currentValue > max) currentValue = max;
-      setInputValue(currentValue);
-      onValueChange(currentValue);
-      return;
-    }
-    setInputValue(currentValue);
-    onValueChange(currentValue);
+  const handleInput = debounceFn((rawValue) => {
+    const num = Number(rawValue);
+    if (Number.isNaN(num)) return;
+    const current = clamp(num, min, max);
+    setCurrentValue(current);
+    onValueChange(current);
   }, 150);
 
   return (
     <div>
-      <div className="flex flex-col gap-3 rounded-lg  sm:flex-row sm:items-center">
-        {/* left title + tooltip */}
-        <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{trimString(title, 15)}</span>
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
+      <div className="flex w-full items-center gap-2">
+        {/* LEFT: flexible */}
+        <div className="flex flex-1 items-center gap-2 min-w-0">
+          <WCFABLabel
+            title={title}
+            size={size}
+            tooltipContent={tooltipContent}
+          />
+
+          {/* Slider must be allowed to shrink */}
+          <div className="flex-1 min-w-0">
+            <WCFABSlider
+              property={property}
+              value={currentValue}
+              onValueChange={handleInput}
+            />
+          </div>
         </div>
 
-        {/* right add + delete button */}
-        <div className="flex-1 flex justify-end items-center gap-3">
-          <Slider
-            defaultValue={[75]}
-            max={100}
-            step={1}
-            className="mx-auto w-full max-w-xs"
-          />
-          {/* <Slider
-            value={[inputValue]}
-            min={min === 0 ? Infinity : min}
-            max={max === 0 ? Infinity : max}
-            step={step}
-            onValueChange={(v) => setInputValue(v[0])}
-            className="flex-1"
-          /> */}
-          <Input
-            placeholder="Add Value"
-            className="wcf-ab-text-input"
-            value={inputValue}
-            min={min === 0 ? Infinity : min}
-            max={max === 0 ? Infinity : max}
-            type="number"
-            onChange={(e) => {
-              const value = e.target.value;
-              setInputValue(value);
-              handleInput(value);
-            }}
+        {/* RIGHT: fixed, never shrink */}
+        <div className="flex items-center gap-2 shrink-0">
+          <WCFABNumberInput
+            property={property}
+            value={currentValue}
+            onValueChange={handleInput}
           />
           {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
+
       {/* required message */}
       {isRequired && isDataValid && (
-        <p className="text-white text-sm">Field is Required</p>
+        <WCFABErrorMessage message={"This field is required"} />
       )}
     </div>
   );

@@ -10,17 +10,11 @@ import WCFABNumberInput from "@/components/animations/blocks/WCFABNumberInput";
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
 const WCFABRotationPicker = ({
-  size = "sm",
-  value = 0,
   property = {},
+  value = 0,
   onValueChange = () => {},
 }) => {
-  const {
-    min = 0,
-    max = 360,
-    placeholder = "Add Value",
-    ...rest
-  } = property || {};
+  const { size = "sm", min = 0, max = 360, ...rest } = property;
 
   const [inputValue, setInputValue] = useState(value ?? 0);
 
@@ -52,16 +46,9 @@ const WCFABRotationPicker = ({
       </Popover>
 
       <WCFABNumberInput
-        size={size}
-        type="number"
-        placeholder={placeholder}
+        property={property}
         value={inputValue}
-        onValueChange={(value) => {
-          console.log(value);
-          handleInput(value);
-        }}
-        min={min}
-        max={max}
+        onValueChange={handleInput}
       />
     </div>
   );
