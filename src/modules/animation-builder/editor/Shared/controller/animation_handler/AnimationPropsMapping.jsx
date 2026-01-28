@@ -13,9 +13,9 @@ import TransformOriginField from "@/components/animations/TransformOriginField";
 import TabsField from "@/components/animations/TabsField";
 import DropShadowField from "@/components/animations/DropShadowField";
 import BoxShadowField from "@/components/animations/BoxShadowField";
-// import CodeblockField from "@/components/animations/CodeblockField";
 import CodeblockField from "@/components/animations/CodeblockField";
 import RepeatField from "@/components/animations/RepeatField";
+import StaggerField from "@/components/animations/StaggerField";
 
 const AnimationPropsMapping = React.memo(
   ({
@@ -214,6 +214,18 @@ const AnimationPropsMapping = React.memo(
       case "box-shadow-field":
         return (
           <BoxShadowField
+            property={property}
+            value={value}
+            onDelete={() => {}}
+            onDisabledUpdate={() => {}}
+            onValueChange={handleSetValueByPath}
+            contentStep={contentStep}
+            updateContentData={updateContentData}
+          />
+        );
+      case "stagger-field":
+        return (
+          <StaggerField
             property={property}
             value={value}
             onDelete={() => {}}

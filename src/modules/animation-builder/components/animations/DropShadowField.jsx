@@ -16,7 +16,7 @@ import {
 import PopoverModalInputGroup from "@/components/animations/shared/PopoverModalInputGroup";
 import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
-import { buildDropShadow, parseDropShadow } from "@/utils/dropShadowHelper";
+import { parseDropShadow } from "@/utils/dropShadowHelper";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 
 const DropShadowField = ({

@@ -18,7 +18,7 @@ import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import { parseDropShadow } from "@/utils/dropShadowHelper";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
-import { Switch } from "../ui/switch";
+import { Switch } from "@/components/ui/switch";
 
 const BoxShadowField = ({
   property = {},
