@@ -17,7 +17,29 @@ import CodeblockField from "@/components/animations/CodeblockField";
 import RepeatField from "@/components/animations/RepeatField";
 import StaggerField from "@/components/animations/StaggerField";
 import WidthHeightField from "@/components/animations/WidthHeightField";
-import TweenMethodField from "@/components/animations/TweenMethodField";
+import TabsFields from "@/components/animations/TabsField";
+
+export const FIELD_COMPONENTS = {
+  "text-field": TextField,
+  "number-field": NumberField,
+  "number-field-2": NumberField2,
+  "class-selector-field": ClassSelectionField,
+  "code-block-field": CodeblockField,
+  "color-picker": ColorPickerField,
+  "rotation-field": RotationField,
+  "select-field": SelectField,
+  "slider-field": SliderField,
+  "switch-field": SwitchField,
+  "repeat-field": RepeatField,
+  "height-field": WidthHeightField,
+  "width-field": WidthHeightField,
+  "tabs-field": TabsFields,
+  "transform-origin-field": TransformOriginField,
+  "tabs-field": TabsField,
+  "drop-shadow-field": DropShadowField,
+  "box-shadow-field": BoxShadowField,
+  "stagger-field": StaggerField,
+};
 
 const AnimationPropsMapping = React.memo(
   ({
@@ -29,7 +51,6 @@ const AnimationPropsMapping = React.memo(
     const { path = null, fieldType = null } = property || {};
     if (!path || !fieldType) return null;
 
-    // updating animation properties.
     const handleSetValueByPath = useCallback(
       (value) => {
         // console.log(`Current Path: ${property?.path} | Value => ${value}`);
@@ -43,227 +64,36 @@ const AnimationPropsMapping = React.memo(
       [defaultData, path, contentStep, updateContentData],
     );
 
-    const handleDeleteField = useCallback(() => {
-      console.log("Deleted");
-    }, []);
-
-    const handleDisabledUpdate = useCallback(() => {
-      console.log("Disabled");
-    }, []);
-
-    // extracting latest value
+    const handleDeleteField = useCallback(() => console.log("Deleted"), []);
+    const handleDisabledUpdate = useCallback(() => console.log("Disabled"), []);
     const value = getValueFromPath(defaultData, path) ?? "";
 
-    switch (fieldType) {
-      case "text-field":
-        return (
-          <TextField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
+    const FieldComponent = FIELD_COMPONENTS[fieldType];
+    if (!FieldComponent) return null;
 
-      case "number-field":
-        return (
-          <NumberField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
+    // dynamically pass props
+    const commonProps = {
+      property,
+      value,
+      onDelete: handleDeleteField,
+      onDisabledUpdate: handleDisabledUpdate,
+      onValueChange: handleSetValueByPath,
+    };
 
-      case "number-field-2":
-        return (
-          <NumberField2
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-
-      case "class-selector-field":
-        return (
-          <ClassSelectionField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-
-      case "code-block-field":
-        return (
-          <CodeblockField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-
-      case "color-picker":
-        return (
-          <ColorPickerField
-            property={property}
-            value={value}
-            onValueChang
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-
-      case "rotation-field":
-        return (
-          <RotationField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-
-      case "select-field":
-        return (
-          <SelectField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-
-      case "slider-field":
-        return (
-          <SliderField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-
-      case "switch-field":
-        return (
-          <SwitchField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-
-      case "repeat-field":
-        return (
-          <RepeatField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-
-      case "tabs-field":
-        return (
-          <TabsField
-            property={property}
-            value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
-            onValueChange={handleSetValueByPath}
-            contentStep={contentStep}
-            updateContentData={updateContentData}
-          />
-        );
-      case "transform-origin-field":
-        return (
-          <TransformOriginField
-            property={property}
-            value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
-            onValueChange={handleSetValueByPath}
-            contentStep={contentStep}
-            updateContentData={updateContentData}
-          />
-        );
-      case "drop-shadow-field":
-        return (
-          <DropShadowField
-            property={property}
-            value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
-            onValueChange={handleSetValueByPath}
-            contentStep={contentStep}
-            updateContentData={updateContentData}
-          />
-        );
-      case "box-shadow-field":
-        return (
-          <BoxShadowField
-            property={property}
-            value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
-            onValueChange={handleSetValueByPath}
-            contentStep={contentStep}
-            updateContentData={updateContentData}
-          />
-        );
-      case "stagger-field":
-        return (
-          <StaggerField
-            property={property}
-            value={value}
-            onDelete={() => {}}
-            onDisabledUpdate={() => {}}
-            onValueChange={handleSetValueByPath}
-            contentStep={contentStep}
-            updateContentData={updateContentData}
-          />
-        );
-      case "height-field":
-      case "width-field":
-        return (
-          <WidthHeightField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-      case "tween-method-field":
-        return (
-          <TweenMethodField
-            property={property}
-            value={value}
-            onDelete={handleDeleteField}
-            onDisabledUpdate={handleDisabledUpdate}
-            onValueChange={handleSetValueByPath}
-          />
-        );
-
-      default:
-        return null;
+    // tabs-field needs extra props
+    if (fieldType === "tabs-field") {
+      return (
+        <FieldComponent
+          {...commonProps}
+          contentStep={contentStep}
+          updateContentData={updateContentData}
+        />
+      );
     }
+
+    return <FieldComponent {...commonProps} />;
   },
-  (prev, next) => prev?.contentStep === next?.contentStep, // if true memorized it
+  (prev, next) => prev?.contentStep === next?.contentStep,
 );
 
 export default AnimationPropsMapping;
