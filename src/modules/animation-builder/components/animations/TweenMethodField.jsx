@@ -1,59 +1,132 @@
 import React, { useState } from "react";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
-import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AddCircleIcon } from "@hugeicons/core-free-icons";
+import AddPropertyPopoverModal from "./shared/AddPropertyPopoverModal";
 
-// Devices data
-const methods = [
-  {
-    key: "from",
-    label: "From",
-  },
-  {
-    key: "to",
-    label: "To",
-  },
-  {
-    key: "fromto",
-    label: "FromTo",
-  },
+const METHODS = [
+  { key: "from", title: "From" },
+  { key: "to", title: "To" },
+  { key: "fromTo", title: "FromTo" },
 ];
 
 const TweenMethodField = ({
   property = {},
-  value = "",
-  onDelete = () => {},
-  onDisabledUpdate = () => {},
+  value = {},
   onValueChange = () => {},
 }) => {
   const {
-    title = "Label",
-    tooltipContent = "Select Method",
+    title,
+    tooltipContent = "Enter the value.",
     isRequired = false,
-    isCustomAnim = false,
+    isCustomAnim = true,
+    min = 0,
+    max = 0,
+    path = "",
     ...rest
-  } = property || {};
+  } = property;
 
-  const [selectedMethod, setSelectedMethod] = useState("from");
-  console.log(selectedMethod)
+  const [activeMethod, setActiveMethod] = useState("from");
+
+  const [uiProps, setUiProps] = useState({
+    from: [],
+    to: [],
+    fromTo: [],
+  });
+
+  const [gsapValues, setGsapValues] = useState({
+    from: {},
+    to: {},
+    fromTo: {},
+  });
+
+  /* ───────── add property to active tab */
+  const handleAddProperty = (prop) => {
+    setUiProps((prev) => {
+      if (prev[activeMethod].some((p) => p.key === prop.key)) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [activeMethod]: [...prev[activeMethod], prop],
+      };
+    });
+  };
+
+  /* ───────── update gsap value */
+  const handleValueChange = (path, nextValue) => {
+    setGsapValues((prev) => {
+      const next = {
+        ...prev,
+        [activeMethod]: {
+          ...prev[activeMethod],
+          [path]: nextValue,
+        },
+      };
+
+      console.log(next);
+
+      onValueChange(next); // 🔥 send GSAP-ready object
+      return next;
+    });
+  };
 
   return (
-    <div className="flex items-center justify-between">
-      <WCFABLabel title={title} tooltipContent={tooltipContent} />
-        <div className="w-[176px] h-7 flex items-center gap-0.5 bg-[#202024] p-0.5 rounded-md ">
-        {methods.map((method) => (
-          <div
-            key={method.key}
-            onClick={() => setSelectedMethod(method.key)}
-            className={`w-[56px] h-6 flex items-center justify-center rounded-md px-3 py-[5px] text-[11.5px] font-normal leading-4.5 cursor-pointer transition ${
-              selectedMethod === method.key
-                ? "bg-[#303033] text-[#FAFAFA]"
-                : "text-[#A1A1AA] hover:bg-[#303033]"
-            }`}
-          >
-            <span>{method?.label}</span>
-          </div>
-        ))}
+    <div className="flex flex-col gap-3">
+      {/* Title */}
+      <div className="flex items-center justify-between">
+        <WCFABLabel title={title} tooltipContent={tooltipContent} />
+
+        <Tabs value={activeMethod} onValueChange={setActiveMethod}>
+          <TabsList className="bg-[#202024] h-7 p-0.5 rounded-md">
+            {METHODS.map((m) => (
+              <TabsTrigger
+                key={m.key}
+                value={m.key}
+                className="h-6 px-3 text-[11px] data-[state=active]:bg-[#303033] data-[state=active]:text-[#FAFAFA] hover:bg-[#303033] border-none bg-transparent text-[#A1A1AA]"
+              >
+                {m.title}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <TabsContent value={activeMethod} className="flex flex-col gap-2">
+            {uiProps[activeMethod].map((prop) => {
+              const Field = prop.element;
+              return (
+                <Field
+                  key={prop.key}
+                  property={prop}
+                  value={gsapValues[activeMethod][prop.path]}
+                  onValueChange={(v) => handleValueChange(prop.path, v)}
+                />
+              );
+            })}
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* Add property */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button className="bg-[#303033] h-7 rounded-md flex gap-2 border-none text-[#FAFAFA]">
+            <HugeiconsIcon icon={AddCircleIcon} className="w-3 h-3" />
+            Add
+          </Button>
+        </PopoverTrigger>
+
+        <PopoverContent className="w-[260px] p-2 bg-[#18181B]">
+          <AddPropertyPopoverModal onSelect={handleAddProperty} />
+        </PopoverContent>
+      </Popover>
+
+      {/* Properties */}
     </div>
   );
 };

@@ -18,6 +18,7 @@ import RepeatField from "@/components/animations/RepeatField";
 import StaggerField from "@/components/animations/StaggerField";
 import WidthHeightField from "@/components/animations/WidthHeightField";
 import TabsFields from "@/components/animations/TabsField";
+import TweenMethodField from "@/components/animations/TweenMethodField";
 
 export const FIELD_COMPONENTS = {
   "text-field": TextField,
@@ -39,6 +40,7 @@ export const FIELD_COMPONENTS = {
   "drop-shadow-field": DropShadowField,
   "box-shadow-field": BoxShadowField,
   "stagger-field": StaggerField,
+  "tween-method-field": TweenMethodField,
 };
 
 const AnimationPropsMapping = React.memo(
