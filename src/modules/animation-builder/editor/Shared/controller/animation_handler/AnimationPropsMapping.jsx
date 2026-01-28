@@ -16,6 +16,7 @@ import BoxShadowField from "@/components/animations/BoxShadowField";
 import CodeblockField from "@/components/animations/CodeblockField";
 import RepeatField from "@/components/animations/RepeatField";
 import StaggerField from "@/components/animations/StaggerField";
+import WidthHeightField from "@/components/animations/WidthHeightField";
 
 const AnimationPropsMapping = React.memo(
   ({
@@ -235,6 +236,18 @@ const AnimationPropsMapping = React.memo(
             updateContentData={updateContentData}
           />
         );
+      case "height-field":
+      case "width-field":
+        return (
+          <WidthHeightField
+            property={property}
+            value={value}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
+            onValueChange={handleSetValueByPath}
+          />
+        );
+
       default:
         return null;
     }

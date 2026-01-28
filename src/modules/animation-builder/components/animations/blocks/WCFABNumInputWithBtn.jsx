@@ -11,7 +11,6 @@ import { debounceFn } from "@/utils/utils";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-// Input field variants
 const inputGroupVariants = cva(
   "px-[10px] py-[5px] bg-input hover:bg-input-hover focus:bg-input-focus border-none rounded-5 outline-none ring-0 focus-visible:ring-0 transition-colors cursor-text",
   {
@@ -44,7 +43,6 @@ const inputVariants = cva(
   },
 );
 
-// Button variants
 const buttonVariants = cva(
   "!px-[3px] !py-[6px] bg-background-topbar hover:bg-button-hover focus:bg-button-focus active:bg-button-action text-foreground text-button-icon-size border-none outline-none focus-visible:ring-0 rounded-5 cursor-pointer",
   {

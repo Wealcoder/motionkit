@@ -170,6 +170,12 @@ const config = {
           fieldType: "stagger-field",
           path: "stagger",
           isCustomAnim: true,
+        }, 
+        {
+          title: "Width",
+          fieldType: "width-field",
+          path: "repeat",
+          isCustomAnim: true,
         },
       ],
     },
