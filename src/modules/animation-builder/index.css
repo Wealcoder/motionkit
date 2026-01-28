@@ -375,7 +375,7 @@
   padding: 10px 4px !important;
 }
 [data-color-mode*="dark"].w-color-github .w-color-editable-input > input {
-  background: var(--input-primary-hover) !important;
+  background: var(--input-secondary) !important;
   min-height: 28px;
   font-family: "Inter", sans-serif;
   color: var(--foreground) !important;
@@ -390,12 +390,12 @@
   box-shadow: none !important;
 }
 [data-color-mode*="dark"].w-color-github .w-color-editable-input > input:hover {
-  background: var(--input-primary-hover) !important;
+  background: var(--input-secondary) !important;
 }
 [data-color-mode*="dark"].w-color-github
   .w-color-editable-input
   > input:active {
-  background: var(--input-primary-hover) !important;
+  background: var(--input-secondary) !important;
 }
 [data-color-mode*="dark"].w-color-github .w-color-editable-input > span {
   --editable-input-label-color: var(--foreground) !important;
@@ -406,7 +406,7 @@
   border-radius: 5px !important;
 }
 [data-color-mode*="dark"].w-color-github > div:nth-child(5) > div:nth-child(2) {
-  background: var(--input-primary-hover) !important;
+  background: var(--input-secondary) !important;
   border-radius: 5px !important;
   height: 28px;
   width: 28px;

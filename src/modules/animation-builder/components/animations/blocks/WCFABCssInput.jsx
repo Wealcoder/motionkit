@@ -97,7 +97,7 @@ const selectContentVariants = cva(
 );
 
 const selectItemVariants = cva(
-  "relative flex justify-center items-center w-full rounded-5 my-[2px] !p-[2px] cursor-pointer outline-none transition-colors hover:bg-select-hover data-[highlighted]:bg-select-hover data-[state=checked]:bg-select-hover text-xss",
+  "relative flex justify-center items-center w-full rounded-5 my-[2px] !p-0.5 cursor-pointer outline-none transition-colors hover:bg-select-hover data-[highlighted]:bg-select-hover data-[state=checked]:bg-select-hover text-xss",
 );
 
 const clamp = (num, min, max) => {

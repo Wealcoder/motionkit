@@ -15,6 +15,7 @@ const defaultData = {
   switch: true,
   code: "",
   repeat: -1,
+  tabs: {},
 };
 
 const config = {
@@ -53,6 +54,12 @@ const config = {
         {
           title: "Color picker",
           fieldType: "color-picker",
+          path: "colorPicker",
+          isCustomAnim: true,
+        },
+        {
+          title: "Gradient",
+          fieldType: "gradient-color-picker",
           path: "colorPicker",
           isCustomAnim: true,
         },
@@ -98,6 +105,172 @@ const config = {
           fieldType: "width-field",
           path: "repeat",
           isCustomAnim: true,
+        },
+        {
+          title: "Tabs",
+          fieldType: "tabs-field",
+          path: "tabs",
+          tabsTrigger: [
+            { title: "Default", value: "default" },
+            { title: "Custom", value: "custom" },
+            { title: "Test 1", value: "test1" },
+            { title: "Test 2", value: "test2" },
+            { title: "Test 3", value: "test3" },
+            { title: "Test 4", value: "test4" },
+          ],
+          tabsContent: [
+            {
+              key: "default",
+              fields: [
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+              ],
+            },
+            {
+              key: "custom",
+              fields: [
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+              ],
+            },
+            {
+              key: "test1",
+              fields: [
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+              ],
+            },
+            {
+              key: "test2",
+              fields: [
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+              ],
+            },
+            {
+              key: "test3",
+              fields: [
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+              ],
+            },
+            {
+              key: "test4",
+              fields: [
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+                {
+                  title: "Ease",
+                  fieldType: "select-field",
+                  fieldData: easeTypes,
+                  path: "triggerType",
+                },
+                {
+                  title: "Repeat",
+                  fieldType: "number-field",
+                  path: "repeat",
+                },
+              ],
+            },
+          ],
         },
       ],
     },

@@ -6,10 +6,17 @@ import { cn, getScreenSize } from "@/lib/utils";
 import { PlusSignIcon, Remove01Icon } from "@hugeicons/core-free-icons/index";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { SearchAddIcon } from "@hugeicons/core-free-icons";
+import { useLayoutEffect } from "react";
 
 const EditorPreview = () => {
   const { mainState, settings, setEditorZoomLevel, resetEditorPreview } =
     useKernel();
+
+  console.log(
+    "Log | EditorPreview.jsx:15 | EditorPreview | mainState => ",
+    mainState?.contentStep,
+  );
+
   const { selectedDevice } = useDeviceConfig();
   const device = getScreenSize(selectedDevice) || {};
 
@@ -31,8 +38,6 @@ const EditorPreview = () => {
     }
     return;
   };
-
-  console.log({ mainState });
 
   return (
     <div className="h-full bg-[#404040] relative min-w-full flex justify-center">
