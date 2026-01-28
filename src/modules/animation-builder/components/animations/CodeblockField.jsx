@@ -1,16 +1,16 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import ToolTipWrapper from "@/components/common/ToolTipWrapper";
-import Prism from "prismjs";
+import { useCallback, useState } from "react";
 import Editor from "react-simple-code-editor";
 
+import Prism from "prismjs";
 import "prismjs/components/prism-css";
 import "prismjs/components/prism-javascript";
 import "prismjs/themes/prism-tomorrow.css";
 
-import { Delete01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { debounceFn, trimString } from "@/utils/utils";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
+import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage";
+import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
+
+import { debounceFn } from "@/utils/utils";
 
 const CodeblockField = ({
   property = {},
@@ -31,51 +31,46 @@ const CodeblockField = ({
 
   const [code, setCode] = useState(value ?? "");
 
-  const handleChange = debounceFn((newCode) => {
-    setCode(newCode);
-    onValueChange(newCode);
-  });
+  const handleChange = useCallback(
+    debounceFn((newCode) => {
+      setCode(newCode);
+      onValueChange(newCode);
+    }, 150),
+    [],
+  );
 
   const highlightCode = (code) => {
     const grammar =
       language === "css" ? Prism.languages.css : Prism.languages.javascript;
-
     return Prism.highlight(code, grammar, language);
   };
 
   return (
-    <div className="w-64 space-y-3">
+    <div className="flex flex-col gap-3">
       {/* Header */}
-      <div className="w-full h-4.5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-white text-[11.5px] font-normal leading-4.5">
-            {trimString(title, 15)}
-          </span>
-
-          {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
-        </div>
-
-        {/* delete icon */}
-        {property?.isCustomAnim && <DeleteBtn onDelete={onDelete} />}
+      <div className="w-full flex items-center justify-between">
+        <WCFABLabel title={title} tooltipContent={tooltipContent} />
+        {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
       </div>
 
       {/* Code Editor */}
-      <div className="rounded-md bg-[#303033] overflow-hidden">
-        <Editor
-          value={code}
-          placeholder={placeholder}
-          onValueChange={handleChange}
-          highlight={highlightCode}
-          padding={10}
-          textareaId="codeblock-editor"
-          spellCheck={false}
-          className="w-full min-h-17.5 text-[11.5px] leading-4.5 text-[#FAFAFA] bg-[#303033]"
-        />
-      </div>
+      <Editor
+        id="sabbir"
+        value={code}
+        placeholder={placeholder}
+        onValueChange={handleChange}
+        highlight={highlightCode}
+        padding={10}
+        spellCheck={false}
+        className="
+        w-full !min-h-[60px] !max-h-[60px] !overflow-y-auto text-xss leading-4.25 text-foreground bg-input rounded-5"
+        textareaId="codeblock-editor"
+        textareaClassName="outline-none focus:outline-none focus-visible:outline-none"
+      />
 
       {/* required message */}
-      {isRequired && !code && (
-        <p className="text-red-400 text-xs">Field is Required</p>
+      {isRequired && isDataValid && (
+        <WCFABErrorMessage message={"This field is required"} />
       )}
     </div>
   );

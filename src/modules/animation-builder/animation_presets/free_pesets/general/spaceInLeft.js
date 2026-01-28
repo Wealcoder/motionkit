@@ -14,6 +14,7 @@ const defaultData = {
   slider: -150,
   switch: true,
   code: "",
+  repeat: -1,
 };
 
 const config = {
@@ -154,6 +155,10 @@ const config = {
           title: "Box Shadow",
           fieldType: "box-shadow-field",
           path: "boxShadow",
+          title: "Repeat",
+          fieldType: "repeat-field",
+          path: "repeat",
+          isCustomAnim: true,
         },
       ],
     },

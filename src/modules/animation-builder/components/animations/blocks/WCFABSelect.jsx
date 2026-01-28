@@ -105,10 +105,7 @@ const WCFABSelect = ({
         <SelectValue placeholder="Select Method" />
       </SelectTrigger>
 
-      <SelectContent
-        id="sabbir"
-        className={cn(selectContentVariants({ size }))}
-      >
+      <SelectContent className={cn(selectContentVariants({ size }))}>
         {isSearchEnabled && (
           <div className="sticky top-0 z-10 p-1 bg-select-secondary">
             <InputGroup className="bg-input-secondary px-[7px] py-[5px] max-h-7 border-none outline-none rounded-5 focus-within:ring-0">
