@@ -30,7 +30,7 @@ const GradientColorPickerField = ({
 
         <div className="flex items-center gap-2">
           {/* color picker block */}
-          <WCFABGradientPicker value={value} onValueChange={onValueChange} />
+          <WCFABGradientPicker value={value} />
           {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>

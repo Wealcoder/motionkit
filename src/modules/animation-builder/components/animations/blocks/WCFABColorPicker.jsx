@@ -9,6 +9,8 @@ import Chrome from "@uiw/react-color-chrome";
 import Swatch from "@uiw/react-color-swatch";
 import { debounceFn } from "@/utils/utils";
 import { hsvaToHexa } from "@uiw/color-convert";
+import { cn } from "@/lib/utils";
+import { inputVariants } from "./shared/style";
 
 const STORAGE_KEY = "wcf-ab-swash-colors";
 const SWASHLIMIT = 100;
@@ -33,10 +35,11 @@ function validateHSL(h, s, l) {
 }
 
 const WCFABColorPicker = ({
+  property = {},
   value = "#000000",
   onValueChange = () => {},
-  ...rest
 }) => {
+  const { size = "sm", ...rest } = property || {};
   const [color, setColor] = useState(value);
   const [inputValue, setInputValue] = useState(value);
   const [swashColors, setSwashColors] = useState([]);
@@ -85,7 +88,6 @@ const WCFABColorPicker = ({
   const handleInputChange = (e) => {
     const next = e.target.value;
     setInputValue(next);
-    const isValid = validateColor(next);
     if (validateColor(next)) {
       commitColor(next);
     }
@@ -127,7 +129,7 @@ const WCFABColorPicker = ({
   }, []);
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex justify-center items-center gap-1.5">
       <Popover
         onOpenChange={(isOpen) => {
           // loading latest swash colors
@@ -162,10 +164,7 @@ const WCFABColorPicker = ({
       <Input
         value={inputValue}
         onChange={handleInputChange}
-        className={`
-          wcf-ab-text-input
-          ${isInvalid ? "border-red-500 focus-visible:ring-red-500" : ""}
-        `}
+        className={cn(inputVariants({ size }))}
         placeholder="#000000"
       />
     </div>
