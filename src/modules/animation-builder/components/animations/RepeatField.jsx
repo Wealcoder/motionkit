@@ -1,15 +1,22 @@
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+
 import {
   ArrowDataTransferHorizontalIcon,
   InfinityIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@/components/ui/button";
-import { debounceFn } from "@/utils/utils";
+
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage";
 import WCFABNumberInput from "@/components/animations/blocks/WCFABNumberInput";
+
+import { debounceFn } from "@/utils/utils";
+import { cn } from "@/lib/utils";
+
+const repeatBtnVariants =
+  "!h-[28px] !w-[28px] px-3 py-3 bg-button hover:bg-button-hover focus:bg-button-action active:bg-button-action !text-foreground-secondary  hover:!text-foreground focus:!text-foreground active:!text-foreground text-button-icon-size border-none outline-none focus-within:ring-0 rounded-5 cursor-pointer";
 
 const RepeatField = ({
   property = {},
@@ -97,15 +104,27 @@ const RepeatField = ({
             }}
           />
           {/* Infinity */}
-          <Button onClick={setInfinity} className="wcf-ab-button-icon">
-            <HugeiconsIcon icon={InfinityIcon} className="text-[#A1A1AA]" />
+          <Button
+            onClick={setInfinity}
+            className={cn(
+              repeatBtnVariants,
+              inputValue === -1 ? "!bg-button-action !text-foreground" : null,
+            )}
+          >
+            <HugeiconsIcon icon={InfinityIcon} color="currentColor" />
           </Button>
 
           {/* Shuffle */}
-          <Button onClick={setShuffle} className="wcf-ab-button-icon">
+          <Button
+            onClick={setShuffle}
+            className={cn(
+              repeatBtnVariants,
+              inputValue === 1 ? "!bg-button-action !text-foreground" : null,
+            )}
+          >
             <HugeiconsIcon
               icon={ArrowDataTransferHorizontalIcon}
-              className="text-[#A1A1AA]"
+              color="currentColor"
             />
           </Button>
 

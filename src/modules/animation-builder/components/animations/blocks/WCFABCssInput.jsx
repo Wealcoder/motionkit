@@ -68,9 +68,9 @@ const buttonVariants = cva(
   {
     variants: {
       size: {
-        sm: "!min-w-6 max-w-[35px] w-full h-[22px]",
-        md: "!min-w-6 max-w-[35px] w-full h-[22px]",
-        lg: "!min-w-6 max-w-[35px] w-full h-[22px]",
+        sm: "!min-w-6 max-w-[50px] h-[22px]",
+        md: "!min-w-6 max-w-[50px] h-[22px]",
+        lg: "!min-w-6 max-w-[50px] h-[22px]",
       },
     },
     defaultVariants: {

@@ -215,6 +215,9 @@
     focus:bg-button-focus
     active:bg-button-action
     text-foreground
+    hover:text-foreground
+    focus:text-foreground
+    active:text-foreground
     text-button-icon-size
     border-none
     outline
