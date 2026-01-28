@@ -93,6 +93,12 @@ const config = {
           path: "repeat",
           isCustomAnim: true,
         },
+        {
+          title: "Width",
+          fieldType: "width-field",
+          path: "repeat",
+          isCustomAnim: true,
+        },
       ],
     },
   ],

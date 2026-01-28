@@ -11,6 +11,7 @@ import SliderField from "@/components/animations/SliderField";
 import SwitchField from "@/components/animations/SwitchField";
 import CodeblockField from "@/components/animations/CodeblockField";
 import RepeatField from "@/components/animations/RepeatField";
+import WidthHeightField from "@/components/animations/WidthHeightField";
 
 const AnimationPropsMapping = React.memo(
   ({
@@ -162,6 +163,18 @@ const AnimationPropsMapping = React.memo(
       case "repeat-field":
         return (
           <RepeatField
+            property={property}
+            value={value}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
+            onValueChange={handleSetValueByPath}
+          />
+        );
+
+      case "height-field":
+      case "width-field":
+        return (
+          <WidthHeightField
             property={property}
             value={value}
             onDelete={handleDeleteField}

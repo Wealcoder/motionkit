@@ -51,8 +51,6 @@ const WCFABNumberInput = ({
 
   const handleInputChange = (e) => {
     const val = e.target.value;
-
-    // ✅ Allow: "", "-", "-10", "10", "10.5"
     if (/^-?\d*\.?\d*$/.test(val)) {
       setInputValue(val);
       onDebounceChange(val);
