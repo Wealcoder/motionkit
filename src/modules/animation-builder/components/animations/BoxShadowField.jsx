@@ -161,9 +161,9 @@ const BoxShadowField = ({
 
             {/* popover color picker */}
             <div className="flex flex-col gap-1.5 [&_input]:!bg-background-sidebar [&_input]:!max-w-[150px] [&_input:hover]:!bg-background-sidebar [&_input:focus-visible]:!bg-background-sidebar">
-              <h2 className="text-[11px] font-normal text-[#E4E4E7] m-0 font-inter">
+              <label className="text-[11px] font-normal text-[#E4E4E7] m-0 font-inter">
                 Color
-              </h2>
+              </label>
               <WCFABColorPicker
                 value={shadow.color}
                 onValueChange={(val) => updateShadow({ color: val })}

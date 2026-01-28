@@ -177,6 +177,12 @@ const config = {
           path: "repeat",
           isCustomAnim: true,
         },
+        {
+          title: "Method",
+          fieldType: "tween-method-field",
+          path: "tween",
+          isCustomAnim: true,
+        },
       ],
     },
   ],

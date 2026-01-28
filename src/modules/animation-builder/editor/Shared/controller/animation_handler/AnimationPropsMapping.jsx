@@ -17,6 +17,7 @@ import CodeblockField from "@/components/animations/CodeblockField";
 import RepeatField from "@/components/animations/RepeatField";
 import StaggerField from "@/components/animations/StaggerField";
 import WidthHeightField from "@/components/animations/WidthHeightField";
+import TweenMethodField from "@/components/animations/TweenMethodField";
 
 const AnimationPropsMapping = React.memo(
   ({
@@ -240,6 +241,16 @@ const AnimationPropsMapping = React.memo(
       case "width-field":
         return (
           <WidthHeightField
+            property={property}
+            value={value}
+            onDelete={handleDeleteField}
+            onDisabledUpdate={handleDisabledUpdate}
+            onValueChange={handleSetValueByPath}
+          />
+        );
+      case "tween-method-field":
+        return (
+          <TweenMethodField
             property={property}
             value={value}
             onDelete={handleDeleteField}
