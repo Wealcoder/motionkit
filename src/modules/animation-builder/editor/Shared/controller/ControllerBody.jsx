@@ -9,13 +9,13 @@ const RenderContent = (item) => {
   switch (currentStep) {
     case 1:
       return (
-        <ScrollArea>
+        <ScrollArea hideScrollbar>
           <AllAnimationList />
         </ScrollArea>
       );
     case 2:
       return (
-        <ScrollArea>
+        <ScrollArea hideScrollbar>
           {item?.data?.type == "free_animation" ? (
             <FreePresetAnimation />
           ) : item?.data?.type === "preset" ? (

@@ -16,6 +16,7 @@ import AnimationPropsHanlder from "../../animation_handler/AnimationPropsHanlder
 
 const FreePresetAnimation = () => {
   const { contentStep, updateContentData } = useContentStep();
+
   const { selectedDevice } = useDeviceConfig();
 
   // getting information about register presets and preset groups

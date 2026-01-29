@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AnimationPropsMapping from "./AnimationPropsMapping";
+import { getValueFromPath } from "@/lib/animations/animations";
 
 const AnimationPropsHanlder = ({
   selectedPresetGroup = "",
@@ -15,6 +16,8 @@ const AnimationPropsHanlder = ({
   updateContentData = () => {},
 }) => {
   if (!selectedPreset || !selectedPresetGroup) return;
+
+  // TODO: need to load the default data when component rendered but it won't replace on each render.
 
   // collecting preset configuration
   const { config = null, defaultData = null } = useMemo(() => {
@@ -33,7 +36,7 @@ const AnimationPropsHanlder = ({
   }
 
   return (
-    <ScrollArea className="w-full h-full">
+    <ScrollArea className="w-full h-full" hideScrollbar>
       <div className="flex flex-col gap-3">
         <Accordion
           type="single"
@@ -80,15 +83,18 @@ const SingleAccordion = ({
       {/* mapping each property */}
       {hasProperties && (
         <AccordionContent className="flex flex-col gap-2 max-w-[256px] overflow-hidden">
-          {properties.map((property, index) => (
-            <AnimationPropsMapping
-              key={index}
-              property={property}
-              defaultData={defaultData}
-              contentStep={contentStep}
-              updateContentData={updateContentData}
-            />
-          ))}
+          {properties.map((property, index) => {
+            const value = getValueFromPath();
+            return (
+              <AnimationPropsMapping
+                key={index}
+                property={property}
+                defaultData={defaultData}
+                contentStep={contentStep}
+                updateContentData={updateContentData}
+              />
+            );
+          })}
         </AccordionContent>
       )}
     </AccordionItem>

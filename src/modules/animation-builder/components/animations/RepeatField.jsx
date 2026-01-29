@@ -37,6 +37,8 @@ const RepeatField = ({
     ...rest
   } = property || {};
 
+  console.log("RepeatField", { value });
+
   const [inputValue, setInputValue] = useState(value.repeat ?? 0);
   const [isDataValid, setIsDataValid] = useState(false);
 
@@ -48,8 +50,6 @@ const RepeatField = ({
   };
 
   const handleInput = debounceFn((rewValue) => {
-    if (rewValue === "" || rewValue === "-") return;
-
     let currentValue = Number(rewValue);
     if (isNaN(currentValue)) return;
 
@@ -60,7 +60,6 @@ const RepeatField = ({
       setInputValue(currentValue);
       updateValue({
         repeat: currentValue,
-        yoyo: false,
       });
       return;
     }
@@ -68,7 +67,6 @@ const RepeatField = ({
     setInputValue(currentValue);
     updateValue({
       repeat: currentValue,
-      yoyo: false,
     });
   }, 150);
 
@@ -81,12 +79,14 @@ const RepeatField = ({
   };
 
   const setShuffle = () => {
-    const shuffleValue = Math.max(value.repeat ?? 0, 1);
-    setInputValue(shuffleValue);
+    const isShuffleEnabled = value?.yoyo ?? false;
+    console.log("Current yoyo:", isShuffleEnabled);
     updateValue({
-      repeat: shuffleValue,
-      yoyo: true,
+      ...value,
+      repeat: inputValue,
+      yoyo: !isShuffleEnabled,
     });
+    console.log("Updated yoyo:", !isShuffleEnabled);
   };
 
   return (
@@ -119,7 +119,7 @@ const RepeatField = ({
             onClick={setShuffle}
             className={cn(
               repeatBtnVariants,
-              inputValue === 1 ? "!bg-button-action !text-foreground" : null,
+              value?.yoyo ? "!bg-button-action !text-foreground" : null,
             )}
           >
             <HugeiconsIcon

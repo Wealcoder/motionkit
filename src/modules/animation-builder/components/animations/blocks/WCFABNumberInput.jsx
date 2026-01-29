@@ -38,12 +38,10 @@ const WCFABNumberInput = ({
   const onDebounceChange = useCallback(
     debounceFn((raw) => {
       const num = parseNumber(raw);
-
       if (num === null) {
         onValueChange(null);
         return;
       }
-
       onValueChange(clamp(num, min, max));
     }, 150),
     [min, max, onValueChange],

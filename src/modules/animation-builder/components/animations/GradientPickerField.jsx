@@ -1,9 +1,10 @@
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
-import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
+import WCFABGradientPicker from "@/components/animations/blocks/WCFABGradientColorPicker";
+
 import { trimString } from "@/utils/utils";
 
-const ColorPickerField = ({
+const GradientColorPickerField = ({
   property = {},
   value = "#000000",
   onDelete = () => {},
@@ -29,7 +30,7 @@ const ColorPickerField = ({
 
         <div className="flex items-center gap-2">
           {/* color picker block */}
-          <WCFABColorPicker value={value} onValueChange={onValueChange} />
+          <WCFABGradientPicker value={value} />
           {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
@@ -41,4 +42,4 @@ const ColorPickerField = ({
   );
 };
 
-export default ColorPickerField;
+export default GradientColorPickerField;
