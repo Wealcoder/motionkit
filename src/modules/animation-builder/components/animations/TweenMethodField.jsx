@@ -15,6 +15,8 @@ const METHODS = [
   { key: "from", title: "From" },
   { key: "to", title: "To" },
   { key: "fromTo", title: "FromTo" },
+  { key: "set", title: "Set" },
+  { key: "call", title: "Call" },
 ];
 
 const TweenMethodField = ({
@@ -38,6 +40,8 @@ const TweenMethodField = ({
   const [uiProps, setUiProps] = useState({
     from: [],
     to: [],
+    set: [],
+    call: [],
     fromTo: [],
   });
 
@@ -73,7 +77,7 @@ const TweenMethodField = ({
 
       console.log(next);
 
-      onValueChange(next); // 🔥 send GSAP-ready object
+      onValueChange(next); 
       return next;
     });
   };
@@ -81,16 +85,16 @@ const TweenMethodField = ({
   return (
     <div className="flex flex-col gap-3">
       {/* Title */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2">
         <WCFABLabel title={title} tooltipContent={tooltipContent} />
 
         <Tabs value={activeMethod} onValueChange={setActiveMethod}>
-          <TabsList className="bg-[#202024] h-7 p-0.5 rounded-md">
+          <TabsList className="bg-[#202024] w-[257px] h-7 p-0.5 rounded-md gap-0.5 justify-start">
             {METHODS.map((m) => (
               <TabsTrigger
                 key={m.key}
                 value={m.key}
-                className="h-6 px-3 text-[11px] data-[state=active]:bg-[#303033] data-[state=active]:text-[#FAFAFA] hover:bg-[#303033] border-none bg-transparent text-[#A1A1AA]"
+                className="h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-[#303033] data-[state=active]:text-[#FAFAFA] hover:bg-[#303033] border-none bg-transparent text-[#A1A1AA]"
               >
                 {m.title}
               </TabsTrigger>
@@ -121,7 +125,7 @@ const TweenMethodField = ({
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent className="w-[260px] p-2 bg-[#18181B]">
+        <PopoverContent className="w-[260px] p-2 bg-[#303033]">
           <AddPropertyPopoverModal onSelect={handleAddProperty} />
         </PopoverContent>
       </Popover>
