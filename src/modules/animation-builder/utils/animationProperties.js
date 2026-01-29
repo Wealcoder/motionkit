@@ -7,7 +7,6 @@ import RotationField from "@/components/animations/RotationField";
 import TextField from "@/components/animations/TextField";
 import TransformOriginField from "@/components/animations/TransformOriginField";
 import StaggerField from "@/components/animations/StaggerField";
-import TweenMethodField from "@/components/animations/TweenMethodField";
 import WidthHeightField from "@/components/animations/WidthHeightField";
 
 const animationProperties = [
@@ -39,14 +38,14 @@ const animationProperties = [
                 key: "width",
                 title: "Width",
                 path: "width",
-                fieldType: "number-field",
+                fieldType: "width-field",
                 element: WidthHeightField,
             },
             {
                 key: "height",
                 title: "Height",
                 path: "height",
-                fieldType: "number-field",
+                fieldType: "width-field",
                 element: WidthHeightField,
             },
             {
@@ -78,6 +77,76 @@ const animationProperties = [
                 element: RotationField,
             },
             {
+                key: "transformOrigin",
+                title: "Transform Origin",
+                path: "transformOrigin",
+                fieldType: "transform-origin-field",
+                element: TransformOriginField,
+            },
+            {
+                key: "color",
+                title: "Color",
+                path: "color",
+                fieldType: "color-picker",
+                element: ColorPickerField,
+            },
+            {
+                key: "background",
+                title: "Background",
+                path: "background",
+                fieldType: "color-picker",
+                element: ColorPickerField,
+            },
+            {
+                key: "border",
+                title: "Border",
+                path: "border",
+                fieldType: "border-field",
+                element: NumberField,
+            },
+            {
+                key: "boxShadow",
+                title: "Box Shadow",
+                path: "boxShadow",
+                fieldType: "box-shadow-field",
+                element: BoxShadowField,
+            },
+            {
+                key: "dropShadow",
+                title: "Drop Shadow",
+                path: "dropShadow",
+                fieldType: "drop-shadow-field",
+                element: DropShadowField,
+            },
+            {
+                key: "ease",
+                title: "Ease",
+                path: "ease",
+                fieldType: "select-field",
+                element: TextField,
+            },
+            {
+                key: "force3D",
+                title: "Force 3D",
+                path: "force3D",
+                fieldType: "switch-field",
+                element: TextField,
+            },
+            {
+                key: "delay",
+                title: "Delay",
+                path: "delay",
+                fieldType: "number-field",
+                element: NumberField,
+            },
+            {
+                key: "duration",
+                title: "Duration",
+                path: "duration",
+                fieldType: "number-field",
+                element: NumberField,
+            },
+            {
                 key: "scaleX",
                 title: "Scale X",
                 path: "scaleX",
@@ -106,20 +175,6 @@ const animationProperties = [
                 element: NumberField,
             },
             {
-                key: "delay",
-                title: "Delay",
-                path: "delay",
-                fieldType: "number-field",
-                element: NumberField,
-            },
-            {
-                key: "duration",
-                title: "Duration",
-                path: "duration",
-                fieldType: "number-field",
-                element: NumberField,
-            },
-            {
                 key: "repeatDelay",
                 title: "Repeat Delay",
                 path: "repeatDelay",
@@ -142,60 +197,11 @@ const animationProperties = [
                 element: RotationField,
             },
             {
-                key: "transformOrigin",
-                title: "Transform Origin",
-                path: "transformOrigin",
-                fieldType: "transform-origin-field",
-                element: TransformOriginField,
-            },
-            {
-                key: "color",
-                title: "Color",
-                path: "color",
-                fieldType: "color-picker",
-                element: ColorPickerField,
-            },
-            {
-                key: "background",
-                title: "Background",
-                path: "background",
-                fieldType: "color-picker",
-                element: ColorPickerField,
-            },
-            {
-                key: "boxShadow",
-                title: "Box Shadow",
-                path: "boxShadow",
-                fieldType: "box-shadow-field",
-                element: BoxShadowField,
-            },
-            {
-                key: "dropShadow",
-                title: "Drop Shadow",
-                path: "dropShadow",
-                fieldType: "drop-shadow-field",
-                element: DropShadowField,
-            },
-            {
                 key: "stagger",
                 title: "Stagger",
                 path: "stagger",
                 fieldType: "stagger-field",
                 element: StaggerField,
-            },
-            {
-                key: "ease",
-                title: "Ease",
-                path: "ease",
-                fieldType: "select-field",
-                element: TextField,
-            },
-            {
-                key: "force3D",
-                title: "Force 3D",
-                path: "force3D",
-                fieldType: "switch-field",
-                element: TextField,
             },
             {
                 key: "overwrite",

@@ -12,10 +12,10 @@ const EditorPreview = () => {
   const { mainState, settings, setEditorZoomLevel, resetEditorPreview } =
     useKernel();
 
-  console.log(
-    "Log | EditorPreview.jsx:15 | EditorPreview | mainState => ",
-    mainState?.contentStep,
-  );
+  // console.log(
+  //   "Log | EditorPreview.jsx:15 | EditorPreview | mainState => ",
+  //   mainState?.contentStep,
+  // );
 
   const { selectedDevice } = useDeviceConfig();
   const device = getScreenSize(selectedDevice) || {};

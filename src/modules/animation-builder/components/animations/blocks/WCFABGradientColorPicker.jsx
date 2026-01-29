@@ -88,7 +88,7 @@ const WCFABGradientPicker = ({
 }) => {
   const [gradient, setGradient] = useState(DEFAULT_GRADIENT);
 
-  console.log({ gradient });
+  // console.log({ gradient });
 
   const barRef = useRef(null);
   const isDraggingRef = useRef(false);

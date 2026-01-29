@@ -61,7 +61,7 @@ const TransformOriginGrid = ({ value, onChange }) => {
             key={item.id}
             value={cssValue}
             className={cn(
-              "border-none h-1.5 w-1.5 rounded-full !p-0 bg-[#A1A1AA] data-[state=checked]:w-3 data-[state=checked]:h-3 data-[state=checked]:bg-[#2C76E6] [&>span]:hidden"
+              "border-none h-1.5 w-1.5 rounded-full !p-0 bg-[#A1A1AA] data-[state=checked]:scale-150 data-[state=checked]:bg-[#2C76E6] [&>svg]:hidden"
             )}
           />
         );

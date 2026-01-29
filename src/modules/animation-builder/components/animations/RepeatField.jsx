@@ -37,7 +37,7 @@ const RepeatField = ({
     ...rest
   } = property || {};
 
-  console.log("RepeatField", { value });
+  // console.log("RepeatField", { value });
 
   const [inputValue, setInputValue] = useState(value.repeat ?? 0);
   const [isDataValid, setIsDataValid] = useState(false);

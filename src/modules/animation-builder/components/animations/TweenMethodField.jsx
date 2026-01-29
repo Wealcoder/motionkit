@@ -21,102 +21,164 @@ const METHODS = [
 
 const TweenMethodField = ({
   property = {},
-  value = {},
   onValueChange = () => {},
+  onDisabledUpdate = () => {},
+  onDelete = () => {},
 }) => {
   const {
     title,
-    tooltipContent = "Enter the value.",
+    tooltipContent = "tooltip",
     isRequired = false,
     isCustomAnim = true,
-    min = 0,
-    max = 0,
     path = "",
     ...rest
   } = property;
 
   const [activeMethod, setActiveMethod] = useState("from");
+  const [fromToSide, setFromToSide] = useState("from");
 
+  /* UI props */
   const [uiProps, setUiProps] = useState({
     from: [],
     to: [],
     set: [],
     call: [],
-    fromTo: [],
   });
 
+  /* GSAP values */
   const [gsapValues, setGsapValues] = useState({
     from: {},
     to: {},
-    fromTo: {},
+    set: {},
+    call: {},
   });
 
-  /* ───────── add property to active tab */
+  /* resolve active bucket */
+  const getActiveBucket = () => {
+    if (activeMethod === "fromTo") return fromToSide;
+    return activeMethod;
+  };
+
+  /* element add handler */
   const handleAddProperty = (prop) => {
+    const bucket = getActiveBucket();
+
     setUiProps((prev) => {
-      if (prev[activeMethod].some((p) => p.key === prop.key)) {
-        return prev;
-      }
+      if (prev[bucket].find((p) => p.key === prop.key)) return prev;
       return {
         ...prev,
-        [activeMethod]: [...prev[activeMethod], prop],
+        [bucket]: [...prev[bucket], prop],
       };
     });
   };
 
-  /* ───────── update gsap value */
+  /* handle update value */
   const handleValueChange = (path, nextValue) => {
+    const bucket = getActiveBucket();
     setGsapValues((prev) => {
       const next = {
         ...prev,
-        [activeMethod]: {
-          ...prev[activeMethod],
+        [bucket]: {
+          ...prev[bucket],
           [path]: nextValue,
         },
       };
+      // console.log(next)
 
-      console.log(next);
+      if (activeMethod === "fromTo") {
+        const result = {
+          method: "fromTo",
+          values: {
+            from: next.from,
+            to: next.to,
+          },
+        };
+        console.log(result);
+        onValueChange(result);
+      } else {
+        const update = {
+          method: activeMethod,
+          values: next[activeMethod],
+        };
+        console.log(update);
+        onValueChange(update);
+      }
 
-      onValueChange(next); 
       return next;
     });
   };
 
+  // get selected property key
+  const getUsedPropertyKeys = () => {
+    if (activeMethod === "fromTo") {
+      return [
+        ...uiProps.from.map((p) => p.key),
+        ...uiProps.to.map((p) => p.key),
+      ];
+    }
+
+    return uiProps[activeMethod].map((p) => p.key);
+  };
+
+  const activeBucket = getActiveBucket();
+  const activeUiProps = uiProps[activeBucket];
+  const activeValues = gsapValues[activeBucket];
+
   return (
     <div className="flex flex-col gap-3">
-      {/* Title */}
-      <div className="flex flex-col gap-2">
-        <WCFABLabel title={title} tooltipContent={tooltipContent} />
+      <WCFABLabel title={title} tooltipContent={tooltipContent} />
 
-        <Tabs value={activeMethod} onValueChange={setActiveMethod}>
-          <TabsList className="bg-[#202024] w-[257px] h-7 p-0.5 rounded-md gap-0.5 justify-start">
-            {METHODS.map((m) => (
+      {/* main tabs */}
+      <Tabs value={activeMethod} onValueChange={setActiveMethod}>
+        <TabsList className="bg-[#202024] w-[257px] h-7 p-0.5 rounded-md gap-0.5 justify-start">
+          {METHODS.map((m) => (
+            <TabsTrigger
+              key={m.key}
+              value={m.key}
+              className="h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-[#303033] data-[state=active]:text-[#FAFAFA] hover:bg-[#303033] border-none bg-transparent text-[#A1A1AA]"
+            >
+              {m.title}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {/* nested from / to */}
+        {activeMethod === "fromTo" && (
+          <Tabs value={fromToSide} onValueChange={setFromToSide}>
+            <TabsList className="bg-[#202024] w-[257px] h-7 p-0.5 rounded-md gap-0.5 mt-1 justify-between">
               <TabsTrigger
-                key={m.key}
-                value={m.key}
-                className="h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-[#303033] data-[state=active]:text-[#FAFAFA] hover:bg-[#303033] border-none bg-transparent text-[#A1A1AA]"
+                value="from"
+                className="flex-1 h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-[#303033] data-[state=active]:text-[#FAFAFA] hover:bg-[#303033] border-none bg-transparent text-[#A1A1AA]"
               >
-                {m.title}
+                From
               </TabsTrigger>
-            ))}
-          </TabsList>
-          <TabsContent value={activeMethod} className="flex flex-col gap-2">
-            {uiProps[activeMethod].map((prop) => {
-              const Field = prop.element;
-              return (
-                <Field
-                  key={prop.key}
-                  property={prop}
-                  value={gsapValues[activeMethod][prop.path]}
-                  onValueChange={(v) => handleValueChange(prop.path, v)}
-                />
-              );
-            })}
-          </TabsContent>
-        </Tabs>
-      </div>
+              <TabsTrigger
+                value="to"
+                className="flex-1 h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-[#303033] data-[state=active]:text-[#FAFAFA] hover:bg-[#303033] border-none bg-transparent text-[#A1A1AA]"
+              >
+                To
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
 
-      {/* Add property */}
+        {/* added fields */}
+        <TabsContent value={activeMethod} className="mt-2 flex flex-col gap-2">
+          {activeUiProps.map((prop) => {
+            const Field = prop.element;
+            return (
+              <Field
+                key={prop.key}
+                property={prop}
+                value={activeValues[prop.path]}
+                onValueChange={(v) => handleValueChange(prop.path, v)}
+              />
+            );
+          })}
+        </TabsContent>
+      </Tabs>
+
+      {/* add property popover */}
       <Popover>
         <PopoverTrigger asChild>
           <Button className="bg-[#303033] h-7 rounded-md flex gap-2 border-none text-[#FAFAFA]">
@@ -126,11 +188,12 @@ const TweenMethodField = ({
         </PopoverTrigger>
 
         <PopoverContent className="w-[260px] p-2 bg-[#303033]">
-          <AddPropertyPopoverModal onSelect={handleAddProperty} />
+          <AddPropertyPopoverModal
+            selectedKeys={getUsedPropertyKeys()}
+            onSelect={handleAddProperty}
+          />
         </PopoverContent>
       </Popover>
-
-      {/* Properties */}
     </div>
   );
 };
