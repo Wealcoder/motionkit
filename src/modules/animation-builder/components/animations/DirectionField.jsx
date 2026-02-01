@@ -1,6 +1,13 @@
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
-import WCFABRadio from "./blocks/WCFABRadio";
+
+import { RadioGroup } from "../ui/radio-group";
+import WCFABRadio from "@/components/animations/blocks/WCFABRadio";
+
+const radioGroupItems = [
+  { key: "drawin", label: "Draw In" },
+  { key: "drawout", label: "Draw Out" },
+];
 
 const DirectionField = (
   property = {},
@@ -12,36 +19,40 @@ const DirectionField = (
   const {
     title = "Direction",
     tooltipContent = "Choose animation direction",
-    path = "",
     isRequired = false,
     isCustomAnim = true,
-    ...rest
   } = property || {};
 
-  const handleChange = (selectedValue) => {
-    console.log(selectedValue);
-    onValueChange(selectedValue);
-  };
+  const handleChange=(newValue)=>{
+    onValueChange(newValue)
+  }
 
   return (
     <div className="w-64 h-7 p-0.5">
-      <div className="flex flex-col justify-between mx-auto rounded-lg sm:flex-row sm:items-center">
-        {/* left label + tooltip */}
+      <div className="flex flex-col md:flex-row justify-between">
+        {/* label */}
         <WCFABLabel title={title} tooltipContent={tooltipContent} />
 
-        {/* right radio + delete button */}
+        {/* radios */}
         <div className="flex items-center gap-3 w-44.5 h-4.5">
-          <WCFABRadio defaultValue={value} handleChange={handleChange} />
-          
-          {/* delete button */}
+          <RadioGroup
+            defaultValue={value}
+            onValueChange={handleChange}
+            className="grid grid-cols-2 gap-2.5"
+          >
+            {radioGroupItems.map((item) => (
+              <WCFABRadio
+                key={item.key}
+                value={item.key}
+                label={item.label}
+                id={item.key}
+              />
+            ))}
+          </RadioGroup>
+
           {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>
       </div>
-
-      {/* required message */}
-      {isRequired && isDataValid && (
-        <p className="text-white text-sm">Field is Required</p>
-      )}
     </div>
   );
 };

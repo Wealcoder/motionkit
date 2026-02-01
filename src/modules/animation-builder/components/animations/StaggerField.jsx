@@ -11,7 +11,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Settings03Icon } from "@hugeicons/core-free-icons/index";
-import StaggerPopoverModal from "./shared/StaggerPopoverModal";
+import StaggerPopoverModal from "./blocks/StaggerPopoverModal";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const StaggerField = ({
   property = {},
@@ -49,8 +50,8 @@ const StaggerField = ({
             // }}
           />
 
-          <Popover>
-            <PopoverTrigger asChild>
+          <Dialog>
+            <DialogTrigger asChild>
               <Button className="wcf-ab-button-icon">
                 <HugeiconsIcon
                   icon={Settings03Icon}
@@ -59,14 +60,13 @@ const StaggerField = ({
                   className="w-3.5 h-3.5 text-white"
                 />
               </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              align="end"
-              className="bg-popover w-[176px] h-[424px] p-3 flex flex-col gap-2.5"
+            </DialogTrigger>
+            <DialogContent
+              className="bg-[#18181B] w-[354px] min-h-[295px] p-3 flex flex-col gap-2.5 [&_svg]:hidden [&_span]:hidden"
             >
-              <StaggerPopoverModal />
-            </PopoverContent>
-          </Popover>
+              <StaggerPopoverModal/>
+            </DialogContent>
+          </Dialog>
 
           {/* delete button */}
           {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}

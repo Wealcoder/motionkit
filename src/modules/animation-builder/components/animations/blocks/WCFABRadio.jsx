@@ -1,43 +1,38 @@
 import React from "react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { cva } from "class-variance-authority";
+import { RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+const RadioVariants = cva(
+  "border-none rounded-full !p-0 bg-button data-[state=checked]:bg-button-action [&_svg]:hidden focus-visible:ring-0 cursor-pointer",
+  {
+    variants: {
+      size: {
+        sm: "h-[14px] w-[14px]",
+        md: "h-[16px] w-[16px] ",
+        lg: "h-[18px] w-[18px]",
+      },
+    },
+    defaultVariants: {
+      size: "sm",
+    },
+  },
+);
 
-const WCFABRadio = ({defaultValue, handleChange}) => {
-    console.log(defaultValue)
+const WCFABRadio = ({ value, label, size = "sm", id }) => {
   return (
-    <div>
-      <RadioGroup
-        defaultValue={defaultValue}
-        onValueChange={handleChange}
-        className="flex items-center gap-3 w-38.5"
+    <div className="flex items-center gap-1.5 max-w-16.5">
+      <RadioGroupItem
+        value={value}
+        id={id}
+        className={cn(RadioVariants({ size }))}
+      />
+      <Label
+        htmlFor={id}
+        className="text-[#A1A1AA] text-[11.5px] font-normal leading-4.5 p-0"
       >
-        <div className="flex items-center gap-2 w-16.5">
-          <RadioGroupItem
-            value="drawin"
-            id="draw-in"
-            className="size-3.5 border-none rounded-full !p-0 bg-button  data-[state=checked]:bg-[#2C76E6] [&_svg]:hidden focus-visible:ring-0"
-          />
-          <Label
-            htmlFor="draw-in"
-            className="text-[#A1A1AA] text-[11.5px] font-normal leading-4.5"
-          >
-            Draw In
-          </Label>
-        </div>
-        <div className="flex items-center gap-2 w-19">
-          <RadioGroupItem
-            value="drawout"
-            id="draw-out"
-            className="size-3.5 border-none rounded-full !p-0 bg-button data-[state=checked]:bg-[#2C76E6] [&_svg]:hidden focus-visible:ring-0"
-          />
-          <Label
-            htmlFor="draw-out"
-            className="text-[#A1A1AA] text-[11.5px] font-normal leading-4.5"
-          >
-            Draw Out
-          </Label>
-        </div>
-      </RadioGroup>
+        {label}
+      </Label>
     </div>
   );
 };

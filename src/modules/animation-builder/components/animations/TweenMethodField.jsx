@@ -1,15 +1,7 @@
 import React, { useState } from "react";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { AddCircleIcon } from "@hugeicons/core-free-icons";
-import AddPropertyPopoverModal from "./shared/AddPropertyPopoverModal";
+import AddPropertyPopover from "./blocks/AddPropertyPopove";
 
 const METHODS = [
   { key: "from", title: "From" },
@@ -181,21 +173,12 @@ const TweenMethodField = ({
       </Tabs>
 
       {/* add property popover */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button className="bg-[#303033] h-7 rounded-md flex gap-2 border-none text-[#FAFAFA]">
-            <HugeiconsIcon icon={AddCircleIcon} className="w-3 h-3" />
-            Add
-          </Button>
-        </PopoverTrigger>
 
-        <PopoverContent className="w-[260px] p-2 bg-button">
-          <AddPropertyPopoverModal
-            selectedKeys={getUsedPropertyKeys()}
-            onSelect={handleAddProperty}
-          />
-        </PopoverContent>
-      </Popover>
+      <AddPropertyPopover
+        title={"Add Properties"}
+        selectedKeys={getUsedPropertyKeys()}
+        onSelect={handleAddProperty}
+      />
     </div>
   );
 };

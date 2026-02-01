@@ -291,6 +291,18 @@
   @apply font-inter box-border;
 }
 
+/* css to hide sidebar scrollbar */
+.hide-scrollbar {
+  overflow-y: auto;
+  -ms-overflow-style: none;   
+  scrollbar-width: none;      
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;              
+}
+
+
 /* scrollbar styles */
 * {
   scrollbar-width: thin;

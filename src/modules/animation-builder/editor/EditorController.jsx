@@ -48,7 +48,7 @@ export default function EditorController() {
           />
         )}
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="hide-scrollbar">
         {/* display properties of new animation or lisitng all animations */}
         {contentStep?.step === 2 && (
           <div className="flex-1">
