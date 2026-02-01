@@ -4,7 +4,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const labelVariant = cva(
-  "text-foreground font-inter font-semibold leading-5 tracking-normal text-nowrap",
+  "text-tertiary font-inter font-semibold leading-5 tracking-normal text-nowrap",
   {
     variants: {
       size: {

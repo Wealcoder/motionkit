@@ -37,7 +37,8 @@ export const cssUnits = [
   { title: "vh", value: "vh" },
   { title: "vmin", value: "vmin" },
   { title: "vmax", value: "vmax" },
-]
+];
+
 // for grouping select options (select field)
 // export const easeTypes = [
 //   {
