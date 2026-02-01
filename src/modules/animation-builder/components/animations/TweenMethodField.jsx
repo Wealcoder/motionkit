@@ -36,7 +36,6 @@ const TweenMethodField = ({
 
   const [activeMethod, setActiveMethod] = useState("from");
   const [fromToSide, setFromToSide] = useState("from");
-
   /* UI props */
   const [uiProps, setUiProps] = useState({
     from: [],
@@ -83,7 +82,6 @@ const TweenMethodField = ({
           [path]: nextValue,
         },
       };
-      // console.log(next)
 
       if (activeMethod === "fromTo") {
         const result = {
@@ -129,13 +127,17 @@ const TweenMethodField = ({
       <WCFABLabel title={title} tooltipContent={tooltipContent} />
 
       {/* main tabs */}
-      <Tabs value={activeMethod} onValueChange={setActiveMethod}>
-        <TabsList className="bg-[#202024] w-[257px] h-7 p-0.5 rounded-md gap-0.5 justify-start">
+      <Tabs
+        value={activeMethod}
+        key={`${activeMethod}-${fromToSide}`}
+        onValueChange={setActiveMethod}
+      >
+        <TabsList className="bg-background-topbar w-[257px] h-7 p-0.5 rounded-md gap-0.5 justify-start">
           {METHODS.map((m) => (
             <TabsTrigger
               key={m.key}
               value={m.key}
-              className="h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-[#303033] data-[state=active]:text-[#FAFAFA] hover:bg-[#303033] border-none bg-transparent text-[#A1A1AA]"
+              className="h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-button data-[state=active]:text-[#FAFAFA] hover:bg-button border-none bg-transparent text-foreground-secondary"
             >
               {m.title}
             </TabsTrigger>
@@ -148,13 +150,13 @@ const TweenMethodField = ({
             <TabsList className="bg-[#202024] w-[257px] h-7 p-0.5 rounded-md gap-0.5 mt-1 justify-between">
               <TabsTrigger
                 value="from"
-                className="flex-1 h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-[#303033] data-[state=active]:text-[#FAFAFA] hover:bg-[#303033] border-none bg-transparent text-[#A1A1AA]"
+                className="flex-1 h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-button data-[state=active]:text-[#FAFAFA] hover:bg-button border-none bg-transparent text-foreground-secondary"
               >
                 From
               </TabsTrigger>
               <TabsTrigger
                 value="to"
-                className="flex-1 h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-[#303033] data-[state=active]:text-[#FAFAFA] hover:bg-[#303033] border-none bg-transparent text-[#A1A1AA]"
+                className="flex-1 h-6 px-3 py-[5px] text-[11.5px] font-normal leading-4.5 data-[state=active]:bg-button data-[state=active]:text-[#FAFAFA] hover:bg-button border-none bg-transparent text-foreground-secondary"
               >
                 To
               </TabsTrigger>
@@ -187,7 +189,7 @@ const TweenMethodField = ({
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent className="w-[260px] p-2 bg-[#303033]">
+        <PopoverContent className="w-[260px] p-2 bg-button">
           <AddPropertyPopoverModal
             selectedKeys={getUsedPropertyKeys()}
             onSelect={handleAddProperty}

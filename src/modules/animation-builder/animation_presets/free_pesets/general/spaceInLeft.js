@@ -95,60 +95,6 @@ const config = {
           isCustomAnim: true,
         },
         {
-          title: "Tabs",
-          fieldType: "tabs-field",
-          path: "tabs",
-          tabsTrigger: [
-            { title: "Default", value: "default" },
-            { title: "Custom", value: "custom" },
-          ],
-          tabsContent: [
-            {
-              key: "default",
-              fields: [
-                {
-                  title: "Ease",
-                  fieldType: "select-field",
-                  fieldData: easeTypes,
-                  path: "triggerType",
-                },
-                {
-                  title: "Repeat",
-                  fieldType: "number-field",
-                  path: "repeat",
-                },
-              ],
-            },
-            {
-              key: "custom",
-              fields: [
-                {
-                  title: "Ease",
-                  fieldType: "select-field",
-                  fieldData: easeTypes,
-                  path: "triggerType",
-                },
-                {
-                  title: "Repeat",
-                  fieldType: "number-field",
-                  path: "repeat",
-                },
-                {
-                  title: "Ease",
-                  fieldType: "select-field",
-                  fieldData: easeTypes,
-                  path: "triggerType",
-                },
-                {
-                  title: "Repeat",
-                  fieldType: "number-field",
-                  path: "repeat",
-                },
-              ],
-            },
-          ],
-        },
-        {
           title: "Transform Origin",
           fieldType: "transform-origin-field",
           path: "transformOrigin",
@@ -356,6 +302,12 @@ const config = {
             },
           ],
         },
+         {
+          title: "Direction",
+          fieldType: "direction-field",
+          path: "direction",
+          isCustomAnim: true,
+        }, 
       ],
     },
   ],

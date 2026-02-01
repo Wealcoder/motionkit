@@ -11,7 +11,6 @@ import SelectField from "@/components/animations/SelectField";
 import SliderField from "@/components/animations/SliderField";
 import SwitchField from "@/components/animations/SwitchField";
 import TransformOriginField from "@/components/animations/TransformOriginField";
-import TabsField from "@/components/animations/TabsField";
 import DropShadowField from "@/components/animations/DropShadowField";
 import BoxShadowField from "@/components/animations/BoxShadowField";
 import CodeblockField from "@/components/animations/CodeblockField";
@@ -20,6 +19,7 @@ import StaggerField from "@/components/animations/StaggerField";
 import WidthHeightField from "@/components/animations/WidthHeightField";
 import TabsFields from "@/components/animations/TabsField";
 import TweenMethodField from "@/components/animations/TweenMethodField";
+import DirectionField from "@/components/animations/DirectionField";
 
 // listing all animation properties types.
 export const FIELD_COMPONENTS = {
@@ -39,11 +39,11 @@ export const FIELD_COMPONENTS = {
   "width-field": WidthHeightField,
   "tabs-field": TabsFields,
   "transform-origin-field": TransformOriginField,
-  "tabs-field": TabsField,
   "drop-shadow-field": DropShadowField,
   "box-shadow-field": BoxShadowField,
   "stagger-field": StaggerField,
   "tween-method-field": TweenMethodField,
+  "direction-field": DirectionField,
 };
 
 const AnimationPropsMapping = React.memo(
