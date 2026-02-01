@@ -16,7 +16,7 @@ const tabs = [
 const GlobalSettingModal = () => {
   return (
     <Tabs
-      defaultValue="import_export"
+      defaultValue="scroll_smoother"
       className="h-full flex p-0 min-w-0 w-full"
     >
       {/* Sidebar */}

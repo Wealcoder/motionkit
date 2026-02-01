@@ -3,23 +3,20 @@ import { trimString } from "@/utils/utils";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const labelVariant = cva(
-  "text-tertiary font-inter font-semibold leading-5 tracking-normal text-nowrap",
-  {
-    variants: {
-      size: {
-        sm: "text-xs",
-        md: "text-xs",
-        lg: "text-xs",
-      },
-    },
-    defaultVariants: {
-      size: "sm",
+const labelVariant = cva("font-inter tracking-normal text-nowrap", {
+  variants: {
+    size: {
+      sm: "text-xss text-tertiary font-normal leading-4.25",
+      md: "text-xss text-tertiary font-medium leading-4.25",
+      lg: "text-xs text-foreground font-medium leading-5",
     },
   },
-);
+  defaultVariants: {
+    size: "sm",
+  },
+});
 
-const WCFABLabel = ({ size = "sm", title = "", tooltipContent = "" }) => {
+const WCFABLabel = ({ size = "sm", title = "", tooltipContent = null }) => {
   return (
     <div className="flex items-center gap-[6px] min-w-0">
       <span className={cn(labelVariant({ size }), "select-none")}>

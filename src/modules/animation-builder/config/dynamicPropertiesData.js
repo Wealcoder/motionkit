@@ -42,7 +42,7 @@ export const cssUnits = [
 // for grouping select options (select field)
 // export const easeTypes = [
 //   {
-//     label: "Power Eases",
+//     groupName: "Power Eases",
 //     options: [
 //       { title: "Power 2 In", value: "power2.in" },
 //       { title: "Power 2 Out", value: "power2.out" },
@@ -59,7 +59,7 @@ export const cssUnits = [
 //   },
 
 //   {
-//     label: "Natural Motion",
+//     groupName: "Natural Motion",
 //     options: [
 //       { title: "Sine", value: "sine" },
 //       { title: "Circ", value: "circ" },
@@ -68,7 +68,7 @@ export const cssUnits = [
 //   },
 
 //   {
-//     label: "Spring & Bounce",
+//     groupName: "Spring & Bounce",
 //     options: [
 //       { title: "Back", value: "back" },
 //       { title: "Elastic", value: "elastic" },
