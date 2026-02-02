@@ -47,8 +47,8 @@ const AddPropertyPopover = ({ selectedKeys = [], onSelect, title }) => {
     <Popover open={open} onOpenChange={setOpen}>
       <div className="flex flex-col gap-2 relative">
         {/* Row 1: Title + plus icon */}
-        <div className="flex items-center justify-between">
-          <h1 className="wcf-ab-title">{title}</h1>
+        <div className="h-5 flex items-center justify-between">
+          <h1 className="wcf-ab-title !text-[#E4E4E7] m-0">{title}</h1>
 
           <Button
             className="bg-transparent border-none text-[#FAFAFA] cursor-pointer"

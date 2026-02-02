@@ -5,14 +5,10 @@ import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage"
 import WCFABNumberInput from "@/components/animations/blocks/WCFABNumberInput";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Settings03Icon } from "@hugeicons/core-free-icons/index";
-import StaggerPopoverModal from "./blocks/StaggerPopoverModal";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import StaggerPopoverDialog from "./blocks/StaggerPopoverDialog";
+
 
 const StaggerField = ({
   property = {},
@@ -43,11 +39,6 @@ const StaggerField = ({
         <div className="flex items-center gap-2">
           <WCFABNumberInput
             property={property}
-            // value={inputValue}
-            // onValueChange={(value) => {
-            //   setInputValue(value);
-            //   handleInput(value);
-            // }}
           />
 
           <Dialog>
@@ -62,9 +53,9 @@ const StaggerField = ({
               </Button>
             </DialogTrigger>
             <DialogContent
-              className="bg-[#18181B] w-[354px] min-h-[295px] p-3 flex flex-col gap-2.5 [&_svg]:hidden [&_span]:hidden"
+              className="bg-[#18181B] w-[354px] min-h-[295px] p-0 flex flex-col gap-2.5 [&>button]:hidden"
             >
-              <StaggerPopoverModal/>
+              <StaggerPopoverDialog/>
             </DialogContent>
           </Dialog>
 

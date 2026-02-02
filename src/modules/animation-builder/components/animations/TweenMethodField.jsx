@@ -173,7 +173,6 @@ const TweenMethodField = ({
       </Tabs>
 
       {/* add property popover */}
-
       <AddPropertyPopover
         title={"Add Properties"}
         selectedKeys={getUsedPropertyKeys()}
