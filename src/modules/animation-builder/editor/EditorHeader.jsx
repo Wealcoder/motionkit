@@ -9,7 +9,7 @@ import ResponsiveControl from "./Shared/header/center/ResponsiveControl";
 import Search from "./Shared/header/right/Search";
 import DraftAnimation from "./Shared/header/right/DraftAnimation";
 import SavedAnimation from "./Shared/header/right/SavedAnimation";
-import GlobalSettingsTrigger from "./Shared/header/right/GlobalSettings/GlobalSettingsTrigger";
+import GlobalSettingModal from "./Shared/header/right/GlobalSettings/GlobalSettings";
 import { useAnimationControl } from "@/hooks/app.hooks";
 
 const EditorHeader = () => {
@@ -77,7 +77,7 @@ const EditorHeader = () => {
         <Search />
         <DraftAnimation />
         <SavedAnimation />
-        <GlobalSettingsTrigger />
+        <GlobalSettingModal />
         <Others />
       </div>
       {/* <div className="flex items-center gap-2">

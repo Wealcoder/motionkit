@@ -82,9 +82,8 @@ const WCFABAddAnimationElement = ({
     console.warn("Field data required!");
   }
 
-  // Normalize flat or grouped data
   const normalizedGroups = useMemo(() => {
-    // Flat list → single group
+    if (!Array.isArray(fieldData) || fieldData.length === 0) return [];
     if (!fieldData[0]?.options) {
       return [
         {
@@ -93,22 +92,26 @@ const WCFABAddAnimationElement = ({
         },
       ];
     }
-
-    return fieldData;
+    return fieldData.map((group) => ({
+      groupName: group.groupName ?? null,
+      options: Array.isArray(group.options) ? group.options : [],
+    }));
   }, [fieldData]);
 
   // Search filter
-  const filterOptions = (options) =>
-    options?.filter((item) => {
+  const filterOptions = (options) => {
+    if (!options?.length || !Array.isArray(options)) return [];
+    return options?.filter((item) => {
       const title = typeof item === "object" ? item?.title : String(item);
       return title.toLowerCase().includes(search.toLowerCase());
     });
+  };
 
   // selecting a field and update field rendering and configuration
   const handleSelect = (currentField = {}) => {
-    const { key = null, path = null } = currentField || {};
-    if (!key || !path) return;
-    const isExists = pageTransitionFields?.some((field) => field?.key == key);
+    const { path = null } = currentField || {};
+    if (!path) return;
+    const isExists = pageTransitionFields?.some((field) => field?.key == path);
     if (isExists) return;
     setPageTransitionField([currentField, ...pageTransitionFields]);
     setConfiguration((prev) => {
@@ -123,12 +126,11 @@ const WCFABAddAnimationElement = ({
     return pageTransitionFields
       ?.map((property, index) => {
         const { path = "", fieldType = null } = property || {};
+        if (!path || !fieldType) return null;
 
-        // removing tooltip and modifying size for dynamic properties
-        property.tooltipContent = null;
+        // choosing dynamic properites field rendering styles.
         property.size = "lg";
 
-        if (!path || !fieldType) return null;
         return (
           <AnimationPropsMapping
             key={`${path}${index}`}
@@ -156,7 +158,6 @@ const WCFABAddAnimationElement = ({
       {/* choosing fields */}
       <Select onValueChange={handleSelect}>
         <SelectTrigger
-          disabled={!fieldData?.length}
           enableRightIcon={false}
           className={cn(selectTriggerVariants({ size }))}
         >
@@ -195,7 +196,6 @@ const WCFABAddAnimationElement = ({
                   {filtered?.map((field, index) => {
                     const isObject =
                       !Array.isArray(field) && typeof field === "object";
-                    const value = isObject ? field.value : toCamelCase(field);
                     const title = isObject ? field.title : field;
 
                     return (

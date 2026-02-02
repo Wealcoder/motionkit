@@ -124,7 +124,9 @@ const ExportSection = () => {
     <div className="p-[15px] bg-background-topbar border-none outline-none rounded-5">
       {/* Header */}
       <div className="w-89 h-7.5 flex items-center justify-between">
-        <h2 className="text-[15px] font-normal leading-5 text-white">Export</h2>
+        <h2 className="text-[13px] my-0 font-normal leading-5 text-white">
+          Export
+        </h2>
 
         <Button
           size="icon"

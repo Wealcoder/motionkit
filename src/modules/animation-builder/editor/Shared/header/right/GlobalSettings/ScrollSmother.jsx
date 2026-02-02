@@ -100,7 +100,7 @@ const ScrollSmother = () => {
   };
 
   return (
-    <div className="flex flex-col gap-[15px] p-3 bg-background-topbar rounded-5">
+    <div className="flex flex-col gap-[15px] p-[15px] bg-background-topbar rounded-5">
       <SwitchField
         property={{
           title: "Scroll Smother",

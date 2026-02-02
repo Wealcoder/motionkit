@@ -20,6 +20,7 @@ import StaggerField from "@/components/animations/StaggerField";
 import WidthHeightField from "@/components/animations/WidthHeightField";
 import TabsFields from "@/components/animations/TabsField";
 import TweenMethodField from "@/components/animations/TweenMethodField";
+import TweenField from "@/components/animations/TweenField";
 
 // listing all animation properties types.
 export const FIELD_COMPONENTS = {
@@ -44,6 +45,7 @@ export const FIELD_COMPONENTS = {
   "box-shadow-field": BoxShadowField,
   "stagger-field": StaggerField,
   "tween-method-field": TweenMethodField,
+  "tween-field": TweenField,
 };
 
 const AnimationPropsMapping = React.memo(
