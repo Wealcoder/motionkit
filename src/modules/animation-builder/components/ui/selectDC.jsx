@@ -16,7 +16,7 @@ const SelectGroupDC = SelectPrimitiveDC.Group;
 const SelectValueDC = SelectPrimitiveDC.Value;
 
 const SelectTriggerDC = React.forwardRef(
-  ({ className, children, ...props }, ref) => (
+  ({ className, children, enableRightIcon = true, ...props }, ref) => (
     <SelectPrimitiveDC.Trigger
       ref={ref}
       className={cn(
@@ -26,9 +26,14 @@ const SelectTriggerDC = React.forwardRef(
       {...props}
     >
       {children}
-      <SelectPrimitiveDC.Icon asChild>
-        <HugeiconsIcon icon={ArrowDown01Icon} className="h-4 w-4 opacity-50" />
-      </SelectPrimitiveDC.Icon>
+      {enableRightIcon && (
+        <SelectPrimitiveDC.Icon asChild>
+          <HugeiconsIcon
+            icon={ArrowDown01Icon}
+            className="h-4 w-4 opacity-50"
+          />
+        </SelectPrimitiveDC.Icon>
+      )}
     </SelectPrimitiveDC.Trigger>
   ),
 );

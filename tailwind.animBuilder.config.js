@@ -20,6 +20,7 @@ module.exports = {
         foreground: {
           DEFAULT: "var(--foreground)",
           secondary: "var(--foreground-secondary)",
+          tertiary: "var(--foreground-tertiary)",
         },
         background: {
           sidebar: "var(--background-primary)",

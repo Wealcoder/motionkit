@@ -1,4 +1,4 @@
-import { easeTypes, triggerTypes } from "@/config/animationsProperties";
+import { easeTypes, triggerTypes } from "@/config/dynamicPropertiesData";
 
 const defaultData = {
   triggerType: "on_scroll",

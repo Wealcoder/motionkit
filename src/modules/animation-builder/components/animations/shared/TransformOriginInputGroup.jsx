@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cssUnits } from "@/config/animationsProperties";
+import { cssUnits } from "@/config/dynamicPropertiesData";
 
 const TransformOriginInputGroup = ({
   title,
@@ -23,7 +23,9 @@ const TransformOriginInputGroup = ({
   // console.log(unit);
   return (
     <div className="h-[50px] flex flex-col gap-1.5">
-      <h2 className="text-[11px] font-normal text-[#E4E4E7] m-0 font-inter">{title}</h2>
+      <h2 className="text-[11px] font-normal text-[#E4E4E7] m-0 font-inter">
+        {title}
+      </h2>
       <InputGroup className="border-none bg-background-sidebar w-[80px] h-[27px] pl-2.5 pr-3 py-[5px] has-[[data-slot=input-group-control]:focus-visible]:ring-0 has-[>[data-align=inline-end]]:[&>input]:-pr-1">
         <InputGroupInput
           className="!text-[11px] !placeholder:text-[11px] font-normal leading-4.5 text-white p-0"

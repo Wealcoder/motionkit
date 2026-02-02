@@ -1,22 +1,27 @@
 import * as React from "react";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
-import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons/index";
-
+import { Tick02Icon } from "@hugeicons/core-free-icons/index";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@/lib/utils";
 
 const Checkbox = React.forwardRef(({ className, ...props }, ref) => (
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      "grid place-content-center peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
-      className
+      "grid place-content-center peer h-4 w-4 shrink-0 rounded-sm border-1 border-solid border-foreground-secondary data-[state=checked]:border-button-action shadow focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 bg-transparent data-[state=checked]:!bg-button-action data-[state=checked]:text-foreground",
+      className,
     )}
     {...props}
   >
     <CheckboxPrimitive.Indicator
       className={cn("grid place-content-center text-current")}
     >
-      <HugeiconsIcon icon={CheckmarkCircle02Icon} className="h-4 w-4" />
+      <HugeiconsIcon
+        icon={Tick02Icon}
+        size={12}
+        color="currentColor"
+        strokeWidth={2}
+      />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ));

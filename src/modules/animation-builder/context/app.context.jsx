@@ -19,6 +19,43 @@ const initialState = {
     isControllerOpen: true,
     isStructureOpen: false,
   },
+  // todo: need to write global settings save api and organize this context. follow bellow function for global settings.
+  // const savePresets = async () => {
+  //   await fetch(WCF_ANIMATION_BUILDER_ADMIN.ajaxurl, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/x-www-form-urlencoded",
+  //       Accept: "application/json",
+  //     },
+
+  //     body: new URLSearchParams({
+  //       action: "aae_save_anim_builder_settings",
+  //       setting_name: "wcf_anim_builder_free_animation_settings",
+  //       form_fields: JSON.stringify(allFreeAnimations),
+  //       nonce: WCF_ANIMATION_BUILDER_ADMIN.nonce,
+  //     }),
+  //   })
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       setPresetCount?.(data.count);
+  //       toast.success("Presets saved successfully!", { position: "top-right" });
+  //     });
+  // };
+  globalSettings: {
+    scrollsmoother: {
+      enableScrollSmother: true,
+      configuration: {
+        desktop: { enable: true, value: 1 },
+        laptop: { enable: true, value: 1 },
+        tablet: { enable: true, value: 1 },
+        mobile: { enable: true, value: 1 },
+      },
+    },
+    pageTransition: {
+      enter: {},
+      exit: {},
+    },
+  },
   // content sections
   contentStep: {
     step: 1,
@@ -209,7 +246,7 @@ const useMainContext = (state) => {
           toast("Animation Create Successfully");
         });
     },
-    [mainState.allAnimation, mainState.pageConfig, mainState.selectedDevice]
+    [mainState.allAnimation, mainState.pageConfig, mainState.selectedDevice],
   );
 
   const updateAnimation = useCallback(
@@ -228,7 +265,7 @@ const useMainContext = (state) => {
           pageTypeConfigs: JSON.stringify(cfg.pageTypeConfigs),
           wcf_nonce: cfg.nonce,
           animationConfigs: JSON.stringify(
-            allAnimation || mainState.allAnimation
+            allAnimation || mainState.allAnimation,
           ),
         }),
       })
@@ -239,7 +276,7 @@ const useMainContext = (state) => {
           toast("Animation Save Successfully");
         });
     },
-    [mainState.allAnimation, mainState.pageConfig]
+    [mainState.allAnimation, mainState.pageConfig],
   );
 
   const temporarySave = useCallback(
@@ -255,7 +292,7 @@ const useMainContext = (state) => {
         if (!isValid.status) {
           return updateContentData(
             { ...data?.ScrollTrigger, properties: isValid.data },
-            "ScrollTrigger"
+            "ScrollTrigger",
           );
         }
       }
@@ -263,7 +300,7 @@ const useMainContext = (state) => {
       const clonedData = structuredClone(data);
 
       const updatedDeviceAnim = deviceAnim.map((el) =>
-        el.id === clonedData.id ? clonedData : structuredClone(el)
+        el.id === clonedData.id ? clonedData : structuredClone(el),
       );
 
       const newAllAnimation = {
@@ -276,7 +313,7 @@ const useMainContext = (state) => {
 
       if (!sourceEl) {
         console.warn(
-          `Element with id ${clonedData.id} not found in current device`
+          `Element with id ${clonedData.id} not found in current device`,
         );
         return;
       }
@@ -291,7 +328,7 @@ const useMainContext = (state) => {
 
         const oldValue = structuredClone(
           oldAnimStore[parentDevice]?.find((el) => el.id === clonedData.id) ||
-            {}
+            {},
         );
 
         let found = false;
@@ -303,14 +340,14 @@ const useMainContext = (state) => {
             sourceEl,
             targetDevice,
             deviceOrder,
-            newAllAnimation
+            newAllAnimation,
           );
 
           if (isCustomized) {
             const result = deepSmartMerge(
               parentEl || sourceEl,
               targetEl,
-              oldValue
+              oldValue,
             );
 
             return result;
@@ -328,7 +365,7 @@ const useMainContext = (state) => {
 
       setAllAnimation(newAllAnimation);
     },
-    [mainState.allAnimation, mainState.contentStep, mainState.selectedDevice]
+    [mainState.allAnimation, mainState.contentStep, mainState.selectedDevice],
   );
 
   const duplicateAnimation = useCallback(
@@ -391,7 +428,7 @@ const useMainContext = (state) => {
 
       setAllAnimation(updated);
     },
-    [mainState.allAnimation, mainState.selectedDevice]
+    [mainState.allAnimation, mainState.selectedDevice],
   );
 
   const deleteAnimation = useCallback(
@@ -401,7 +438,7 @@ const useMainContext = (state) => {
 
       for (const device in mainState.allAnimation) {
         result[device] = mainState.allAnimation[device].filter(
-          (el) => el.id !== id
+          (el) => el.id !== id,
         );
       }
 
@@ -427,7 +464,7 @@ const useMainContext = (state) => {
           toast("Animation Delete Successfully");
         });
     },
-    [mainState.allAnimation, mainState.pageConfig, mainState.selectedDevice]
+    [mainState.allAnimation, mainState.pageConfig, mainState.selectedDevice],
   );
 
   const updateContentData = useCallback(
@@ -444,7 +481,7 @@ const useMainContext = (state) => {
       setContentStep(result);
       temporarySave(result.data);
     },
-    [mainState.contentStep]
+    [mainState.contentStep],
   );
 
   const updateTimelineData = useCallback(
@@ -471,7 +508,7 @@ const useMainContext = (state) => {
         }
       }
     },
-    [mainState.contentStep]
+    [mainState.contentStep],
   );
 
   const updateAnimationData = useCallback(
@@ -498,7 +535,7 @@ const useMainContext = (state) => {
         }
       }
     },
-    [mainState.contentStep]
+    [mainState.contentStep],
   );
 
   const duplicateTimeline = useCallback(
@@ -523,7 +560,7 @@ const useMainContext = (state) => {
       setContentStep(fullContent);
       temporarySave(fullContent.data);
     },
-    [mainState.contentStep]
+    [mainState.contentStep],
   );
 
   const deleteTimeline = useCallback(
@@ -536,7 +573,7 @@ const useMainContext = (state) => {
       setContentStep(fullContent);
       temporarySave(fullContent.data);
     },
-    [mainState.contentStep]
+    [mainState.contentStep],
   );
 
   const duplicateAnimationData = useCallback(
@@ -561,7 +598,7 @@ const useMainContext = (state) => {
       setContentStep(fullContent);
       temporarySave(fullContent.data);
     },
-    [mainState.contentStep]
+    [mainState.contentStep],
   );
 
   const deleteAnimationData = useCallback(
@@ -574,7 +611,7 @@ const useMainContext = (state) => {
       setContentStep(fullContent);
       temporarySave(fullContent.data);
     },
-    [mainState.contentStep]
+    [mainState.contentStep],
   );
 
   const updateResponsive = useCallback(
@@ -582,11 +619,11 @@ const useMainContext = (state) => {
       setAllAnimation({
         ...mainState.allAnimation,
         [device]: mainState.allAnimation[device].map((el) =>
-          el.id === id ? { ...el, enable: value } : el
+          el.id === id ? { ...el, enable: value } : el,
         ),
       });
     },
-    [mainState.allAnimation]
+    [mainState.allAnimation],
   );
 
   return {

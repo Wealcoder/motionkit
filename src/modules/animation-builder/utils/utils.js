@@ -8,9 +8,9 @@ export const toCamelCase = (str = "") => {
     .replace(/^(.)/, (_, c) => c.toLowerCase());
 };
 
-export const trimString = (str = "", limit = 0) => {
+export const trimString = (str = "", limit = "full") => {
   if (!str) return;
-  if (limit === 0) return str;
+  if (limit === "full") return str;
   if (str?.length > limit) {
     return str.slice(0, limit) + "...";
   }

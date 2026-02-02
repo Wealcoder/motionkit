@@ -13,6 +13,7 @@ const SwitchField = ({
 }) => {
   const {
     title = "title",
+    titleLength = 15,
     tooltipContent = "Enable functionality",
     isRequired = false,
     isCustomAnim = false,
@@ -31,7 +32,7 @@ const SwitchField = ({
       <div className="flex flex-col justify-between gap-3 rounded-lg sm:flex-row sm:items-center">
         {/* left title + tooltip */}
         <div className="flex items-center gap-[6px]">
-          <span className="wcf-ab-title">{trimString(title, 15)}</span>
+          <span className="wcf-ab-title">{trimString(title, titleLength)}</span>
           {property?.tooltipContent && (
             <ToolTipWrapper text={property?.tooltipContent} />
           )}

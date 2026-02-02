@@ -83,7 +83,7 @@ const WCFABSelect = ({
     if (!fieldData[0]?.options) {
       return [
         {
-          label: null,
+          groupName: null,
           options: fieldData,
         },
       ];
@@ -94,8 +94,8 @@ const WCFABSelect = ({
 
   // Search filter
   const filterOptions = (options) =>
-    options.filter((item) => {
-      const title = typeof item === "object" ? item.title : String(item);
+    options?.filter((item) => {
+      const title = typeof item === "object" ? item?.title : String(item);
       return title.toLowerCase().includes(search.toLowerCase());
     });
 
@@ -128,9 +128,9 @@ const WCFABSelect = ({
 
             return (
               <SelectGroup key={groupIndex} className="p-[3px]">
-                {group.label && (
+                {group?.groupName && (
                   <SelectLabel className="px-2 py-1 text-[12px] font-bold text-muted-foreground border-b border-b-[var(--background-secondary)] select-none">
-                    {group.label}
+                    {group?.groupName ?? ""}
                   </SelectLabel>
                 )}
 
