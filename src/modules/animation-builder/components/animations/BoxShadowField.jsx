@@ -13,12 +13,12 @@ import {
   Settings03Icon,
   Sun01Icon,
 } from "@hugeicons/core-free-icons/index";
-import PopoverModalInputGroup from "@/components/animations/shared/PopoverModalInputGroup";
 import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import { parseDropShadow } from "@/utils/dropShadowHelper";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import { Switch } from "@/components/ui/switch";
+import PopoverModalInputGroup from "./blocks/PopoverModalInputGroup";
 
 const BoxShadowField = ({
   property = {},

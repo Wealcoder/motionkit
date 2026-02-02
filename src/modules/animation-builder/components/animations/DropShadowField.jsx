@@ -13,7 +13,7 @@ import {
   Settings03Icon,
   Sun01Icon,
 } from "@hugeicons/core-free-icons/index";
-import PopoverModalInputGroup from "@/components/animations/shared/PopoverModalInputGroup";
+import PopoverModalInputGroup from "@/components/animations/blocks/PopoverModalInputGroup";
 import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import { parseDropShadow } from "@/utils/dropShadowHelper";
