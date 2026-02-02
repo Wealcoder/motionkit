@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Popover,
   PopoverContent,
@@ -13,12 +13,11 @@ import {
   Settings03Icon,
   Sun01Icon,
 } from "@hugeicons/core-free-icons/index";
-import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import { parseDropShadow } from "@/utils/dropShadowHelper";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
-import { Switch } from "@/components/ui/switch";
-import PopoverModalInputGroup from "./blocks/PopoverModalInputGroup";
+import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
+import { parseCssValue, toCssValue } from "@/utils/cssHelper";
 
 const BoxShadowField = ({
   property = {},
@@ -27,15 +26,8 @@ const BoxShadowField = ({
   onValueChange = () => {},
   onDelete = () => {},
 }) => {
-  const buildBoxShadow = ({ offsetX, offsetY, blur, spread, color, inset }) => {
-    if (inset)
-      return `box-shadow(inset ${offsetX}px ${offsetY}px ${blur}px ${spread}px ${color})`;
-    return `box-shadow(${offsetX}px ${offsetY}px ${blur}px ${spread}px ${color})`;
-  };
-
   const properties = [
     {
-      key: "offsetX",
       title: "Offset X",
       icon: (
         <HugeiconsIcon
@@ -46,9 +38,9 @@ const BoxShadowField = ({
         />
       ),
       path: "dropShadowOffsetX",
+      fieldType: "block-input",
     },
     {
-      key: "offsetY",
       title: "Offset Y",
       icon: (
         <HugeiconsIcon
@@ -59,9 +51,9 @@ const BoxShadowField = ({
         />
       ),
       path: "dropShadowOffsetY",
+      fieldType: "block-input",
     },
     {
-      key: "blur",
       title: "Blur",
       icon: (
         <HugeiconsIcon
@@ -72,9 +64,9 @@ const BoxShadowField = ({
         />
       ),
       path: "dropShadowBlur",
+      fieldType: "block-input",
     },
     {
-      key: "spread",
       title: "Spread",
       icon: (
         <HugeiconsIcon
@@ -85,6 +77,17 @@ const BoxShadowField = ({
         />
       ),
       path: "dropShadowSpread",
+      fieldType: "block-input",
+    },
+    {
+      title: "Color",
+      path: "color",
+      fieldType: "block-color",
+    },
+    {
+      title: "Inner Shadow",
+      path: "innerShadow",
+      fieldType: "switch-field",
     },
   ];
 
@@ -99,29 +102,73 @@ const BoxShadowField = ({
     ...rest
   } = property || {};
 
-  const [shadow, setShadow] = useState(() => parseDropShadow(value));
+  const [shadow, setShadow] = useState({});
+  const [selectedUnit, setSelectedUnit] = useState("px");
 
   useEffect(() => {
     if (!value) return;
+    const parsedValue = value
+      ?.split(" ")
+      ?.filter(Boolean)
+      ?.map((unit) => parseCssValue(unit, selectedUnit))
+      ?.map((item, index) => {
+        const { value } = item || {};
+        const { path } = properties[index];
+        return { [path]: value };
+      })
+      ?.filter(Boolean);
 
-    setShadow((prev) => {
-      const parsed = parseDropShadow(value);
-      return JSON.stringify(prev) === JSON.stringify(parsed) ? prev : parsed;
-    });
+    console.log({ parsedValue });
+
+    return;
+    setShadow(parsedValue?.value);
+    setSelectedUnit(parsedValue?.unit);
   }, [value]);
 
-  const updateShadow = (next) => {
-    setShadow((prev) => {
-      const updatedValues = { ...prev, ...next };
-
-      const result = {
-        boxShadow: buildBoxShadow(updatedValues),
-      };
-      onValueChange(result);
-
-      return updatedValues;
-    });
+  const updateValue = (next = {}) => {
+    // const nextValue = next.value ?? shadow ?? 0;
+    // const nextUnit = next.unit ?? selectedUnit ?? "px";
+    console.log({ next });
+    // onValueChange(toCssValue(nextValue, nextUnit));
   };
+
+  // useEffect(() => {
+  //   if (!value) return;
+
+  //   setShadow((prev) => {
+  //     const parsed = parseDropShadow(value);
+  //     return JSON.stringify(prev) === JSON.stringify(parsed) ? prev : parsed;
+  //   });
+  // }, [value]);
+
+  // mapping page transition fields
+  const fields = useMemo(() => {
+    return properties
+      ?.map((property, index) => {
+        const { path = "", fieldType = null } = property || {};
+        if (!path || !fieldType) return null;
+
+        // choosing dynamic properties field rendering styles.
+        property.size = "lg";
+
+        return (
+          <AnimationPropsMapping
+            key={`${path}${index}`}
+            property={property}
+            defaultData={shadow}
+            contentStep={shadow}
+            updateContentData={(value) => {
+              console.log("updateContentData", { value });
+              setShadow(value);
+              updateValue(value);
+            }}
+          />
+        );
+      })
+      .filter(Boolean);
+  }, [properties]);
+
+  // console.log(fields);
 
   return (
     <div className="flex items-center justify-between">
@@ -145,42 +192,9 @@ const BoxShadowField = ({
             align="end"
             className="bg-popover w-[204px] h-[233px] p-3 flex flex-col gap-2.5"
           >
-            {/* popover input fields */}
+            {/* popover modal fields */}
             <div className="grid grid-cols-2 gap-2.5">
-              {properties.map((field) => (
-                <PopoverModalInputGroup
-                  key={field.key}
-                  title={field.title}
-                  icon={field.icon}
-                  value={shadow[field.key]}
-                  unit="px"
-                  onValueChange={(val) => updateShadow({ [field.key]: val })}
-                />
-              ))}
-            </div>
-
-            {/* popover color picker */}
-            <div className="flex flex-col gap-1.5 [&_input]:!bg-background-sidebar [&_input]:!max-w-[150px] [&_input:hover]:!bg-background-sidebar [&_input:focus-visible]:!bg-background-sidebar">
-              <label className="text-[11px] font-normal text-[#E4E4E7] m-0 font-inter">
-                Color
-              </label>
-              <WCFABColorPicker
-                value={shadow.color}
-                onValueChange={(val) => updateShadow({ color: val })}
-              />
-            </div>
-            {/* switch field */}
-            <div className="flex items-center justify-between h-7">
-              <div>
-                <h2 className="text-[11px] font-normal text-[#E4E4E7] m-0 font-inter">
-                  Inner Shadow
-                </h2>
-              </div>
-              <Switch
-                onCheckedChange={(val) => updateShadow({ inset: val })}
-                id="airplane-mode"
-                className="wcf-ab-switch-field"
-              />
+              {fields?.map((item) => item)}
             </div>
           </PopoverContent>
         </Popover>

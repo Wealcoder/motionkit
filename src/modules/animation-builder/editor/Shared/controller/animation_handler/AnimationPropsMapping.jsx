@@ -21,9 +21,16 @@ import TabsFields from "@/components/animations/TabsField";
 import TweenMethodField from "@/components/animations/TweenMethodField";
 import DirectionField from "@/components/animations/DirectionField";
 import TweenField from "@/components/animations/TweenField";
+import PopoverModalInputGroup from "@/components/animations/blocks/PopoverModalInputGroup";
+import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
 
 // listing all animation properties types.
 export const FIELD_COMPONENTS = {
+  // blocks
+  "block-input": PopoverModalInputGroup,
+  "block-color": WCFABColorPicker,
+
+  // animation properties fields
   "text-field": TextField,
   "number-field": NumberField,
   "number-field-2": NumberField2,

@@ -16,6 +16,7 @@ const defaultData = {
   code: "",
   repeat: -1,
   tabs: {},
+  boxShadow:"10px 5px 5px #ffffffff",
 };
 
 const config = {

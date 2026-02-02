@@ -1,18 +1,35 @@
+import { cssUnits } from "@/config/dynamicPropertiesData";
+
 // Parse a CSS value string into { value, unit }
-export const parseCssValue = (cssValue, defaultUnit = "px") => {
-  if (!cssValue || typeof cssValue !== "string") {
-    return { value: 0, unit: defaultUnit };
-  }
+const ALLOWED_UNITS = new Set(cssUnits.map((u) => u.value));
+
+export const isValidCssValue = (cssValue) => {
+  if (!cssValue || typeof cssValue !== "string") return false;
+
   const trimmed = cssValue.trim();
-  const match = trimmed.match(/^(-?\d*\.?\d+)([a-z%]+)$/i);
-  if (!match) {
+
+  // split number + unit
+  const numberPart = parseFloat(trimmed);
+  if (Number.isNaN(numberPart)) return false;
+
+  const unitPart = trimmed.replace(numberPart.toString(), "");
+
+  return ALLOWED_UNITS.has(unitPart);
+};
+
+
+export const parseCssValue = (cssValue, defaultUnit = "px") => {
+  if (!isValidCssValue(cssValue)) {
     return { value: 0, unit: defaultUnit };
   }
-  return {
-    value: Number(match[1]),
-    unit: match[2],
-  };
+
+  const value = parseFloat(cssValue);
+  const unit = cssValue.replace(value.toString(), "");
+
+  return { value, unit };
 };
+
+
 
 // Convert number + unit into a valid CSS value
 export const toCssValue = (value, unit) => {
