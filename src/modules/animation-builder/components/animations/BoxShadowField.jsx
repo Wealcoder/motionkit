@@ -14,7 +14,6 @@ import {
   Sun01Icon,
 } from "@hugeicons/core-free-icons/index";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
-import { parseDropShadow } from "@/utils/dropShadowHelper";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 import { parseCssValue, toCssValue } from "@/utils/cssHelper";
@@ -102,34 +101,56 @@ const BoxShadowField = ({
     ...rest
   } = property || {};
 
+  const selectedUnit = "px";
   const [shadow, setShadow] = useState({});
-  const [selectedUnit, setSelectedUnit] = useState("px");
+
+  // splitting box shadow value by value and unit
+  function mapBoxShadowValue(parsed) {
+    return {
+      innerShadow: parsed[0]?.value === "inset",
+      dropShadowOffsetX: parsed[1]?.value ?? 0,
+      dropShadowOffsetY: parsed[2]?.value ?? 0,
+      dropShadowBlur: parsed[3]?.value ?? 0,
+      dropShadowSpread: parsed[4]?.value ?? 0,
+      color: parsed[5]?.value ?? "transparent",
+    };
+  }
+
+  // converting box shadow data to css string
+  function toBoxShadowString(data) {
+    const {
+      innerShadow,
+      dropShadowOffsetX,
+      dropShadowOffsetY,
+      dropShadowBlur,
+      dropShadowSpread,
+      color,
+    } = data || {};
+
+    const parts = [];
+    if (innerShadow) parts.push("inset");
+    parts.push(
+      toCssValue(dropShadowOffsetX, selectedUnit),
+      toCssValue(dropShadowOffsetY, selectedUnit),
+      toCssValue(dropShadowBlur, selectedUnit),
+      toCssValue(dropShadowSpread, selectedUnit),
+      color,
+    );
+    return parts.join(" ");
+  }
 
   useEffect(() => {
     if (!value) return;
     const parsedValue = value
       ?.split(" ")
-      ?.filter(Boolean)
-      ?.map((unit) => parseCssValue(unit, selectedUnit))
-      ?.map((item, index) => {
-        const { value } = item || {};
-        const { path } = properties[index];
-        return { [path]: value };
-      })
-      ?.filter(Boolean);
-
-    console.log({ parsedValue });
-
-    return;
-    setShadow(parsedValue?.value);
-    setSelectedUnit(parsedValue?.unit);
+      ?.map((unit) => parseCssValue(unit, selectedUnit));
+    const mappedData = mapBoxShadowValue(parsedValue);
+    setShadow(mappedData);
   }, [value]);
 
   const updateValue = (next = {}) => {
-    // const nextValue = next.value ?? shadow ?? 0;
-    // const nextUnit = next.unit ?? selectedUnit ?? "px";
-    console.log({ next });
-    // onValueChange(toCssValue(nextValue, nextUnit));
+    const nextValue = next.value ?? shadow ?? 0;
+    onValueChange(toBoxShadowString(nextValue));
   };
 
   // mapping page transition fields
@@ -138,7 +159,6 @@ const BoxShadowField = ({
       ?.map((property, index) => {
         const { path = "", fieldType = null } = property || {};
         if (!path || !fieldType) return null;
-
         // choosing dynamic properties field rendering styles.
         property.size = "lg";
 
@@ -149,7 +169,6 @@ const BoxShadowField = ({
             defaultData={shadow}
             contentStep={shadow}
             updateContentData={(value) => {
-              console.log("updateContentData", { value:value?.data });
               setShadow(value?.data);
               updateValue(value?.data);
             }}
@@ -190,7 +209,10 @@ const BoxShadowField = ({
 
             {/* Color */}
             <div className="w-full [&>div]:gap-[3px] [&_input]:!max-w-[150px] flex flex-col gap-1.5 [&_input]:!bg-background-sidebar [&_input:hover]:!bg-background-sidebar [&_input:focus-visible]:!bg-background-sidebar">
-              <h2 className="text-[11px] text-[#E4E4E7] font-normal leading-[17px] m-0">Color</h2> {fields?.[4]}
+              <h2 className="text-[11px] text-[#E4E4E7] font-normal leading-[17px] m-0">
+                Color
+              </h2>{" "}
+              {fields?.[4]}
             </div>
 
             {/* Inner Shadow */}
