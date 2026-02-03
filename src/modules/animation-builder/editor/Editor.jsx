@@ -9,6 +9,19 @@ import { disableIframeLinks } from "@/lib/editor/editor";
 export default function Editor() {
   // MAJOR (DO NOT DELETE THIS) : initiating iframe and editor communication
   useIframeMessageBridge();
+  // Editor
+  const {
+    isLoading,
+    mainState,
+    settings,
+    toggleController,
+    setEditorZoomLevel,
+    resetEditorPreview,
+  } = useKernel();
+  const { selectedDevice } = useDeviceConfig();
+  const device = getScreenSize(selectedDevice) || {};
+
+  // console.log({ mainState });
 
   const handleWheel = (e) => {
     e.preventDefault();

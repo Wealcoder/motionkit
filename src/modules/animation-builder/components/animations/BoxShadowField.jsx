@@ -149,7 +149,7 @@ const BoxShadowField = ({
             defaultData={shadow}
             contentStep={shadow}
             updateContentData={(value) => {
-              console.log("updateContentData", { value:value?.data });
+              // console.log("updateContentData", { value:value?.data });
               setShadow(value?.data);
               updateValue(value?.data);
             }}

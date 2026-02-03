@@ -69,6 +69,7 @@ module.exports = {
         popover: {
           DEFAULT: "var(--popover)",
         },
+        
       },
       fontFamily: {
         inter: "Inter, sans-serif",

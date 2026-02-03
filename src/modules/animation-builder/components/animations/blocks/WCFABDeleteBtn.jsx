@@ -9,8 +9,8 @@ const deleteBtnVariants = cva(
   {
     variants: {
       size: {
-        sm: "h-3 w-3",
-        md: "h-4 w-4",
+        sm: "h-2 w-2",
+        md: "h-2 w-2",
         lg: "h-5 w-5",
       },
     },
@@ -26,7 +26,7 @@ const WCFABDeleteBtn = ({ size = "", onDelete = () => {} }) => {
       onClick={() => onDelete()}
       className={cn(deleteBtnVariants({ size }))}
     >
-      <HugeiconsIcon icon={Delete01Icon} size={12} strokeWidth={2} />
+      <HugeiconsIcon icon={Delete01Icon} size={11} strokeWidth={1.2} />
     </Button>
   );
 };

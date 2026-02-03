@@ -23,6 +23,7 @@ import DirectionField from "@/components/animations/DirectionField";
 import TweenField from "@/components/animations/TweenField";
 import PopoverModalInputGroup from "@/components/animations/blocks/PopoverModalInputGroup";
 import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
+import StrokeField from "@/components/animations/StrokeField";
 
 // listing all animation properties types.
 export const FIELD_COMPONENTS = {
@@ -53,6 +54,7 @@ export const FIELD_COMPONENTS = {
   "tween-method-field": TweenMethodField,
   "direction-field": DirectionField,
   "tween-field": TweenField,
+  "stroke-field": StrokeField,
 };
 
 const AnimationPropsMapping = React.memo(

@@ -16,7 +16,7 @@ const defaultData = {
   code: "",
   repeat: -1,
   tabs: {},
-  boxShadow:"10px 5px 5px #ffffffff",
+  boxShadow:"10px 5px 5px 5px #ffffffff",
 };
 
 const config = {
@@ -307,6 +307,12 @@ const config = {
           title: "Direction",
           fieldType: "direction-field",
           path: "direction",
+          isCustomAnim: true,
+        }, 
+         {
+          title: "Stroke",
+          fieldType: "stroke-field",
+          path: "stroke",
           isCustomAnim: true,
         }, 
       ],

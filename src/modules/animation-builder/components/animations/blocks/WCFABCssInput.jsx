@@ -139,7 +139,9 @@ const WCFABCssInput = ({
   const updateValue = (next = {}) => {
     const nextValue = next.value ?? inputValue ?? 0;
     const nextUnit = next.unit ?? selectedUnit ?? "px";
-    onValueChange(toCssValue(nextValue, nextUnit));
+    const result=toCssValue(nextValue, nextUnit)
+    console.log(result)
+    onValueChange(result);
   };
 
   const onDebounceChange = useCallback(
