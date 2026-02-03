@@ -132,15 +132,6 @@ const BoxShadowField = ({
     // onValueChange(toCssValue(nextValue, nextUnit));
   };
 
-  // useEffect(() => {
-  //   if (!value) return;
-
-  //   setShadow((prev) => {
-  //     const parsed = parseDropShadow(value);
-  //     return JSON.stringify(prev) === JSON.stringify(parsed) ? prev : parsed;
-  //   });
-  // }, [value]);
-
   // mapping page transition fields
   const fields = useMemo(() => {
     return properties
@@ -158,9 +149,9 @@ const BoxShadowField = ({
             defaultData={shadow}
             contentStep={shadow}
             updateContentData={(value) => {
-              console.log("updateContentData", { value });
-              setShadow(value);
-              updateValue(value);
+              console.log("updateContentData", { value:value?.data });
+              setShadow(value?.data);
+              updateValue(value?.data);
             }}
           />
         );
@@ -192,10 +183,18 @@ const BoxShadowField = ({
             align="end"
             className="bg-popover w-[204px] h-[233px] p-3 flex flex-col gap-2.5"
           >
-            {/* popover modal fields */}
+            {/* Offsets */}
             <div className="grid grid-cols-2 gap-2.5">
-              {fields?.map((item) => item)}
+              {fields?.slice(0, 4).map((item) => item)}
             </div>
+
+            {/* Color */}
+            <div className="w-full [&>div]:gap-[3px] [&_input]:!max-w-[150px] flex flex-col gap-1.5 [&_input]:!bg-background-sidebar [&_input:hover]:!bg-background-sidebar [&_input:focus-visible]:!bg-background-sidebar">
+              <h2 className="text-[11px] text-[#E4E4E7] font-normal leading-[17px] m-0">Color</h2> {fields?.[4]}
+            </div>
+
+            {/* Inner Shadow */}
+            <div className="w-full min-h-7">{fields?.[5]}</div>
           </PopoverContent>
         </Popover>
 
