@@ -129,6 +129,8 @@ const WCFABCssInput = ({
   const [inputValue, setInputValue] = useState(value || "0px");
   const [selectedUnit, setSelectedUnit] = useState("px");
 
+  // console.log(selectedUnit)
+
   // sync incoming value
   useEffect(() => {
     const parsedValue = parseCssValue(value, "px");
@@ -140,7 +142,7 @@ const WCFABCssInput = ({
     const nextValue = next.value ?? inputValue ?? 0;
     const nextUnit = next.unit ?? selectedUnit ?? "px";
     const result=toCssValue(nextValue, nextUnit)
-    console.log(result)
+    // console.log(result)
     onValueChange(result);
   };
 

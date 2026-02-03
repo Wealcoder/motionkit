@@ -24,11 +24,17 @@ import TweenField from "@/components/animations/TweenField";
 import PopoverModalInputGroup from "@/components/animations/blocks/PopoverModalInputGroup";
 import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
 import StrokeField from "@/components/animations/StrokeField";
+import PaddingField from "@/components/animations/PaddingField";
+import WCFABCssInput from "@/components/animations/blocks/WCFABCssInput";
+import MarginField from "@/components/animations/MarginField";
+import BorderField from "@/components/animations/BorderField";
+import BorderRadiusField from "@/components/animations/BorderRadiusField";
 
 // listing all animation properties types.
 export const FIELD_COMPONENTS = {
   // blocks
   "block-input": PopoverModalInputGroup,
+  "block-input-unit-select": WCFABCssInput,
   "block-color": WCFABColorPicker,
 
   // animation properties fields
@@ -55,6 +61,10 @@ export const FIELD_COMPONENTS = {
   "direction-field": DirectionField,
   "tween-field": TweenField,
   "stroke-field": StrokeField,
+  "padding-field": PaddingField,
+  "margin-field": MarginField,
+  "border-field": BorderField,
+  "border-radius-field": BorderRadiusField,
 };
 
 const AnimationPropsMapping = React.memo(

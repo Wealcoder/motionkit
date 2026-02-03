@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import { Settings03Icon } from "@hugeicons/core-free-icons";
 import {
@@ -6,19 +6,30 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import WCFABCssInput from "@/components/animations/blocks/WCFABCssInput";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import { HugeiconsIcon } from "@hugeicons/react";
-import WCFABColorPicker from "@/components/animations/blocks/WCFABColorPicker";
 import { Button } from "@/components/ui/button";
+import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
+import { parseCssValue, toCssValue } from "@/utils/cssHelper";
 
 const StrokeField = ({
   property = {},
-  value = {},
+  value = "",
   onValueChange = () => {},
   onDisabledUpdate = () => {},
   onDelete = () => {},
 }) => {
+  const properties = [
+    {
+      path: "strokeWidth",
+      fieldType: "block-input-unit-select",
+    },
+    {
+      path: "color",
+      fieldType: "block-color",
+    },
+  ];
+
   const {
     title = "Stroke",
     tooltipContent = "Stroke Value",
@@ -30,22 +41,73 @@ const StrokeField = ({
     ...rest
   } = property || {};
 
-  //   const [stroke, setStroke] = useState(() => {
-  //     const parsedValue = parseStrokeValues(value, "px");
-  //     return {
-  //       size: parsedValue.size ?? 0,
-  //       unit: parsedValue.unit ?? "px",
-  //       color: parsedValue.color ?? "#000000",
-  //     };
-  //   });
+  const selectedUnit = "px";
+  const [stroke, setStroke] = useState({});
   const [isDataValid, setIsDataValid] = useState(false);
 
-  //   // helper to send data to HOC
-  //   const updateStroke = (next) => {
-  //     const updatedValues = { ...stroke, ...next };
-  //     setStroke(updatedValues);
-  //     onValueChange(buildStrokeValues(updatedValues));
-  //   };
+  // console.log("incoming stroke values", value);
+  console.log("stroke state values", stroke);
+
+  // splitting stroke value by value and unit
+  function mapStrokeValue(parsed) {
+    // console.log({parsed})
+    return {
+      strokeWidth: parsed[0]?.value ?? 0,
+      color: parsed[1]?.value ?? "transparent",
+    };
+  }
+
+  // converting stroke data to css string
+  function toStrokeString(data) {
+    const { strokeWidth, color } = data || {};
+
+    const parts = [];
+    parts.push(toCssValue(strokeWidth, selectedUnit), color);
+    return parts.join(" ");
+  }
+
+  useEffect(() => {
+    if (!value) return;
+    const parsedValue = value
+      ?.split(" ")
+      ?.map((unit) => parseCssValue(unit, selectedUnit));
+      const mappedData = mapStrokeValue(parsedValue);
+      console.log("mapped data :", mappedData);
+    setStroke(mappedData);
+  }, [value]);
+
+  const updateValue = (next = {}) => {
+    // console.log("next value :",next)
+    const nextValue = next.value ?? stroke ?? 0;
+    const result = toStrokeString(nextValue);
+    // console.log("outgoing box value :", result)
+    onValueChange(result);
+  };
+
+  // mapping page transition fields
+  const fields = useMemo(() => {
+    return properties
+      ?.map((property, index) => {
+        const { path = "", fieldType = null } = property || {};
+        if (!path || !fieldType) return null;
+        // choosing dynamic properties field rendering styles.
+        property.size = "lg";
+
+        return (
+          <AnimationPropsMapping
+            key={`${path}${index}`}
+            property={property}
+            defaultData={stroke}
+            contentStep={stroke}
+            updateContentData={(value) => {
+              setStroke(value?.data);
+              updateValue(value?.data);
+            }}
+          />
+        );
+      })
+      .filter(Boolean);
+  }, [properties]);
 
   return (
     <div className="w-64 h-7 p-0.5">
@@ -65,17 +127,16 @@ const StrokeField = ({
                 />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="max-w-[150px] h-21 bg-[#303033] rounded-md p-2.5 flex flex-col gap-2">
-              <div className="[&>div]:!bg-background-sidebar [&>div]:!min-w-[130px] [&>div:hover]:!bg-background-sidebar [&>div:focus-visible]:!bg-background-sidebar [&_button]:!bg-[#303033]">
-                <WCFABCssInput
-                  property={property}
-                  value={value}
-                  onValueChange={onValueChange}
-                />
+            <PopoverContent
+              align="end"
+              className="max-w-[150px] h-21 bg-[#303033] rounded-md p-2.5 flex flex-col gap-2"
+            >
+              <div className="[&>div]:!bg-[#18181B] [&>div]:!min-w-[130px] [&>div]:!max-h-7 [&>div:hover]:!bg-[#18181B] [&>div:focus-visible]:!bg-[#18181B] [&_button]:!bg-[#303033]">
+                {fields?.[0]}
               </div>
               {/* color picker field */}
               <div className="[&_input]:!bg-background-sidebar [&_input:hover]:!bg-background-sidebar [&_input:focus-visible]:!bg-background-sidebar">
-                <WCFABColorPicker />
+                {fields?.[1]}
               </div>
             </PopoverContent>
           </Popover>

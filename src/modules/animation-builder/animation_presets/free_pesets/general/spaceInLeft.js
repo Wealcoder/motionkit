@@ -16,7 +16,12 @@ const defaultData = {
   code: "",
   repeat: -1,
   tabs: {},
-  boxShadow:"10px 5px 5px 5px #ffffffff",
+  boxShadow:"inset 10px 5px 5px 5px #000000",
+  dropShadow:"10px 5px 5px 5px #000000",
+  padding:"3px 5px 7px 9px",
+  margin:"3px 5px 7px 9px",
+  border:"3px 5px 7px 9px",
+  stroke:"3px #000000",
 };
 
 const config = {
@@ -313,6 +318,30 @@ const config = {
           title: "Stroke",
           fieldType: "stroke-field",
           path: "stroke",
+          isCustomAnim: true,
+        }, 
+         {
+          title: "Padding",
+          fieldType: "padding-field",
+          path: "padding",
+          isCustomAnim: true,
+        }, 
+         {
+          title: "Margin",
+          fieldType: "margin-field",
+          path: "margin",
+          isCustomAnim: true,
+        }, 
+         {
+          title: "Border",
+          fieldType: "border-field",
+          path: "border",
+          isCustomAnim: true,
+        }, 
+         {
+          title: "Border Radius",
+          fieldType: "border-radius-field",
+          path: "radius",
           isCustomAnim: true,
         }, 
       ],

@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/selectDC";
+import { cssUnits } from "@/config/dynamicPropertiesData";
 
 const units = [
   { title: "%", value: "%" },
@@ -36,12 +37,8 @@ const PopoverModalInputGroup = ({
     icon = null,
     path = "",
     isUnitSelection = false,
+    ...rest
   } = property;
-
-  console.log({ value });
-
-  // const [inputValue, setInputValue] = useState(value || "0px");
-  // const [selectedUnit, setSelectedUnit] = useState("px");
 
   return (
     <div className="h-[50px] max-w-[84px] flex flex-col gap-1.5">
@@ -68,7 +65,7 @@ const PopoverModalInputGroup = ({
                 <SelectValue placeholder={unit} />
               </SelectTrigger>
               <SelectContent>
-                {units?.map((field, index) => (
+                {cssUnits?.map((field, index) => (
                   <SelectItem key={index} value={field.value}>
                     {field.title}
                   </SelectItem>

@@ -6,19 +6,14 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  ArrowHorizontalIcon,
-  ArrowVerticalIcon,
-  BlurIcon,
-  Settings03Icon,
-  Sun01Icon,
-} from "@hugeicons/core-free-icons/index";
+import { DashedLine02Icon } from "@hugeicons/core-free-icons/index";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 import { parseCssValue, toCssValue } from "@/utils/cssHelper";
+import WCFABCssInput from "@/components/animations/blocks/WCFABCssInput";
 
-const DropShadowField = ({
+const MarginField = ({
   property = {},
   value = "",
   onDisabledUpdate = () => {},
@@ -27,61 +22,56 @@ const DropShadowField = ({
 }) => {
   const properties = [
     {
-      title: "Offset X",
+      title: "Top",
       icon: (
         <HugeiconsIcon
-          icon={ArrowHorizontalIcon}
+          icon={DashedLine02Icon}
           color="currentColor"
           strokeWidth={1}
           className="text-[#E4E4E7] "
         />
       ),
-      path: "dropShadowOffsetX",
+      path: "marginTop",
       fieldType: "block-input",
     },
     {
-      title: "Offset Y",
+      title: "Right",
       icon: (
         <HugeiconsIcon
-          icon={ArrowVerticalIcon}
+          icon={DashedLine02Icon}
           color="currentColor"
           strokeWidth={1}
           className="text-[#E4E4E7] "
         />
       ),
-      path: "dropShadowOffsetY",
+      path: "marginRight",
       fieldType: "block-input",
     },
     {
-      title: "Blur",
+      title: "Bottom",
       icon: (
         <HugeiconsIcon
-          icon={BlurIcon}
+          icon={DashedLine02Icon}
           color="currentColor"
           strokeWidth={1}
           className="text-[#E4E4E7] "
         />
       ),
-      path: "dropShadowBlur",
+      path: "marginBottom",
       fieldType: "block-input",
     },
     {
-      title: "Spread",
+      title: "Left",
       icon: (
         <HugeiconsIcon
-          icon={Sun01Icon}
+          icon={DashedLine02Icon}
           color="currentColor"
           strokeWidth={1}
           className="text-[#E4E4E7] "
         />
       ),
-      path: "dropShadowSpread",
+      path: "marginLeft",
       fieldType: "block-input",
-    },
-    {
-      title: "Color",
-      path: "color",
-      fieldType: "block-color",
     },
   ];
   const {
@@ -96,39 +86,27 @@ const DropShadowField = ({
   } = property || {};
 
   const selectedUnit = "px";
-  const [shadow, setShadow] = useState({});
+  const [margin, setMargin] = useState({});
 
-  // console.log("drop shadow value:", shadow);
-
-  function mapDropShadowValue(parsed) {
+  function mapMarginValue(parsed) {
     return {
-      dropShadowOffsetX: parsed[0]?.value ?? 0,
-      dropShadowOffsetY: parsed[1]?.value ?? 0,
-      dropShadowBlur: parsed[2]?.value ?? 0,
-      dropShadowSpread: parsed[3]?.value ?? 0,
-      color: parsed[4]?.value ?? "transparent",
+      marginTop: parsed[0]?.value ?? 0,
+      marginRight: parsed[1]?.value ?? 0,
+      marginBottom: parsed[2]?.value ?? 0,
+      marginLeft: parsed[3]?.value ?? 0,
     };
   }
 
   // converting box shadow data to css string
-  function toDropShadowString(data) {
-    // console.log("latest values to send", data);
-
-    const {
-      dropShadowOffsetX,
-      dropShadowOffsetY,
-      dropShadowBlur,
-      dropShadowSpread,
-      color,
-    } = data || {};
+  function toMarginString(data) {
+    const { marginTop, marginRight, marginBottom, marginLeft } = data || {};
 
     const parts = [];
     parts.push(
-      toCssValue(dropShadowOffsetX, selectedUnit),
-      toCssValue(dropShadowOffsetY, selectedUnit),
-      toCssValue(dropShadowBlur, selectedUnit),
-      toCssValue(dropShadowSpread, selectedUnit),
-      color,
+      toCssValue(marginTop, selectedUnit),
+      toCssValue(marginRight, selectedUnit),
+      toCssValue(marginBottom, selectedUnit),
+      toCssValue(marginLeft, selectedUnit),
     );
     return parts.join(" ");
   }
@@ -138,14 +116,13 @@ const DropShadowField = ({
     const parsedValue = value
       ?.split(" ")
       ?.map((unit) => parseCssValue(unit, selectedUnit));
-    const mappedData = mapDropShadowValue(parsedValue);
-    setShadow(mappedData);
+    const mappedData = mapMarginValue(parsedValue);
+    setMargin(mappedData);
   }, [value]);
 
   const updateValue = (next = {}) => {
-    const nextValue = next.value ?? shadow ?? 0;
-    const result = toDropShadowString(nextValue);
-    // console.log("outgoing drop value :", result);
+    const nextValue = next.value ?? margin ?? 0;
+    const result = toMarginString(nextValue);
     onValueChange(result);
   };
 
@@ -162,10 +139,10 @@ const DropShadowField = ({
           <AnimationPropsMapping
             key={`${path}${index}`}
             property={property}
-            defaultData={shadow}
-            contentStep={shadow}
+            defaultData={margin}
+            contentStep={margin}
             updateContentData={(value) => {
-              setShadow(value?.data);
+              setMargin(value?.data);
               updateValue(value?.data);
             }}
           />
@@ -179,13 +156,18 @@ const DropShadowField = ({
       {/* title and tooltip */}
       <WCFABLabel title={title} tooltipContent={tooltipContent} />
 
-      {/* right side popover and delete button */}
-      <div className="flex items-center gap-3">
+      {/* right side input, popover and delete button */}
+      <div className="flex items-center gap-2">
+         <WCFABCssInput
+          property={property}
+          value={value}
+          onValueChange={onValueChange}
+        />
         <Popover>
           <PopoverTrigger asChild>
             <Button className="wcf-ab-button-icon">
               <HugeiconsIcon
-                icon={Settings03Icon}
+                icon={DashedLine02Icon}
                 color="#A1A1AA"
                 strokeWidth={1.5}
                 className="w-3.5 h-3.5 text-white"
@@ -194,19 +176,11 @@ const DropShadowField = ({
           </PopoverTrigger>
           <PopoverContent
             align="end"
-            className="bg-popover w-[204px] h-[195px] p-3 flex flex-col gap-2.5"
+            className="bg-popover w-[204px] h-[134px] p-3 flex flex-col gap-2.5"
           >
             {/* Offsets */}
             <div className="grid grid-cols-2 gap-2.5">
-              {fields?.slice(0, 4).map((item) => item)}
-            </div>
-
-            {/* popover color picker */}
-            <div className="flex flex-col gap-1.5 [&_input]:!bg-background-sidebar [&_input]:!max-w-[150px] [&_input:hover]:!bg-background-sidebar [&_input:focus-visible]:!bg-background-sidebar">
-              <h2 className="text-[11px] font-normal text-[#E4E4E7] m-0 font-inter">
-                Color
-              </h2>
-              {fields?.[4]}
+              {fields?.map((item) => item)}
             </div>
           </PopoverContent>
         </Popover>
@@ -218,4 +192,4 @@ const DropShadowField = ({
   );
 };
 
-export default DropShadowField;
+export default MarginField;

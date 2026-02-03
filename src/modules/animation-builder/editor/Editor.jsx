@@ -5,6 +5,8 @@ import EditorHeader from "./EditorHeader";
 import EditorPreview from "./EditorPreview";
 import { useIframeMessageBridge } from "@/lib/editor/core/dispatch_events/useIframeMessageBridge";
 import { disableIframeLinks } from "@/lib/editor/editor";
+import { useDeviceConfig, useKernel } from "@/hooks/app.hooks";
+import { getScreenSize } from "@/lib/utils";
 
 export default function Editor() {
   // MAJOR (DO NOT DELETE THIS) : initiating iframe and editor communication

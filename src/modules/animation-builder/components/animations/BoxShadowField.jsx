@@ -36,7 +36,7 @@ const BoxShadowField = ({
           className="text-[#E4E4E7] "
         />
       ),
-      path: "dropShadowOffsetX",
+      path: "boxShadowOffsetX",
       fieldType: "block-input",
     },
     {
@@ -49,7 +49,7 @@ const BoxShadowField = ({
           className="text-[#E4E4E7] "
         />
       ),
-      path: "dropShadowOffsetY",
+      path: "boxShadowOffsetY",
       fieldType: "block-input",
     },
     {
@@ -62,7 +62,7 @@ const BoxShadowField = ({
           className="text-[#E4E4E7] "
         />
       ),
-      path: "dropShadowBlur",
+      path: "boxShadowBlur",
       fieldType: "block-input",
     },
     {
@@ -75,7 +75,7 @@ const BoxShadowField = ({
           className="text-[#E4E4E7] "
         />
       ),
-      path: "dropShadowSpread",
+      path: "boxShadowSpread",
       fieldType: "block-input",
     },
     {
@@ -104,14 +104,16 @@ const BoxShadowField = ({
   const selectedUnit = "px";
   const [shadow, setShadow] = useState({});
 
+  // console.log("incoming box value:",value)
+
   // splitting box shadow value by value and unit
   function mapBoxShadowValue(parsed) {
     return {
       innerShadow: parsed[0]?.value === "inset",
-      dropShadowOffsetX: parsed[1]?.value ?? 0,
-      dropShadowOffsetY: parsed[2]?.value ?? 0,
-      dropShadowBlur: parsed[3]?.value ?? 0,
-      dropShadowSpread: parsed[4]?.value ?? 0,
+      boxShadowOffsetX: parsed[1]?.value ?? 0,
+      boxShadowOffsetY: parsed[2]?.value ?? 0,
+      boxShadowBlur: parsed[3]?.value ?? 0,
+      boxShadowSpread: parsed[4]?.value ?? 0,
       color: parsed[5]?.value ?? "transparent",
     };
   }
@@ -120,20 +122,20 @@ const BoxShadowField = ({
   function toBoxShadowString(data) {
     const {
       innerShadow,
-      dropShadowOffsetX,
-      dropShadowOffsetY,
-      dropShadowBlur,
-      dropShadowSpread,
+      boxShadowOffsetX,
+      boxShadowOffsetY,
+      boxShadowBlur,
+      boxShadowSpread,
       color,
     } = data || {};
 
     const parts = [];
     if (innerShadow) parts.push("inset");
     parts.push(
-      toCssValue(dropShadowOffsetX, selectedUnit),
-      toCssValue(dropShadowOffsetY, selectedUnit),
-      toCssValue(dropShadowBlur, selectedUnit),
-      toCssValue(dropShadowSpread, selectedUnit),
+      toCssValue(boxShadowOffsetX, selectedUnit),
+      toCssValue(boxShadowOffsetY, selectedUnit),
+      toCssValue(boxShadowBlur, selectedUnit),
+      toCssValue(boxShadowSpread, selectedUnit),
       color,
     );
     return parts.join(" ");
@@ -150,7 +152,9 @@ const BoxShadowField = ({
 
   const updateValue = (next = {}) => {
     const nextValue = next.value ?? shadow ?? 0;
-    onValueChange(toBoxShadowString(nextValue));
+    const result=toBoxShadowString(nextValue)
+    // console.log("outgoing box value :", result)
+    onValueChange(result);
   };
 
   // mapping page transition fields
