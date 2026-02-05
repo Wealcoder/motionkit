@@ -1,16 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
-import { Settings03Icon } from "@hugeicons/core-free-icons";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@/components/ui/button";
 import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 import { parseCssValue, toCssValue } from "@/utils/cssHelper";
+import WCFABSettingBtn from "@/components/animations/blocks/WCFABSettingBtn";
 
 const StrokeField = ({
   property = {},
@@ -41,46 +39,46 @@ const StrokeField = ({
     ...rest
   } = property || {};
 
-  const selectedUnit = "px";
   const [stroke, setStroke] = useState({});
   const [isDataValid, setIsDataValid] = useState(false);
 
-  // console.log("incoming stroke values", value);
-  console.log("stroke state values", stroke);
+  // console.log("incoming value:", value);
+  // console.log("local stroke state:", stroke);
 
   // splitting stroke value by value and unit
   function mapStrokeValue(parsed) {
-    // console.log({parsed})
     return {
-      strokeWidth: parsed[0]?.value ?? 0,
+      strokeWidth: parsed[0]
+        ? toCssValue(parsed[0].value, parsed[0].unit)
+        : "0px",
       color: parsed[1]?.value ?? "transparent",
     };
   }
 
   // converting stroke data to css string
   function toStrokeString(data) {
+    // console.log("changed data", data);
     const { strokeWidth, color } = data || {};
 
     const parts = [];
-    parts.push(toCssValue(strokeWidth, selectedUnit), color);
+    parts.push(toCssValue(strokeWidth, color));
     return parts.join(" ");
   }
 
   useEffect(() => {
     if (!value) return;
-    const parsedValue = value
-      ?.split(" ")
-      ?.map((unit) => parseCssValue(unit, selectedUnit));
-      const mappedData = mapStrokeValue(parsedValue);
-      console.log("mapped data :", mappedData);
+    const parsedValue = value?.split(" ")?.map((unit) => parseCssValue(unit));
+    const mappedData = mapStrokeValue(parsedValue);
     setStroke(mappedData);
   }, [value]);
 
   const updateValue = (next = {}) => {
-    // console.log("next value :",next)
-    const nextValue = next.value ?? stroke ?? 0;
+    // console.log(next.strokeWidth)
+    const nextValue = next ?? stroke ?? 0;
+    // console.log("next value", nextValue);
     const result = toStrokeString(nextValue);
-    // console.log("outgoing box value :", result)
+    // console.log("final value", result);
+
     onValueChange(result);
   };
 
@@ -100,8 +98,19 @@ const StrokeField = ({
             defaultData={stroke}
             contentStep={stroke}
             updateContentData={(value) => {
-              setStroke(value?.data);
-              updateValue(value?.data);
+              const nextValue = value?.data ?? {};
+              // console.log("nextValue", nextValue)
+
+              setStroke((prev) => {
+                const merged = {
+                  ...prev,
+                  ...nextValue,
+                };
+                // console.log("merged value", merged);
+
+                updateValue(merged);
+                return merged;
+              });
             }}
           />
         );
@@ -118,14 +127,7 @@ const StrokeField = ({
         <div className="w-12 h-7 flex items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
-              <Button className="wcf-ab-button-icon">
-                <HugeiconsIcon
-                  icon={Settings03Icon}
-                  color="#A1A1AA"
-                  strokeWidth={1.5}
-                  className="w-3.5 h-3.5 text-white"
-                />
-              </Button>
+              <WCFABSettingBtn />
             </PopoverTrigger>
             <PopoverContent
               align="end"
@@ -135,11 +137,12 @@ const StrokeField = ({
                 {fields?.[0]}
               </div>
               {/* color picker field */}
-              <div className="[&_input]:!bg-background-sidebar [&_input:hover]:!bg-background-sidebar [&_input:focus-visible]:!bg-background-sidebar">
+              <div className="[&_input]:!bg-background-sidebar [&_input]:!max-w-[102px] [&_input:hover]:!bg-background-sidebar [&_input:focus-visible]:!bg-background-sidebar">
                 {fields?.[1]}
               </div>
             </PopoverContent>
           </Popover>
+
           {/* delete button */}
           {isCustomAnim && <WCFABDeleteBtn onDelete={onDelete} />}
         </div>

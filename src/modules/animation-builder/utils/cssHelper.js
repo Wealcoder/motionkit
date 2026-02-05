@@ -13,6 +13,7 @@ export const isValidCssValue = (cssValue) => {
 };
 
 export const parseCssValue = (cssValue, defaultUnit = "px") => {
+  // console.log(cssValue)
   if (!cssValue || typeof cssValue !== "string") {
     return { value: 0, unit: defaultUnit };
   }

@@ -74,6 +74,8 @@ const AnimationPropsMapping = React.memo(
     contentStep = {},
     updateContentData = () => {},
   }) => {
+    // console.log(contentStep,defaultData)
+
     const { path = null, fieldType = null } = property || {};
     if (!path || !fieldType) return null;
 

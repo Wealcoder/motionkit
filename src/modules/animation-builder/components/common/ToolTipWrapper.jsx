@@ -12,7 +12,7 @@ const ToolTipWrapper = ({ text = "" }) => {
     <TooltipProvider delayDuration={100}>
       <Tooltip delayDuration={100}>
         <TooltipTrigger asChild>
-          <div className="text-foreground cursor-pointer flex justify-center items-center">
+          <div className="cursor-pointer flex justify-center items-center">
             <HugeiconsIcon
               icon={InformationCircleFreeIcons}
               size={10}
@@ -21,7 +21,7 @@ const ToolTipWrapper = ({ text = "" }) => {
             />
           </div>
         </TooltipTrigger>
-        <TooltipContent align="start">{text}</TooltipContent>
+        <TooltipContent align="start" className="!text-[10px] !text-foreground font-normal !bg-button-hover px-1.5 py-1" >{text}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

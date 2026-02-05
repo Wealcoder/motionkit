@@ -1,7 +1,7 @@
 import React from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { parseCssValue } from "@/utils/trnasformOriginHelper";
 import { cn } from "@/lib/utils";
+import { parseCssValue } from "@/utils/cssHelper";
 const GRID = [
   { id: "tl", x: "0%", y: "0%" },
   { id: "tc", x: "50%", y: "0%" },
@@ -61,7 +61,7 @@ const TransformOriginGrid = ({ value, onChange }) => {
             key={item.id}
             value={cssValue}
             className={cn(
-              "border-none h-1.5 w-1.5 rounded-full !p-0 bg-[#A1A1AA] data-[state=checked]:scale-150 data-[state=checked]:bg-[#2C76E6] [&_svg]:hidden focus-visible:ring-0"
+              "border-none h-1.5 w-1.5 rounded-full cursor-pointer !p-0 bg-[#A1A1AA] data-[state=checked]:scale-150 data-[state=checked]:bg-[#2C76E6] [&_svg]:hidden focus-visible:ring-0"
             )}
           />
         );

@@ -1,6 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
-import animationProperties from "@/utils/animationProperties";
 import ToolTipWrapper from "@/components/common/ToolTipWrapper";
 import { Search01Icon } from "@hugeicons/core-free-icons/index";
 import {
@@ -11,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AddCircleIcon } from "@hugeicons/core-free-icons";
+import animationProperties from "@/config/animationProperties";
 
 const AddPropertyPopover = ({ selectedKeys = [], onSelect, title }) => {
   const [search, setSearch] = useState("");

@@ -1,20 +1,64 @@
 import React, { useEffect, useMemo, useState } from "react";
 import ToolTipWrapper from "../common/ToolTipWrapper";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  CancelCircleIcon,
-  Settings03Icon,
-} from "@hugeicons/core-free-icons/index";
-import TransformOriginGrid from "./shared/TransformOriginRadioGrid";
-import {
-  buildTransformOrigin,
-  parseCssValue,
-  parseTransformOrigin,
-} from "@/utils/trnasformOriginHelper";
-import { Button } from "../ui/button";
-import TransformOriginInputGroup from "./shared/TransformOriginInputGroup";
-import WCFABDeleteBtn from "./blocks/WCFABDeleteBtn";
+import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
+import { CancelCircleIcon } from "@hugeicons/core-free-icons/index";
+import TransformOriginGrid from "@/components/animations/shared/TransformOriginRadioGrid";
+import TransformOriginInputGroup from "@/components/animations/shared/TransformOriginInputGroup";
+import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
+import { parseCssValue } from "@/utils/cssHelper";
+import WCFABSettingBtn from "@/components/animations/blocks/WCFABSettingBtn";
+
+const parseTransformOrigin = (input, fallbackUnit = "%") => {
+  const raw = (input || "").trim();
+  // default
+  if (!raw) {
+    return { x: `50${fallbackUnit}`, y: `50${fallbackUnit}` };
+  }
+  // normalize whitespace
+  const parts = raw.split(/\s+/);
+  const xRaw = parts[0] ?? "50%";
+  const yRaw = parts[1] ?? "50%";
+  const result = {
+    x: normalizeOriginToken(xRaw, fallbackUnit, "x"),
+    y: normalizeOriginToken(yRaw, fallbackUnit, "y"),
+  };
+  return result;
+};
+
+// Builds CSS string back
+const buildTransformOrigin = ({ x, y }) => {
+  const safeX = (x || "").trim();
+  const safeY = (y || "").trim();
+
+  return `${safeX} ${safeY}`.trim();
+};
+
+// Converts keywords and bare numbers into valid CSS tokens
+const normalizeOriginToken = (token, fallbackUnit, axis) => {
+  const t = (token || "").toLowerCase().trim();
+
+  // Keywords allowed by CSS
+  const keywordsX = { left: "0%", center: "50%", right: "100%" };
+  const keywordsY = { top: "0%", center: "50%", bottom: "100%" };
+
+  if (axis === "x" && keywordsX[t]) return keywordsX[t];
+  if (axis === "y" && keywordsY[t]) return keywordsY[t];
+
+  // Numeric with unit: 10px, 50%, 1.2rem, 3em, 10vh, etc.
+  if (/^-?\d*\.?\d+[a-z%]+$/i.test(t)) return t;
+
+  // Bare number: "10" -> "10px" (fallback unit)
+  if (/^-?\d*\.?\d+$/.test(t)) return `${t}${fallbackUnit}`;
+
+  // Unknown token -> fallback to center
+  return axis === "x" ? `50${fallbackUnit}` : `50${fallbackUnit}`;
+};
 
 const TransformOriginField = ({
   property = {},
@@ -100,25 +144,18 @@ const TransformOriginField = ({
   return (
     <div className="flex items-center justify-between">
       {/* title and tooltip */}
-      <div className="flex items-center gap-2">
-        <span className="wcf-ab-title">{title}</span>
-        {tooltipContent && <ToolTipWrapper text={tooltipContent} />}
-      </div>
+      <WCFABLabel title={title} tooltipContent={tooltipContent} />
 
       {/* right side popover and delete button */}
       <div className="flex items-center gap-3">
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="wcf-ab-button-icon">
-              <HugeiconsIcon
-                icon={Settings03Icon}
-                color="#A1A1AA"
-                strokeWidth={1.5}
-                className="w-3.5 h-3.5 text-white"
-              />
-            </Button>
+            <WCFABSettingBtn />
           </PopoverTrigger>
-          <PopoverContent align="end" className="bg-popover w-[228px] min-h-[160px] p-3 flex flex-col gap-2.5">
+          <PopoverContent
+            align="end"
+            className="bg-popover w-[228px] min-h-[160px] p-3 flex flex-col gap-2.5"
+          >
             {/* modal title and cancel button */}
             <div className="flex items-center justify-between w-full h-3">
               <h2 className="text-white text-[11px] font-normal leading-4.25 font-inter">

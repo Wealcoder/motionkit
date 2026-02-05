@@ -114,7 +114,7 @@ const parseNumber = (value) => {
 
 const WCFABCssInput = ({
   property = {},
-  value = "0px",
+  value = "",
   onValueChange = () => {},
 }) => {
   const {
@@ -129,7 +129,8 @@ const WCFABCssInput = ({
   const [inputValue, setInputValue] = useState(value || "0px");
   const [selectedUnit, setSelectedUnit] = useState("px");
 
-  // console.log(selectedUnit)
+  // console.log(inputValue);
+  // console.log(selectedUnit);
 
   // sync incoming value
   useEffect(() => {
@@ -139,10 +140,14 @@ const WCFABCssInput = ({
   }, [value]);
 
   const updateValue = (next = {}) => {
+    // console.log("next values", next);
+
     const nextValue = next.value ?? inputValue ?? 0;
     const nextUnit = next.unit ?? selectedUnit ?? "px";
-    const result=toCssValue(nextValue, nextUnit)
-    // console.log(result)
+    const result = toCssValue(nextValue, nextUnit);
+
+    // console.log("final value to send to hoc", result);
+
     onValueChange(result);
   };
 
@@ -168,6 +173,7 @@ const WCFABCssInput = ({
 
   // unit select handler
   const handleSelect = (unit) => {
+    // console.log(unit);
     setSelectedUnit(unit);
     updateValue({ unit });
   };
@@ -179,7 +185,7 @@ const WCFABCssInput = ({
         className={cn(inputVariants({ size }))}
         placeholder={placeholder}
         value={inputValue}
-        type="number"
+        type="text"
         onChange={handleInput}
       />
 

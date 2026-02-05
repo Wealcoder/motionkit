@@ -12,6 +12,7 @@ import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 import { parseCssValue, toCssValue } from "@/utils/cssHelper";
 import WCFABCssInput from "@/components/animations/blocks/WCFABCssInput";
+import WCFABDashedBtn from "@/components/animations/blocks/WCFABDashedBtn";
 
 const BorderField = ({
   property = {},
@@ -165,14 +166,7 @@ const BorderField = ({
         />
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="wcf-ab-button-icon">
-              <HugeiconsIcon
-                icon={DashedLine02Icon}
-                color="#A1A1AA"
-                strokeWidth={1.5}
-                className="w-3.5 h-3.5 text-white"
-              />
-            </Button>
+            <WCFABDashedBtn />
           </PopoverTrigger>
           <PopoverContent
             align="end"

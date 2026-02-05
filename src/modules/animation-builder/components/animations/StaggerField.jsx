@@ -3,12 +3,9 @@ import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import WCFABErrorMessage from "@/components/animations/blocks/WCFABErrorMessage";
 import WCFABNumberInput from "@/components/animations/blocks/WCFABNumberInput";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@/components/ui/button";
-import { Settings03Icon } from "@hugeicons/core-free-icons/index";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import StaggerPopoverDialog from "./blocks/StaggerPopoverDialog";
-
+import WCFABSettingBtn from "@/components/animations/blocks/WCFABSettingBtn";
 
 const StaggerField = ({
   property = {},
@@ -37,25 +34,14 @@ const StaggerField = ({
         <WCFABLabel title={title} tooltipContent={tooltipContent} />
 
         <div className="flex items-center gap-2">
-          <WCFABNumberInput
-            property={property}
-          />
+          <WCFABNumberInput property={property} />
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="wcf-ab-button-icon">
-                <HugeiconsIcon
-                  icon={Settings03Icon}
-                  color="#A1A1AA"
-                  strokeWidth={1.5}
-                  className="w-3.5 h-3.5 text-white"
-                />
-              </Button>
+              <WCFABSettingBtn />
             </DialogTrigger>
-            <DialogContent
-              className="bg-[#18181B] w-[354px] min-h-[295px] p-0 flex flex-col gap-2.5 [&>button]:hidden"
-            >
-              <StaggerPopoverDialog/>
+            <DialogContent className="bg-[#18181B] w-[354px] min-h-[295px] p-0 flex flex-col gap-2.5 [&>button]:hidden">
+              <StaggerPopoverDialog />
             </DialogContent>
           </Dialog>
 

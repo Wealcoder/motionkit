@@ -21,6 +21,7 @@ const defaultData = {
   padding:"3px 5px 7px 9px",
   margin:"3px 5px 7px 9px",
   border:"3px 5px 7px 9px",
+  radius:"3px 5px 7px 9px",
   stroke:"3px #000000",
 };
 

@@ -4,19 +4,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowHorizontalIcon,
   ArrowVerticalIcon,
   BlurIcon,
-  Settings03Icon,
   Sun01Icon,
 } from "@hugeicons/core-free-icons/index";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 import { parseCssValue, toCssValue } from "@/utils/cssHelper";
+import WCFABSettingBtn from "@/components/animations/blocks/WCFABSettingBtn";
 
 const DropShadowField = ({
   property = {},
@@ -139,6 +138,7 @@ const DropShadowField = ({
       ?.split(" ")
       ?.map((unit) => parseCssValue(unit, selectedUnit));
     const mappedData = mapDropShadowValue(parsedValue);
+    // console.log("mapped data :", mappedData);
     setShadow(mappedData);
   }, [value]);
 
@@ -183,14 +183,7 @@ const DropShadowField = ({
       <div className="flex items-center gap-3">
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="wcf-ab-button-icon">
-              <HugeiconsIcon
-                icon={Settings03Icon}
-                color="#A1A1AA"
-                strokeWidth={1.5}
-                className="w-3.5 h-3.5 text-white"
-              />
-            </Button>
+            <WCFABSettingBtn />
           </PopoverTrigger>
           <PopoverContent
             align="end"

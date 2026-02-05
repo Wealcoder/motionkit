@@ -4,7 +4,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { DashedLine02Icon } from "@hugeicons/core-free-icons/index";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
@@ -12,6 +11,7 @@ import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 import { parseCssValue, toCssValue } from "@/utils/cssHelper";
 import WCFABCssInput from "@/components/animations/blocks/WCFABCssInput";
+import WCFABDashedBtn from "@/components/animations/blocks/WCFABDashedBtn";
 
 const PaddingField = ({
   property = {},
@@ -85,7 +85,6 @@ const PaddingField = ({
     ...rest
   } = property || {};
 
-  const selectedUnit = "px";
   const [padding, setPadding] = useState({});
 
   function mapPaddingValue(parsed) {
@@ -103,19 +102,17 @@ const PaddingField = ({
 
     const parts = [];
     parts.push(
-      toCssValue(paddingTop, selectedUnit),
-      toCssValue(paddingRight, selectedUnit),
-      toCssValue(paddingBottom, selectedUnit),
-      toCssValue(paddingLeft, selectedUnit),
+      toCssValue(paddingTop),
+      toCssValue(paddingRight),
+      toCssValue(paddingBottom),
+      toCssValue(paddingLeft),
     );
     return parts.join(" ");
   }
 
   useEffect(() => {
     if (!value) return;
-    const parsedValue = value
-      ?.split(" ")
-      ?.map((unit) => parseCssValue(unit, selectedUnit));
+    const parsedValue = value?.split(" ")?.map((unit) => parseCssValue(unit));
     const mappedData = mapPaddingValue(parsedValue);
     setPadding(mappedData);
   }, [value]);
@@ -124,6 +121,22 @@ const PaddingField = ({
     const nextValue = next.value ?? padding ?? 0;
     const result = toPaddingString(nextValue);
     onValueChange(result);
+  };
+
+  const getMainPaddingValue = (cssValue) => {
+    if (!cssValue) return "";
+
+    const parts = cssValue.split(" ").map((v) => parseCssValue(v));
+
+    if (parts.length === 0) return "";
+
+    const first = parts[0];
+
+    const allSame = parts.every(
+      (p) => p.value === first.value && p.unit === first.unit,
+    );
+
+    return allSame ? `${first.value}${first.unit}` : "";
   };
 
   // mapping page transition fields
@@ -158,21 +171,14 @@ const PaddingField = ({
 
       {/* right side input, popover and delete button */}
       <div className="flex items-center gap-2">
-         <WCFABCssInput
+        <WCFABCssInput
           property={property}
-          value={value}
+          value={getMainPaddingValue(value)}
           onValueChange={onValueChange}
         />
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="wcf-ab-button-icon">
-              <HugeiconsIcon
-                icon={DashedLine02Icon}
-                color="#A1A1AA"
-                strokeWidth={1.5}
-                className="w-3.5 h-3.5 text-white"
-              />
-            </Button>
+            <WCFABDashedBtn />
           </PopoverTrigger>
           <PopoverContent
             align="end"

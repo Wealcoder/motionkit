@@ -23,9 +23,10 @@ const DirectionField = (
     isCustomAnim = true,
   } = property || {};
 
-  const handleChange=(newValue)=>{
-    onValueChange(newValue)
-  }
+
+  const handleChange = (newValue) => {
+    onValueChange(newValue);
+  };
 
   return (
     <div className="w-64 h-7 p-0.5">
@@ -36,7 +37,7 @@ const DirectionField = (
         {/* radios */}
         <div className="flex items-center gap-3 w-44.5 h-4.5">
           <RadioGroup
-            defaultValue={value}
+            defaultValue="drawin"
             onValueChange={handleChange}
             className="grid grid-cols-2 gap-2.5"
           >

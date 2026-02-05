@@ -4,19 +4,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowHorizontalIcon,
   ArrowVerticalIcon,
   BlurIcon,
-  Settings03Icon,
   Sun01Icon,
 } from "@hugeicons/core-free-icons/index";
 import WCFABDeleteBtn from "@/components/animations/blocks/WCFABDeleteBtn";
 import WCFABLabel from "@/components/animations/blocks/WCFABLabel";
 import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 import { parseCssValue, toCssValue } from "@/utils/cssHelper";
+import WCFABSettingBtn from "@/components/animations/blocks/WCFABSettingBtn";
 
 const BoxShadowField = ({
   property = {},
@@ -151,8 +150,8 @@ const BoxShadowField = ({
   }, [value]);
 
   const updateValue = (next = {}) => {
-    const nextValue = next.value ?? shadow ?? 0;
-    const result=toBoxShadowString(nextValue)
+    const nextValue = next ?? shadow ?? 0;
+    const result = toBoxShadowString(nextValue);
     // console.log("outgoing box value :", result)
     onValueChange(result);
   };
@@ -193,14 +192,15 @@ const BoxShadowField = ({
       <div className="flex items-center gap-3">
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="wcf-ab-button-icon">
+            {/* <Button className="wcf-ab-button-icon">
               <HugeiconsIcon
                 icon={Settings03Icon}
                 color="#A1A1AA"
                 strokeWidth={1.5}
                 className="w-3.5 h-3.5 text-white"
               />
-            </Button>
+            </Button> */}
+            <WCFABSettingBtn />
           </PopoverTrigger>
           <PopoverContent
             align="end"
