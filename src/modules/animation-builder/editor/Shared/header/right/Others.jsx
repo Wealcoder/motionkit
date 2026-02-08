@@ -26,7 +26,7 @@ const Others = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-56 bg-background text-white shadow-lg"
+        className="w-56 bg-background text-white shadow-lg mt-[18px]"
         align="end"
       >
         <DropdownMenuGroup>

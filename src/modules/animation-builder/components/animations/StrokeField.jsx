@@ -77,7 +77,7 @@ const StrokeField = ({
     const nextValue = next ?? stroke ?? 0;
     // console.log("next value", nextValue);
     const result = toStrokeString(nextValue);
-    // console.log("final value", result);
+    console.log("final value", result);
 
     onValueChange(result);
   };

@@ -18,6 +18,7 @@ const CodeblockField = ({
   onDelete = () => {},
   onDisabledUpdate = () => {},
   onValueChange = () => {},
+
 }) => {
   const {
     title = "Custom",
@@ -26,6 +27,7 @@ const CodeblockField = ({
     language = "javascript",
     isRequired = false,
     isCustomAnim = true,
+    isReadOnly,
     ...rest
   } = property || {};
 
@@ -62,8 +64,8 @@ const CodeblockField = ({
         highlight={highlightCode}
         padding={10}
         spellCheck={false}
-        className="
-        w-full !min-h-[60px] !max-h-[60px] !overflow-y-auto text-xss leading-4.25 text-foreground bg-input rounded-5"
+        readOnly={isReadOnly}
+        className="w-full !min-h-[60px] !max-h-[60px] !overflow-y-auto text-xss leading-4.25 text-foreground bg-input rounded-5"
         textareaId="codeblock-editor"
         textareaClassName="outline-none focus:outline-none focus-visible:outline-none"
       />

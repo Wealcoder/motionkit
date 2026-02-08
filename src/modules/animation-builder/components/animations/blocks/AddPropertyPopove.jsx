@@ -17,7 +17,6 @@ const AddPropertyPopover = ({ selectedKeys = [], onSelect, title }) => {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
 
-
   const hasProperty = selectedKeys.length > 0;
 
   // popover buttons click handler
@@ -51,21 +50,23 @@ const AddPropertyPopover = ({ selectedKeys = [], onSelect, title }) => {
           <h1 className="wcf-ab-title !text-[#E4E4E7] m-0">{title}</h1>
 
           <Button
-            className="bg-transparent border-none text-[#FAFAFA] cursor-pointer"
+            className="bg-transparent border-none text-[#FAFAFA] cursor-pointer [&_svg]:size-3.5"
             onClick={openAt}
           >
-            <HugeiconsIcon icon={AddCircleIcon} className="w-3 h-3" />
+            <HugeiconsIcon icon={AddCircleIcon} />
           </Button>
         </div>
 
         {/* Row 2: Add button */}
         {!hasProperty && (
           <Button
-            className="bg-[#303033] h-7 rounded-md flex gap-2 border-none text-[#FAFAFA] cursor-pointer"
+            className="bg-[#303033] h-7 rounded-md flex gap-2  border-none text-[#FAFAFA] cursor-pointer [&_svg]:size-3.5"
             onClick={openAt}
           >
-            <HugeiconsIcon icon={AddCircleIcon} className="w-3 h-3" />
-            Add
+            <HugeiconsIcon icon={AddCircleIcon} />
+            <span className="text-[11.5px] font-normal leading-[18px]">
+              Add
+            </span>
           </Button>
         )}
 
@@ -76,15 +77,12 @@ const AddPropertyPopover = ({ selectedKeys = [], onSelect, title }) => {
         />
 
         {/* Popover content */}
-        <PopoverContent
-          align="end"
-          className="w-[260px] p-2 bg-button"
-        >
+        <PopoverContent align="end" className="w-[260px] p-2 bg-button">
           {/* Search */}
-          <div className="flex items-center bg-background-topbar mb-2 h-7 rounded-md px-[7px] py-[5px]">
+          <div className="flex items-center bg-background-topbar mb-2 h-7 rounded-md px-[7px] py-[5px] [&_svg]:size-3.5">
             <HugeiconsIcon
               icon={Search01Icon}
-              className="text-[#E4E4E7] w-3.5 h-3.5"
+              className="text-[#E4E4E7]"
             />
             <Input
               value={search}
