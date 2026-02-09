@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnimationPropsMapping from "@/editor/Shared/controller/animation_handler/AnimationPropsMapping";
 
@@ -23,14 +23,27 @@ const TabsFields = ({
 
   const [activeTab, setActiveTab] = useState(tabsTrigger?.[0]?.value);
 
-  const tabsRef = useRef(null);
-  const handleWheel = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (tabsRef.current) {
-      tabsRef.current.scrollLeft += e.deltaY;
+ const tabsRef = useRef(null);
+
+useEffect(() => {
+  const el = tabsRef.current;
+  if (!el) return;
+
+  const onWheel = (e) => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      e.stopPropagation();
+      el.scrollLeft += e.deltaY;
     }
   };
+
+  el.addEventListener("wheel", onWheel, { passive: false });
+
+  return () => {
+    el.removeEventListener("wheel", onWheel);
+  };
+}, []);
+
 
   // handle tab click
   const handleTabChange = (tabValue) => {
@@ -52,7 +65,6 @@ const TabsFields = ({
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList
           ref={tabsRef}
-          onWheel={handleWheel}
           className="w-full h-7 p-0.5 gap-1 overflow-x-auto overflow-y-hidden bg-background-topbar scrollbar-none"
         >
           {tabsTrigger?.map((tab) => (

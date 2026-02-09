@@ -192,14 +192,6 @@ const BoxShadowField = ({
       <div className="flex items-center gap-3">
         <Popover>
           <PopoverTrigger asChild>
-            {/* <Button className="wcf-ab-button-icon">
-              <HugeiconsIcon
-                icon={Settings03Icon}
-                color="#A1A1AA"
-                strokeWidth={1.5}
-                className="w-3.5 h-3.5 text-white"
-              />
-            </Button> */}
             <WCFABSettingBtn />
           </PopoverTrigger>
           <PopoverContent

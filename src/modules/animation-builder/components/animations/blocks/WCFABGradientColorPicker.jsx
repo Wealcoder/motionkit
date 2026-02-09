@@ -86,6 +86,8 @@ const WCFABGradientPicker = ({
   value = "",
   onValueChange = () => {},
 }) => {
+  const { size = "sm", ...rest } = property || {};
+  
   const [gradient, setGradient] = useState(DEFAULT_GRADIENT);
 
   // console.log({ gradient });
@@ -192,138 +194,148 @@ const WCFABGradientPicker = ({
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          className="w-9 h-9 rounded border"
-          style={{ background: gradientCSS }}
-        />
-      </PopoverTrigger>
-
-      <PopoverContent
-        align="end"
-        className="max-w-[260px] p-2 min-w-full rounded-5 space-y-3"
-      >
-        {/* TYPE SELECT */}
-        <Select
-          onValueChange={(value) => setGradient((g) => ({ ...g, type: value }))}
-        >
-          <SelectTrigger className="h-7 px-[10px] w-[120px] max-w-[120px] !bg-select-hover text-foreground !text-xss font-medium leading-18 border-none outline-none !rounded-5 cursor-pointer">
-            <SelectValue placeholder="Linear" />
-          </SelectTrigger>
-          <SelectContent className="z-50 min-w-0  max-h-[140px] p-[3px] bg-select-secondary text-foreground rounded-5 border-none shadow-md overflow-hidden w-[--radix-select-trigger-width] max-w-full">
-            <SelectGroup>
-              <SelectLabel>Select One</SelectLabel>
-              {gradienttype?.map((type) => (
-                <SelectItem
-                  value={type?.value}
-                  className="relative flex items-center w-full rounded-5 px-2 py-[2px] cursor-pointer outline-none transition-colors hover:bg-select-hover data-[highlighted]:bg-select-hover data-[state=checked]:bg-select-hover text-xss"
-                >
-                  {type?.title}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-
-        {/* GRADIENT BAR */}
-        <div className="p-2">
-          <div
-            ref={barRef}
-            onClick={handleBarClick}
-            className="relative h-1.5 rounded-5 cursor-pointer "
+    <div className="flex justify-center items-center gap-1.5">
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            className="h-[21px] w-[21px] p-0 m-0 hover:scale-105 rounded-full border-2 border-solid border-button cursor-pointer"
             style={{ background: gradientCSS }}
+          />
+        </PopoverTrigger>
+
+        <PopoverContent
+          align="end"
+          className="max-w-[260px] p-2 min-w-full rounded-5 space-y-3"
+        >
+          {/* TYPE SELECT */}
+          <Select
+            onValueChange={(value) =>
+              setGradient((g) => ({ ...g, type: value }))
+            }
           >
-            {gradient.stops.map((stop) => (
-              <div
-                key={stop.id}
-                data-stop="true"
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  isDraggingRef.current = true;
-
-                  setGradient((g) => ({
-                    ...g,
-                    activeStopId: stop.id,
-                  }));
-                }}
-                onMouseMove={(e) =>
-                  gradient.activeStopId === stop.id &&
-                  e.buttons === 1 &&
-                  handleDrag(e, stop.id)
-                }
-                onMouseUp={() => {
-                  isDraggingRef.current = false;
-                }}
-                className={cn(
-                  "absolute top-1/2 h-2.5 w-2.5 rounded-full border border-white cursor-ew-resize",
-                  gradient.activeStopId === stop.id
-                    ? "ring-2 ring-white"
-                    : "ring-2 ring-black",
-                )}
-                style={{
-                  left: `${stop.position}%`,
-                  transform: "translate(-50%, -50%)",
-                  background: stop.color,
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* ACTIVE STOP CONTROLS */}
-        <div>
-          <div className="flex justify-between items-center">
-            <p className="text-foreground text-sm font-inter font-semibold leading-5 tracking-normal">
-              Stops
-            </p>
-            <Button className={btnStyle} onClick={addStop}>
-              <HugeiconsIcon icon={Add01Icon} />
-            </Button>
-          </div>
-
-          <div className="flex flex-col gap-2 max-h-52 overflow-y-auto overflow-x- scrollbar-none">
-            {gradient?.stops?.map((data) => {
-              return (
-                <div
-                  onClick={() =>
-                    setGradient((g) => ({ ...g, activeStopId: data.id }))
-                  }
-                  className={cn(
-                    "grid grid-cols-[auto_1fr_auto] gap-2 justify-between",
-                  )}
-                >
-                  <WCFABNumberInput
-                    property={{
-                      min: 0,
-                      max: 100,
-                      size: "gradient",
-                    }}
-                    value={Math.floor(data.position) ?? 0}
-                    onValueChange={(value) =>
-                      updateStopPosition(data.id, Number(value))
-                    }
-                  />
-
-                  <WCFABColorPicker
-                    property={{ size: "gradient" }}
-                    value={data?.color?.hex}
-                    onValueChange={(color) => updateStopColor(data.id, color)}
-                  />
-
-                  <Button
-                    className={cn(btnStyle, "justify-self-end")}
-                    onClick={() => removeStop(data.id)}
+            <SelectTrigger className="h-7 px-[10px] w-[120px] max-w-[120px] !bg-select-hover text-foreground !text-xss font-medium leading-18 border-none outline-none !rounded-5 cursor-pointer">
+              <SelectValue placeholder="Linear" />
+            </SelectTrigger>
+            <SelectContent className="z-50 min-w-0  max-h-[140px] p-[3px] bg-select-secondary text-foreground rounded-5 border-none shadow-md overflow-hidden w-[--radix-select-trigger-width] max-w-full">
+              <SelectGroup>
+                <SelectLabel>Select One</SelectLabel>
+                {gradienttype?.map((type) => (
+                  <SelectItem
+                    value={type?.value}
+                    className="relative flex items-center w-full rounded-5 px-2 py-[2px] cursor-pointer outline-none transition-colors hover:bg-select-hover data-[highlighted]:bg-select-hover data-[state=checked]:bg-select-hover text-xss"
                   >
-                    <HugeiconsIcon icon={MinusSignIcon} />
-                  </Button>
-                </div>
-              );
-            })}
+                    {type?.title}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
+          {/* GRADIENT BAR */}
+          <div className="p-2">
+            <div
+              ref={barRef}
+              onClick={handleBarClick}
+              className="relative h-1.5 rounded-5 cursor-pointer "
+              style={{ background: gradientCSS }}
+            >
+              {gradient.stops.map((stop) => (
+                <div
+                  key={stop.id}
+                  data-stop="true"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    isDraggingRef.current = true;
+
+                    setGradient((g) => ({
+                      ...g,
+                      activeStopId: stop.id,
+                    }));
+                  }}
+                  onMouseMove={(e) =>
+                    gradient.activeStopId === stop.id &&
+                    e.buttons === 1 &&
+                    handleDrag(e, stop.id)
+                  }
+                  onMouseUp={() => {
+                    isDraggingRef.current = false;
+                  }}
+                  className={cn(
+                    "absolute top-1/2 h-2.5 w-2.5 rounded-full border border-white cursor-ew-resize",
+                    gradient.activeStopId === stop.id
+                      ? "ring-2 ring-white"
+                      : "ring-2 ring-black",
+                  )}
+                  style={{
+                    left: `${stop.position}%`,
+                    transform: "translate(-50%, -50%)",
+                    background: stop.color,
+                  }}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+
+          {/* ACTIVE STOP CONTROLS */}
+          <div>
+            <div className="flex justify-between items-center">
+              <p className="text-foreground text-sm font-inter font-semibold leading-5 tracking-normal">
+                Stops
+              </p>
+              <Button className={btnStyle} onClick={addStop}>
+                <HugeiconsIcon icon={Add01Icon} />
+              </Button>
+            </div>
+
+            <div className="flex flex-col gap-2 max-h-52 overflow-y-auto overflow-x- scrollbar-none">
+              {gradient?.stops?.map((data) => {
+                return (
+                  <div
+                    onClick={() =>
+                      setGradient((g) => ({ ...g, activeStopId: data.id }))
+                    }
+                    className={cn(
+                      "grid grid-cols-[auto_1fr_auto] gap-2 justify-between",
+                    )}
+                  >
+                    <WCFABNumberInput
+                      property={{
+                        min: 0,
+                        max: 100,
+                        size: "gradient",
+                      }}
+                      value={Math.floor(data.position) ?? 0}
+                      onValueChange={(value) =>
+                        updateStopPosition(data.id, Number(value))
+                      }
+                    />
+
+                    <WCFABColorPicker
+                      property={{ size: "gradient" }}
+                      value={data?.color?.hex}
+                      onValueChange={(color) => updateStopColor(data.id, color)}
+                    />
+
+                    <Button
+                      className={cn(btnStyle, "justify-self-end")}
+                      onClick={() => removeStop(data.id)}
+                    >
+                      <HugeiconsIcon icon={MinusSignIcon} />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+      <Input
+        // value={inputValue}
+        // onChange={handleInputChange}
+        className={cn(inputVariants({ size }))}
+        placeholder="#000000"
+      />
+    </div>
   );
 };
 

@@ -7,7 +7,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Modal from "@/components/common/Modal";
-import { Delete01Icon, Tick02Icon } from "@hugeicons/core-free-icons/index";
+import { Delete01Icon, Upload01Icon } from "@hugeicons/core-free-icons/index";
+import SavedAnimationContent from "@/components/common/SavedAnimationContent";
 
 const SavedAnimation = () => {
   return (
@@ -21,7 +22,7 @@ const SavedAnimation = () => {
 
       {/* Content */}
       <PopoverContent
-        align="center"
+        align="end"
         className="min-w-[398px] min-h-[333px] rounded-md bg-background-topbar p-[15px] mt-[18px]"
       >
         <Modal
@@ -33,15 +34,17 @@ const SavedAnimation = () => {
               <HugeiconsIcon icon={Bookmark02Icon} size={16} strokeWidth={2} />
             ),
             cancelBtn: {
-              icon: <HugeiconsIcon icon={Delete01Icon} className="w-4 h-4" />,
-              label: "Cancel",
+              icon: <HugeiconsIcon icon={Delete01Icon} strokeWidth={1} className="w-4 h-4" />,
+              label: "Delete",
             },
             confirmBtn: {
-              icon: <HugeiconsIcon icon={Tick02Icon} className="w-4 h-4" />,
-              label: "Confirm",
+              icon: <HugeiconsIcon icon={Upload01Icon} strokeWidth={1} className="w-4 h-4" />,
+              label: "Publish",
             },
           }}
-        />
+        >
+          <SavedAnimationContent />
+        </Modal>
       </PopoverContent>
     </Popover>
   );

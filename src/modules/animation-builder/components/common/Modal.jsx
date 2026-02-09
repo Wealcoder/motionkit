@@ -55,7 +55,7 @@ const Modal = ({
       <div className="flex items-center gap-5">
         <Button
           onClick={onCancel}
-          className="bg-button min-w-[174px] h-7 rounded-md text-xs font-medium text-[#FAFAFA] border-none cursor-pointer"
+          className="bg-button min-w-[174px] h-7 px-4 py-1 rounded-md text-xs font-medium text-[#FAFAFA] border-none cursor-pointer"
         >
           {cancelBtn.icon}
           {cancelBtn.label}
@@ -63,7 +63,7 @@ const Modal = ({
 
         <Button
           onClick={onAccept}
-          className="bg-button min-w-[174px] h-7 rounded-md text-xs font-medium text-[#FAFAFA] border-none cursor-pointer"
+          className="bg-button min-w-[174px] h-7 px-4 py-1 rounded-md text-xs font-medium text-[#FAFAFA] border-none cursor-pointer"
         >
           {confirmBtn.icon}
           {confirmBtn.label}
