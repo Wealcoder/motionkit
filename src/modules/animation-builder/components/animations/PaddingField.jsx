@@ -89,10 +89,12 @@ const PaddingField = ({
 
   function mapPaddingValue(parsed) {
     return {
-      paddingTop: parsed[0]?.value ?? 0,
-      paddingRight: parsed[1]?.value ?? 0,
-      paddingBottom: parsed[2]?.value ?? 0,
-      paddingLeft: parsed[3]?.value ?? 0,
+      paddingTop: parsed[0] ?? { value: 0, unit: "px" },
+      paddingRight: parsed[1] ?? parsed[0] ?? { value: 0, unit: "px" },
+      paddingBottom: parsed[2] ?? parsed[0] ?? { value: 0, unit: "px" },
+      paddingLeft: parsed[3] ??
+        parsed[1] ??
+        parsed[0] ?? { value: 0, unit: "px" },
     };
   }
 
@@ -100,19 +102,19 @@ const PaddingField = ({
   function toPaddingString(data) {
     const { paddingTop, paddingRight, paddingBottom, paddingLeft } = data || {};
 
-    const parts = [];
-    parts.push(
-      toCssValue(paddingTop),
-      toCssValue(paddingRight),
-      toCssValue(paddingBottom),
-      toCssValue(paddingLeft),
-    );
-    return parts.join(" ");
+    return [
+      toCssValue(paddingTop?.value, paddingTop?.unit),
+      toCssValue(paddingRight?.value, paddingRight?.unit),
+      toCssValue(paddingBottom?.value, paddingBottom?.unit),
+      toCssValue(paddingLeft?.value, paddingLeft?.unit),
+    ].join(" ");
   }
 
   useEffect(() => {
     if (!value) return;
-    const parsedValue = value?.split(" ")?.map((unit) => parseCssValue(unit));
+
+    const parsedValue = value.split(" ").map((unit) => parseCssValue(unit));
+
     const mappedData = mapPaddingValue(parsedValue);
     setPadding(mappedData);
   }, [value]);
@@ -123,20 +125,25 @@ const PaddingField = ({
     onValueChange(result);
   };
 
-  const getMainPaddingValue = (cssValue) => {
-    if (!cssValue) return "";
+  const getMainPaddingValue = (paddingState) => {
+    if (!paddingState?.paddingTop) return "";
 
-    const parts = cssValue.split(" ").map((v) => parseCssValue(v));
+    const values = [
+      paddingState.paddingTop,
+      paddingState.paddingRight,
+      paddingState.paddingBottom,
+      paddingState.paddingLeft,
+    ];
 
-    if (parts.length === 0) return "";
+    const unit = values[0].unit;
 
-    const first = parts[0];
+    const sameUnit = values.every((v) => v.unit === unit);
+    if (!sameUnit) return "";
 
-    const allSame = parts.every(
-      (p) => p.value === first.value && p.unit === first.unit,
-    );
-
-    return allSame ? `${first.value}${first.unit}` : "";
+    return {
+      values: values.map((v) => v.value).join(","),
+      unit,
+    };
   };
 
   // mapping page transition fields
@@ -164,6 +171,10 @@ const PaddingField = ({
       .filter(Boolean);
   }, [properties]);
 
+  const mainPadding = getMainPaddingValue(padding);
+
+  console.log("main padding", mainPadding);
+
   return (
     <div className="flex items-center justify-between">
       {/* title and tooltip */}
@@ -173,7 +184,8 @@ const PaddingField = ({
       <div className="flex items-center gap-2">
         <WCFABCssInput
           property={property}
-          value={getMainPaddingValue(value)}
+          value={mainPadding?.values ?? ""}
+          unit={mainPadding?.unit ?? "px"}
           onValueChange={onValueChange}
         />
         <Popover>

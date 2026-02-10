@@ -64,7 +64,7 @@ const inputVariants = cva(
 );
 
 const buttonVariants = cva(
-  "!pl-[6px] !py-[2px] !pr-[2px] bg-background-topbar hover:bg-button-hover focus:bg-button-active active:bg-button-action !text-foreground font-inter text-xss font-normal leading-4.25 tracking-normal font border-none outline-none focus-visible:ring-0 rounded-5 cursor-pointer",
+  "!pl-[6px] !py-[2px] !pr-[2px] [&_svg]:hidden !text-foreground font-inter text-xss font-normal leading-4.25 tracking-normal font border-none outline-none focus-visible:ring-0 rounded-5 cursor-pointer",
   {
     variants: {
       size: {
@@ -115,6 +115,7 @@ const parseNumber = (value) => {
 const WCFABCssInput = ({
   property = {},
   value = "",
+  unit: controlledUnit,
   onValueChange = () => {},
 }) => {
   const {
@@ -126,18 +127,27 @@ const WCFABCssInput = ({
     ...rest
   } = property;
 
-  const [inputValue, setInputValue] = useState(value || "0px");
-  const [selectedUnit, setSelectedUnit] = useState("px");
+  const [inputValue, setInputValue] = useState(value ?? "");
+const [selectedUnit, setSelectedUnit] = useState(controlledUnit ?? "px");
 
   // console.log(inputValue);
   // console.log(selectedUnit);
 
   // sync incoming value
-  useEffect(() => {
-    const parsedValue = parseCssValue(value, "px");
-    setInputValue(parsedValue?.value);
-    setSelectedUnit(parsedValue?.unit);
-  }, [value]);
+ useEffect(() => {
+  // if parent explicitly controls unit (padding case)
+  if (controlledUnit) {
+    setInputValue(value ?? "");
+    setSelectedUnit(controlledUnit);
+    return;
+  }
+
+  // fallback: normal css parsing (margin, width, etc.)
+  const parsedValue = parseCssValue(value, "px");
+  setInputValue(parsedValue?.value ?? "");
+  setSelectedUnit(parsedValue?.unit ?? "px");
+}, [value, controlledUnit]);
+
 
   const updateValue = (next = {}) => {
     // console.log("next values", next);
