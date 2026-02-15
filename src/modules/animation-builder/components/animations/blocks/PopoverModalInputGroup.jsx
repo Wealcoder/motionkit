@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   InputGroup,
   InputGroupAddon,
@@ -12,18 +12,6 @@ import {
   SelectValue,
 } from "@/components/ui/selectDC";
 import { cssUnits } from "@/config/dynamicPropertiesData";
-
-const units = [
-  { title: "%", value: "%" },
-  { title: "px", value: "px" },
-  { title: "em", value: "em" },
-  { title: "ch", value: "ch" },
-  { title: "rem", value: "rem" },
-  { title: "vh", value: "vh" },
-  { title: "vw", value: "vw" },
-  { title: "svh", value: "svh" },
-  { title: "svw", value: "svw" },
-];
 
 const PopoverModalInputGroup = ({
   property = {},
@@ -61,12 +49,16 @@ const PopoverModalInputGroup = ({
         {isUnitSelection ? (
           <InputGroupAddon align="inline-end" className="text-foreground p-0">
             <Select>
-              <SelectTrigger>
+              <SelectTrigger className="!pl-[6px] !py-[2px] !pr-[2px] [&_svg]:hidden !text-foreground font-inter text-xss font-normal leading-4.25 tracking-normal border-none outline-none focus-visible:ring-0 rounded-5 cursor-pointer">
                 <SelectValue placeholder={unit} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="min-w-[46px] bg-select-secondary text-foreground rounded-5 border-none shadow-md overflow-hidden w-[--radix-select-trigger-width] max-w-full">
                 {cssUnits?.map((field, index) => (
-                  <SelectItem key={index} value={field.value}>
+                  <SelectItem
+                    key={index}
+                    value={field.value}
+                    className="relative flex justify-center items-center w-full rounded-5 my-[2px] !p-0.5 cursor-pointer outline-none transition-colors hover:bg-select-hover data-[highlighted]:bg-select-hover data-[state=checked]:bg-select-hover text-xss"
+                  >
                     {field.title}
                   </SelectItem>
                 ))}

@@ -211,11 +211,10 @@ const WCFABGradientPicker = ({
 
   // picker -> parent (and keep input synced unless user is typing)
   useEffect(() => {
-    onValueChange(gradientCSS);
-
     if (!isEditing) {
       setInputValue(gradientCSS);
     }
+    onValueChange(gradientCSS);
   }, [gradientCSS]);
 
   // handler to control gradient bar smooth dragging

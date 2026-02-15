@@ -80,7 +80,7 @@ const buttonVariants = cva(
 );
 
 const selectContentVariants = cva(
-  "z-50 min-w-0 bg-select-secondary text-foreground rounded-5 border-none shadow-md overflow-hidden w-[--radix-select-trigger-width] max-w-full",
+  "z-50 min-w-[46px] bg-select-secondary text-foreground rounded-5 border-none shadow-md overflow-hidden w-[--radix-select-trigger-width] max-w-full",
   {
     variants: {
       size: {
@@ -116,81 +116,86 @@ const WCFABCssInput = ({
   property = {},
   value = "",
   unit: controlledUnit,
+  allowMulti = false,
   onValueChange = () => {},
+  onUnitChange = () => {},
 }) => {
-  const {
-    size = "sm",
-    placeholder = "Add Value",
-    min,
-    max,
-    step,
-    ...rest
-  } = property;
+  const { size = "sm", placeholder = "Add Value", min, max } = property;
 
   const [inputValue, setInputValue] = useState(value ?? "");
-const [selectedUnit, setSelectedUnit] = useState(controlledUnit ?? "px");
-
-  // console.log(inputValue);
-  // console.log(selectedUnit);
+  const [selectedUnit, setSelectedUnit] = useState(controlledUnit ?? "px");
 
   // sync incoming value
- useEffect(() => {
-  // if parent explicitly controls unit (padding case)
-  if (controlledUnit) {
-    setInputValue(value ?? "");
-    setSelectedUnit(controlledUnit);
-    return;
-  }
+  useEffect(() => {
+    if (allowMulti) {
+      setInputValue(value ?? "");
+      setSelectedUnit(controlledUnit ?? "px");
+      return;
+    }
 
-  // fallback: normal css parsing (margin, width, etc.)
-  const parsedValue = parseCssValue(value, "px");
-  setInputValue(parsedValue?.value ?? "");
-  setSelectedUnit(parsedValue?.unit ?? "px");
-}, [value, controlledUnit]);
+    const parsed = parseCssValue(value, "px");
+    setInputValue(parsed?.value ?? "");
+    setSelectedUnit(parsed?.unit ?? "px");
+  }, [value, controlledUnit, allowMulti]);
 
-
-  const updateValue = (next = {}) => {
-    // console.log("next values", next);
-
+  const updateSingleValue = (next = {}) => {
     const nextValue = next.value ?? inputValue ?? 0;
     const nextUnit = next.unit ?? selectedUnit ?? "px";
-    const result = toCssValue(nextValue, nextUnit);
-
-    // console.log("final value to send to hoc", result);
-
+    const result=toCssValue(nextValue, nextUnit)
+    console.log(result)
     onValueChange(result);
   };
 
   const onDebounceChange = useCallback(
     debounceFn((raw) => {
+      if (allowMulti) {
+        onValueChange(raw);
+        return;
+      }
+
       const num = parseNumber(raw);
       if (num === null) {
         onValueChange(null);
         return;
       }
-      updateValue({ value: clamp(num, min, max) });
+      updateSingleValue({ value: clamp(num, min, max) });
     }, 150),
-    [min, max, onValueChange],
+    [min, max, onValueChange, allowMulti],
   );
 
   const handleInput = (e) => {
-    const val = e.target.value;
+    let val = e.target.value;
+
+    if (allowMulti) {
+      // allow digits, dot, minus, spaces, commas
+      if (!/^[\d\s,.\-]*$/.test(val)) return;
+
+      // normalize commas -> spaces (keeps typing pleasant)
+      val = val.replace(/,+/g, " ").replace(/\s+/g, " ").trimStart();
+
+      setInputValue(val);
+      onDebounceChange(val);
+      return;
+    }
+
+    // single numeric mode
     if (/^-?\d*\.?\d*$/.test(val)) {
       setInputValue(val);
       onDebounceChange(val);
     }
   };
 
-  // unit select handler
   const handleSelect = (unit) => {
-    // console.log(unit);
     setSelectedUnit(unit);
-    updateValue({ unit });
+    onUnitChange(unit);
+
+    if (!allowMulti) {
+      updateSingleValue({ unit });
+    } 
   };
 
   return (
     <InputGroup className={cn(inputGroupVariants({ size }))}>
-      {/* Number Input */}
       <InputGroupInput
         className={cn(inputVariants({ size }))}
         placeholder={placeholder}
@@ -199,14 +204,13 @@ const [selectedUnit, setSelectedUnit] = useState(controlledUnit ?? "px");
         onChange={handleInput}
       />
 
-      {/* Minus Button */}
-      <InputGroupAddon align="inline-end" className={"text-foreground p-0"}>
+      <InputGroupAddon align="inline-end" className="text-foreground p-0">
         <Select value={selectedUnit} onValueChange={handleSelect}>
           <SelectTrigger className={cn(buttonVariants({ size }))}>
             <SelectValue placeholder={selectedUnit} />
           </SelectTrigger>
           <SelectContent className={cn(selectContentVariants({ size }))}>
-            {units?.map((field, index) => (
+            {units.map((field, index) => (
               <SelectItem
                 key={index}
                 value={field.value}
@@ -221,4 +225,5 @@ const [selectedUnit, setSelectedUnit] = useState(controlledUnit ?? "px");
     </InputGroup>
   );
 };
+
 export default WCFABCssInput;

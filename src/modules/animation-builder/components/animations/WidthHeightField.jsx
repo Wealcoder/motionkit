@@ -12,7 +12,7 @@ const WidthHeightField = ({
   onDelete = () => {},
 }) => {
   const {
-    title = "MinWidth",
+    title = "title",
     tooltipContent = "MinWidth Value",
     min = 0,
     max = 0,
