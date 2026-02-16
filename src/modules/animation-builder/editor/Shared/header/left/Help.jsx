@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Popover,
   PopoverTrigger,
@@ -5,12 +6,19 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { InformationCircleIcon } from "@hugeicons/core-free-icons";
-import { BubbleChatQuestionIcon, CustomerSupportIcon, DocumentAttachmentIcon, KeyboardIcon } from "@hugeicons/core-free-icons/index";
+import {
+  InformationCircleIcon,
+  BubbleChatQuestionIcon,
+  CustomerSupportIcon,
+  DocumentAttachmentIcon,
+  KeyboardIcon,
+} from "@hugeicons/core-free-icons";
+import KeyboardShortcutModal from "@/components/common/KeyboardShortcutModal";
+import FAQModal from "@/components/common/FAQModal";
 
 const helpData = [
   {
-    id: "1",
+    id: "docs",
     icon: (
       <HugeiconsIcon
         icon={DocumentAttachmentIcon}
@@ -23,7 +31,7 @@ const helpData = [
     label: "Documentation",
   },
   {
-    id: "2",
+    id: "shortcuts",
     icon: (
       <HugeiconsIcon
         icon={KeyboardIcon}
@@ -36,65 +44,82 @@ const helpData = [
     label: "Keyboard Shortcuts",
   },
   {
-    id: "3",
+    id: "support",
     icon: (
       <HugeiconsIcon
-      icon={CustomerSupportIcon}
-      size={14}
-      color="currentColor"
-      strokeWidth={1}
-      className="text-[#E4E4E7]"
-    />
+        icon={CustomerSupportIcon}
+        size={14}
+        color="currentColor"
+        strokeWidth={1}
+        className="text-[#E4E4E7]"
+      />
     ),
     label: "Support & Contact",
   },
   {
-    id: "4",
+    id: "faq",
     icon: (
       <HugeiconsIcon
-      icon={BubbleChatQuestionIcon}
-      size={14}
-      color="currentColor"
-      strokeWidth={1}
-      className="text-[#E4E4E7]"
-    />
+        icon={BubbleChatQuestionIcon}
+        size={14}
+        color="currentColor"
+        strokeWidth={1}
+        className="text-[#E4E4E7]"
+      />
     ),
     label: "FAQ",
   },
 ];
-
 const Help = () => {
-  return (
-    <Popover>
-      {/* Trigger */}
-      <PopoverTrigger asChild>
-        <Button className={"wcf-ab-button-icon"}>
-          <HugeiconsIcon
-            icon={InformationCircleIcon}
-            size={16}
-            strokeWidth={2}
-          />
-        </Button>
-      </PopoverTrigger>
+  const [activeModal, setActiveModal] = useState(null);
 
-      {/* Content */}
-      <PopoverContent
-        align="start"
-        className="max-w-[185px] min-h-[135px] bg-background-topbar rounded-md p-0 mt-5"
-      >
-        <div className="flex flex-col gap-1 p-1">
-          {helpData.map((item) => (
-            <div
-              key={item.id}
-              className="w-full min-h-7 flex items-center gap-1.5 text-[#FAFAFA] cursor-pointer hover:bg-button px-2 rounded-5"
-            >
-              {item.icon}
-              <label className="text-[13px] font-normal leading-5 cursor-pointer">{item.label}</label>
-            </div>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
+  const openModal = (type) => {
+    setActiveModal(type);
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+  };
+
+  return (
+    <>
+      {/* Popover */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button className="wcf-ab-button-icon">
+            <HugeiconsIcon
+              icon={InformationCircleIcon}
+              size={16}
+              strokeWidth={2}
+            />
+          </Button>
+        </PopoverTrigger>
+
+        <PopoverContent
+          align="start"
+          className="max-w-[185px] bg-background-topbar rounded-md p-1 mt-5"
+        >
+          <div className="flex flex-col gap-1">
+            {helpData.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => openModal(item.id)}
+                className="w-full min-h-7 flex items-center gap-2 text-[#FAFAFA] cursor-pointer hover:bg-button px-2 rounded-5 transition-colors"
+              >
+                {item.icon}
+                <span className="text-[13px] leading-5">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      <KeyboardShortcutModal
+        open={activeModal === "shortcuts"}
+        onClose={closeModal}
+      />
+      <FAQModal open={activeModal === "faq"} onClose={closeModal} />
+    </>
   );
 };
 

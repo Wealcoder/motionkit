@@ -92,8 +92,6 @@ const PaddingField = ({
   // normalize 1/2/3/4 values -> 4 sides
   const normalize4 = (vals) => {
     const safe = vals.filter((v) => v !== null && v !== undefined);
-    // console.log("safe", safe);
-
     if (safe.length === 1) return [safe[0], safe[0], safe[0], safe[0]];
     if (safe.length === 2) return [safe[0], safe[1], safe[0], safe[1]];
     if (safe.length === 3) return [safe[0], safe[1], safe[2], safe[1]];
@@ -104,7 +102,6 @@ const PaddingField = ({
 
   // build css string
   const toPaddingString = (data, u) => {
-    // console.log(data, u);
     const { paddingTop, paddingRight, paddingBottom, paddingLeft } = data || {};
     return [
       toCssValue(paddingTop ?? 0, u),
@@ -134,7 +131,6 @@ const PaddingField = ({
   // send final string to HOC
   const commit = (nextPadding, nextUnit) => {
     const css = toPaddingString(nextPadding, nextUnit);
-    // console.log(css);
     onValueChange(css);
   };
 
