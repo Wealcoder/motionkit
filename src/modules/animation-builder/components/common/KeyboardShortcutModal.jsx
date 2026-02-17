@@ -19,6 +19,10 @@ export const keyboardShortcutGroups = [
       { label: "Delete", keys: ["Del"] },
       { label: "Duplicate", keys: ["Ctrl", "D"] },
       { label: "Save", keys: ["Ctrl", "S"] },
+      { label: "Paste Style", keys: ["Ctrl", "Shift", "V"] },
+      { label: "Delete", keys: ["Del"] },
+      { label: "Duplicate", keys: ["Ctrl", "D"] },
+      { label: "Save", keys: ["Ctrl", "S"] },
     ],
   },
   {
@@ -63,76 +67,81 @@ const KeyboardShortcutModal = ({ open, onClose }) => {
         {/* dialog header */}
         <HelpDialogHeader title="Keyboards Shortcuts" />
 
-        {/* search section */}
-        <HelpDialogSearchSection
-          placeholder="Search shortcuts"
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onClear={() => setSearchQuery("")}
-        />
+        <div className="pt-10 px-16">
+          {/* search section */}
+          <HelpDialogSearchSection
+            placeholder="Search shortcuts"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery("")}
+          />
 
-        {/* keyboard shortcuts */}
-        <div className="w-full max-h-[400px] overflow-y-auto px-8 py-6">
-          <div className="grid grid-cols-3 gap-[60px]">
-            {filteredGroups.map((group, index) => (
-              <div className="flex flex-col ">
-                {/* Group Title */}
-                <div key={index} className="w-[257px] flex flex-col gap-[13px]">
-                  <div className="w-[237px] mx-auto">
-                    <h3 className="text-sm font-semibold text-[#FAFAFA] m-0">
-                      {group.title}
-                    </h3>
-                  </div>
+          {/* keyboard shortcuts */}
+          <div className="w-full max-h-[400px] mt-12 overflow-y-auto overflow-x-hidden">
+            <div className="grid grid-cols-3 gap-[60px]">
+              {filteredGroups.map((group, index) => (
+                <div className="flex flex-col ">
+                  {/* Group Title */}
+                  <div
+                    key={index}
+                    className="w-[257px] flex flex-col gap-[13px]"
+                  >
+                    <div className="w-[237px] mx-auto">
+                      <h3 className="text-sm font-semibold text-[#FAFAFA] m-0">
+                        {group.title}
+                      </h3>
+                    </div>
 
-                  {/* Items */}
-                  <div className="flex flex-col gap-2.5">
-                    {group.items.map((item, i) => (
-                      <div key={i} className="max-w-[257px]">
-                        <div className="max-w-[237px] min-h-6 mx-auto flex items-center justify-between pb-2.5">
-                          <span className="text-xs text-[#E4E4E7] font-normal leading-5 tracking-normal">
-                            {item.label}
-                          </span>
+                    {/* Items */}
+                    <div className="flex flex-col gap-2.5">
+                      {group.items.map((item, i) => (
+                        <div key={i} className="max-w-[257px]">
+                          <div className="max-w-[237px] min-h-6 mx-auto flex items-center justify-between pb-2.5">
+                            <span className="text-xs text-[#E4E4E7] font-normal leading-5 tracking-normal">
+                              {item.label}
+                            </span>
 
-                          <div className="flex items-center gap-0.5">
-                            {item.keys.map((key, k) => (
-                              <div
-                                key={k}
-                                className="flex items-center gap-0.5"
-                              >
-                                <Kbd className="bg-[#303033] text-[#FAFAFA] border-none rounded-md px-1.5 py-[2px] text-xs">
-                                  {key}
-                                </Kbd>
+                            <div className="flex items-center gap-0.5">
+                              {item.keys.map((key, k) => (
+                                <div
+                                  key={k}
+                                  className="flex items-center gap-0.5"
+                                >
+                                  <Kbd className="bg-[#303033] text-[#FAFAFA] border-none rounded-md px-1.5 py-[2px] text-xs">
+                                    {key}
+                                  </Kbd>
 
-                                {/* + symbol between keys */}
-                                {k !== item.keys.length - 1 && (
-                                  <HugeiconsIcon
-                                    icon={PlusSignIcon}
-                                    size={12}
-                                    color="currentColor"
-                                    strokeWidth={1}
-                                    className="text-[#71717A] text-xs"
-                                  />
-                                )}
-                              </div>
-                            ))}
+                                  {/* + symbol between keys */}
+                                  {k !== item.keys.length - 1 && (
+                                    <HugeiconsIcon
+                                      icon={PlusSignIcon}
+                                      size={12}
+                                      color="currentColor"
+                                      strokeWidth={1}
+                                      className="text-[#71717A] text-xs"
+                                    />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Divider — only if NOT last item */}
-                        {i !== group.items.length - 1 && (
-                          <div className="w-full h-[1px] bg-[#303033]" />
-                        )}
-                      </div>
-                    ))}
+                          {/* Divider — only if NOT last item */}
+                          {i !== group.items.length - 1 && (
+                            <div className="w-full h-[1px] bg-[#303033]" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+          {filteredGroups.length === 0 && (
+            <p className="text-center text-[#71717A] mt-6">No results found.</p>
+          )}
         </div>
-        {filteredGroups.length === 0 && (
-          <p className="text-center text-[#71717A] mt-6">No results found.</p>
-        )}
       </DialogContent>
     </Dialog>
   );

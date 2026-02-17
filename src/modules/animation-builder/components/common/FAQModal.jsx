@@ -14,9 +14,7 @@ import HelpDialogHeader from "@/components/common/HelpDialogHeader";
 import HelpDialogSearchSection from "@/components/common/HelpDialogSearchSection";
 import { BubbleChatQuestionIcon } from "@hugeicons/core-free-icons/index";
 
-/* ---------------------------
-   Dummy FAQ Data
----------------------------- */
+/* Dummy FAQ Data */
 
 const faqData = [
   {
@@ -49,9 +47,7 @@ const faqData = [
 const FAQModal = ({ open, onClose }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  /* ---------------------------
-     Filter FAQs
-  ---------------------------- */
+  /* Filter FAQs */
   const filteredFaqs = useMemo(() => {
     if (!searchQuery.trim()) return faqData;
 
@@ -67,29 +63,31 @@ const FAQModal = ({ open, onClose }) => {
         <HelpDialogHeader title="FAQ" />
 
         {/* Body */}
-        <div className="px-10 pb-10">
+        <div className="px-16 pt-10 pb-16">
           {/* Section Title */}
-          <div className="text-center mt-6">
-            <h2 className="text-[22px] font-semibold text-[#FAFAFA] m-0">
+          <div className="flex flex-col gap-3 items-center w-[443px] mx-auto">
+            <h2 className="text-2xl font-semibold leading-5 tracking-normal text-[#FAFAFA] m-0">
               Popular Queries
             </h2>
-            <p className="text-sm text-[#A1A1AA] mt-2 max-w-[550px] mx-auto leading-5">
+            <p className="text-xs font-normal text-center text-[#A1A1AA] leading-5 tracking-normal m-0">
               A curated collection of the most frequently asked questions,
               common use cases, and real-world scenarios from our users.
             </p>
           </div>
 
           {/* Search */}
-          <HelpDialogSearchSection
+          <div className="[&>div]:w-[450px] mt-[31px]">
+            <HelpDialogSearchSection
             placeholder="Search faq"
             value={searchQuery}
             onChange={setSearchQuery}
             onClear={() => setSearchQuery("")}
           />
+          </div>
 
           {/* FAQ Accordion */}
-          <div className="max-w-[769px] mx-auto mt-6 overflow-y-auto">
-            <Accordion type="single" collapsible>
+          <div className="max-w-[769px] max-h-[244px] mx-auto mt-[43px] overflow-y-auto">
+            <Accordion type="single" className="gap-4" collapsible>
               {filteredFaqs.map((faq, index) => (
                 <div className="flex flex-col gap-2.5">
                   <AccordionItem
@@ -97,10 +95,10 @@ const FAQModal = ({ open, onClose }) => {
                     value={`item-${index}`}
                     className="border-none [&_h3]:m-0"
                   >
-                    <AccordionTrigger className="h-[31px] text-left text-xs font-medium leading-5 tracking-normal bg-transparent text-[#FAFAFA] border-none cursor-pointer hover:no-underline">
+                    <AccordionTrigger className="h-[31px] text-left text-xs font-medium leading-5 tracking-normal bg-transparent font-inter text-[#FAFAFA] border-none cursor-pointer hover:no-underline">
                       {faq.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-[11.5px] font-normal leading-4.5 tracking-normal text-[#E4E4E7]">
+                    <AccordionContent className="text-[11.5px] font-normal leading-4.5 tracking-normal text-[#E4E4E7] pb-0">
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>
