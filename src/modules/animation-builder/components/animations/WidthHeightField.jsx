@@ -6,7 +6,7 @@ import WCFABCssInput from "@/components/animations/blocks/WCFABCssInput";
 
 const WidthHeightField = ({
   property = {},
-  value = 0,
+  value = "",
   onValueChange = () => {},
   onDisabledUpdate = () => {},
   onDelete = () => {},
@@ -20,6 +20,8 @@ const WidthHeightField = ({
     isCustomAnim = true,
     ...rest
   } = property || {};
+  
+  // console.log("coming value", value);
 
   const [isDataValid, setIsDataValid] = useState(false);
 

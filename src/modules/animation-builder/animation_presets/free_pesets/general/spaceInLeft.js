@@ -23,6 +23,7 @@ const defaultData = {
   border:"3px 5px 7px 9px",
   radius:"3px 5px 7px 9px",
   stroke:"3px #000000",
+  width:"5px"
 };
 
 const config = {
@@ -134,7 +135,7 @@ const config = {
         {
           title: "Width",
           fieldType: "width-field",
-          path: "repeat",
+          path: "width",
           isCustomAnim: true,
         },
         {

@@ -95,29 +95,6 @@ const BorderField = ({
     borderLeft: 0,
   });
 
-  // normalize 1/2/3/4 values -> 4 sides
-  const normalize4 = (vals) => {
-    const safe = vals.filter((v) => v !== null && v !== undefined);
-
-    if (safe.length === 1) return [safe[0], safe[0], safe[0], safe[0]];
-    if (safe.length === 2) return [safe[0], safe[1], safe[0], safe[1]];
-    if (safe.length === 3) return [safe[0], safe[1], safe[2], safe[1]];
-    if (safe.length >= 4) return safe.slice(0, 4);
-
-    return [0, 0, 0, 0];
-  };
-
-  // build css string
-  const toBorderString = (data, u) => {
-    const { borderTop, borderRight, borderBottom, borderLeft } = data || {};
-    return [
-      toCssValue(borderTop ?? 0, u),
-      toCssValue(borderRight ?? 0, u),
-      toCssValue(borderBottom ?? 0, u),
-      toCssValue(borderLeft ?? 0, u),
-    ].join(" ");
-  };
-
   // sync incoming value from HOC
   useEffect(() => {
     if (!value) return;
@@ -135,10 +112,30 @@ const BorderField = ({
     });
   }, [value]);
 
+  // normalize 1/2/3/4 values -> 4 sides
+  const normalize4 = (vals) => {
+    const safe = vals.filter((v) => v !== null && v !== undefined);
+    if (safe.length === 1) return [safe[0], safe[0], safe[0], safe[0]];
+    if (safe.length === 2) return [safe[0], safe[1], safe[0], safe[1]];
+    if (safe.length === 3) return [safe[0], safe[1], safe[2], safe[1]];
+    if (safe.length >= 4) return safe.slice(0, 4);
+    return [0, 0, 0, 0];
+  };
+
+  // build css string
+  const toBorderString = (data, u) => {
+    const { borderTop, borderRight, borderBottom, borderLeft } = data || {};
+    return [
+      toCssValue(borderTop ?? 0, u),
+      toCssValue(borderRight ?? 0, u),
+      toCssValue(borderBottom ?? 0, u),
+      toCssValue(borderLeft ?? 0, u),
+    ].join(" ");
+  };
+
   // send final string to HOC
   const commit = (nextBorder, nextUnit) => {
     const css = toBorderString(nextBorder, nextUnit);
-    console.log(css);
     onValueChange(css);
   };
 
@@ -148,7 +145,6 @@ const BorderField = ({
     const r = border.borderRight;
     const b = border.borderBottom;
     const l = border.borderLeft;
-
     // 1
     if (t === r && r === b && b === l) return `${t}`;
     // 2
@@ -164,7 +160,6 @@ const BorderField = ({
   // main input change (string: "3 5 7 9" OR "3,5,7,9")
   const handleMainChange = (raw) => {
     const cleaned = String(raw ?? "").trim();
-
     // If empty → reset everything
     if (!cleaned) {
       const reset = {
@@ -173,7 +168,6 @@ const BorderField = ({
         borderBottom: 0,
         borderLeft: 0,
       };
-
       setBorder(reset);
       commit(reset, unit);
       return;
@@ -192,21 +186,17 @@ const BorderField = ({
         borderBottom: 0,
         borderLeft: 0,
       };
-
       setBorder(reset);
       commit(reset, unit);
       return;
     }
-
     const nums = normalize4(parts);
-
     const nextBorder = {
       borderTop: nums[0],
       borderRight: nums[1],
       borderBottom: nums[2],
       borderLeft: nums[3],
     };
-
     setBorder(nextBorder);
     commit(nextBorder, unit);
   };
@@ -219,25 +209,24 @@ const BorderField = ({
   // modal fields via HOC (numbers + static unit)
   const fields = useMemo(() => {
     return properties
-      .map((p, index) => {
-        const propWithUnit = { ...p, unit, size: "lg" };
-
+      .map((property, index) => {
+        const { path = "", fieldType = null } = property || {};
+        if (!path || !fieldType) return null;
+        const propWithUnit = { ...property, unit, size: "lg" };
         return (
           <AnimationPropsMapping
-            key={`${p.path}${index}`}
+            key={`${path}${index}`}
             property={propWithUnit}
             defaultData={border}
             contentStep={border}
             updateContentData={(value) => {
               const incoming = value?.data ?? {};
-
               const normalized = {
                 borderTop: Number(incoming.borderTop) || 0,
                 borderRight: Number(incoming.borderRight) || 0,
                 borderBottom: Number(incoming.borderBottom) || 0,
                 borderLeft: Number(incoming.borderLeft) || 0,
               };
-
               setBorder(normalized);
               commit(normalized, unit);
             }}

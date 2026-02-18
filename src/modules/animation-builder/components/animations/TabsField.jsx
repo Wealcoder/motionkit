@@ -23,27 +23,25 @@ const TabsFields = ({
 
   const [activeTab, setActiveTab] = useState(tabsTrigger?.[0]?.value);
 
- const tabsRef = useRef(null);
+  const tabsRef = useRef(null);
 
-useEffect(() => {
-  const el = tabsRef.current;
-  if (!el) return;
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
 
-  const onWheel = (e) => {
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      e.preventDefault();
-      e.stopPropagation();
-      el.scrollLeft += e.deltaY;
-    }
-  };
+    const onWheel = (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
 
-  el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("wheel", onWheel, { passive: false });
 
-  return () => {
-    el.removeEventListener("wheel", onWheel);
-  };
-}, []);
-
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+    };
+  }, []);
 
   // handle tab click
   const handleTabChange = (tabValue) => {
@@ -62,21 +60,25 @@ useEffect(() => {
   return (
     <div className="space-y-3 w-87.75">
       {/* Tabs */}
+
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList
+        <div
           ref={tabsRef}
-          className="w-full h-7 p-0.5 gap-1 overflow-x-auto overflow-y-hidden bg-background-topbar scrollbar-none"
+          className="w-full overflow-x-auto overflow-y-hidden scrollbar-none"
         >
-          {tabsTrigger?.map((tab) => (
-            <TabsTrigger
-              key={tab?.value}
-              value={tab?.value}
-              className="max-w-[150px] h-6 bg-transparent text-xss text-foreground-secondary font-normal leading-4.25 px-3 py-[5px] border-none rounded-5 shadow-none data-[state=active]:bg-button data-[state=active]:text-foreground"
-            >
-              {tab?.title}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+          <TabsList className="w-full h-7 p-0.5 gap-1 bg-background-topbar">
+            {tabsTrigger?.map((tab) => (
+              <TabsTrigger
+                key={tab?.value}
+                value={tab?.value}
+                className="max-w-[150px] h-6 bg-transparent text-xss text-foreground-secondary font-normal leading-4.25 px-3 py-[5px] border-none rounded-5 shadow-none data-[state=active]:bg-button data-[state=active]:text-foreground"
+              >
+                {tab?.title}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+
         <TabsContent value={activeTab}>
           {hasProperties && (
             <div className="flex flex-col gap-2">

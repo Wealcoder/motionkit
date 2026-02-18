@@ -95,6 +95,8 @@ const BorderRadiusField = ({
     radiusBottomLeft: 0,
   });
 
+  // console.log("state value", radius);
+
   // normalize 1/2/3/4 values -> 4 sides
   const normalize4 = (vals) => {
     const safe = vals.filter((v) => v !== null && v !== undefined);
@@ -109,7 +111,12 @@ const BorderRadiusField = ({
 
   // build css string
   const toRadiusString = (data, u) => {
-    const { radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft } = data || {};
+    const {
+      radiusTopLeft,
+      radiusTopRight,
+      radiusBottomRight,
+      radiusBottomLeft,
+    } = data || {};
     return [
       toCssValue(radiusTopLeft ?? 0, u),
       toCssValue(radiusTopRight ?? 0, u),
@@ -219,16 +226,19 @@ const BorderRadiusField = ({
   // modal fields via HOC (numbers + static unit)
   const fields = useMemo(() => {
     return properties
-      .map((p, index) => {
-        const propWithUnit = { ...p, unit, size: "lg" };
+      .map((property, index) => {
+        const { path = "", fieldType = null } = property || {};
+        if (!path || !fieldType) return null;
+        const propWithUnit = { ...property, unit, size: "lg" };
 
         return (
           <AnimationPropsMapping
-            key={`${p.path}${index}`}
+            key={`${path}${index}`}
             property={propWithUnit}
             defaultData={radius}
             contentStep={radius}
             updateContentData={(value) => {
+              // console.log("value", value);
               const incoming = value?.data ?? {};
 
               const normalized = {
@@ -254,7 +264,7 @@ const BorderRadiusField = ({
 
       {/* right side input, popover and delete button */}
       <div className="flex items-center gap-2">
-         <WCFABCssInput
+        <WCFABCssInput
           property={property}
           value={getMainValues()}
           unit={unit}

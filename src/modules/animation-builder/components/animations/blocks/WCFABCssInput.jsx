@@ -125,6 +125,7 @@ const WCFABCssInput = ({
   const [inputValue, setInputValue] = useState(value ?? "");
   const [selectedUnit, setSelectedUnit] = useState(controlledUnit ?? "px");
 
+  // console.log("selected unit", selectedUnit);
   // sync incoming value
   useEffect(() => {
     if (allowMulti) {
@@ -139,10 +140,11 @@ const WCFABCssInput = ({
   }, [value, controlledUnit, allowMulti]);
 
   const updateSingleValue = (next = {}) => {
+    console.log("next", next);
     const nextValue = next.value ?? inputValue ?? 0;
     const nextUnit = next.unit ?? selectedUnit ?? "px";
-    const result=toCssValue(nextValue, nextUnit)
-    console.log(result)
+    const result = toCssValue(nextValue, nextUnit);
+    console.log(result);
     onValueChange(result);
   };
 
@@ -191,7 +193,7 @@ const WCFABCssInput = ({
 
     if (!allowMulti) {
       updateSingleValue({ unit });
-    } 
+    }
   };
 
   return (

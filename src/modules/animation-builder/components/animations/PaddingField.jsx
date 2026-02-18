@@ -140,7 +140,6 @@ const PaddingField = ({
     const r = padding.paddingRight;
     const b = padding.paddingBottom;
     const l = padding.paddingLeft;
-
     // 1
     if (t === r && r === b && b === l) return `${t}`;
     // 2
@@ -211,12 +210,14 @@ const PaddingField = ({
   // modal fields via HOC (numbers + static unit)
   const fields = useMemo(() => {
     return properties
-      .map((p, index) => {
-        const propWithUnit = { ...p, unit, size: "lg" };
+      .map((property, index) => {
+        const { path = "", fieldType = null } = property || {};
+        if (!path || !fieldType) return null;
+        const propWithUnit = { ...property, unit, size: "lg" };
 
         return (
           <AnimationPropsMapping
-            key={`${p.path}${index}`}
+            key={`${path}${index}`}
             property={propWithUnit}
             defaultData={padding}
             contentStep={padding}
