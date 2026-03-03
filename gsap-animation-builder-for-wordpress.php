@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: GSAP Animation Builder for WordPress
+ * Plugin Name: Motionkit Connector for WordPress
  * Plugin URI: https://github.com/your-username/gsap-animation-builder-for-wordpress
- * Description: A powerful and customizable GSAP animation builder for WordPress that allows you to create stunning animations with ease.
+ * Description: A WordPress plugin that integrates the GSAP Animation Builder (Motionkit) to create and manage animations directly from the WordPress admin dashboard.
  * Version: 1.0.0
- * Author: Your Name
+ * Author: wealcoder
  * Author URI: https://profiles.wordpress.org/your-username/
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html

@@ -23,45 +23,18 @@ module.exports = {
   },
   entry: () => {
     return {
-      ...getWebpackEntryPoints(),
-
-      // assets entries
-      "assets/AssetImage": "./src/assets/AssetImage.js",
-      // "assets/AssetImage": "./src/assets/icons.jsx",
-
-      // manual entries
-
-      "modules/animation-builder/main":
-        "./src/modules/animation-builder/main.js",
-      "modules/animation-builder-settings/main":
-        "./src/modules/animation-builder-settings/main.js",
-
-      "modules/animation-builder/preview":
-        "./src/modules/animation-builder/preview.js",
+      ...getWebpackEntryPoints(),   
       "modules/animation-builder/frontend":
-        "./src/modules/animation-builder/frontend.js",
-      "modules/animation-builder/animbuilder-copy":
-        "./src/modules/animation-builder/animbuilder-copy.css",
+        "./src/modules/animation-builder/frontend.js",   
       "modules/animation-builder/freeAnim": "./src/css/freeAnim.css",
-
       // auto-generated free preset entries (frontend)
       ...getPresetEntries({
         folder:
           "./src/modules/animation-builder/frontend/animation-type/freePreset",
         outPrefix: "modules/animation-builder/frontend/freePresets/",
       }),
-
-      // auto-generated preset entries (register)
-      ...getPresetEntries({
-        folder: "./src/modules/animation-builder/register/preset",
-        outPrefix: "modules/animation-builder/register/preset/",
-      }),
-
-      // auto-generated free preset entries (register)
-      ...getPresetEntries({
-        folder: "./src/modules/animation-builder/register/freePresets",
-        outPrefix: "modules/animation-builder/register/freePresets/",
-      }),
+    
+      
     };
   },
   output: {
@@ -84,8 +57,7 @@ module.exports = {
     extensions: [".js", ".jsx"],
     modules: [path.resolve(__dirname, "/src"), "node_modules"],
     alias: {
-      "@": path.resolve(__dirname, "src/modules/animation-builder/"),
-      "@@": path.resolve(__dirname, "src/modules/animation-builder-settings/"),
+      "@": path.resolve(__dirname, "src/modules/animation-builder/"),      
     },
   },
 };
