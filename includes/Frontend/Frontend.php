@@ -15,12 +15,14 @@ if (!defined('ABSPATH')) {
 }
 
 use WcfAnimationBuilder\Common\Assets\AssetLoader;
+use WcfAnimationBuilder\Common\AnimationBuilderPageType;
 use WcfAnimationBuilder\Factory\ComponentFactory;
 
 /**
  * Frontend Class
  *
- * Handles all frontend functionality for the plugin.
+ * Handles frontend script loading and AJAX config handlers
+ * for the MotionKit connector plugin.
  */
 final class Frontend
 {
@@ -31,7 +33,12 @@ final class Frontend
    */
   private AssetLoader $asset_loader;
 
-
+  /**
+   * Page type resolver
+   *
+   * @var AnimationBuilderPageType
+   */
+  private AnimationBuilderPageType $page_type;
 
   /**
    * Initialize frontend functionality
@@ -41,6 +48,7 @@ final class Frontend
   public function init(): void
   {
     $this->asset_loader = ComponentFactory::create_asset_loader();
+    $this->page_type = AnimationBuilderPageType::instance();
 
     $this->init_hooks();
   }
@@ -52,42 +60,485 @@ final class Frontend
    */
   private function init_hooks(): void
   {
-    // Asset loading
-    add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+    // Frontend script enqueue — only on actual page loads (not admin/AJAX)
+    if (!is_admin()) {
+      add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_scripts'], 60);
+    }
 
-    // Template handling
-    add_filter('body_class', [$this, 'add_body_classes']);
-    add_action('wp_footer', [$this, 'html_selector']);
+    // AJAX handlers — must register in admin context (admin-ajax.php)
+    add_action('wp_ajax_wcf_anim_builder_configs_store', [$this, 'ajax_configs_store']);
+    add_action('wp_ajax_wcf_anim_builder_configs_delete', [$this, 'ajax_configs_delete']);
+    add_action('wp_ajax_wcf_anim_builder_gl_configs_store', [$this, 'ajax_global_configs_store']);
+    add_action('wp_ajax_wcf_anim_builder_gl_configs_delete', [$this, 'ajax_global_configs_delete']);
+  }
+
+  // ─── Frontend Script Loading ─────────────────────────────────────
+
+  /**
+   * Check if the current request is a SaaS editor preview
+   *
+   * @return bool
+   */
+  private function is_editor_preview(): bool
+  {
+    return isset($_GET['action'])
+      && sanitize_text_field(wp_unslash($_GET['action'])) === 'motionkit-editor';
   }
 
   /**
-   * Enqueue frontend scripts and styles
+   * Conditionally enqueue frontend animation scripts
+   *
+   * Two modes:
+   * 1. Editor preview (?action=motionkit-editor) — loads all scripts + enriched localized data
+   * 2. Normal frontend — only loads scripts when the page has saved animation configs
    *
    * @return void
    */
-  public function enqueue_scripts(): void
+  public function enqueue_frontend_scripts(): void
   {
-    // Enqueue frontend JavaScript
-    $this->asset_loader->register_style(
-      'wcf-animbuilder-class-selector',
-      'assets/build/modules/animation-builder/animbuilder-copy.css',
-      []
+    if ($this->is_editor_preview()) {
+      $this->enqueue_editor_preview_scripts();
+      return;
+    }
 
-    );
+    $this->enqueue_page_scripts();
   }
 
-  public function html_selector()
+  /**
+   * Editor preview mode — load all CSS/JS for the SaaS editor iframe
+   *
+   * Enqueues frontend.js, all active free presets, and localizes with
+   * ajaxurl + nonce + pageTypeConfigs so the editor can save/delete via AJAX.
+   *
+   * @return void
+   */
+  private function enqueue_editor_preview_scripts(): void
   {
+    if (!is_user_logged_in() || !current_user_can('manage_options')) {
+      return;
+    }
 
-    if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) == 'animation-builder') {
-      wp_enqueue_style('wcf-animbuilder-class-selector');
-?>
-      <div class="wcfanimb-skip-selector" id="wcf-anim-builder-structure"></div>
+    $deps = apply_filters('motionkit_core_lib_deps', []);
+    $deps = array_values(array_filter($deps, function ($dep) {
+      return $dep !== 'wp-element';
+    }));
 
-      <div id="wcf-ab-context-menu-wrapper"></div>
-<?php
+    // Enqueue frontend runner
+    wp_register_script(
+      'motionkit-frontend',
+      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend.js',
+      $deps,
+      MOTIONKIT_VERSION,
+      true
+    );
+    wp_enqueue_script('motionkit-frontend');
+
+    // Enqueue editor bridge — postMessage receiver for SaaS editor
+    wp_enqueue_script(
+      'motionkit-editor-bridge',
+      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/editor-bridge.js',
+      ['motionkit-frontend'],
+      MOTIONKIT_VERSION,
+      true
+    );
+
+    // Enqueue ALL free presets (not filtered by page config)
+    $this->enqueue_all_free_presets();
+
+    // Load device breakpoints
+    $devices = $this->get_sanitized_devices();
+
+    // Get existing page config (may be empty for new pages)
+    $page_configs = $this->page_type->getConfig();
+
+    // Localize with enriched data for the SaaS editor
+    wp_localize_script('motionkit-frontend', 'wcfanimb', [
+      'animation_config' => is_array($page_configs) ? $page_configs : [],
+      'device_config'    => $devices,
+      'ajaxurl'          => admin_url('admin-ajax.php'),
+      'nonce'            => wp_create_nonce('wcf-admin-preview-nonce'),
+      'pageTypeConfigs'  => $this->page_type->getCurrentPageType(),
+      'base_path'        => MOTIONKIT_PLUGIN_URL,
+    ]);
+
+    // Allow Pro to enqueue premium preset scripts
+    do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts', $deps, true, []);
+  }
+
+  /**
+   * Normal frontend — conditional script loading based on saved page configs
+   *
+   * @return void
+   */
+  private function enqueue_page_scripts(): void
+  {
+    $page_configs = $this->page_type->getConfig();
+
+    // Early return — no saved configs for this page
+    if (empty($page_configs) || !is_array($page_configs)) {
+      return;
+    }
+
+    // Determine which presets are active in the config
+    $is_custom = false;
+    $is_free = false;
+    $active_presets = $this->get_active_presets($page_configs, $is_custom, $is_free);
+
+    // Build deps — allow Pro to add gsap/ScrollTrigger via filter
+    $deps = apply_filters('motionkit_core_lib_deps', []);
+    $deps = array_values(array_filter($deps, function ($dep) {
+      return $dep !== 'wp-element';
+    }));
+
+    // Enqueue main frontend runner
+    wp_register_script(
+      'motionkit-frontend',
+      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend.js',
+      $deps,
+      MOTIONKIT_VERSION,
+      true
+    );
+    wp_enqueue_script('motionkit-frontend');
+
+    // Conditionally enqueue free preset scripts
+    if ($is_free || $this->is_editor_preview()) {
+      $this->enqueue_free_presets($active_presets);
+    }
+
+    // Load device breakpoints and localize
+    $devices = $this->get_sanitized_devices();
+
+    wp_localize_script('motionkit-frontend', 'wcfanimb', [
+      'animation_config' => $page_configs,
+      'device_config'    => $devices,
+    ]);
+
+    // Allow Pro to enqueue premium preset scripts
+    do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts', $deps, $is_custom, $active_presets);
+  }
+
+  /**
+   * Enqueue active free preset scripts and CSS
+   *
+   * @param array $active_presets Active preset handles from page config
+   * @return void
+   */
+  private function enqueue_free_presets(array $active_presets): void
+  {
+    $config_path = MOTIONKIT_PLUGIN_DIR . 'includes/Common/configs/animation-builder-assets.php';
+
+    if (!file_exists($config_path)) {
+      return;
+    }
+
+    $config = include $config_path;
+
+    if (!is_array($config) || empty($config['freePresets'])) {
+      return;
+    }
+
+    $active_elements = $this->get_active_element_keys('wcf_anim_builder_free_animation_settings');
+
+    if (empty($active_elements)) {
+      return;
+    }
+
+    // Enqueue free animation CSS
+    wp_enqueue_style(
+      'wcf-animation-builder-free-anim',
+      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/freeAnim.css',
+      [],
+      MOTIONKIT_VERSION
+    );
+
+    // Enqueue each active free preset script
+    foreach ($active_elements as $key) {
+      if (isset($config['freePresets'][$key]) && in_array($key, $active_presets, true)) {
+        $element = $config['freePresets'][$key];
+        wp_enqueue_script(
+          $key,
+          $element['src'],
+          $element['deps'] ?? [],
+          $element['version'] ?? MOTIONKIT_VERSION,
+          true
+        );
+      }
     }
   }
+
+  /**
+   * Enqueue ALL free presets (editor preview mode)
+   *
+   * Loads every free preset from the config — no active_elements
+   * or page config filtering. The SaaS editor needs all presets available.
+   *
+   * @return void
+   */
+  private function enqueue_all_free_presets(): void
+  {
+    $config_path = MOTIONKIT_PLUGIN_DIR . 'includes/Common/configs/animation-builder-assets.php';
+
+    if (!file_exists($config_path)) {
+      return;
+    }
+
+    $config = include $config_path;
+
+    if (!is_array($config) || empty($config['freePresets'])) {
+      return;
+    }
+
+    // Enqueue free animation CSS
+    wp_enqueue_style(
+      'wcf-animation-builder-free-anim',
+      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/freeAnim.css',
+      [],
+      MOTIONKIT_VERSION
+    );
+
+    // Enqueue every free preset script
+    foreach ($config['freePresets'] as $key => $element) {
+      wp_enqueue_script(
+        $key,
+        $element['src'],
+        $element['deps'] ?? [],
+        $element['version'] ?? MOTIONKIT_VERSION,
+        true
+      );
+    }
+  }
+
+  /**
+   * Load and sanitize device breakpoint config
+   *
+   * @return array Sanitized device breakpoints
+   */
+  private function get_sanitized_devices(): array
+  {
+    $config_path = MOTIONKIT_PLUGIN_DIR . 'includes/Common/configs/animation-builder-device.php';
+
+    if (!file_exists($config_path)) {
+      return [];
+    }
+
+    $config = include $config_path;
+
+    if (!is_array($config)) {
+      return [];
+    }
+
+    return array_map(function ($d) {
+      return [
+        'key'        => sanitize_key($d['key'] ?? ''),
+        'title'      => wp_strip_all_tags($d['title'] ?? ''),
+        'viewWidth'  => esc_attr($d['viewWidth'] ?? ''),
+        'mediaQuery' => wp_strip_all_tags($d['mediaQuery'] ?? ''),
+      ];
+    }, $config);
+  }
+
+  // ─── Preset Resolution ───────────────────────────────────────────
+
+  /**
+   * Recursively find active preset handles from page animation config
+   *
+   * Walks the nested config structure to find all enabled preset entries.
+   * Sets $is_custom and $is_free flags by reference.
+   *
+   * @param array $data     Page animation config
+   * @param bool  &$is_custom Set to true if custom animations found
+   * @param bool  &$is_free   Set to true if free animations found
+   * @return array Unique array of active preset handles
+   */
+  private function get_active_presets(array $data, bool &$is_custom, bool &$is_free): array
+  {
+    $presets = [];
+
+    $iterator = function (array $array) use (&$iterator, &$presets, &$is_custom, &$is_free): void {
+      foreach ($array as $value) {
+        if (!is_array($value)) {
+          continue;
+        }
+
+        // Check for enabled animation entries
+        if (isset($value['type'], $value['enable']) && (int) $value['enable'] === 1) {
+          if ($value['type'] === 'preset' && isset($value['preset'])) {
+            $presets[] = $value['preset'];
+          } elseif ($value['type'] === 'free_animation' && isset($value['preset'])) {
+            $presets[] = $value['preset'];
+            $is_free = true;
+          } elseif ($value['type'] === 'custom') {
+            $is_custom = true;
+          }
+        }
+
+        // Recurse into nested arrays
+        $iterator($value);
+      }
+    };
+
+    $iterator($data);
+
+    return array_values(array_unique($presets));
+  }
+
+  /**
+   * Get keys of active free animation elements from WP option
+   *
+   * Reads a JSON-encoded option containing element activation state.
+   *
+   * @param string $option_name WP option name
+   * @return array Active element keys
+   */
+  private function get_active_element_keys(string $option_name): array
+  {
+    $raw = get_option($option_name);
+
+    if (!is_string($raw) || $raw === '') {
+      return [];
+    }
+
+    $data = json_decode($raw, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($data) || !isset($data['elements'])) {
+      return [];
+    }
+
+    $active_keys = [];
+
+    foreach ($data['elements'] as $group) {
+      if (!isset($group['elements']) || !is_array($group['elements'])) {
+        continue;
+      }
+      foreach ($group['elements'] as $key => $element) {
+        if (!empty($element['is_active'])) {
+          $active_keys[] = $key;
+        }
+      }
+    }
+
+    return $active_keys;
+  }
+
+  // ─── AJAX Handlers ───────────────────────────────────────────────
+
+  /**
+   * AJAX: Save page-specific animation configs
+   *
+   * @return void
+   */
+  public function ajax_configs_store(): void
+  {
+    check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+
+    if (!current_user_can('manage_options')) {
+      wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'motionkit')], 403);
+    }
+
+    $page_type_raw = isset($_POST['pageTypeConfigs']) ? sanitize_text_field(wp_unslash($_POST['pageTypeConfigs'])) : '';
+    $anim_raw = isset($_POST['animationConfigs']) ? sanitize_text_field(wp_unslash($_POST['animationConfigs'])) : '';
+
+    if ($page_type_raw === '' || $anim_raw === '') {
+      wp_send_json_error(['msg' => esc_html__('Missing configuration data', 'motionkit')], 400);
+    }
+
+    $page_type_configs = json_decode($page_type_raw, true);
+    $animation_configs = json_decode($anim_raw, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($page_type_configs) || !is_array($animation_configs)) {
+      wp_send_json_error(['msg' => esc_html__('Invalid configuration data', 'motionkit')], 400);
+    }
+
+    $this->page_type->saveConfig($page_type_configs, $animation_configs);
+
+    wp_send_json_success([
+      'msg'     => esc_html__('Configurations saved', 'motionkit'),
+      'configs' => $animation_configs,
+    ]);
+  }
+
+  /**
+   * AJAX: Delete page-specific animation configs
+   *
+   * @return void
+   */
+  public function ajax_configs_delete(): void
+  {
+    check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+
+    if (!current_user_can('manage_options')) {
+      wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'motionkit')], 403);
+    }
+
+    $raw = isset($_POST['pageTypeConfigs']) ? sanitize_text_field(wp_unslash($_POST['pageTypeConfigs'])) : '';
+
+    if ($raw === '') {
+      wp_send_json_error(['msg' => esc_html__('Missing configuration data', 'motionkit')], 400);
+    }
+
+    $page_type_configs = json_decode($raw, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($page_type_configs)) {
+      wp_send_json_error(['msg' => esc_html__('Invalid configuration data', 'motionkit')], 400);
+    }
+
+    $this->page_type->deleteConfig($page_type_configs);
+
+    wp_send_json_success(['msg' => esc_html__('Configurations deleted', 'motionkit')]);
+  }
+
+  /**
+   * AJAX: Save global animation configs
+   *
+   * @return void
+   */
+  public function ajax_global_configs_store(): void
+  {
+    check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+
+    if (!current_user_can('manage_options')) {
+      wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'motionkit')], 403);
+    }
+
+    $raw = isset($_POST['animationConfigs']) ? sanitize_text_field(wp_unslash($_POST['animationConfigs'])) : '';
+
+    if ($raw === '') {
+      wp_send_json_error(['msg' => esc_html__('Missing configuration data', 'motionkit')], 400);
+    }
+
+    $animation_configs = json_decode($raw, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($animation_configs)) {
+      wp_send_json_error(['msg' => esc_html__('Invalid configuration data', 'motionkit')], 400);
+    }
+
+    update_option('wcf_global_animation_builder_configs', $animation_configs);
+
+    wp_send_json_success([
+      'msg'     => esc_html__('Global configurations saved', 'motionkit'),
+      'configs' => $animation_configs,
+    ]);
+  }
+
+  /**
+   * AJAX: Delete global animation configs
+   *
+   * @return void
+   */
+  public function ajax_global_configs_delete(): void
+  {
+    check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+
+    if (!current_user_can('manage_options')) {
+      wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'motionkit')], 403);
+    }
+
+    delete_option('wcf_global_animation_builder_configs');
+
+    wp_send_json_success(['msg' => esc_html__('Global configurations deleted', 'motionkit')]);
+  }
+
+  // ─── Accessors ───────────────────────────────────────────────────
 
   /**
    * Get asset loader instance
@@ -100,77 +551,12 @@ final class Frontend
   }
 
   /**
-   * Add custom body classes
+   * Get page type resolver
    *
-   * @param array $classes Existing body classes
-   * @return array Modified body classes
+   * @return AnimationBuilderPageType Page type instance
    */
-  public function add_body_classes(array $classes): array
+  public function get_page_type(): AnimationBuilderPageType
   {
-    // Add custom body classes here if needed
-    return $classes;
-  }
-
-  /**
-   * AJAX handler for getting animation data
-   *
-   * @return void
-   */
-  public function ajax_get_animation_data(): void
-  {
-    // Verify nonce
-    $nonce = isset($_REQUEST['wcf_animation_builder_nonce'])
-      ? sanitize_text_field(wp_unslash($_REQUEST['wcf_animation_builder_nonce']))
-      : '';
-
-    if (!wp_verify_nonce($nonce, 'wcf_animation_builder_nonce')) {
-      wp_send_json_error(['message' => __('Security check failed.', 'gsap-animation-builder-for-wordpress')]);
-    }
-
-    // Get and sanitize data
-    $post_id = absint($_GET['post_id'] ?? 0);
-
-    if (empty($post_id)) {
-      wp_send_json_error(['message' => __('Invalid post ID.', 'gsap-animation-builder-for-wordpress')]);
-    }
-
-    // Get animation data
-    $animation_data = get_post_meta($post_id, '_wcf_animation_data', true);
-
-    if (empty($animation_data)) {
-      wp_send_json_error(['message' => __('No animation data found.', 'gsap-animation-builder-for-wordpress')]);
-    }
-
-    wp_send_json_success($animation_data);
-  }
-
-  /**
-   * AJAX handler for saving animation
-   *
-   * @return void
-   */
-  public function ajax_save_animation(): void
-  {
-    // Verify nonce
-    $nonce = isset($_REQUEST['wcf_animation_builder_nonce'])
-      ? sanitize_text_field(wp_unslash($_REQUEST['wcf_animation_builder_nonce']))
-      : '';
-
-    if (!wp_verify_nonce($nonce, 'wcf_animation_builder_nonce')) {
-      wp_send_json_error(['message' => __('Security check failed.', 'gsap-animation-builder-for-wordpress')]);
-    }
-
-    // Get and sanitize data
-    $post_id = absint($_POST['post_id'] ?? 0);
-    $animation_data = isset($_POST['animation_data']) ? sanitize_text_field(wp_unslash($_POST['animation_data'])) : '';
-
-    if (empty($post_id) || empty($animation_data)) {
-      wp_send_json_error(['message' => __('Invalid data provided.', 'gsap-animation-builder-for-wordpress')]);
-    }
-
-    // Save animation data
-    update_post_meta($post_id, '_wcf_animation_data', $animation_data);
-
-    wp_send_json_success(['message' => __('Animation saved successfully.', 'gsap-animation-builder-for-wordpress')]);
+    return $this->page_type;
   }
 }

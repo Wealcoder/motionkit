@@ -25,7 +25,9 @@ module.exports = {
     return {
       ...getWebpackEntryPoints(),   
       "modules/animation-builder/frontend":
-        "./src/modules/animation-builder/frontend.js",   
+        "./src/modules/animation-builder/frontend.js",
+      "modules/animation-builder/editor-bridge":
+        "./src/modules/animation-builder/editor-bridge.js",
       "modules/animation-builder/freeAnim": "./src/css/freeAnim.css",
       // auto-generated free preset entries (frontend)
       ...getPresetEntries({

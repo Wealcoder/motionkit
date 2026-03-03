@@ -16,7 +16,6 @@ if (!defined('ABSPATH')) {
 
 use WcfAnimationBuilder\Backend\Backend;
 use WcfAnimationBuilder\Frontend\Frontend;
-use WcfAnimationBuilder\Compatibility\Compatibility;
 use WcfAnimationBuilder\Common\Assets\AssetLoader;
 
 /**
@@ -44,16 +43,6 @@ final class ComponentFactory
     public static function create_frontend(): Frontend
     {
         return new Frontend();
-    }
-
-    /**
-     * Create compatibility instance
-     *
-     * @return Compatibility Compatibility instance
-     */
-    public static function create_compatibility(): Compatibility
-    {
-        return new Compatibility();
     }
 
     /**

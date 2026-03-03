@@ -47,7 +47,7 @@ class AssetLoader
      */
     public function __construct()
     {
-        $this->version = WCF_ANIMATION_BUILDER_VERSION;
+        $this->version = MOTIONKIT_VERSION;
     }
     
     /**
@@ -58,7 +58,7 @@ class AssetLoader
     private function get_plugin_instance(): \WcfAnimationBuilder\Plugin
     {
         if (null === $this->plugin) {
-            $this->plugin = \WcfAnimationBuilder\Plugin::get_instance(WCF_ANIMATION_BUILDER_PLUGIN_FILE);
+            $this->plugin = \WcfAnimationBuilder\Plugin::get_instance(MOTIONKIT_PLUGIN_FILE);
         }
         return $this->plugin;
     }

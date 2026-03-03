@@ -17,9 +17,8 @@ if (!defined('ABSPATH')) {
 use WcfAnimationBuilder\Backend\Backend;
 use WcfAnimationBuilder\Frontend\Frontend;
 use WcfAnimationBuilder\Includes\Autoloader;
-use WcfAnimationBuilder\Compatibility\Compatibility;
 use WcfAnimationBuilder\Factory\ComponentFactory;
-use WcfAnimationBuilder\Common\AnimationBuilderCore;
+
 
 /**
  * Main Plugin Class
@@ -41,7 +40,7 @@ final class Plugin
     /**
      * Plugin slug
      */
-    public const PLUGIN_SLUG = 'gsap-animation-builder-for-wordpress';
+    public const PLUGIN_SLUG = 'motionkit';
     
 
     /**
@@ -92,19 +91,7 @@ final class Plugin
      * @var Backend|null
      */
     private ?Backend $backend = null;
-    /**
-     * AnimationBuilderCore instance
-     *
-     * @var AnimationBuilderCore|null
-     */
-    private ?AnimationBuilderCore $buildercore = null;
-
-    /**
-     * Compatibility instance
-     *
-     * @var Compatibility|null
-     */
-    private ?Compatibility $compatibility = null;
+  
 
     /**
      * Constructor
@@ -176,13 +163,10 @@ final class Plugin
         // }
        
         // Initialize components (lazy loading)
-        $this->init_compatibility();
         $this->init_frontend();
-        $this->init_backend();
-
-        $this->init_animation_builder_core();
+        $this->init_backend();  
         
-        do_action('WCF_ANIMATION_BUILDER_LOADED');
+        do_action('MOTIONKIT_LOADED');
     }
 
     /**
@@ -208,29 +192,19 @@ final class Plugin
     /**
      * Initialize frontend functionality
      *
+     * Runs in all contexts: Frontend handles its own context checks —
+     * wp_enqueue_scripts only fires on page loads, AJAX handlers
+     * fire in admin context (admin-ajax.php).
+     *
      * @return void
      */
     private function init_frontend(): void
     {
-        // Only initialize frontend on frontend requests
-        if (is_admin()) {
-            return;
-        }
-
         $this->frontend = ComponentFactory::create_frontend();
         $this->frontend->init();
     }
 
-    /**
-     * Initialize animation builder core
-     *
-     * @return void
-     */
-    private function init_animation_builder_core(): void
-    {
-        $this->buildercore = AnimationBuilderCore::instance();
-        $this->buildercore->init();
-    }
+    
 
     /**
      * Initialize backend functionality
@@ -243,17 +217,6 @@ final class Plugin
             $this->backend = ComponentFactory::create_backend();
             $this->backend->init();
         }
-    }
-
-    /**
-     * Initialize compatibility
-     *
-     * @return void
-     */
-    private function init_compatibility(): void
-    {
-        $this->compatibility = ComponentFactory::create_compatibility();
-        $this->compatibility->init();
     }
 
     /**
@@ -275,10 +238,7 @@ final class Plugin
     public function activate(): void
     {
         // Set default options
-        $this->set_default_options();
-       
-        AnimationBuilderCore::instance()->custom_rewrite_rules();	      		
-		
+        $this->set_default_options();   
         // Flush rewrite rules
         flush_rewrite_rules();
         update_option('wcf_animation_builder_version', self::VERSION);

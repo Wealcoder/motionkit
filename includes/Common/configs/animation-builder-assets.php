@@ -10,350 +10,142 @@ defined('ABSPATH') || die();
 return [
   'presets' => [
     'wcf-scroll-video-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/scrollVideoFrame.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rScrollVideoFrame.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/scrollVideoFrame.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-horizontal-scroll-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/horizontalScrollAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rHorizontalScrollAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/horizontalScrollAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-cube-scroll-reveal-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cubeScrollRevealAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rCubeScrollRevealAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cubeScrollRevealAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-image-reveal-animation' => [
-      'src' =>  WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageRevealAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rImageRevealAnim.js',
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageRevealAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-image-hover-reveal-animation' => [
-      'src' =>  WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageHoverRevealAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rImageHoverRevealAnim.js',
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageHoverRevealAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-cursor-hover-reveal-animation' => [
-      'src' =>  WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cursorHoverRevealAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rCursorHoverRevealAnim.js',
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cursorHoverRevealAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-cursor-hover-move-animation' => [
-      'src' =>  WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cursorHoverMoveAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rCursorHoverMoveAnim.js',
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cursorHoverMoveAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-image-stretch-animation' => [
-      'src' =>  WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageStretchAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rImageStretchAnim.js',
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageStretchAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-image-scale-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageScaleAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rImageScaleAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageScaleAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-text-split-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSplitAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rTextSplitAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSplitAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-text-rotate-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textRotateAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rTextRotateAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textRotateAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-text-scale-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textScaleAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rTextScaleAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textScaleAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-text-invert-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textInvertAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rTextInvertAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textInvertAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-text-spin-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSpinAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rTextSpinAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSpinAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-popup-media-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/popupMediaAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rPopupMediaAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/popupMediaAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-container-fade-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/containerFadeAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rContainerFadeAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/containerFadeAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-header-sticky-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/headerStickyAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/preset/rHeaderStickyAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/headerStickyAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
   ],
   // ############## FREE ANIMATIONS ##############
   "freePresets" => [
     // ############## GENERAL ############## //
     'wcf-ab-gen-sil-fa' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpaceInLeftAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSpeceInLeftAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpaceInLeftAnim.js',
       'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-general-sir-free-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpeceInRightAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSpeceInRightAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpeceInRightAnim.js',
       'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-general-swap-free-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSwapAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralSwapAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSwapAnim.js',
       'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-general-tid-free-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalTwisterInDownAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rGeneralTwisterInDownAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalTwisterInDownAnim.js',
       'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
 
     // ############## IMAGE ############## //
     'wcf-image-swash-in-free-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/imageSwashInAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rImageSwashInAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/imageSwashInAnim.js',
       'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-image-vanish-in-free-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/imageVanishInAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rImageVanishInAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/imageVanishInAnim.js',
       'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
 
     // ############## TEXT ############## //
     'wcf-text-clip-reveal-free-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipRevealAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rTextClipRevealAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipRevealAnim.js',
       'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-text-clip-slide-up-free-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipSlideUpAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rTextClipSlideUpAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipSlideUpAnim.js',
       'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
     'wcf-text-clip-slide-right-free-animation' => [
-      'src' => WCF_ANIMATION_BUILDER_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipSlideRightAnim.js',
-      'editorSrc' => WCF_ANIMATION_BUILDER_PLUGIN_URL . 'assets/build/modules/animation-builder/register/freePresets/rTextClipSlideRightAnim.js',
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipSlideRightAnim.js',
       'deps' => [],
-      'editorDeps' => [
-        'react',
-        'react-dom',
-        'wp-dom-ready',
-        'wp-element',
-        'wp-hooks'
-      ],
-      'version' => WCF_ANIMATION_BUILDER_VERSION,
+      'version' => MOTIONKIT_VERSION,
     ],
   ]
 
