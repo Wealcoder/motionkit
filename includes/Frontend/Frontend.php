@@ -68,6 +68,9 @@ final class Frontend
    */
   private function init_hooks(): void
   {
+    // Allow the editor iframe to embed this site
+    add_action('send_headers', [$this, 'allow_editor_iframe']);
+
     // Register GSAP CDN scripts via core deps filter
     add_filter('motionkit_core_lib_deps', [$this, 'register_gsap_libs']);
 
@@ -168,6 +171,21 @@ final class Frontend
   {
     return isset($_GET['action'])
       && sanitize_text_field(wp_unslash($_GET['action'])) === 'motionkit-editor';
+  }
+
+  /**
+   * Remove X-Frame-Options for editor preview so the SaaS iframe can embed the page.
+   *
+   * @return void
+   */
+  public function allow_editor_iframe(): void
+  {
+    if (!$this->is_editor_preview()) {
+      return;
+    }
+
+    header_remove('X-Frame-Options');
+    header('Content-Security-Policy: frame-ancestors *');
   }
 
   /**
