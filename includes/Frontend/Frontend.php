@@ -41,6 +41,13 @@ final class Frontend
   private AnimationBuilderPageType $page_type;
 
   /**
+   * ScrollSmoother manager
+   *
+   * @var ScrollSmoother
+   */
+  private ScrollSmoother $smoother;
+
+  /**
    * Initialize frontend functionality
    *
    * @return void
@@ -49,6 +56,7 @@ final class Frontend
   {
     $this->asset_loader = ComponentFactory::create_asset_loader();
     $this->page_type = AnimationBuilderPageType::instance();
+    $this->smoother = new ScrollSmoother();
 
     $this->init_hooks();
   }
@@ -60,9 +68,19 @@ final class Frontend
    */
   private function init_hooks(): void
   {
+    // Register GSAP CDN scripts via core deps filter
+    add_filter('motionkit_core_lib_deps', [$this, 'register_gsap_libs']);
+
     // Frontend script enqueue — only on actual page loads (not admin/AJAX)
     if (!is_admin()) {
       add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_scripts'], 60);
+
+      // ScrollSmoother wrapper — skip if WCF Addons Pro already handles it
+      if (!defined('WCF_ADDONS_PRO_VERSION')) {
+        add_action('wp_body_open', [$this->smoother, 'start_wrapper'], 1);
+        add_action('wp_footer', [$this->smoother, 'end_wrapper'], -1);
+        add_action('wp_footer', [$this->smoother, 'run_scroll_smoother']);
+      }
     }
 
     // AJAX handlers — must register in admin context (admin-ajax.php)
@@ -70,6 +88,73 @@ final class Frontend
     add_action('wp_ajax_wcf_anim_builder_configs_delete', [$this, 'ajax_configs_delete']);
     add_action('wp_ajax_wcf_anim_builder_gl_configs_store', [$this, 'ajax_global_configs_store']);
     add_action('wp_ajax_wcf_anim_builder_gl_configs_delete', [$this, 'ajax_global_configs_delete']);
+  }
+
+  // ─── GSAP Library Registration ──────────────────────────────────
+
+  /**
+   * Register all GSAP CDN scripts and return core dependency handles
+   *
+   * @param array $deps Existing deps from filter
+   * @return array Merged dependency handles
+   */
+  public function register_gsap_libs(array $deps): array
+  {
+    $cdn = 'https://cdn.jsdelivr.net/npm/gsap@3.14/dist/';
+    $ver = '3.14.0';
+
+    $libs = [
+      // Core
+      'gsap'                => ['file' => 'gsap.min.js',                'deps' => []],
+
+      // Scroll
+      'ScrollTrigger'       => ['file' => 'ScrollTrigger.min.js',       'deps' => ['gsap']],
+      'ScrollSmoother'      => ['file' => 'ScrollSmoother.min.js',      'deps' => ['gsap', 'ScrollTrigger']],
+      'ScrollToPlugin'      => ['file' => 'ScrollToPlugin.min.js',      'deps' => ['gsap']],
+      'Observer'            => ['file' => 'Observer.min.js',             'deps' => ['gsap']],
+
+      // Text
+      'SplitText'           => ['file' => 'SplitText.min.js',           'deps' => ['gsap']],
+      'TextPlugin'          => ['file' => 'TextPlugin.min.js',          'deps' => ['gsap']],
+      'ScrambleTextPlugin'  => ['file' => 'ScrambleTextPlugin.min.js',  'deps' => ['gsap']],
+
+      // SVG / Path
+      'DrawSVGPlugin'       => ['file' => 'DrawSVGPlugin.min.js',       'deps' => ['gsap']],
+      'MorphSVGPlugin'      => ['file' => 'MorphSVGPlugin.min.js',      'deps' => ['gsap']],
+      'MotionPathPlugin'    => ['file' => 'MotionPathPlugin.min.js',    'deps' => ['gsap']],
+      'MotionPathHelper'    => ['file' => 'MotionPathHelper.min.js',    'deps' => ['gsap', 'MotionPathPlugin']],
+
+      // UI
+      'Flip'                => ['file' => 'Flip.min.js',                'deps' => ['gsap']],
+      'Draggable'           => ['file' => 'Draggable.min.js',           'deps' => ['gsap']],
+      'InertiaPlugin'       => ['file' => 'InertiaPlugin.min.js',       'deps' => ['gsap']],
+
+      // Physics
+      'Physics2DPlugin'     => ['file' => 'Physics2DPlugin.min.js',     'deps' => ['gsap']],
+      'PhysicsPropsPlugin'  => ['file' => 'PhysicsPropsPlugin.min.js',  'deps' => ['gsap']],
+
+      // Eases
+      'CustomEase'          => ['file' => 'CustomEase.min.js',          'deps' => ['gsap']],
+      'EasePack'            => ['file' => 'EasePack.min.js',            'deps' => ['gsap']],
+      'CustomBounce'        => ['file' => 'CustomBounce.min.js',        'deps' => ['gsap', 'CustomEase']],
+      'CustomWiggle'        => ['file' => 'CustomWiggle.min.js',        'deps' => ['gsap', 'CustomEase']],
+
+      // Other
+      'PixiPlugin'          => ['file' => 'PixiPlugin.min.js',          'deps' => ['gsap']],
+      'EaselPlugin'         => ['file' => 'EaselPlugin.min.js',         'deps' => ['gsap']],
+      'GSDevTools'          => ['file' => 'GSDevTools.min.js',          'deps' => ['gsap']],
+    ];
+
+    foreach ($libs as $handle => $lib) {
+      wp_register_script($handle, $cdn . $lib['file'], $lib['deps'], $ver, true);
+      if($this->is_editor_preview()) {
+        wp_enqueue_script($handle);
+      }
+    }
+
+    $core_deps = ['gsap', 'ScrollSmoother' ];
+
+    return array_merge($deps, $core_deps);
   }
 
   // ─── Frontend Script Loading ─────────────────────────────────────
@@ -145,6 +230,18 @@ final class Frontend
     // Enqueue ALL free presets (not filtered by page config)
     $this->enqueue_all_free_presets();
 
+    // Enqueue ALL premium presets
+    $this->enqueue_all_presets($deps);
+
+    // Always enqueue the smart animation engine in editor preview
+    wp_enqueue_script(
+      'motionkit-custom-animation',
+      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/customAnimation.js',
+      ['motionkit-frontend'],
+      MOTIONKIT_VERSION,
+      true
+    );
+
     // Load device breakpoints
     $devices = $this->get_sanitized_devices();
 
@@ -203,6 +300,20 @@ final class Frontend
     // Conditionally enqueue free preset scripts
     if ($is_free || $this->is_editor_preview()) {
       $this->enqueue_free_presets($active_presets);
+    }
+
+    // Enqueue premium preset scripts
+    $this->enqueue_presets($active_presets, $deps);
+
+    // Enqueue smart animation engine when custom animations are present
+    if ($is_custom) {
+      wp_enqueue_script(
+        'motionkit-custom-animation',
+        MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/customAnimation.js',
+        ['motionkit-frontend'],
+        MOTIONKIT_VERSION,
+        true
+      );
     }
 
     // Load device breakpoints and localize
@@ -305,6 +416,83 @@ final class Frontend
         $element['version'] ?? MOTIONKIT_VERSION,
         true
       );
+    }
+  }
+
+  /**
+   * Enqueue active premium preset scripts
+   *
+   * @param array $active_presets Active preset handles from page config
+   * @param array $deps           Script dependencies (gsap, ScrollTrigger, etc.)
+   * @return void
+   */
+  private function enqueue_presets(array $active_presets, array $deps = []): void
+  {
+    $config_path = MOTIONKIT_PLUGIN_DIR . 'includes/Common/configs/animation-builder-assets.php';
+
+    if (!file_exists($config_path)) {
+      return;
+    }
+
+    $config = include $config_path;
+
+    if (!is_array($config) || empty($config['presets'])) {
+      return;
+    }    
+  
+
+    $active_elements = $this->get_active_element_keys('aae_anim_builder_settings');
+
+    foreach ($active_presets as $key) {
+      if (!isset($config['presets'][$key])) {
+        continue;
+      }
+
+      // If element settings exist, respect the active toggle
+      if (!empty($active_elements) && !in_array($key, $active_elements, true)) {
+        continue;
+      }
+
+      $element = $config['presets'][$key];
+      wp_enqueue_script(
+        $key,
+        $element['src'],
+        $element['deps'] ?? $deps,
+        $element['version'] ?? MOTIONKIT_VERSION,
+        true
+      );
+    }
+  }
+
+  /**
+   * Enqueue ALL premium presets (editor preview mode)
+   *
+   * @param array $deps Script dependencies (gsap, ScrollTrigger, etc.)
+   * @return void
+   */
+  private function enqueue_all_presets(array $deps = []): void
+  {
+    $config_path = MOTIONKIT_PLUGIN_DIR . 'includes/Common/configs/animation-builder-assets.php';
+  
+    if (!file_exists($config_path)) {
+      return;
+    }
+
+    $config = include $config_path;
+   
+    if (!is_array($config) || empty($config['presets'])) {
+      return;
+    }
+ 
+    foreach ($config['presets'] as $key => $element) {
+      wp_enqueue_script(
+        $key,
+        $element['src'],
+        $element['deps'] ?? $deps,
+        $element['version'] ?? MOTIONKIT_VERSION,
+        true
+      );
+     
     }
   }
 

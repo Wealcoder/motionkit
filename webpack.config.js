@@ -35,6 +35,15 @@ module.exports = {
           "./src/modules/animation-builder/frontend/animation-type/freePreset",
         outPrefix: "modules/animation-builder/frontend/freePresets/",
       }),
+      // auto-generated premium preset entries (frontend)
+      ...getPresetEntries({
+        folder:
+          "./src/modules/animation-builder/frontend/animation-type/preset",
+        outPrefix: "modules/animation-builder/frontend/presets/",
+      }),
+      // smart engine — custom animation entry point
+      "modules/animation-builder/frontend/customAnimation":
+        "./src/modules/animation-builder/frontend/animation-type/customAnimation.js",
     
       
     };

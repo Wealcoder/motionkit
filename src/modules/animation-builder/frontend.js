@@ -16,7 +16,11 @@ function playAnimation() {
     ) {
       window.addEventListener("load", () => {
         setTimeout(() => {
-          ScrollTrigger.refresh();
+          // check it exist
+          if (typeof ScrollTrigger !== "undefined") {
+            ScrollTrigger.refresh();
+          }
+         
           let mm;
 
           mm?.revert?.();
