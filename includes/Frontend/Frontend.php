@@ -77,13 +77,6 @@ final class Frontend
     // Frontend script enqueue — only on actual page loads (not admin/AJAX)
     if (!is_admin()) {
       add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_scripts'], 60);
-
-      // ScrollSmoother wrapper — skip if WCF Addons Pro already handles it
-      if (!defined('WCF_ADDONS_PRO_VERSION')) {
-        add_action('wp_body_open', [$this->smoother, 'start_wrapper'], 1);
-        add_action('wp_footer', [$this->smoother, 'end_wrapper'], -1);
-        add_action('wp_footer', [$this->smoother, 'run_scroll_smoother']);
-      }
     }
 
     // AJAX handlers — must register in admin context (admin-ajax.php)
@@ -189,6 +182,21 @@ final class Frontend
   }
 
   /**
+   * Register ScrollSmoother boot script (once only, when scripts will actually load).
+   * Skip if WCF Addons Pro is active — it handles the wrapper itself.
+   *
+   * @return void
+   */
+  private function maybe_init_scroll_smoother(): void
+  {
+    if (defined('WCF_ADDONS_PRO_VERSION')) {
+      return;
+    }
+   
+    add_action('wp_footer', [$this->smoother, 'run_scroll_smoother']);
+  }
+
+  /**
    * Conditionally enqueue frontend animation scripts
    *
    * Two modes:
@@ -217,9 +225,9 @@ final class Frontend
    */
   private function enqueue_editor_preview_scripts(): void
   {
-    if (!is_user_logged_in() || !current_user_can('manage_options')) {
-      return;
-    }
+   
+
+    $this->maybe_init_scroll_smoother();
 
     $deps = apply_filters('motionkit_core_lib_deps', []);
     $deps = array_values(array_filter($deps, function ($dep) {
@@ -293,6 +301,9 @@ final class Frontend
     if (empty($page_configs) || !is_array($page_configs)) {
       return;
     }
+
+    // Page has configs — register ScrollSmoother wrapper for this page
+    $this->maybe_init_scroll_smoother();
 
     // Determine which presets are active in the config
     $is_custom = false;
