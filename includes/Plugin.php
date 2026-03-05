@@ -164,8 +164,13 @@ final class Plugin
        
         // Initialize components (lazy loading)
         $this->init_frontend();
-        $this->init_backend();  
-        
+        $this->init_backend();
+
+        // Admin bar runs on both frontend and admin
+        add_action('admin_bar_menu', [$this, 'add_admin_bar_build_animation'], 100);
+        add_action('wp_head', [$this, 'admin_bar_inline_css']);
+        add_action('admin_head', [$this, 'admin_bar_inline_css']);
+
         do_action('MOTIONKIT_LOADED');
     }
 
@@ -279,6 +284,75 @@ final class Plugin
         // Update options and clear cache
         update_option('wcf_animation_builder_options', $options);
         \WcfAnimationBuilder\Helpers\Helper::clear_options_cache();
+    }
+
+    /**
+     * Add "Build Animation" link to the admin bar on frontend singular pages
+     */
+    public function add_admin_bar_build_animation($wp_admin_bar): void
+    {
+        if (is_admin() || !current_user_can('manage_options') ) {
+            return;
+        }
+
+        $editor_url = apply_filters('motionkit/editor/url', add_query_arg(array(
+            'site' => get_permalink(),
+        ), 'https://editor.motionkit.io/'));
+
+        $icon = '<span class="motionkit-ab-icon"></span>';
+        $title = $icon . '<span class="motionkit-ab-label">' . esc_html__('Build Animation', 'motionkit') . '</span>';
+
+        $wp_admin_bar->add_node(array(
+            'id'    => 'motionkit-build-animation',
+            'title' => $title,
+            'href'  => esc_url($editor_url),
+            'meta'  => array(
+                'target' => '_blank',
+                'title'  => esc_html__('Motionkit Editor', 'motionkit'),
+            ),
+        ));
+    }
+
+    /**
+     * Inline CSS for the admin bar icon
+     */
+    public function admin_bar_inline_css(): void
+    {
+        if (!is_admin_bar_showing() || !current_user_can('manage_options')) {
+            return;
+        }
+        ?>
+        <style>
+            #wp-admin-bar-motionkit-build-animation > .ab-item {
+                display: flex !important;
+                align-items: center !important;
+            }
+            .motionkit-ab-icon {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                margin-right: 6px;
+                background-image: url('<?php echo esc_url(MOTIONKIT_PLUGIN_URL . 'assets/images/Logo.png'); ?>');
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                flex-shrink: 0;
+            }
+            .motionkit-ab-label {
+                background: linear-gradient(135deg, #FF69B4, #FFD700, #7CFC00);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                font-weight: 600;
+            }
+            #wp-admin-bar-motionkit-build-animation:hover .motionkit-ab-label {
+                background: linear-gradient(135deg, #FF85C8, #FFE34D, #98FF2E);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+        </style>
+        <?php
     }
 
     /**

@@ -62,20 +62,9 @@ final class Backend
 		}
 		// Ensure this only applies to pages , posts
 		if ($post->post_type === 'page' || $post->post_type === 'post') {
-			$permalink_structure = get_option('permalink_structure');
-
-			if ($permalink_structure) {
-				$animation_builder_url = home_url('/aae-animation-builder/');
-			} else {
-				$animation_builder_url = home_url('/');
-				$animation_builder_url = add_query_arg(array(
-					'aae_builder' => 1,
-				), $animation_builder_url);
-			}
-
-			$editor_url            = apply_filters('wcfanimationbuilder/editor/url', add_query_arg(array(
-				'builder_url' => get_the_permalink($post->ID),
-			), $animation_builder_url));
+			$editor_url = apply_filters('motionkit/editor/url', add_query_arg(array(
+				'site' => get_the_permalink($post->ID),
+			), 'https://editor.motionkit.io/'));
 
 			$actions['wcfanimb_action'] = '<a target="_blank" href="' . esc_url($editor_url) . '">' . esc_html__('Build Animation', 'motionkit') . '</a>';
 		}

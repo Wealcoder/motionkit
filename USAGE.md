@@ -183,9 +183,9 @@ All endpoints require:
 
 | Action                               | Method | POST params                                         | Description                 |
 | ------------------------------------ | ------ | --------------------------------------------------- | --------------------------- |
-| `wcf_anim_builder_configs_store`     | POST   | `pageTypeConfigs` (JSON), `animationConfigs` (JSON) | Save page-specific config   |
+| `motionkit_builder_pagetype_configs` | POST   | `pageTypeConfigs` (JSON), `animationConfigs` (JSON) | Save page-specific config   |
 | `wcf_anim_builder_configs_delete`    | POST   | `pageTypeConfigs` (JSON)                            | Delete page-specific config |
-| `wcf_anim_builder_gl_configs_store`  | POST   | `animationConfigs` (JSON)                           | Save global config          |
+| `motionkit_builder_gl_configs_store` | POST   | `animationConfigs` (JSON)                           | Save global config          |
 | `wcf_anim_builder_gl_configs_delete` | POST   | —                                                   | Delete global config        |
 
 ### Error handling
@@ -235,7 +235,7 @@ Each animation entry in the config:
 | `wcf_animation_builder_creation_date`      | Install date                        |
 | `aae_anim_builder_settings`                | Premium preset toggle states (JSON) |
 | `wcf_anim_builder_free_animation_settings` | Free animation toggle states (JSON) |
-| `wcf_global_animation_builder_configs`     | Global animation configs (JSON)     |
+| `motionkit_global_settings`                | Global animation configs (JSON)     |
 | `cfanim_build_config_*`                    | Per-page animation configs          |
 
 ---
