@@ -16,6 +16,7 @@ if (!defined('ABSPATH')) {
 
 use WcfAnimationBuilder\Backend\Backend;
 use WcfAnimationBuilder\Frontend\Frontend;
+use WcfAnimationBuilder\RestApi\RestApi;
 use WcfAnimationBuilder\Includes\Autoloader;
 use WcfAnimationBuilder\Factory\ComponentFactory;
 
@@ -91,6 +92,13 @@ final class Plugin
      * @var Backend|null
      */
     private ?Backend $backend = null;
+
+    /**
+     * REST API instance
+     *
+     * @var RestApi|null
+     */
+    private ?RestApi $rest_api = null;
   
 
     /**
@@ -165,6 +173,7 @@ final class Plugin
         // Initialize components (lazy loading)
         $this->init_frontend();
         $this->init_backend();
+        $this->init_rest_api();
 
         // Admin bar runs on both frontend and admin
         add_action('admin_bar_menu', [$this, 'add_admin_bar_build_animation'], 100);
@@ -222,6 +231,17 @@ final class Plugin
             $this->backend = ComponentFactory::create_backend();
             $this->backend->init();
         }
+    }
+
+    /**
+     * Initialize REST API endpoints
+     *
+     * @return void
+     */
+    private function init_rest_api(): void
+    {
+        $this->rest_api = new RestApi();
+        $this->rest_api->init();
     }
 
     /**

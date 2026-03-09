@@ -13,12 +13,84 @@ import { handleMediaQuery } from "@/lib/utils";
 
 // WCFFreeAnimBuilder is already initialized by frontend.js (loaded as dependency)
 
+/**
+ * Allowed editor origins that can communicate with this bridge.
+ * In production only editor.motionkit.io is allowed.
+ * In development localhost origins are also permitted.
+ */
+const ALLOWED_ORIGINS = [
+  "https://editor.motionkit.io",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000",
+  '*'
+];
+
+/**
+ * Validate that a message event comes from an allowed editor origin.
+ */
+function isAllowedOrigin(origin) {
+  return ALLOWED_ORIGINS.some((allowed) => origin === allowed);
+}
+
+/**
+ * Get the validated parent origin for sending messages back.
+ * Falls back to the referrer or first allowed origin.
+ */
+function getParentOrigin() {
+  try {
+    if (document.referrer) {
+      const url = new URL(document.referrer);
+      const origin = url.origin;
+      if (isAllowedOrigin(origin)) return origin;
+    }
+  } catch (e) {
+    // ignore invalid referrer
+  }
+  return ALLOWED_ORIGINS[0];
+}
+
+/**
+ * Build a full REST API URL that works with both pretty and plain permalinks.
+ *
+ * Pretty:  https://site.com/wp-json/motionkit/v1/  + "configs"  → .../configs
+ * Plain:   https://site.com/?rest_route=/motionkit/v1/  + "configs"  → ...&rest_route=.../configs
+ *
+ * WordPress rest_url() already handles the base, but simple string concat
+ * breaks when the base contains a query string (?rest_route=).
+ */
+function restUrl(endpoint) {
+  const base = wcfanimb.rest_url || "";
+  // Plain permalinks: rest_url contains "?rest_route="
+  if (base.includes("?")) {
+    // base is e.g. "https://site.com/?rest_route=/motionkit/v1/"
+    // We need to append the endpoint to the rest_route value
+    return base + endpoint;
+  }
+  // Pretty permalinks: just concat
+  console.log('6 REST URL (pretty permalinks):', base + endpoint);
+  return base + endpoint;
+}
+
 let storeAnimation = {};
+let parentOrigin = null;
 
 function receivePageConfig() {
+  parentOrigin = getParentOrigin();
+
   window.addEventListener(
     "message",
     (event) => {
+      // Validate origin — reject messages from unknown sources
+      if (!isAllowedOrigin(event.origin)) {
+        return;
+      }
+
+      // Lock to the first valid origin we receive from
+      if (!parentOrigin) {
+        parentOrigin = event.origin;
+      }
+
       // Receive animation config from SaaS editor
       if ("wcf-animation-config" in event.data) {
         storeAnimation = {};
@@ -91,15 +163,19 @@ function receivePageConfig() {
       // Receive global + current page settings from the editor
       if (event.data?.type === "motionkit-settings") {
         const { globalSettings, currentPageSettings } = event.data.data || {};
-        console.log("Received global and page settings from editor", { globalSettings, currentPageSettings });
-        // Save global settings via WP AJAX
-        if (globalSettings) {
-          const globalForm = new FormData();
-          globalForm.append("action", "motionkit_builder_gl_configs_store");
-          globalForm.append("wcf_nonce", wcfanimb.nonce);
-          globalForm.append("animationConfigs", JSON.stringify(globalSettings));
 
-          fetch(wcfanimb.ajaxurl, { method: "POST", body: globalForm, credentials: "include" })
+        // Save global settings via REST API
+        if (globalSettings) {
+         
+          fetch(restUrl("global-settings"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-WP-Nonce": wcfanimb.rest_nonce,
+            },
+            credentials: "include",
+            body: JSON.stringify({ animationConfigs: globalSettings }),
+          })
             .then((r) => {
               if (!r.ok) {
                 return r.text().then((txt) => {
@@ -111,7 +187,6 @@ function receivePageConfig() {
             })
             .then((res) => {
               if (!res) return;
-              console.log("MotionKit: global settings response", res);
               if (res.success) {
                 wcfanimb.global_settings = globalSettings;
               }
@@ -119,15 +194,24 @@ function receivePageConfig() {
             .catch((err) => console.error("MotionKit: global settings save failed", err));
         }
 
-        // Save current page settings via WP AJAX
+        // Save current page settings via REST API
         if (currentPageSettings) {
-          const pageForm = new FormData();
-          pageForm.append("action", "motionkit_builder_pagetype_configs");
-          pageForm.append("wcf_nonce", wcfanimb.nonce);
-          pageForm.append("pageTypeConfigs", JSON.stringify(wcfanimb.pageTypeConfigs));
-          pageForm.append("animationConfigs", JSON.stringify(currentPageSettings));
-
-          fetch(wcfanimb.ajaxurl, { method: "POST", body: pageForm, credentials: "include" })
+          console.log('888 Saving current page settings via REST API:', {
+            pageTypeConfigs: wcfanimb.pageTypeConfigs,
+            animationConfigs: currentPageSettings,
+          });
+          fetch(restUrl("configs"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-WP-Nonce": wcfanimb.rest_nonce,
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              pageTypeConfigs: wcfanimb.pageTypeConfigs,
+              animationConfigs: currentPageSettings,
+            }),
+          })
             .then((r) => {
               if (!r.ok) {
                 return r.text().then((txt) => {
@@ -139,7 +223,6 @@ function receivePageConfig() {
             })
             .then((res) => {
               if (!res) return;
-              console.log("MotionKit: page settings response", res);
               if (res.success) {
                 wcfanimb.animation_config = currentPageSettings;
               }
@@ -156,11 +239,9 @@ function receivePageConfig() {
             pageType: wcfanimb.pageTypeConfigs,
             pageSettings: currentPageSettings || wcfanimb.animation_config,
             deviceConfig: wcfanimb.device_config,
-            ajaxurl: wcfanimb.ajaxurl,
-            nonce: wcfanimb.nonce,
             base_domain: wcfanimb.base_domain,
           },
-        }, "*");
+        }, parentOrigin);
 
         document.dispatchEvent(
           new CustomEvent("motionkit-settings-update", {
@@ -182,11 +263,9 @@ function receivePageConfig() {
             pageType: wcfanimb.pageTypeConfigs,
             pageSettings: wcfanimb.animation_config,
             deviceConfig: wcfanimb.device_config,
-            ajaxurl: wcfanimb.ajaxurl,
-            nonce: wcfanimb.nonce,
             base_domain: wcfanimb.base_domain,
           },
-        }, "*");
+        }, parentOrigin);
 
       }
     },
@@ -195,7 +274,13 @@ function receivePageConfig() {
 
   // Notify parent (SaaS editor) that the iframe is ready
   setTimeout(() => {
-    window.parent.postMessage(wcfanimb);
+    window.parent.postMessage({
+      type: "motionkit-ready",
+      data: {
+        platform: wcfanimb.platform,
+        base_domain: wcfanimb.base_domain,
+      },
+    }, parentOrigin);
   }, 1000);
 }
 

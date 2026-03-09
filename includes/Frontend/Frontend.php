@@ -80,11 +80,10 @@ final class Frontend
     }
 
     // AJAX handlers — must register in admin context (admin-ajax.php)
+    // All config endpoints require authentication (no nopriv)
     add_action('wp_ajax_motionkit_builder_pagetype_configs', [$this, 'ajax_configs_store']);
-    add_action('wp_ajax_nopriv_motionkit_builder_pagetype_configs', [$this, 'ajax_configs_store']);
     add_action('wp_ajax_wcf_anim_builder_configs_delete', [$this, 'ajax_configs_delete']);
     add_action('wp_ajax_motionkit_builder_gl_configs_store', [$this, 'ajax_global_configs_store']);
-    add_action('wp_ajax_nopriv_motionkit_builder_gl_configs_store', [$this, 'ajax_global_configs_store']);
     add_action('wp_ajax_wcf_anim_builder_gl_configs_delete', [$this, 'ajax_global_configs_delete']);
   }
 
@@ -179,8 +178,15 @@ final class Frontend
       return;
     }
 
+    $allowed_origins = apply_filters('motionkit/editor/allowed_origins', [
+      'https://editor.motionkit.io',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:3000',
+    ]);
+
     header_remove('X-Frame-Options');
-    header('Content-Security-Policy: frame-ancestors *');
+    header('Content-Security-Policy: frame-ancestors ' . implode(' ', $allowed_origins));
   }
 
   /**
@@ -285,8 +291,10 @@ final class Frontend
       'device_config'    => $devices,
       'ajaxurl'          => admin_url('admin-ajax.php'),
       'nonce'            => wp_create_nonce('wcf-admin-preview-nonce'),
+      'rest_url'         => rest_url('motionkit/v1/'),
+      'rest_nonce'       => wp_create_nonce('wp_rest'),
       'pageTypeConfigs'  => $this->page_type->getCurrentPageType(),
-      'base_domain'        => home_url(),
+      'base_domain'      => home_url(),
       'global_settings'  => is_array($global_settings) ? $global_settings : [],
       'platform'         => 'wordpress',
     ]);
@@ -718,22 +726,22 @@ final class Frontend
    */
   public function ajax_global_configs_store(): void
   {
-    // check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+    check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
 
-    // if (!current_user_can('manage_options')) {
-    //   wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'motionkit')], 403);
-    // }
+    if (!current_user_can('manage_options')) {
+      wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'motionkit')], 403);
+    }
 
-    $raw = isset($_POST['animationConfigs']) ? wp_unslash($_POST['animationConfigs']) : '';
+    $raw = isset($_POST['animationConfigs']) ? sanitize_text_field(wp_unslash($_POST['animationConfigs'])) : '';
 
     if ($raw === '') {
-      wp_send_json_error(['msg' => esc_html__('Missing configuration data', 'motionkit'), 'debug' => 'POST keys: ' . implode(',', array_keys($_POST))], 400);
+      wp_send_json_error(['msg' => esc_html__('Missing configuration data', 'motionkit')], 400);
     }
 
     $animation_configs = json_decode($raw, true);
 
     if (json_last_error() !== JSON_ERROR_NONE || !is_array($animation_configs)) {
-      wp_send_json_error(['msg' => esc_html__('Invalid configuration data', 'motionkit'), 'debug' => 'json_error: ' . json_last_error_msg(), 'raw_length' => strlen($raw)], 400);
+      wp_send_json_error(['msg' => esc_html__('Invalid configuration data', 'motionkit')], 400);
     }
 
     update_option('motionkit_global_settings', $animation_configs);
