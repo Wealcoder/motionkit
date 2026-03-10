@@ -62,9 +62,14 @@ final class Backend
 		}
 		// Ensure this only applies to pages , posts
 		if ($post->post_type === 'page' || $post->post_type === 'post') {
-			$editor_url = apply_filters('motionkit/editor/url', add_query_arg(array(
-				'site' => get_the_permalink($post->ID),
-			), 'https://editor.motionkit.io/'));
+			$page_url = get_the_permalink($post->ID);
+			$query_args = ['site' => $page_url];
+
+			if (\WcfAnimationBuilder\Auth\OAuthHandler::is_connected()) {
+				$query_args['token'] = \WcfAnimationBuilder\Auth\JwtTokenManager::generate($page_url);
+			}
+
+			$editor_url = apply_filters('motionkit/editor/url', add_query_arg($query_args, 'https://editor.motionkit.io/'));
 
 			$actions['wcfanimb_action'] = '<a target="_blank" href="' . esc_url($editor_url) . '">' . esc_html__('Build Animation', 'motionkit') . '</a>';
 		}

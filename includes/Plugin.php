@@ -17,6 +17,8 @@ if (!defined('ABSPATH')) {
 use WcfAnimationBuilder\Backend\Backend;
 use WcfAnimationBuilder\Frontend\Frontend;
 use WcfAnimationBuilder\RestApi\RestApi;
+use WcfAnimationBuilder\Auth\OAuthHandler;
+use WcfAnimationBuilder\Auth\ConnectPage;
 use WcfAnimationBuilder\Includes\Autoloader;
 use WcfAnimationBuilder\Factory\ComponentFactory;
 
@@ -99,7 +101,13 @@ final class Plugin
      * @var RestApi|null
      */
     private ?RestApi $rest_api = null;
-  
+
+    /**
+     * OAuth handler instance
+     *
+     * @var OAuthHandler|null
+     */
+    private ?OAuthHandler $oauth = null;
 
     /**
      * Constructor
@@ -171,6 +179,7 @@ final class Plugin
         // }
        
         // Initialize components (lazy loading)
+        $this->init_auth();
         $this->init_frontend();
         $this->init_backend();
         $this->init_rest_api();
@@ -230,6 +239,44 @@ final class Plugin
         if (is_admin()) {
             $this->backend = ComponentFactory::create_backend();
             $this->backend->init();
+        }
+    }
+
+    /**
+     * Initialize authentication (OAuth + Connect page)
+     *
+     * @return void
+     */
+    private function init_auth(): void
+    {
+        // Override connect URLs for local development
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            $local = 'http://localhost:5173';
+            add_filter('motionkit/connect/authorize_url', fn() => $local . '/connect/authorize');
+            add_filter('motionkit/connect/token_url', fn() => 'http://localhost:3001/connect/token');
+            add_filter('motionkit/connect/revoke_url', fn() => 'http://localhost:3001/connect/revoke');
+            add_filter('motionkit/connect/validate_url', fn() => 'http://localhost:3001/connect/validate');
+            add_filter('motionkit/connect/verify_session_url', fn() => 'http://localhost:3001/connect/verify-session');
+            add_filter('motionkit/editor/url', function ($url) use ($local) {
+                $parts = wp_parse_url($url);
+                return $local . '/' . ($parts['query'] ? '?' . $parts['query'] : '');
+            });
+
+            // Allow wp_remote_post to localhost (blocked by default)
+            add_filter('http_request_host_is_external', function ($external, $host) {
+                if ($host === 'localhost' || $host === '127.0.0.1') {
+                    return true;
+                }
+                return $external;
+            }, 10, 2);
+        }
+
+        $this->oauth = new OAuthHandler();
+        $this->oauth->init();
+
+        if (is_admin()) {
+            $connect_page = new ConnectPage($this->oauth);
+            $connect_page->init();
         }
     }
 
@@ -315,9 +362,15 @@ final class Plugin
             return;
         }
 
-        $editor_url = apply_filters('motionkit/editor/url', add_query_arg(array(
-            'site' => get_permalink(),
-        ), 'https://editor.motionkit.io/'));
+        $page_url = get_permalink();
+        $query_args = ['site' => $page_url];
+
+        // Include JWT token if connected
+        if (OAuthHandler::is_connected()) {
+            $query_args['token'] = \WcfAnimationBuilder\Auth\JwtTokenManager::generate($page_url);
+        }
+
+        $editor_url = apply_filters('motionkit/editor/url', add_query_arg($query_args, 'https://editor.motionkit.io/'));
 
         $icon = '<span class="motionkit-ab-icon"></span>';
         $title = $icon . '<span class="motionkit-ab-label">' . esc_html__('Build Animation', 'motionkit') . '</span>';

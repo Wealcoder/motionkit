@@ -72,6 +72,37 @@ function restUrl(endpoint) {
   return base + endpoint;
 }
 
+/**
+ * Extract the mk_token (JWT) from the current page URL.
+ * The editor loads the iframe with ?action=motionkit-editor&mk_token=<jwt>
+ */
+function getMkToken() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("mk_token") || "";
+  } catch (e) {
+    return "";
+  }
+}
+
+/**
+ * Build auth headers for REST API calls.
+ * Uses JWT Bearer token if mk_token exists (cross-origin editor session),
+ * otherwise falls back to WP nonce (same-origin admin session).
+ */
+function getAuthHeaders() {
+  const headers = { "Content-Type": "application/json" };
+  const token = getMkToken();
+
+  if (token) {
+    headers["Authorization"] = "Bearer " + token;
+  } else if (wcfanimb.rest_nonce) {
+    headers["X-WP-Nonce"] = wcfanimb.rest_nonce;
+  }
+
+  return headers;
+}
+
 let storeAnimation = {};
 let parentOrigin = null;
 
@@ -81,8 +112,12 @@ function receivePageConfig() {
   window.addEventListener(
     "message",
     (event) => {
+      // Debug: log all incoming messages
+      console.log('[bridge] message from:', event.origin, 'type:', event.data?.type);
+
       // Validate origin — reject messages from unknown sources
       if (!isAllowedOrigin(event.origin)) {
+        console.warn('[bridge] rejected origin:', event.origin);
         return;
       }
 
@@ -163,17 +198,12 @@ function receivePageConfig() {
       // Receive global + current page settings from the editor
       if (event.data?.type === "motionkit-settings") {
         const { globalSettings, currentPageSettings } = event.data.data || {};
-
+        console.log('Received settings from editor:', { globalSettings, currentPageSettings });
         // Save global settings via REST API
         if (globalSettings) {
-         
           fetch(restUrl("global-settings"), {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-WP-Nonce": wcfanimb.rest_nonce,
-            },
-            credentials: "include",
+            headers: getAuthHeaders(),
             body: JSON.stringify({ animationConfigs: globalSettings }),
           })
             .then((r) => {
@@ -202,11 +232,7 @@ function receivePageConfig() {
           });
           fetch(restUrl("configs"), {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-WP-Nonce": wcfanimb.rest_nonce,
-            },
-            credentials: "include",
+            headers: getAuthHeaders(),
             body: JSON.stringify({
               pageTypeConfigs: wcfanimb.pageTypeConfigs,
               animationConfigs: currentPageSettings,
@@ -240,6 +266,8 @@ function receivePageConfig() {
             pageSettings: currentPageSettings || wcfanimb.animation_config,
             deviceConfig: wcfanimb.device_config,
             base_domain: wcfanimb.base_domain,
+            rest_url: wcfanimb.rest_url,
+            mk_token: getMkToken(),
           },
         }, parentOrigin);
 
@@ -264,6 +292,8 @@ function receivePageConfig() {
             pageSettings: wcfanimb.animation_config,
             deviceConfig: wcfanimb.device_config,
             base_domain: wcfanimb.base_domain,
+            rest_url: wcfanimb.rest_url,
+            mk_token: getMkToken(),
           },
         }, parentOrigin);
 
@@ -279,6 +309,8 @@ function receivePageConfig() {
       data: {
         platform: wcfanimb.platform,
         base_domain: wcfanimb.base_domain,
+        rest_url: wcfanimb.rest_url,
+        mk_token: getMkToken(),
       },
     }, parentOrigin);
   }, 1000);

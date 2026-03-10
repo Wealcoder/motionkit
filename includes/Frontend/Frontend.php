@@ -16,6 +16,8 @@ if (!defined('ABSPATH')) {
 
 use WcfAnimationBuilder\Common\Assets\AssetLoader;
 use WcfAnimationBuilder\Common\AnimationBuilderPageType;
+use WcfAnimationBuilder\Auth\JwtTokenManager;
+use WcfAnimationBuilder\Auth\OAuthHandler;
 use WcfAnimationBuilder\Factory\ComponentFactory;
 
 /**
@@ -157,14 +159,80 @@ final class Frontend
   // ─── Frontend Script Loading ─────────────────────────────────────
 
   /**
-   * Check if the current request is a SaaS editor preview
+   * Check if the current request is a SaaS editor preview.
+   *
+   * When the site is connected (has an access token), a valid JWT
+   * must be present in the mk_token query param. Supports two token types:
+   * - WP-generated JWTs (iss = site URL, validated locally)
+   * - Server-generated JWTs (iss = motionkit-server, validated via SaaS API)
    *
    * @return bool
    */
   private function is_editor_preview(): bool
   {
-    return isset($_GET['action'])
-      && sanitize_text_field(wp_unslash($_GET['action'])) === 'motionkit-editor';
+    if (!isset($_GET['action']) || sanitize_text_field(wp_unslash($_GET['action'])) !== 'motionkit-editor') {
+      return false;
+    }
+
+    // If site is connected, require a valid JWT
+    if (OAuthHandler::is_connected()) {
+      $token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
+      if (empty($token)) {
+        return false;
+      }
+
+      // Try WP-generated token first (local validation, no HTTP call)
+      $payload = JwtTokenManager::validate_reusable($token);
+      if ($payload !== false) {
+        return true;
+      }
+
+      // Not a WP token — try server-generated token via SaaS API
+      return $this->verify_server_session($token);
+    }
+
+    return true;
+  }
+
+  /**
+   * Verify a server-generated editor session token via the SaaS API.
+   *
+   * Calls POST /connect/verify-session to check JWT signature,
+   * expiry, and revocation status. Results are cached in a transient
+   * for 5 minutes to avoid repeated HTTP calls on iframe reloads.
+   *
+   * @param string $token The JWT string
+   * @return bool True if the session is valid
+   */
+  private function verify_server_session(string $token): bool
+  {
+    // Cache key based on token hash (avoid storing raw JWT in transient key)
+    $cache_key = 'mk_session_' . substr(md5($token), 0, 16);
+    $cached = get_transient($cache_key);
+
+    if ($cached !== false) {
+      return $cached === 'valid';
+    }
+
+    $verify_url = OAuthHandler::get_verify_session_url();
+
+    $response = wp_remote_post($verify_url, [
+      'timeout' => 10,
+      'headers' => ['Content-Type' => 'application/json'],
+      'body'    => wp_json_encode(['token' => $token]),
+    ]);
+
+    if (is_wp_error($response)) {
+      return false;
+    }
+
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+    $valid = isset($body['valid']) && $body['valid'] === true;
+
+    // Cache result for 5 minutes
+    set_transient($cache_key, $valid ? 'valid' : 'invalid', 300);
+
+    return $valid;
   }
 
   /**
@@ -234,14 +302,14 @@ final class Frontend
   private function enqueue_editor_preview_scripts(): void
   {
    
-
+    
     $this->maybe_init_scroll_smoother();
-
+     
     $deps = apply_filters('motionkit_core_lib_deps', []);
     $deps = array_values(array_filter($deps, function ($dep) {
       return $dep !== 'wp-element';
     }));
-
+  
     // Enqueue frontend runner
     wp_register_script(
       'motionkit-frontend',
@@ -251,12 +319,14 @@ final class Frontend
       true
     );
     wp_enqueue_script('motionkit-frontend');
-
+   
     // Enqueue editor bridge — postMessage receiver for SaaS editor
+    // No dependency on motionkit-frontend: the bridge only handles postMessage
+    // and must load even if GSAP CDN scripts fail.
     wp_enqueue_script(
       'motionkit-editor-bridge',
       MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/editor-bridge.js',
-      ['motionkit-frontend'],
+      [],
       MOTIONKIT_VERSION,
       true
     );
@@ -285,8 +355,8 @@ final class Frontend
     // Global animation configs (saved from editor, stored in wp_options)
     $global_settings = get_option('motionkit_global_settings', []);
 
-    // Localize with enriched data for the SaaS editor
-    wp_localize_script('motionkit-frontend', 'wcfanimb', [
+    // Shared localized data for both frontend runner and editor bridge
+    $localized_data = [
       'animation_config' => is_array($page_configs) ? $page_configs : [],
       'device_config'    => $devices,
       'ajaxurl'          => admin_url('admin-ajax.php'),
@@ -297,7 +367,13 @@ final class Frontend
       'base_domain'      => home_url(),
       'global_settings'  => is_array($global_settings) ? $global_settings : [],
       'platform'         => 'wordpress',
-    ]);
+    ];
+
+    // Localize on the bridge (loads independently, no GSAP deps)
+    wp_localize_script('motionkit-editor-bridge', 'wcfanimb', $localized_data);
+
+    // Also localize on frontend runner (for GSAP-dependent code)
+    wp_localize_script('motionkit-frontend', 'wcfanimb', $localized_data);
 
     // Allow Pro to enqueue premium preset scripts
     do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts', $deps, true, []);

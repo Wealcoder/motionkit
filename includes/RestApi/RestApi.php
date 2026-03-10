@@ -18,6 +18,8 @@ if (!defined('ABSPATH')) {
 }
 
 use WcfAnimationBuilder\Common\AnimationBuilderPageType;
+use WcfAnimationBuilder\Auth\JwtTokenManager;
+use WcfAnimationBuilder\Auth\OAuthHandler;
 
 final class RestApi
 {
@@ -114,17 +116,83 @@ final class RestApi
   // ─── Permission ─────────────────────────────────────────────────
 
   /**
-   * Check if user has permission to access endpoints
+   * Check if user has permission to access endpoints.
    *
+   * Two auth paths:
+   * 1. WordPress nonce (X-WP-Nonce header) — logged-in user with manage_options
+   * 2. JWT bearer token (Authorization header) — editor session token
+   *
+   * @param \WP_REST_Request $request
    * @return bool|\WP_Error
    */
-  public function check_permission()
+  public function check_permission(?\WP_REST_Request $request = null)
   {
-    // token-based auth can be implemented here if needed
-    // check nonces, user capabilities, etc. For now, allow if user can edit posts.
-       
     
-    return true;
+    // Path 2: JWT bearer token (cross-origin editor session)
+    // The mk_token JWT is passed from editor → iframe URL → bridge → Authorization header
+    $auth_header = '';
+    if ($request && $request->get_header('Authorization')) {
+      $auth_header = $request->get_header('Authorization');
+    } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+      $auth_header = sanitize_text_field(wp_unslash($_SERVER['HTTP_AUTHORIZATION']));
+    }
+
+    if (preg_match('/^Bearer\s+(.+)$/i', $auth_header, $matches)) {
+      $bearer_token = $matches[1];
+
+      // Try WP-generated JWT first (local, no HTTP call)
+      $payload = JwtTokenManager::validate_reusable($bearer_token);
+      if ($payload !== false) {
+        return true;
+      }
+
+      // Try server-generated JWT via SaaS API
+      if ($this->verify_server_session($bearer_token)) {
+        return true;
+      }
+    }
+
+    return new \WP_Error(
+      'rest_forbidden',
+      esc_html__('Authentication required.', 'motionkit'),
+      ['status' => 401]
+    );
+  }
+
+  /**
+   * Verify a server-generated editor session token via the SaaS API.
+   * Cached in a transient for 5 minutes to avoid repeated HTTP calls.
+   *
+   * @param string $token The JWT string
+   * @return bool
+   */
+  private function verify_server_session(string $token): bool
+  {
+    $cache_key = 'mk_session_' . substr(md5($token), 0, 16);
+    $cached = get_transient($cache_key);
+
+    if ($cached !== false) {
+      return $cached === 'valid';
+    }
+
+    $verify_url = OAuthHandler::get_verify_session_url();
+
+    $response = wp_remote_post($verify_url, [
+      'timeout' => 10,
+      'headers' => ['Content-Type' => 'application/json'],
+      'body'    => wp_json_encode(['token' => $token]),
+    ]);
+
+    if (is_wp_error($response)) {
+      return false;
+    }
+
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+    $valid = isset($body['valid']) && $body['valid'] === true;
+
+    set_transient($cache_key, $valid ? 'valid' : 'invalid', 300);
+
+    return $valid;
   }
 
   // ─── CORS ──────────────────────────────────────────────────────
