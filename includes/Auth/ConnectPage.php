@@ -100,7 +100,8 @@ final class ConnectPage
       $query_args['token'] = JwtTokenManager::generate($page_url);
     }
 
-    return apply_filters('motionkit/editor/url', add_query_arg($query_args, 'https://editor.motionkit.io/'));
+    $base_url = apply_filters('motionkit/editor/url', 'https://editor.motionkit.io/');
+    return add_query_arg($query_args, $base_url);
   }
 
   /**
