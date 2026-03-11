@@ -355,6 +355,9 @@ final class Frontend
     // Global animation configs (saved from editor, stored in wp_options)
     $global_settings = get_option('motionkit_global_settings', []);
 
+    // mk_token is already validated by is_editor_preview() — safe to pass through
+    $mk_token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
+
     // Shared localized data for both frontend runner and editor bridge
     $localized_data = [
       'animation_config' => is_array($page_configs) ? $page_configs : [],
@@ -367,6 +370,7 @@ final class Frontend
       'base_domain'      => home_url(),
       'global_settings'  => is_array($global_settings) ? $global_settings : [],
       'platform'         => 'wordpress',
+      'mk_token'         => $mk_token,
     ];
 
     // Localize on the bridge (loads independently, no GSAP deps)

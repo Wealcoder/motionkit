@@ -258,8 +258,9 @@ final class Plugin
             add_filter('motionkit/connect/validate_url', fn() => 'http://localhost:3001/connect/validate');
             add_filter('motionkit/connect/verify_session_url', fn() => 'http://localhost:3001/connect/verify-session');
             add_filter('motionkit/editor/url', function ($url) use ($local) {
-                $parts = wp_parse_url($url);
-                return $local . '/' . (!empty($parts['query']) ? '?' . $parts['query'] : '');
+                // Replace the production origin with the local dev origin,
+                // preserving path, query string, and fragment intact.
+                return str_replace('https://editor.motionkit.io', $local, $url);
             });
 
             // Allow wp_remote_post to localhost (blocked by default)

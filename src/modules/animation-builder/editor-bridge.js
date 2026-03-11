@@ -73,11 +73,17 @@ function restUrl(endpoint) {
 }
 
 /**
- * Extract the mk_token (JWT) from the current page URL.
- * The editor loads the iframe with ?action=motionkit-editor&mk_token=<jwt>
+ * Extract the mk_token (JWT) for editor authentication.
+ *
+ * Priority:
+ * 1. wcfanimb.mk_token — set by PHP (already validated server-side, most reliable)
+ * 2. URL query param ?mk_token — fallback for cases where localized data is unavailable
  */
 function getMkToken() {
   try {
+    if (typeof wcfanimb !== "undefined" && wcfanimb.mk_token) {
+      return wcfanimb.mk_token;
+    }
     const params = new URLSearchParams(window.location.search);
     return params.get("mk_token") || "";
   } catch (e) {
