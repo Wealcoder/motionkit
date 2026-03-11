@@ -259,7 +259,7 @@ final class Plugin
             add_filter('motionkit/connect/verify_session_url', fn() => 'http://localhost:3001/connect/verify-session');
             add_filter('motionkit/editor/url', function ($url) use ($local) {
                 $parts = wp_parse_url($url);
-                return $local . '/' . ($parts['query'] ? '?' . $parts['query'] : '');
+                return $local . '/' . (!empty($parts['query']) ? '?' . $parts['query'] : '');
             });
 
             // Allow wp_remote_post to localhost (blocked by default)
