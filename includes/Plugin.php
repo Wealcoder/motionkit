@@ -354,7 +354,7 @@ final class Plugin
     }
 
     /**
-     * Add "Build Animation" link to the admin bar on frontend singular pages
+     * Add "Build Animation" link to the admin bar on all frontend pages.
      */
     public function add_admin_bar_build_animation($wp_admin_bar): void
     {
@@ -362,7 +362,30 @@ final class Plugin
             return;
         }
 
-        $page_url = get_permalink();
+        // Resolve current page URL for all page types
+        if (is_singular()) {
+            $page_url = get_permalink();
+        } elseif (is_front_page() || is_home()) {
+            $page_url = home_url('/');
+        } elseif (is_category() || is_tag() || is_tax()) {
+            $page_url = get_term_link(get_queried_object());
+            if (is_wp_error($page_url)) {
+                $page_url = home_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? '/')));
+            }
+        } elseif (is_author()) {
+            $page_url = get_author_posts_url(get_queried_object_id());
+        } elseif (is_post_type_archive()) {
+            $page_url = get_post_type_archive_link(get_queried_object()->name);
+        } elseif (is_archive()) {
+            $page_url = home_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? '/')));
+        } elseif (is_search()) {
+            $page_url = home_url('/?s=' . rawurlencode(get_search_query()));
+        } elseif (is_404()) {
+            $page_url = home_url('/404');
+        } else {
+            $page_url = home_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? '/')));
+        }
+
         $query_args = ['site' => $page_url];
 
         // Include JWT token if connected
