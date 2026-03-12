@@ -10,6 +10,7 @@
  */
 
 import { handleMediaQuery } from "@/lib/utils";
+import { enableElementPicker, disableElementPicker, setElementSelectedCallback, setExistingAnimationCallback, setPickerHoverCallback } from "./element-picker";
 
 // WCFFreeAnimBuilder is already initialized by frontend.js (loaded as dependency)
 
@@ -118,9 +119,6 @@ function receivePageConfig() {
   window.addEventListener(
     "message",
     (event) => {
-      // Debug: log all incoming messages
-      console.log('[bridge] message from:', event.origin, 'type:', event.data?.type);
-
       // Validate origin — reject messages from unknown sources
       if (!isAllowedOrigin(event.origin)) {
         console.warn('[bridge] rejected origin:', event.origin);
@@ -215,7 +213,7 @@ function receivePageConfig() {
             .then((r) => {
               if (!r.ok) {
                 return r.json().catch(() => ({})).then((body) => {
-                  const msg = body?.message || `HTTP ${r.status}`;                  
+                  const msg = body?.message || `HTTP ${r.status}`;
                   window.parent.postMessage({
                     type: "motionkit-error",
                     data: { error: msg, code: body?.code || "save_failed", endpoint: "global-settings", status: r.status },
@@ -251,7 +249,7 @@ function receivePageConfig() {
             .then((r) => {
               if (!r.ok) {
                 return r.json().catch(() => ({})).then((body) => {
-                  const msg = body?.message || `HTTP ${r.status}`;                  
+                  const msg = body?.message || `HTTP ${r.status}`;
                   window.parent.postMessage({
                     type: "motionkit-error",
                     data: { error: msg, code: body?.code || "save_failed", endpoint: "configs", status: r.status },
@@ -294,6 +292,17 @@ function receivePageConfig() {
         );
       }
 
+      // Toggle element picker mode
+      if (event.data?.type === "motionkit-element-picker") {
+        console.log('[bridge] picker toggle:', event.data.data?.enabled);
+        if (event.data.data?.enabled) {
+          enableElementPicker();
+        } else {
+          disableElementPicker();
+        }
+        return;
+      }
+
       // Respond to data requests from the SaaS editor
       if (event.data?.type === "motionkit-request" && event.data?.request === "get-data") {
 
@@ -333,4 +342,25 @@ function receivePageConfig() {
 // Initialize on page load
 window.addEventListener("load", () => {
   receivePageConfig();
+
+  // Wire up element picker to send selection back to editor
+  setElementSelectedCallback((data) => {
+    const target = parentOrigin || "*";   
+    window.parent.postMessage({ type: "motionkit-element-selected", data }, target);
+  }); 
+
+  // Wire up existing animation button to signal animation selector
+  setExistingAnimationCallback((data) => {
+    const target = parentOrigin || "*";
+    window.parent.postMessage({ type: "motionkit-existing-animation-clicked", data }, target);
+  });
+
+  // Dismiss class selector panel when hovering a new element
+  setPickerHoverCallback(() => {
+    const target = parentOrigin || "*";
+    window.parent.postMessage({ type: "motionkit-picker-hover" }, target);
+  });
+
+  // Auto-enable picker
+  enableElementPicker();
 });
