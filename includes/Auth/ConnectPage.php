@@ -3,12 +3,11 @@
 namespace WcfAnimationBuilder\Auth;
 
 /**
- * Connect Page
+ * Admin Dashboard Page
  *
- * WordPress admin page for connecting/disconnecting the site
- * to/from the MotionKit editor service.
+ * WordPress admin page with tabbed layout: License, Connect, Help.
  *
- * Menu: MotionKit → Connect
+ * Menu: MotionKit
  * URL:  /wp-admin/admin.php?page=motionkit-connect
  *
  * @package WcfAnimationBuilder
@@ -22,42 +21,44 @@ if (!defined('ABSPATH')) {
 
 final class ConnectPage
 {
+  private const LICENSE_OPTION = 'motionkit_license_key';
+  private const LICENSE_STATUS_OPTION = 'motionkit_license_status';
+
   /**
-   * OAuth handler instance
-   *
    * @var OAuthHandler
    */
   private OAuthHandler $oauth;
 
-  /**
-   * Constructor
-   *
-   * @param OAuthHandler $oauth
-   */
   public function __construct(OAuthHandler $oauth)
   {
     $this->oauth = $oauth;
   }
 
-  /**
-   * Initialize admin page hooks
-   *
-   * @return void
-   */
   public function init(): void
   {
     add_action('admin_menu', [$this, 'register_menu']);
+    add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_styles']);
+    add_action('admin_init', [$this, 'handle_license_activation']);
   }
 
-  /**
-   * Register the admin menu page
-   *
-   * @return void
-   */
+  public function enqueue_admin_styles(string $hook): void
+  {
+    if ($hook !== 'toplevel_page_motionkit-connect') {
+      return;
+    }
+
+    wp_enqueue_style(
+      'motionkit-admin',
+      plugins_url('assets/build/admin.css', MOTIONKIT_PLUGIN_FILE),
+      [],
+      defined('MOTIONKIT_VERSION') ? MOTIONKIT_VERSION : '1.0.0'
+    );
+  }
+
   public function register_menu(): void
   {
     add_menu_page(
-      __('MotionKit Connect', 'motionkit'),
+      __('MotionKit', 'motionkit'),
       __('MotionKit', 'motionkit'),
       'manage_options',
       'motionkit-connect',
@@ -68,29 +69,19 @@ final class ConnectPage
 
     add_submenu_page(
       'motionkit-connect',
-      __('Connect Settings', 'motionkit'),
-      __('Connect', 'motionkit'),
+      __('MotionKit Settings', 'motionkit'),
+      __('Settings', 'motionkit'),
       'manage_options',
       'motionkit-connect',
       [$this, 'render_page']
     );
   }
 
-  /**
-   * Get the menu icon
-   *
-   * @return string
-   */
   private function get_menu_icon(): string
   {
     return 'dashicons-admin-links';
   }
 
-  /**
-   * Build the editor URL for the home page.
-   *
-   * @return string
-   */
   private function get_editor_url(): string
   {
     $page_url = home_url('/');
@@ -104,26 +95,66 @@ final class ConnectPage
     return add_query_arg($query_args, $base_url);
   }
 
-  /**
-   * Render the connect page
-   *
-   * @return void
-   */
+  // ─── License Activation Handler ──────────────────────────────
+
+  public function handle_license_activation(): void
+  {
+    if (!isset($_POST['motionkit_license_action'])) {
+      return;
+    }
+
+    if (!current_user_can('manage_options')) {
+      return;
+    }
+
+    if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'motionkit_license_nonce')) {
+      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=license&error=nonce_failed'));
+      exit;
+    }
+
+    $action = sanitize_text_field($_POST['motionkit_license_action']);
+
+    if ($action === 'activate') {
+      $license_key = sanitize_text_field(wp_unslash($_POST['license_key'] ?? ''));
+
+      if (empty($license_key)) {
+        wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=license&error=empty_key'));
+        exit;
+      }
+
+      update_option(self::LICENSE_OPTION, $license_key);
+      update_option(self::LICENSE_STATUS_OPTION, 'active');
+
+      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=license&license_activated=1'));
+      exit;
+    }
+
+    if ($action === 'deactivate') {
+      delete_option(self::LICENSE_OPTION);
+      delete_option(self::LICENSE_STATUS_OPTION);
+
+      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=license&license_deactivated=1'));
+      exit;
+    }
+  }
+
+  // ─── Render Page ─────────────────────────────────────────────
+
   public function render_page(): void
   {
     if (!current_user_can('manage_options')) {
       wp_die(esc_html__('You do not have permission to access this page.', 'motionkit'));
     }
 
-    $info = OAuthHandler::get_connection_info();
-    $error = isset($_GET['error']) ? sanitize_text_field(wp_unslash($_GET['error'])) : '';
-    $just_connected = isset($_GET['connected']);
-    $just_disconnected = isset($_GET['disconnected']);
-    $verify = isset($_GET['verify']) ? sanitize_text_field(wp_unslash($_GET['verify'])) : '';
-    $verify_reason = isset($_GET['reason']) ? sanitize_text_field(wp_unslash($_GET['reason'])) : '';
-
+    $active_tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'license';
     $current_user = wp_get_current_user();
     $user_email = $current_user->user_email;
+
+    $tabs = [
+      'license' => ['label' => __('License', 'motionkit'), 'icon' => '&#128196;'],
+      'connect' => ['label' => __('Connect', 'motionkit'), 'icon' => '&#128279;'],
+      'help'    => ['label' => __('Help', 'motionkit'),    'icon' => '&#9432;'],
+    ];
 
     ?>
     <div class="mk-page">
@@ -149,80 +180,215 @@ final class ConnectPage
         </div>
       </div>
 
-      <!-- Notices -->
-      <?php if ($error): ?>
-        <div class="mk-notice mk-notice--error">
-          <span class="mk-notice-icon">&#10060;</span>
-          <?php echo esc_html($this->get_error_message($error)); ?>
-          <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
-        </div>
-      <?php endif; ?>
+      <!-- Layout: Sidebar + Content -->
+      <div class="mk-layout">
 
-      <?php if ($just_connected): ?>
-        <div class="mk-notice mk-notice--success">
-          <span class="mk-notice-icon">&#10004;</span>
-          <?php esc_html_e('Connected Successfully', 'motionkit'); ?>
-          <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <!-- Sidebar -->
+        <div class="mk-sidebar">
+          <nav class="mk-sidebar-nav">
+            <?php foreach ($tabs as $tab_key => $tab): ?>
+              <a href="<?php echo esc_url(admin_url('admin.php?page=motionkit-connect&tab=' . $tab_key)); ?>"
+                 class="mk-sidebar-link <?php echo $active_tab === $tab_key ? 'mk-sidebar-link--active' : ''; ?>">
+                <span class="mk-sidebar-icon"><?php echo $tab['icon']; ?></span>
+                <?php echo esc_html($tab['label']); ?>
+              </a>
+            <?php endforeach; ?>
+          </nav>
         </div>
-      <?php endif; ?>
 
-      <?php if ($just_disconnected): ?>
-        <div class="mk-notice mk-notice--info">
-          <span class="mk-notice-icon">&#8505;</span>
-          <?php esc_html_e('Disconnected from MotionKit.', 'motionkit'); ?>
-          <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
-        </div>
-      <?php endif; ?>
+        <!-- Content -->
+        <div class="mk-content">
+          <?php $this->render_notices(); ?>
 
-      <?php if ($verify === 'valid'): ?>
-        <div class="mk-notice mk-notice--success">
-          <span class="mk-notice-icon">&#10004;</span>
-          <?php esc_html_e('Token verified — your local token matches the MotionKit server.', 'motionkit'); ?>
-          <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
+          <?php
+          switch ($active_tab) {
+            case 'connect':
+              $this->render_connect_tab($current_user);
+              break;
+            case 'help':
+              $this->render_help_tab();
+              break;
+            case 'license':
+            default:
+              $this->render_license_tab();
+              break;
+          }
+          ?>
         </div>
-      <?php elseif ($verify === 'invalid'): ?>
-        <div class="mk-notice mk-notice--error">
-          <span class="mk-notice-icon">&#10060;</span>
-          <?php esc_html_e('Token mismatch — try disconnecting and reconnecting.', 'motionkit'); ?>
-          <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
-        </div>
-      <?php elseif ($verify === 'error'): ?>
-        <div class="mk-notice mk-notice--error">
-          <span class="mk-notice-icon">&#9888;</span>
-          <?php echo esc_html(sprintf(__('Verification failed: %s', 'motionkit'), $verify_reason ?: 'unknown error')); ?>
-          <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
-        </div>
-      <?php endif; ?>
 
-      <!-- Content -->
-      <?php if ($info['connected']): ?>
-        <?php $this->render_connected_state($info, $current_user); ?>
-      <?php else: ?>
-        <?php $this->render_disconnected_state($current_user); ?>
-      <?php endif; ?>
-
+      </div>
     </div>
 
-    <?php $this->render_styles(); ?>
     <?php
   }
 
-  /**
-   * Render connected state UI
-   *
-   * @param array    $info         Connection info
-   * @param \WP_User $current_user Current WP user
-   * @return void
-   */
+  // ─── Notices ─────────────────────────────────────────────────
+
+  private function render_notices(): void
+  {
+    $error = isset($_GET['error']) ? sanitize_text_field(wp_unslash($_GET['error'])) : '';
+    $just_connected = isset($_GET['connected']);
+    $just_disconnected = isset($_GET['disconnected']);
+    $license_activated = isset($_GET['license_activated']);
+    $license_deactivated = isset($_GET['license_deactivated']);
+    $verify = isset($_GET['verify']) ? sanitize_text_field(wp_unslash($_GET['verify'])) : '';
+    $verify_reason = isset($_GET['reason']) ? sanitize_text_field(wp_unslash($_GET['reason'])) : '';
+
+    if ($error): ?>
+      <div class="mk-notice mk-notice--error">
+        <span class="mk-notice-icon">&#10060;</span>
+        <?php echo esc_html($this->get_error_message($error)); ?>
+        <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
+      </div>
+    <?php endif;
+
+    if ($just_connected): ?>
+      <div class="mk-notice mk-notice--success">
+        <span class="mk-notice-icon">&#10004;</span>
+        <?php esc_html_e('Connected Successfully', 'motionkit'); ?>
+        <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
+      </div>
+    <?php endif;
+
+    if ($just_disconnected): ?>
+      <div class="mk-notice mk-notice--info">
+        <span class="mk-notice-icon">&#8505;</span>
+        <?php esc_html_e('Disconnected from MotionKit.', 'motionkit'); ?>
+        <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
+      </div>
+    <?php endif;
+
+    if ($license_activated): ?>
+      <div class="mk-notice mk-notice--success">
+        <span class="mk-notice-icon">&#10004;</span>
+        <?php esc_html_e('License activated successfully.', 'motionkit'); ?>
+        <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
+      </div>
+    <?php endif;
+
+    if ($license_deactivated): ?>
+      <div class="mk-notice mk-notice--info">
+        <span class="mk-notice-icon">&#8505;</span>
+        <?php esc_html_e('License deactivated.', 'motionkit'); ?>
+        <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
+      </div>
+    <?php endif;
+
+    if ($verify === 'valid'): ?>
+      <div class="mk-notice mk-notice--success">
+        <span class="mk-notice-icon">&#10004;</span>
+        <?php esc_html_e('Token verified — your local token matches the MotionKit server.', 'motionkit'); ?>
+        <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
+      </div>
+    <?php elseif ($verify === 'invalid'): ?>
+      <div class="mk-notice mk-notice--error">
+        <span class="mk-notice-icon">&#10060;</span>
+        <?php esc_html_e('Token mismatch — try disconnecting and reconnecting.', 'motionkit'); ?>
+        <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
+      </div>
+    <?php elseif ($verify === 'error'): ?>
+      <div class="mk-notice mk-notice--error">
+        <span class="mk-notice-icon">&#9888;</span>
+        <?php echo esc_html(sprintf(__('Verification failed: %s', 'motionkit'), $verify_reason ?: 'unknown error')); ?>
+        <button class="mk-notice-close" onclick="this.parentElement.remove()">&times;</button>
+      </div>
+    <?php endif;
+  }
+
+  // ─── License Tab ─────────────────────────────────────────────
+
+  private function render_license_tab(): void
+  {
+    $license_key = get_option(self::LICENSE_OPTION, '');
+    $license_status = get_option(self::LICENSE_STATUS_OPTION, '');
+    $has_license = !empty($license_key) && $license_status === 'active';
+    $authorize_url = $this->oauth->get_authorize_url();
+
+    ?>
+    <div class="mk-card">
+      <div class="mk-card-body">
+        <?php if ($has_license): ?>
+          <!-- Active License -->
+          <div class="mk-license-active">
+            <h3 class="mk-card-title">
+              <span class="mk-title-icon">&#127881;</span>
+              <?php esc_html_e('Activate License', 'motionkit'); ?>
+            </h3>
+            <p class="mk-card-desc"><?php esc_html_e('Your license is active. You have access to all pro features.', 'motionkit'); ?></p>
+
+            <div class="mk-license-key-display">
+              <span class="mk-license-key-value"><?php echo esc_html($this->mask_license_key($license_key)); ?></span>
+              <span class="mk-badge mk-badge--success">&#9679; <?php esc_html_e('Active', 'motionkit'); ?></span>
+            </div>
+
+            <form method="post" action="">
+              <?php wp_nonce_field('motionkit_license_nonce'); ?>
+              <input type="hidden" name="motionkit_license_action" value="deactivate">
+              <button type="submit" class="mk-btn mk-btn--outline mk-btn--danger">
+                <?php esc_html_e('Deactivate', 'motionkit'); ?>
+              </button>
+            </form>
+          </div>
+        <?php else: ?>
+          <!-- No License -->
+          <h3 class="mk-card-title">
+            <span class="mk-title-icon">&#127881;</span>
+            <?php esc_html_e('Activate License', 'motionkit'); ?>
+          </h3>
+          <p class="mk-card-desc">
+            <?php esc_html_e('Enter your license key to activate Animation Addons Pro. If you need guidance please go to the instructions guideline for help.', 'motionkit'); ?>
+          </p>
+
+          <form method="post" action="">
+            <?php wp_nonce_field('motionkit_license_nonce'); ?>
+            <input type="hidden" name="motionkit_license_action" value="activate">
+
+            <div class="mk-form-group">
+              <input type="text"
+                     name="license_key"
+                     class="mk-input"
+                     placeholder="<?php esc_attr_e('license key', 'motionkit'); ?>"
+                     value=""
+                     autocomplete="off">
+            </div>
+
+            <div class="mk-form-actions">
+              <button type="submit" class="mk-btn mk-btn--primary">
+                <?php esc_html_e('Activate', 'motionkit'); ?>
+              </button>
+              <a href="<?php echo esc_url($authorize_url); ?>" class="mk-btn mk-btn--outline">
+                <?php esc_html_e('Connect', 'motionkit'); ?>
+              </a>
+            </div>
+          </form>
+        <?php endif; ?>
+      </div>
+    </div>
+    <?php
+  }
+
+  // ─── Connect Tab ─────────────────────────────────────────────
+
+  private function render_connect_tab(\WP_User $current_user): void
+  {
+    $info = OAuthHandler::get_connection_info();
+
+    if ($info['connected']) {
+      $this->render_connected_state($info, $current_user);
+    } else {
+      $this->render_disconnected_state($current_user);
+    }
+  }
+
   private function render_connected_state(array $info, \WP_User $current_user): void
   {
     $disconnect_url = wp_nonce_url(
-      admin_url('admin.php?page=motionkit-connect&motionkit_disconnect=1'),
+      admin_url('admin.php?page=motionkit-connect&tab=connect&motionkit_disconnect=1'),
       'motionkit_disconnect'
     );
 
     $verify_url = wp_nonce_url(
-      admin_url('admin.php?page=motionkit-connect&motionkit_verify=1'),
+      admin_url('admin.php?page=motionkit-connect&tab=connect&motionkit_verify=1'),
       'motionkit_verify'
     );
 
@@ -232,8 +398,11 @@ final class ConnectPage
     <!-- Status Card -->
     <div class="mk-card">
       <div class="mk-card-header">
-        <h3 class="mk-card-title">Status</h3>
-        <span class="mk-badge mk-badge--success">&#9679; Connected</span>
+        <div class="mk-card-header-left">
+          <span class="mk-title-icon">&#128279;</span>
+          <h3 class="mk-card-title"><?php esc_html_e('Connect your MotionKit Account', 'motionkit'); ?></h3>
+        </div>
+        <span class="mk-badge mk-badge--success">&#9679; <?php esc_html_e('Connected', 'motionkit'); ?></span>
       </div>
 
       <div class="mk-card-body">
@@ -282,26 +451,18 @@ final class ConnectPage
     <?php
   }
 
-  /**
-   * Render disconnected state UI
-   *
-   * @param \WP_User $current_user Current WP user
-   * @return void
-   */
   private function render_disconnected_state(\WP_User $current_user): void
   {
     $authorize_url = $this->oauth->get_authorize_url();
-    $user_email = $current_user->user_email;
 
     ?>
-    <!-- Connect Card -->
     <div class="mk-card">
       <div class="mk-card-header">
         <div class="mk-card-header-left">
           <span class="mk-title-icon">&#128279;</span>
           <h3 class="mk-card-title"><?php esc_html_e('Connect your MotionKit Account', 'motionkit'); ?></h3>
         </div>
-        <span class="mk-badge mk-badge--error">&#9679; Not Connected</span>
+        <span class="mk-badge mk-badge--error">&#9679; <?php esc_html_e('Not Connected', 'motionkit'); ?></span>
       </div>
       <div class="mk-card-body">
         <p class="mk-card-desc">
@@ -323,294 +484,103 @@ final class ConnectPage
     <?php
   }
 
-  /**
-   * Render page styles
-   *
-   * @return void
-   */
-  private function render_styles(): void
+  // ─── Help Tab ────────────────────────────────────────────────
+
+  private function render_help_tab(): void
   {
     ?>
-    <style>
-      /* Reset WP admin styles within our page */
-      .mk-page {
-        max-width: 760px;
-        margin: 28px 2px 20px 12px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      }
+    <div class="mk-card">
+      <div class="mk-card-body">
+        <h3 class="mk-card-title">
+          <span class="mk-title-icon">&#128218;</span>
+          <?php esc_html_e('Getting Started', 'motionkit'); ?>
+        </h3>
+        <p class="mk-card-desc">
+          <?php esc_html_e('MotionKit is a visual GSAP animation builder. Connect your site, then open any page to start building animations.', 'motionkit'); ?>
+        </p>
 
-      /* ─── Header ─────────────────────────────────────── */
-      .mk-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #fff;
-        padding: 16px 24px;
-        border-bottom: 1px solid #e5e7eb;
-        border-radius: 0 0 8px 8px;
-        margin-bottom: 20px;
-      }
-      .mk-header-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .mk-header-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1e1e1e;
-      }
-      .mk-header-right {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .mk-header-email {
-        font-size: 13px;
-        color: #6b7280;
-      }
-      .mk-header-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        overflow: hidden;
-      }
-      .mk-avatar-img {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-      }
+        <div class="mk-help-steps">
+          <div class="mk-help-step">
+            <span class="mk-help-step-num">1</span>
+            <div>
+              <strong><?php esc_html_e('Activate License', 'motionkit'); ?></strong>
+              <p><?php esc_html_e('Enter your license key in the License tab to unlock pro features.', 'motionkit'); ?></p>
+            </div>
+          </div>
+          <div class="mk-help-step">
+            <span class="mk-help-step-num">2</span>
+            <div>
+              <strong><?php esc_html_e('Connect Your Site', 'motionkit'); ?></strong>
+              <p><?php esc_html_e('Go to the Connect tab and link your site to the MotionKit editor.', 'motionkit'); ?></p>
+            </div>
+          </div>
+          <div class="mk-help-step">
+            <span class="mk-help-step-num">3</span>
+            <div>
+              <strong><?php esc_html_e('Build Animations', 'motionkit'); ?></strong>
+              <p><?php esc_html_e('Open any page and click "Build Animation" to launch the visual editor.', 'motionkit'); ?></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      /* ─── Notices ────────────────────────────────────── */
-      .mk-notice {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 12px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 16px;
-        position: relative;
-      }
-      .mk-notice--success {
-        background: #22c55e;
-        color: #fff;
-      }
-      .mk-notice--error {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
-      }
-      .mk-notice--info {
-        background: #eff6ff;
-        color: #2563eb;
-        border: 1px solid #bfdbfe;
-      }
-      .mk-notice-icon {
-        font-size: 14px;
-        flex-shrink: 0;
-      }
-      .mk-notice-close {
-        position: absolute;
-        right: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        font-size: 18px;
-        cursor: pointer;
-        color: inherit;
-        opacity: 0.7;
-        line-height: 1;
-        padding: 0;
-      }
-      .mk-notice-close:hover {
-        opacity: 1;
-      }
+    <div class="mk-card">
+      <div class="mk-card-body">
+        <h3 class="mk-card-title">
+          <span class="mk-title-icon">&#128172;</span>
+          <?php esc_html_e('Need Help?', 'motionkit'); ?>
+        </h3>
+        <div class="mk-help-links">
+          <a href="https://motionkit.io/docs" target="_blank" class="mk-help-link">
+            <span>&#128214;</span> <?php esc_html_e('Documentation', 'motionkit'); ?>
+          </a>
+          <a href="https://motionkit.io/support" target="_blank" class="mk-help-link">
+            <span>&#128233;</span> <?php esc_html_e('Contact Support', 'motionkit'); ?>
+          </a>
+          <a href="https://motionkit.io/changelog" target="_blank" class="mk-help-link">
+            <span>&#128196;</span> <?php esc_html_e('Changelog', 'motionkit'); ?>
+          </a>
+        </div>
+      </div>
 
-      /* ─── Card ───────────────────────────────────────── */
-      .mk-card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        margin-bottom: 16px;
-        overflow: hidden;
-      }
-      .mk-card-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 20px 24px;
-        border-bottom: 1px solid #f3f4f6;
-      }
-      .mk-card-header-left {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .mk-card-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #1e1e1e;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .mk-title-icon {
-        font-style: normal;
-        font-size: 16px;
-      }
-      .mk-card-body {
-        padding: 24px;
-      }
-      .mk-card-desc {
-        font-size: 14px;
-        color: #6b7280;
-        line-height: 1.6;
-        margin: 0 0 20px;
-      }
-      .mk-card-footer {
-        padding: 20px 24px;
-        background: #f9fafb;
-        border-top: 1px solid #f3f4f6;
-      }
-      .mk-footer-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #1e1e1e;
-        margin: 0 0 6px;
-      }
-      .mk-footer-desc {
-        font-size: 13px;
-        color: #6b7280;
-        line-height: 1.6;
-        margin: 0;
-      }
-
-      /* ─── Info rows ──────────────────────────────────── */
-      .mk-info-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 16px 0;
-        border-bottom: 1px solid #f3f4f6;
-      }
-      .mk-info-row:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-      }
-      .mk-info-row:first-child {
-        padding-top: 0;
-      }
-      .mk-info-content {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-      .mk-info-label {
-        font-size: 13px;
-        color: #6b7280;
-      }
-      .mk-info-value {
-        font-size: 14px;
-        color: #1e1e1e;
-      }
-
-      /* ─── Badge ──────────────────────────────────────── */
-      .mk-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-      }
-      .mk-badge--success {
-        background: #f0fdf4;
-        color: #16a34a;
-        border: 1px solid #bbf7d0;
-      }
-      .mk-badge--error {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
-      }
-
-      /* ─── Buttons ────────────────────────────────────── */
-      .mk-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        border: none;
-        line-height: 1.4;
-        font-family: inherit;
-      }
-      .mk-btn--primary {
-        background: #3b82f6;
-        color: #fff !important;
-        box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
-      }
-      .mk-btn--primary:hover {
-        background: #2563eb;
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
-        color: #fff !important;
-      }
-      .mk-btn--outline {
-        background: #fff;
-        color: #374151 !important;
-        border: 1px solid #d1d5db;
-        padding: 8px 16px;
-        font-size: 13px;
-      }
-      .mk-btn--outline:hover {
-        background: #f9fafb;
-        border-color: #9ca3af;
-        color: #111827 !important;
-      }
-      .mk-btn--danger {
-        color: #dc2626 !important;
-        border-color: #fca5a5;
-      }
-      .mk-btn--danger:hover {
-        background: #fef2f2;
-        border-color: #f87171;
-        color: #b91c1c !important;
-      }
-      .mk-btn--full {
-        width: 100%;
-        padding: 14px 24px;
-        font-size: 15px;
-      }
-    </style>
+      <div class="mk-card-footer">
+        <p class="mk-footer-desc">
+          <?php
+          echo esc_html(sprintf(
+            __('MotionKit v%s | WordPress %s | PHP %s', 'motionkit'),
+            defined('MOTIONKIT_VERSION') ? MOTIONKIT_VERSION : '1.0.0',
+            get_bloginfo('version'),
+            phpversion()
+          ));
+          ?>
+        </p>
+      </div>
+    </div>
     <?php
   }
 
-  /**
-   * Get human-readable error message
-   *
-   * @param string $error Error code
-   * @return string
-   */
+  // ─── Helpers ─────────────────────────────────────────────────
+
+  private function mask_license_key(string $key): string
+  {
+    if (strlen($key) <= 8) {
+      return str_repeat('*', strlen($key));
+    }
+    return substr($key, 0, 4) . str_repeat('*', strlen($key) - 8) . substr($key, -4);
+  }
+
   private function get_error_message(string $error): string
   {
     $messages = [
       'invalid_state'         => __('Security verification failed. Please try again.', 'motionkit'),
       'token_exchange_failed' => __('Could not complete the connection. Please try again.', 'motionkit'),
       'unauthorized'          => __('You do not have permission to perform this action.', 'motionkit'),
+      'nonce_failed'          => __('Security check failed. Please try again.', 'motionkit'),
+      'empty_key'             => __('Please enter a license key.', 'motionkit'),
     ];
 
     return $messages[$error] ?? __('An unknown error occurred. Please try again.', 'motionkit');
   }
+
 }
