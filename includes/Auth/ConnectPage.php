@@ -148,7 +148,8 @@ final class ConnectPage
 
     $active_tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'license';
     $current_user = wp_get_current_user();
-    $user_email = $current_user->user_email;
+    $connection_info = OAuthHandler::get_connection_info();
+    $user_email = !empty($connection_info['email']) ? $connection_info['email'] : $current_user->user_email;
 
     $tabs = [
       'license' => ['label' => __('License', 'motionkit'), 'icon' => '&#128196;'],
@@ -346,7 +347,7 @@ final class ConnectPage
             <div class="mk-form-group">
               <input type="text"
                      name="license_key"
-                     class="mk-input"
+                     class="mk-input license_key"
                      placeholder="<?php esc_attr_e('license key', 'motionkit'); ?>"
                      value=""
                      autocomplete="off">
@@ -489,72 +490,61 @@ final class ConnectPage
   private function render_help_tab(): void
   {
     ?>
-    <div class="mk-card">
-      <div class="mk-card-body">
-        <h3 class="mk-card-title">
-          <span class="mk-title-icon">&#128218;</span>
-          <?php esc_html_e('Getting Started', 'motionkit'); ?>
+    <!-- Support Banner -->
+    <div class="mk-support-banner">
+      <div class="mk-support-banner-content">
+        <h3 class="mk-support-banner-title">
+          <span>&#9889;</span> <?php esc_html_e('Support', 'motionkit'); ?>
         </h3>
-        <p class="mk-card-desc">
-          <?php esc_html_e('MotionKit is a visual GSAP animation builder. Connect your site, then open any page to start building animations.', 'motionkit'); ?>
+        <p class="mk-support-banner-desc">
+          <?php esc_html_e('Get quick assistance from our dedicated support team', 'motionkit'); ?>
         </p>
-
-        <div class="mk-help-steps">
-          <div class="mk-help-step">
-            <span class="mk-help-step-num">1</span>
-            <div>
-              <strong><?php esc_html_e('Activate License', 'motionkit'); ?></strong>
-              <p><?php esc_html_e('Enter your license key in the License tab to unlock pro features.', 'motionkit'); ?></p>
-            </div>
-          </div>
-          <div class="mk-help-step">
-            <span class="mk-help-step-num">2</span>
-            <div>
-              <strong><?php esc_html_e('Connect Your Site', 'motionkit'); ?></strong>
-              <p><?php esc_html_e('Go to the Connect tab and link your site to the MotionKit editor.', 'motionkit'); ?></p>
-            </div>
-          </div>
-          <div class="mk-help-step">
-            <span class="mk-help-step-num">3</span>
-            <div>
-              <strong><?php esc_html_e('Build Animations', 'motionkit'); ?></strong>
-              <p><?php esc_html_e('Open any page and click "Build Animation" to launch the visual editor.', 'motionkit'); ?></p>
-            </div>
-          </div>
-        </div>
       </div>
+      <a href="https://motionkit.io/support" target="_blank" class="mk-btn mk-btn--primary">
+        <?php esc_html_e('Get Support', 'motionkit'); ?>
+      </a>
     </div>
 
-    <div class="mk-card">
-      <div class="mk-card-body">
-        <h3 class="mk-card-title">
-          <span class="mk-title-icon">&#128172;</span>
-          <?php esc_html_e('Need Help?', 'motionkit'); ?>
-        </h3>
-        <div class="mk-help-links">
-          <a href="https://motionkit.io/docs" target="_blank" class="mk-help-link">
-            <span>&#128214;</span> <?php esc_html_e('Documentation', 'motionkit'); ?>
-          </a>
-          <a href="https://motionkit.io/support" target="_blank" class="mk-help-link">
-            <span>&#128233;</span> <?php esc_html_e('Contact Support', 'motionkit'); ?>
-          </a>
-          <a href="https://motionkit.io/changelog" target="_blank" class="mk-help-link">
-            <span>&#128196;</span> <?php esc_html_e('Changelog', 'motionkit'); ?>
-          </a>
+    <!-- Community + Documentation cards -->
+    <div class="mk-help-grid">
+      <div class="mk-help-card">
+        <div class="mk-help-card-img">
+          <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
+            <circle cx="35" cy="40" r="16" fill="#BFDBFE"/>
+            <circle cx="60" cy="35" r="18" fill="#93C5FD"/>
+            <circle cx="85" cy="40" r="16" fill="#BFDBFE"/>
+            <circle cx="48" cy="50" r="14" fill="#DBEAFE"/>
+            <circle cx="72" cy="50" r="14" fill="#DBEAFE"/>
+          </svg>
         </div>
+        <h4 class="mk-help-card-title"><?php esc_html_e('Community', 'motionkit'); ?></h4>
+        <p class="mk-help-card-desc">
+          <?php esc_html_e('Get quick assistance from our dedicated support team whenever you need help', 'motionkit'); ?>
+        </p>
+        <a href="https://motionkit.io/community" target="_blank" class="mk-btn mk-btn--primary">
+          <?php esc_html_e('Join Community', 'motionkit'); ?>
+        </a>
       </div>
 
-      <div class="mk-card-footer">
-        <p class="mk-footer-desc">
-          <?php
-          echo esc_html(sprintf(
-            __('MotionKit v%s | WordPress %s | PHP %s', 'motionkit'),
-            defined('MOTIONKIT_VERSION') ? MOTIONKIT_VERSION : '1.0.0',
-            get_bloginfo('version'),
-            phpversion()
-          ));
-          ?>
+      <div class="mk-help-card">
+        <div class="mk-help-card-img">
+          <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
+            <rect x="30" y="10" width="50" height="60" rx="4" fill="#FDE68A" stroke="#F59E0B" stroke-width="1.5"/>
+            <rect x="40" y="15" width="50" height="60" rx="4" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+            <line x1="48" y1="30" x2="82" y2="30" stroke="#F59E0B" stroke-width="1.5"/>
+            <line x1="48" y1="40" x2="75" y2="40" stroke="#FCD34D" stroke-width="1.5"/>
+            <line x1="48" y1="50" x2="78" y2="50" stroke="#FCD34D" stroke-width="1.5"/>
+            <circle cx="80" cy="60" r="10" fill="#34D399" stroke="#fff" stroke-width="2"/>
+            <polyline points="76,60 79,63 85,57" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h4 class="mk-help-card-title"><?php esc_html_e('Documentation', 'motionkit'); ?></h4>
+        <p class="mk-help-card-desc">
+          <?php esc_html_e('Explore step by step guides and tutorials to get the most out of the plugin', 'motionkit'); ?>
         </p>
+        <a href="https://motionkit.io/docs" target="_blank" class="mk-btn mk-btn--primary">
+          <?php esc_html_e('Read Documents', 'motionkit'); ?>
+        </a>
       </div>
     </div>
     <?php
