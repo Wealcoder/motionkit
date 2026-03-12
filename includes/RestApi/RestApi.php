@@ -128,6 +128,15 @@ final class RestApi
   public function check_permission(?\WP_REST_Request $request = null)
   {
     
+  // Verify site is still connected
+    if (!OAuthHandler::is_connected()) {
+      return new \WP_Error(
+        'motionkit_disconnected',
+        esc_html__('Site is disconnected. Please reconnect from WordPress admin to save changes.', 'motionkit'),
+        ['status' => 403]
+      );
+    }
+
     // Path 2: JWT bearer token (cross-origin editor session)
     // The mk_token JWT is passed from editor → iframe URL → bridge → Authorization header
     $auth_header = '';
@@ -301,7 +310,6 @@ final class RestApi
    */
   public function store_configs(\WP_REST_Request $request): \WP_REST_Response
   {
-    // token  
     
     $page_type_configs = $this->parse_json_param($request->get_param('pageTypeConfigs'));
     $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));

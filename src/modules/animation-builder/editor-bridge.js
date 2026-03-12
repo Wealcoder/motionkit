@@ -214,8 +214,12 @@ function receivePageConfig() {
           })
             .then((r) => {
               if (!r.ok) {
-                return r.text().then((txt) => {
-                  console.error("MotionKit: global settings HTTP", r.status, txt);
+                return r.json().catch(() => ({})).then((body) => {
+                  const msg = body?.message || `HTTP ${r.status}`;                  
+                  window.parent.postMessage({
+                    type: "motionkit-error",
+                    data: { error: msg, code: body?.code || "save_failed", endpoint: "global-settings", status: r.status },
+                  }, "*");
                   return null;
                 });
               }
@@ -246,8 +250,12 @@ function receivePageConfig() {
           })
             .then((r) => {
               if (!r.ok) {
-                return r.text().then((txt) => {
-                  console.error("MotionKit: page settings HTTP", r.status, txt);
+                return r.json().catch(() => ({})).then((body) => {
+                  const msg = body?.message || `HTTP ${r.status}`;                  
+                  window.parent.postMessage({
+                    type: "motionkit-error",
+                    data: { error: msg, code: body?.code || "save_failed", endpoint: "configs", status: r.status },
+                  }, "*");
                   return null;
                 });
               }
