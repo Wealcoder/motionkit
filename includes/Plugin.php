@@ -178,6 +178,9 @@ final class Plugin
         //     return;
         // }
        
+        // Send platform identification header for MotionKit detect-platform
+        add_action('send_headers', [$this, 'send_platform_header']);
+
         // Initialize components (lazy loading)
         $this->init_auth();
         $this->init_frontend();
@@ -290,6 +293,19 @@ final class Plugin
     {
         $this->rest_api = new RestApi();
         $this->rest_api->init();
+    }
+
+    /**
+     * Send X-Motionkit-Platform header so the SaaS detect-platform endpoint
+     * can instantly identify WordPress sites with MotionKit installed.
+     *
+     * @return void
+     */
+    public function send_platform_header(): void
+    {
+        if (!headers_sent()) {
+            header('X-Motionkit-Platform: wordpress');
+        }
     }
 
     /**
