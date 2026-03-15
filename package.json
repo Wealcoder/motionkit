@@ -1,7 +1,7 @@
 {
-  "name": "animation-addons-for-elementor-pro",
+  "name": "motionkit-connector",
   "version": "1.0.0",
-  "description": "Elementor WCF Addons",
+  "description": "A connector for MotionKit, a library for creating animations in React,nodejs.",
   "main": "echo \"Nothing much here.\" && exit 1",
   "devDependencies": {
     "@babel/core": "^7.28.4",

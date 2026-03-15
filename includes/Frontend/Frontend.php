@@ -242,6 +242,7 @@ final class Frontend
    */
   public function allow_editor_iframe(): void
   {
+    
     if (!$this->is_editor_preview()) {
       return;
     }
@@ -251,6 +252,7 @@ final class Frontend
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:3000',
+      '*'
     ]);
 
     header_remove('X-Frame-Options');
