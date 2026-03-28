@@ -68,7 +68,6 @@ function restUrl(endpoint) {
     return base + endpoint;
   }
   // Pretty permalinks: just concat
-  console.log('6 REST URL (pretty permalinks):', base + endpoint);
   return base + endpoint;
 }
 
@@ -118,12 +117,8 @@ function receivePageConfig() {
   window.addEventListener(
     "message",
     (event) => {
-      // Debug: log all incoming messages
-      console.log('[bridge] message from:', event.origin, 'type:', event.data?.type);
-
       // Validate origin — reject messages from unknown sources
       if (!isAllowedOrigin(event.origin)) {
-        console.warn('[bridge] rejected origin:', event.origin);
         return;
       }
 
@@ -204,7 +199,6 @@ function receivePageConfig() {
       // Receive global + current page settings from the editor
       if (event.data?.type === "motionkit-settings") {
         const { globalSettings, currentPageSettings } = event.data.data || {};
-        console.log('Received settings from editor:', { globalSettings, currentPageSettings });
         // Save global settings via REST API
         if (globalSettings) {
           fetch(restUrl("global-settings"), {
@@ -236,10 +230,6 @@ function receivePageConfig() {
 
         // Save current page settings via REST API
         if (currentPageSettings) {
-          console.log('888 Saving current page settings via REST API:', {
-            pageTypeConfigs: wcfanimb.pageTypeConfigs,
-            animationConfigs: currentPageSettings,
-          });
           fetch(restUrl("configs"), {
             method: "POST",
             headers: getAuthHeaders(),
