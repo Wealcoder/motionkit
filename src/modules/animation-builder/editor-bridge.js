@@ -23,7 +23,6 @@ const ALLOWED_ORIGINS = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:3000",
-  '*'
 ];
 
 /**
@@ -219,7 +218,7 @@ function receivePageConfig() {
                   window.parent.postMessage({
                     type: "motionkit-error",
                     data: { error: msg, code: body?.code || "save_failed", endpoint: "global-settings", status: r.status },
-                  }, "*");
+                  }, parentOrigin);
                   return null;
                 });
               }
@@ -255,7 +254,7 @@ function receivePageConfig() {
                   window.parent.postMessage({
                     type: "motionkit-error",
                     data: { error: msg, code: body?.code || "save_failed", endpoint: "configs", status: r.status },
-                  }, "*");
+                  }, parentOrigin);
                   return null;
                 });
               }
@@ -281,7 +280,6 @@ function receivePageConfig() {
             deviceConfig: wcfanimb.device_config,
             base_domain: wcfanimb.base_domain,
             rest_url: wcfanimb.rest_url,
-            mk_token: getMkToken(),
           },
         }, parentOrigin);
 
@@ -307,7 +305,6 @@ function receivePageConfig() {
             deviceConfig: wcfanimb.device_config,
             base_domain: wcfanimb.base_domain,
             rest_url: wcfanimb.rest_url,
-            mk_token: getMkToken(),
           },
         }, parentOrigin);
 
@@ -324,7 +321,6 @@ function receivePageConfig() {
         platform: wcfanimb.platform,
         base_domain: wcfanimb.base_domain,
         rest_url: wcfanimb.rest_url,
-        mk_token: getMkToken(),
       },
     }, parentOrigin);
   }, 1000);
