@@ -69,7 +69,6 @@ setTimeout(initEngine, 0);
 
 document.addEventListener('aae-animation-event', (e) => {
   const custom = e.detail?.custom;
-  console.log(custom);
   if (!Array.isArray(custom) || !custom.length) return;
 
   MotionLy.ready(({ bus }) => {
