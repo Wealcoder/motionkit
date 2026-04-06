@@ -146,7 +146,7 @@ final class ConnectPage
       wp_die(esc_html__('You do not have permission to access this page.', 'motionkit'));
     }
 
-    $active_tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'license';
+    $active_tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'connect';
     $current_user = wp_get_current_user();
     $connection_info = OAuthHandler::get_connection_info();
     $user_email = !empty($connection_info['email']) ? $connection_info['email'] : $current_user->user_email;
@@ -443,9 +443,18 @@ final class ConnectPage
           <?php esc_html_e('Your site is connected. Open any post or page and click "Edit with MotionKit" - or use the button below to launch the editor directly.', 'motionkit'); ?>
         </p>
         <a href="<?php echo esc_url($editor_url); ?>"
-           class="mk-btn mk-btn--primary"
+           class="mk-btn mk-btn--primary mk-btn--split"
            target="_blank">
-          <?php esc_html_e('Launch Motionkit', 'motionkit'); ?>
+          <span class="mk-btn__text" data-text="<?php esc_attr_e('Launch Motionkit', 'motionkit'); ?>">
+            <?php
+              $text = __('Launch Motionkit', 'motionkit');
+              $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
+              foreach ($chars as $i => $char) {
+                $c = $char === ' ' ? '&nbsp;' : esc_html($char);
+                printf('<span class="mk-btn__char" style="transition-delay:%.2fs">%s</span>', $i * 0.02, $c);
+              }
+            ?>
+          </span>
         </a>
       </div>
     </div>

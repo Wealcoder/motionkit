@@ -212,7 +212,7 @@ final class OAuthHandler
     // Verify CSRF state token
     $stored_state = get_transient(self::OPT_STATE_TOKEN);
     if (!$stored_state || !hash_equals($stored_state, $state)) {
-      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&error=invalid_state'));
+      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&error=invalid_state'));
       exit;
     }
 
@@ -223,7 +223,7 @@ final class OAuthHandler
     $result = $this->exchange_code_for_token($code);
    
     if (is_wp_error($result)) {
-      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&error=' . $result->get_error_code()));
+      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&error=' . $result->get_error_code()));
       exit;
     }
 
@@ -236,7 +236,7 @@ final class OAuthHandler
       update_option(self::OPT_CONNECTED_EMAIL, sanitize_email($result['email']), false);
     }
 
-    wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&connected=1'));
+    wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&connected=1'));
     exit;
   }
 
@@ -377,7 +377,7 @@ final class OAuthHandler
     delete_option('motionkit_jwt_secret');
     delete_option('motionkit_used_jtis');
 
-    wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&disconnected=1'));
+    wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&disconnected=1'));
     exit;
   }
 
