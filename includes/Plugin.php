@@ -252,28 +252,7 @@ final class Plugin
      */
     private function init_auth(): void
     {
-        // Override connect URLs for local development
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            $local = 'http://localhost:5173';
-            add_filter('motionkit/connect/authorize_url', fn() => $local . '/connect/authorize');
-            add_filter('motionkit/connect/token_url', fn() => 'http://localhost:3001/connect/token');
-            add_filter('motionkit/connect/revoke_url', fn() => 'http://localhost:3001/connect/revoke');
-            add_filter('motionkit/connect/validate_url', fn() => 'http://localhost:3001/connect/validate');
-            add_filter('motionkit/connect/verify_session_url', fn() => 'http://localhost:3001/connect/verify-session');
-            add_filter('motionkit/editor/url', function ($url) use ($local) {
-                // Replace the production origin with the local dev origin,
-                // preserving path, query string, and fragment intact.
-                return str_replace('https://editor.motionkit.io', $local, $url);
-            });
-
-            // Allow wp_remote_post to localhost (blocked by default)
-            add_filter('http_request_host_is_external', function ($external, $host) {
-                if ($host === 'localhost' || $host === '127.0.0.1') {
-                    return true;
-                }
-                return $external;
-            }, 10, 2);
-        }
+        // Override connect URLs for local development      
 
         $this->oauth = new OAuthHandler();
         $this->oauth->init();
