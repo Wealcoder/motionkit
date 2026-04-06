@@ -55,10 +55,10 @@ final class RestApi
    */
   public function register_routes(): void
   {
-    // POST /motionkit/v1/configs — save page configs
-    register_rest_route(self::NAMESPACE, '/configs', [
-      'methods'             => ['POST', 'GET'],
-      'callback'            => [$this, 'store_configs'],
+    // POST /motionkit/v1/current-page-settings — save page configs
+    register_rest_route(self::NAMESPACE, '/current-page-settings', [
+      'methods'             => \WP_REST_Server::CREATABLE,
+      'callback'            => [$this, 'store_current_page_settings'],
       'permission_callback' => [$this, 'check_permission'],
       'args'                => [
         'pageTypeConfigs'  => [
@@ -72,8 +72,8 @@ final class RestApi
       ],
     ]);
 
-    // DELETE /motionkit/v1/configs — delete page configs
-    register_rest_route(self::NAMESPACE, '/configs', [
+    // DELETE /motionkit/v1/current-page-settings — delete page configs
+    register_rest_route(self::NAMESPACE, '/current-page-settings', [
       'methods'             => \WP_REST_Server::DELETABLE,
       'callback'            => [$this, 'delete_configs'],
       'permission_callback' => [$this, 'check_permission'],
@@ -105,6 +105,36 @@ final class RestApi
       'permission_callback' => [$this, 'check_permission'],
     ]);
 
+    // POST /motionkit/v1/current-page-animation — save page-level animations
+    register_rest_route(self::NAMESPACE, '/current-page-animation', [
+      'methods'             => \WP_REST_Server::CREATABLE,
+      'callback'            => [$this, 'store_current_page_animation'],
+      'permission_callback' => [$this, 'check_permission'],
+      'args'                => [
+        'pageTypeConfigs'  => [
+          'required'          => true,
+          'validate_callback' => [$this, 'validate_json_object'],
+        ],
+        'animationConfigs' => [
+          'required'          => true,
+          'validate_callback' => [$this, 'validate_json_object'],
+        ],
+      ],
+    ]);
+
+    // POST /motionkit/v1/global-animation — save global animations
+    register_rest_route(self::NAMESPACE, '/global-animation', [
+      'methods'             => \WP_REST_Server::CREATABLE,
+      'callback'            => [$this, 'store_global_animation'],
+      'permission_callback' => [$this, 'check_permission'],
+      'args'                => [
+        'animationConfigs' => [
+          'required'          => true,
+          'validate_callback' => [$this, 'validate_json_object'],
+        ],
+      ],
+    ]);
+
     // GET /motionkit/v1/settings — get all settings (global + page)
     register_rest_route(self::NAMESPACE, '/settings', [
       'methods'             => \WP_REST_Server::READABLE,
@@ -127,8 +157,7 @@ final class RestApi
    */
   public function check_permission(?\WP_REST_Request $request = null)
   {
-    
-  // Verify site is still connected
+    // Verify site is still connected
     if (!OAuthHandler::is_connected()) {
       return new \WP_Error(
         'motionkit_disconnected',
@@ -137,8 +166,7 @@ final class RestApi
       );
     }
 
-    // Path 2: JWT bearer token (cross-origin editor session)
-    // The mk_token JWT is passed from editor → iframe URL → bridge → Authorization header
+    // JWT bearer token (cross-origin editor session)
     $auth_header = '';
     if ($request && $request->get_header('Authorization')) {
       $auth_header = $request->get_header('Authorization');
@@ -307,9 +335,9 @@ final class RestApi
    * @param \WP_REST_Request $request
    * @return \WP_REST_Response
    */
-  public function store_configs(\WP_REST_Request $request): \WP_REST_Response
+  public function store_current_page_settings(\WP_REST_Request $request): \WP_REST_Response
   {
-    
+
     $page_type_configs = $this->parse_json_param($request->get_param('pageTypeConfigs'));
     $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
 
@@ -352,8 +380,8 @@ final class RestApi
    */
   public function store_global_settings(\WP_REST_Request $request): \WP_REST_Response
   {
-    
-    $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));    
+
+    $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
     update_option('motionkit_global_settings', $animation_configs);
 
     return new \WP_REST_Response([
@@ -384,6 +412,54 @@ final class RestApi
   }
 
   /**
+   * Store page-level animations (page_animation bucket from editor)
+   *
+   * Uses the same page-type routing as current-page-settings but with
+   * a separate option key prefix to keep animations apart from settings.
+   *
+   * @param \WP_REST_Request $request
+   * @return \WP_REST_Response
+   */
+  public function store_current_page_animation(\WP_REST_Request $request): \WP_REST_Response
+  {
+    $page_type_configs = $this->parse_json_param($request->get_param('pageTypeConfigs'));
+    $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
+
+    // Use a separate option key for page animations
+    $page_type_configs['option'] = str_replace('cfanim_build_config_', 'motionkit_page_animation_', $page_type_configs['option'] ?? '');
+
+    $this->page_type->saveConfig($page_type_configs, $animation_configs);
+
+    return new \WP_REST_Response([
+      'success' => true,
+      'data'    => [
+        'msg'     => esc_html__('Page animations saved', 'motionkit'),
+        'configs' => $animation_configs,
+      ],
+    ], 200);
+  }
+
+  /**
+   * Store global animations (global_animation bucket from editor)
+   *
+   * @param \WP_REST_Request $request
+   * @return \WP_REST_Response
+   */
+  public function store_global_animation(\WP_REST_Request $request): \WP_REST_Response
+  {
+    $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
+    update_option('motionkit_global_animation', $animation_configs);
+
+    return new \WP_REST_Response([
+      'success' => true,
+      'data'    => [
+        'msg'     => esc_html__('Global animations saved', 'motionkit'),
+        'configs' => $animation_configs,
+      ],
+    ], 200);
+  }
+
+  /**
    * Get all settings (global + current page)
    *
    * @param \WP_REST_Request $request
@@ -392,11 +468,13 @@ final class RestApi
   public function get_settings(\WP_REST_Request $request): \WP_REST_Response
   {
     $global_settings = get_option('motionkit_global_settings', []);
+    $global_animation = get_option('motionkit_global_animation', []);
 
     return new \WP_REST_Response([
       'success' => true,
       'data'    => [
-        'globalSettings' => is_array($global_settings) ? $global_settings : [],
+        'globalSettings'  => is_array($global_settings) ? $global_settings : [],
+        'globalAnimation' => is_array($global_animation) ? $global_animation : [],
       ],
     ], 200);
   }

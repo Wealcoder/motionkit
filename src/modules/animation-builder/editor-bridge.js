@@ -50,24 +50,12 @@ function getParentOrigin() {
 }
 
 /**
- * Build a full REST API URL that works with both pretty and plain permalinks.
- *
- * Pretty:  https://site.com/wp-json/motionkit/v1/  + "configs"  → .../configs
- * Plain:   https://site.com/?rest_route=/motionkit/v1/  + "configs"  → ...&rest_route=.../configs
- *
- * WordPress rest_url() already handles the base, but simple string concat
- * breaks when the base contains a query string (?rest_route=).
+ * Build a full REST API URL.
+ * Uses plain permalink format (?rest_route=) to avoid permalink flush requirements.
+ * e.g. https://site.com/?rest_route=/motionkit/v1/ + "global-animation"
  */
 function restUrl(endpoint) {
-  const base = wcfanimb.rest_url || "";
-  // Plain permalinks: rest_url contains "?rest_route="
-  if (base.includes("?")) {
-    // base is e.g. "https://site.com/?rest_route=/motionkit/v1/"
-    // We need to append the endpoint to the rest_route value
-    return base + endpoint;
-  }
-  // Pretty permalinks: just concat
-  return base + endpoint;
+  return (wcfanimb.rest_url || "") + endpoint;
 }
 
 /**
@@ -105,6 +93,71 @@ function getAuthHeaders() {
   }
 
   return headers;
+}
+
+/**
+ * POST data to a REST endpoint with standardized error handling.
+ * On failure, sends a motionkit-error postMessage to the parent editor.
+ *
+ * @param {string}   endpoint   REST endpoint name (e.g. "global-settings")
+ * @param {object}   body       JSON body to POST
+ * @param {object}   headers    Pre-built auth headers from getAuthHeaders()
+ * @param {function} onSuccess  Callback invoked with the parsed JSON on success
+ */
+function saveViaRest(endpoint, body, headers, onSuccess) {
+  fetch(restUrl(endpoint), {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  })
+    .then((r) => {
+      if (!r.ok) {
+        return r
+          .json()
+          .catch(() => ({}))
+          .then((respBody) => {
+            const msg = respBody?.message || `HTTP ${r.status}`;
+            window.parent.postMessage(
+              {
+                type: "motionkit-error",
+                data: {
+                  error: msg,
+                  code: respBody?.code || "save_failed",
+                  endpoint,
+                  status: r.status,
+                },
+              },
+              parentOrigin,
+            );
+            return null;
+          });
+      }
+      return r.json();
+    })
+    .then((res) => {
+      if (res?.success) onSuccess(res);
+    })
+    .catch((err) =>
+      console.error(`MotionKit: ${endpoint} save failed`, err),
+    );
+}
+
+/**
+ * Build the standard motionkit-response payload,
+ * merging optional overrides over the cached wcfanimb values.
+ */
+function buildResponsePayload(overrides = {}) {
+  return {
+    platform: wcfanimb.platform,
+    globalSettings: overrides.globalSettings || wcfanimb.global_settings,
+    pageType: wcfanimb.pageTypeConfigs,
+    pageSettings: overrides.currentPageSettings || wcfanimb.animation_config,
+    globalAnimation: overrides.globalAnimation || wcfanimb.global_animation,
+    pageAnimation: overrides.pageAnimation || wcfanimb.page_animation,
+    deviceConfig: wcfanimb.device_config,
+    base_domain: wcfanimb.base_domain,
+    rest_url: wcfanimb.rest_url,
+  };
 }
 
 let storeAnimation = {};
@@ -152,7 +205,7 @@ function receivePageConfig() {
                       ];
                     }
                   }
-                }
+                },
               );
             });
           });
@@ -169,7 +222,7 @@ function receivePageConfig() {
                     section,
                   ];
                 }
-              }
+              },
             );
           });
         });
@@ -180,7 +233,7 @@ function receivePageConfig() {
             detail: storeAnimation,
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       }
 
@@ -191,128 +244,88 @@ function receivePageConfig() {
             detail: "",
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       }
 
       // Receive global + current page settings from the editor
       if (event.data?.type === "motionkit-settings") {
-        const { globalSettings, currentPageSettings } = event.data.data || {};
-        // Save global settings via REST API
+        const {
+          globalSettings,
+          currentPageSettings,
+          globalAnimation,
+          pageAnimation,
+        } = event.data.data || {};
+        const headers = getAuthHeaders();
+
         if (globalSettings) {
-          fetch(restUrl("global-settings"), {
-            method: "POST",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ animationConfigs: globalSettings }),
-          })
-            .then((r) => {
-              if (!r.ok) {
-                return r.json().catch(() => ({})).then((body) => {
-                  const msg = body?.message || `HTTP ${r.status}`;                  
-                  window.parent.postMessage({
-                    type: "motionkit-error",
-                    data: { error: msg, code: body?.code || "save_failed", endpoint: "global-settings", status: r.status },
-                  }, parentOrigin);
-                  return null;
-                });
-              }
-              return r.json();
-            })
-            .then((res) => {
-              if (!res) return;
-              if (res.success) {
-                wcfanimb.global_settings = globalSettings;
-              }
-            })
-            .catch((err) => console.error("MotionKit: global settings save failed", err));
+          saveViaRest("global-settings", { animationConfigs: globalSettings }, headers, () => {
+            wcfanimb.global_settings = globalSettings;
+          });
         }
 
-        // Save current page settings via REST API
         if (currentPageSettings) {
-          fetch(restUrl("configs"), {
-            method: "POST",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({
-              pageTypeConfigs: wcfanimb.pageTypeConfigs,
-              animationConfigs: currentPageSettings,
-            }),
-          })
-            .then((r) => {
-              if (!r.ok) {
-                return r.json().catch(() => ({})).then((body) => {
-                  const msg = body?.message || `HTTP ${r.status}`;                  
-                  window.parent.postMessage({
-                    type: "motionkit-error",
-                    data: { error: msg, code: body?.code || "save_failed", endpoint: "configs", status: r.status },
-                  }, parentOrigin);
-                  return null;
-                });
-              }
-              return r.json();
-            })
-            .then((res) => {
-              if (!res) return;
-              if (res.success) {
-                wcfanimb.animation_config = currentPageSettings;
-              }
-            })
-            .catch((err) => console.error("MotionKit: page settings save failed", err));
+          saveViaRest("current-page-settings", { pageTypeConfigs: wcfanimb.pageTypeConfigs, animationConfigs: currentPageSettings }, headers, () => {
+            wcfanimb.animation_config = currentPageSettings;
+          });
         }
 
-        // Send updated response back to the editor
-        window.parent.postMessage({
-          type: "motionkit-response",
-          data: {
-            platform: wcfanimb.platform,
-            globalSettings: globalSettings || wcfanimb.global_settings,
-            pageType: wcfanimb.pageTypeConfigs,
-            pageSettings: currentPageSettings || wcfanimb.animation_config,
-            deviceConfig: wcfanimb.device_config,
-            base_domain: wcfanimb.base_domain,
-            rest_url: wcfanimb.rest_url,
+        if (globalAnimation) {
+          saveViaRest("global-animation", { animationConfigs: globalAnimation }, headers, () => {
+            wcfanimb.global_animation = globalAnimation;
+          });
+        }
+
+        if (pageAnimation) {
+          saveViaRest("current-page-animation", { pageTypeConfigs: wcfanimb.pageTypeConfigs, animationConfigs: pageAnimation }, headers, () => {
+            wcfanimb.page_animation = pageAnimation;
+          });
+        }
+
+        window.parent.postMessage(
+          {
+            type: "motionkit-response",
+            data: buildResponsePayload({ globalSettings, currentPageSettings, globalAnimation, pageAnimation }),
           },
-        }, parentOrigin);
+          parentOrigin,
+        );
 
         document.dispatchEvent(
           new CustomEvent("motionkit-settings-update", {
-            detail: { globalSettings, currentPageSettings },
+            detail: { globalSettings, currentPageSettings, globalAnimation, pageAnimation },
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       }
 
       // Respond to data requests from the SaaS editor
-      if (event.data?.type === "motionkit-request" && event.data?.request === "get-data") {
-
-        window.parent.postMessage({
-          type: "motionkit-response",
-          data: {
-            platform: wcfanimb.platform,
-            globalSettings: wcfanimb.global_settings,
-            pageType: wcfanimb.pageTypeConfigs,
-            pageSettings: wcfanimb.animation_config,
-            deviceConfig: wcfanimb.device_config,
-            base_domain: wcfanimb.base_domain,
-            rest_url: wcfanimb.rest_url,
-          },
-        }, parentOrigin);
-
+      if (
+        event.data?.type === "motionkit-request" &&
+        event.data?.request === "get-data"
+      ) {
+        window.parent.postMessage(
+          { type: "motionkit-response", data: buildResponsePayload() },
+          parentOrigin,
+        );
       }
     },
-    false
+    false,
   );
 
   // Notify parent (SaaS editor) that the iframe is ready
   setTimeout(() => {
-    window.parent.postMessage({
-      type: "motionkit-ready",
-      data: {
-        platform: wcfanimb.platform,
-        base_domain: wcfanimb.base_domain,
-        rest_url: wcfanimb.rest_url,
+    window.parent.postMessage(
+      {
+        type: "motionkit-ready",
+        data: {
+          platform: wcfanimb.platform,
+          base_domain: wcfanimb.base_domain,
+          rest_url: wcfanimb.rest_url,
+        },
       },
-    }, parentOrigin);
+      parentOrigin,
+    );
   }, 1000);
 }
 
