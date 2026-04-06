@@ -356,22 +356,33 @@ final class Frontend
     // Global animation configs (saved from editor, stored in wp_options)
     $global_settings = get_option('motionkit_global_settings', []);
 
+    // Global animation list (global_animation bucket from editor)
+    $global_animation = get_option('motionkit_global_animation', []);
+
+    // Page-level animation list (page_animation bucket from editor)
+    $page_type_config = $this->page_type->getCurrentPageType();
+    $page_anim_config = $page_type_config;
+    $page_anim_config['option'] = str_replace('cfanim_build_config_', 'motionkit_page_animation_', $page_anim_config['option'] ?? '');
+    $page_animation = $this->page_type->getConfig($page_anim_config);
+
     // mk_token is already validated by is_editor_preview() — safe to pass through
     $mk_token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
 
     // Shared localized data for both frontend runner and editor bridge
     $localized_data = [
-      'animation_config' => is_array($page_configs) ? $page_configs : [],
-      'device_config'    => $devices,
-      'ajaxurl'          => admin_url('admin-ajax.php'),
-      'nonce'            => wp_create_nonce('wcf-admin-preview-nonce'),
-      'rest_url'         => rest_url('motionkit/v1/'),
-      'rest_nonce'       => wp_create_nonce('wp_rest'),
-      'pageTypeConfigs'  => $this->page_type->getCurrentPageType(),
-      'base_domain'      => home_url(),
-      'global_settings'  => is_array($global_settings) ? $global_settings : [],
-      'platform'         => 'wordpress',
-      'mk_token'         => $mk_token,
+      'animation_config'  => is_array($page_configs) ? $page_configs : [],
+      'device_config'     => $devices,
+      'ajaxurl'           => admin_url('admin-ajax.php'),
+      'nonce'             => wp_create_nonce('wcf-admin-preview-nonce'),
+      'rest_url'          => add_query_arg('rest_route', '/motionkit/v1/', home_url('/')),
+      'rest_nonce'        => wp_create_nonce('wp_rest'),
+      'pageTypeConfigs'   => $page_type_config,
+      'base_domain'       => home_url(),
+      'global_settings'   => is_array($global_settings) ? $global_settings : [],
+      'global_animation'  => is_array($global_animation) ? $global_animation : [],
+      'page_animation'    => is_array($page_animation) ? $page_animation : [],
+      'platform'          => 'wordpress',
+      'mk_token'          => $mk_token,
     ];
 
     // Localize on the bridge (loads independently, no GSAP deps)
