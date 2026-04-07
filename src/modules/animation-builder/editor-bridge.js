@@ -307,6 +307,38 @@ function receivePageConfig() {
         );
       }
 
+      // Handle page search from the SaaS editor
+      if (event.data?.type === "motionkit-page-search") {
+        const query = event.data.query || "";
+        const page = event.data.page || 1;
+        const perPage = event.data.per_page || 10;
+        const headers = getAuthHeaders();
+        const searchUrl = restUrl("pages") + "&s=" + encodeURIComponent(query) + "&page=" + page + "&per_page=" + perPage;
+
+        fetch(searchUrl, { headers })
+          .then((r) => r.json())
+          .then((res) => {
+            window.parent.postMessage(
+              {
+                type: "motionkit-page-search-result",
+                data: res?.data || [],
+                query,
+                page: res?.page || page,
+                has_more: res?.has_more || false,
+                total: res?.total || 0,
+              },
+              parentOrigin,
+            );
+          })
+          .catch((err) => {
+            console.error("MotionKit: page search failed", err);
+            window.parent.postMessage(
+              { type: "motionkit-page-search-result", data: [], query, page, has_more: false, total: 0 },
+              parentOrigin,
+            );
+          });
+      }
+
       // Respond to data requests from the SaaS editor
       if (
         event.data?.type === "motionkit-request" &&

@@ -141,6 +141,29 @@ final class RestApi
       'callback'            => [$this, 'get_settings'],
       'permission_callback' => [$this, 'check_permission'],
     ]);
+
+    // GET /motionkit/v1/pages — search all animatable pages
+    register_rest_route(self::NAMESPACE, '/pages', [
+      'methods'             => \WP_REST_Server::READABLE,
+      'callback'            => [$this, 'search_pages'],
+      'permission_callback' => [$this, 'check_permission'],
+      'args'                => [
+        's' => [
+          'required'          => false,
+          'sanitize_callback' => 'sanitize_text_field',
+        ],
+        'per_page' => [
+          'required'          => false,
+          'default'           => 10,
+          'sanitize_callback' => 'absint',
+        ],
+        'page' => [
+          'required'          => false,
+          'default'           => 1,
+          'sanitize_callback' => 'absint',
+        ],
+      ],
+    ]);
   }
 
   // ─── Permission ─────────────────────────────────────────────────
@@ -479,5 +502,225 @@ final class RestApi
         'globalAnimation' => is_array($global_animation) ? $global_animation : [],
       ],
     ], 200);
+  }
+
+  /**
+   * Search all animatable pages — posts, pages, CPTs, archives, special pages.
+   * Returns URLs with ?action=motionkit-editor appended.
+   */
+  public function search_pages(\WP_REST_Request $request): \WP_REST_Response
+  {
+    $search   = strtolower(trim($request->get_param('s') ?? ''));
+    $per_page = min((int) $request->get_param('per_page'), 50) ?: 10;
+    $page     = max((int) $request->get_param('page'), 1);
+    $all      = [];
+
+    // ── 1. Special pages (only on page 1) ──
+    if ($page === 1) {
+      $special_pages = [
+        ['title' => 'Homepage',       'type' => 'front_page', 'url' => home_url('/')],
+        ['title' => 'Blog',           'type' => 'blog',       'url' => get_permalink(get_option('page_for_posts')) ?: home_url('/')],
+        ['title' => '404 Page',       'type' => '404',        'url' => home_url('/404-preview/')],
+        ['title' => 'Search Results', 'type' => 'search',     'url' => home_url('/?s=blog')],
+      ];
+
+      foreach ($special_pages as $sp) {
+        if (!$search || stripos($sp['title'], $search) !== false || stripos($sp['type'], $search) !== false) {
+          $all[] = [
+            'id'    => null,
+            'title' => $sp['title'],
+            'type'  => $sp['type'],
+            'group' => 'Special Pages',
+            'url'   => $this->editor_url($sp['url']),
+          ];
+        }
+      }
+    }
+
+    // ── 2. Singular pages/posts ──
+    $post_types = get_post_types(['public' => true], 'objects');
+
+    // Exclude internal/builder post types that aren't real pages
+    $excluded_types = [
+      'wcf-custom-fonts',
+      'attachment',            // Media files
+      'elementor_library',     // Elementor templates
+      'e-landing-page',        // Elementor landing pages
+      'e-floating-buttons',    // Elementor floating buttons
+      'oembed_cache',          // oEmbed cache
+      'wp_block',              // Reusable blocks
+      'wp_template',           // Block theme templates
+      'wp_template_part',      // Block theme template parts
+      'wp_navigation',         // Navigation menus
+      'wp_global_styles',      // Global styles
+      'wp_font_family',        // Font families
+      'wp_font_face',          // Font faces
+      'custom_css',            // Custom CSS
+      'customize_changeset',   // Customizer changesets
+      'revision',              // Revisions
+      'nav_menu_item',         // Menu items
+      'user_request',          // Privacy requests
+      'fl-builder-template',   // Beaver Builder templates
+      'fl-theme-layout',       // Beaver Builder layouts
+      'brizy_template',        // Brizy templates
+      'ct_template',           // Oxygen Builder templates
+      'jet-popup',             // JetPopup
+      'jet-menu',              // JetMenu
+      'jet-smart-filters',     // JetSmartFilters
+      'bricks_template',       // Bricks Builder templates
+      'acf-field-group',       // ACF field groups
+      'acf-field',             // ACF fields
+      'acf-post-type',         // ACF custom post types
+      'acf-taxonomy',          // ACF custom taxonomies
+      'acf-ui-options-page',   // ACF options pages
+      'wpcf7_contact_form',    // Contact Form 7
+      'wpforms',               // WPForms
+      'wpforms_log',           // WPForms logs
+      'frm_display',           // Formidable Forms views
+      'wcf-addons-template',   // Animation Addons templates
+      'wcf-addons-popup',      // Animation Addons popups
+      'wcf-code-snippet',      // Animation Addons code snippets
+      'wcf-custom-icons',      // Animation Addons custom icons
+      'aaeptypebilder',        // Animation Addons CPT builder
+      'aaeaddon_post_rating',  // Animation Addons post ratings
+      'metform-form',          // MetForm forms
+      'metform-entry',         // MetForm entries
+      'wpseo_locations',       // Yoast SEO local locations
+      'wpseo_news',            // Yoast SEO news
+      'redirect_rule',         // Yoast/RankMath redirects
+      'rank_math_schema',      // RankMath schema
+      'rm_content_ai',         // RankMath content AI
+      'aioseo-template',       // All in One SEO templates
+      'et_pb_layout',          // Divi library layouts
+      'et_header_layout',      // Divi header templates
+      'et_body_layout',        // Divi body templates
+      'et_footer_layout',      // Divi footer templates
+      'et_code_snippet',       // Divi code snippets
+      'et_theme_builder',      // Divi theme builder templates
+      'eael_template',         // Essential Addons templates
+      'elementskit_template',  // ElementsKit templates
+      'elementskit_widget',    // ElementsKit widgets
+      'ha_library',            // Happy Addons templates
+      'bdthemes-ep-template',  // Element Pack templates
+      'uael-template',         // Ultimate Addons for Elementor templates
+      'uael_popup',            // Ultimate Addons popups
+      'elementor_font',        // Elementor Pro custom fonts
+      'elementor_icons',       // Elementor Pro custom icons
+      'elementor_snippet',     // Elementor Pro code snippets
+      'elementor-thhf',        // Elementor Pro header/footer templates
+      'powerpack_templates',   // PowerPack for Elementor templates
+      'pp-template',           // PowerPack templates
+      'unlimited-template',    // Starter Templates / Starter Sites
+    ];
+
+    foreach ($excluded_types as $type) {
+      unset($post_types[$type]);
+    }
+
+    $query_args = [
+      'post_type'      => array_keys($post_types),
+      'post_status'    => 'publish',
+      'posts_per_page' => $per_page,
+      'paged'          => $page,
+      'orderby'        => 'title',
+      'order'          => 'ASC',
+    ];
+    
+    if ($search) {
+      $query_args['s'] = $search;
+    }
+
+    $query = new \WP_Query($query_args);
+
+    foreach ($query->posts as $post) {
+      $type_obj = $post_types[$post->post_type] ?? null;
+      $all[] = [
+        'id'    => $post->ID,
+        'title' => $post->post_title ?: '(no title)',
+        'type'  => $post->post_type,
+        'group' => $type_obj ? $type_obj->labels->singular_name : ucfirst($post->post_type),
+        'url'   => $this->editor_url(get_permalink($post)),
+      ];
+    }
+
+    $total_posts = (int) $query->found_posts;
+
+    // ── 3. Taxonomy terms — show as single archive page per term ──
+    if ($page === 1) {
+      $taxonomies = get_taxonomies(['public' => true], 'objects');
+
+      foreach ($taxonomies as $tax) {
+        // Show only 1 representative term per taxonomy
+        $term_args = [
+          'taxonomy'   => $tax->name,
+          'hide_empty' => false,
+          'number'     => 1,
+        ];
+        if ($search) {
+          $term_args['search'] = $search;
+          $term_args['number'] = 3; // show more when searching
+        }
+
+        $terms = get_terms($term_args);
+        if (is_wp_error($terms) || empty($terms)) continue;
+
+        foreach ($terms as $term) {
+          $link = get_term_link($term);
+          if (is_wp_error($link)) continue;
+
+          $all[] = [
+            'id'    => $term->term_id,
+            'title' => $term->name,
+            'type'  => $tax->name,
+            'group' => $tax->labels->singular_name ?: ucfirst($tax->name),
+            'url'   => $this->editor_url($link),
+          ];
+        }
+      }
+
+      // ── 4. Author — show single author page ──
+      if (!$search || stripos('author', $search) !== false) {
+        $authors = get_users([
+          'has_published_posts' => true,
+          'number'              => 1,
+        ]);
+        if ($search) {
+          $authors = get_users([
+            'has_published_posts' => true,
+            'search'              => "*{$search}*",
+            'search_columns'      => ['display_name'],
+            'number'              => 3,
+          ]);
+        }
+        foreach ($authors as $author) {
+          $all[] = [
+            'id'    => $author->ID,
+            'title' => $author->display_name,
+            'type'  => 'author',
+            'group' => 'Author',
+            'url'   => $this->editor_url(get_author_posts_url($author->ID)),
+          ];
+        }
+      }
+    }
+
+    $has_more = $total_posts > ($page * $per_page);
+
+    return new \WP_REST_Response([
+      'success'  => true,
+      'data'     => $all,
+      'page'     => $page,
+      'per_page' => $per_page,
+      'total'    => $total_posts,
+      'has_more' => $has_more,
+    ], 200);
+  }
+
+  /**
+   * Append ?action=motionkit-editor to a URL for editor preview.
+   */
+  private function editor_url(string $url): string
+  {
+    return add_query_arg('action', 'motionkit-editor', $url);
   }
 }
