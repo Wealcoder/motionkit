@@ -12,7 +12,7 @@ function playAnimation() {
   try {
     if (
       wcfanimb !== undefined &&
-      Object.keys(wcfanimb?.animation_config)?.length
+      Object.keys(wcfanimb?.currentPageSettings)?.length
     ) {
       window.addEventListener("load", () => {
         setTimeout(() => {
@@ -28,7 +28,7 @@ function playAnimation() {
 
           wcfanimb?.device_config?.map((device) => {
             mm.add(device.mediaQuery, () => {
-              wcfanimb?.animation_config?.[device?.key].forEach((section) => {
+              wcfanimb?.currentPageSettings?.[device?.key].forEach((section) => {
                 if (section.enable) {
                   if (section.type === "preset") {
                     storeAnimation[section?.preset] = [
@@ -48,7 +48,7 @@ function playAnimation() {
 
           wcfanimb?.device_config?.map((device) => {
             handleMediaQuery(device.mediaQuery, () => {
-              wcfanimb?.animation_config?.[device?.key].forEach((section) => {
+              wcfanimb?.currentPageSettings?.[device?.key].forEach((section) => {
                 if (section.enable) {
                   if (section.type === "free_animation") {
                     storeAnimation[section?.preset] = [

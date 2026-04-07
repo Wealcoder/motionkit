@@ -105,18 +105,22 @@ function getAuthHeaders() {
  * @param {function} onSuccess  Callback invoked with the parsed JSON on success
  */
 function saveViaRest(endpoint, body, headers, onSuccess) {
+
   fetch(restUrl(endpoint), {
     method: "POST",
     headers,
     body: JSON.stringify(body),
   })
     .then((r) => {
+
       if (!r.ok) {
         return r
           .json()
-          .catch(() => ({}))
+          .catch(() => ({ message: `HTTP ${r.status}` }))
           .then((respBody) => {
+            console.log(respBody);
             const msg = respBody?.message || `HTTP ${r.status}`;
+
             window.parent.postMessage(
               {
                 type: "motionkit-error",
@@ -132,9 +136,11 @@ function saveViaRest(endpoint, body, headers, onSuccess) {
             return null;
           });
       }
+
       return r.json();
     })
     .then((res) => {
+
       if (res?.success) onSuccess(res);
     })
     .catch((err) =>
@@ -147,11 +153,12 @@ function saveViaRest(endpoint, body, headers, onSuccess) {
  * merging optional overrides over the cached wcfanimb values.
  */
 function buildResponsePayload(overrides = {}) {
+ 
   return {
     platform: wcfanimb.platform,
     globalSettings: overrides.globalSettings || wcfanimb.global_settings,
     pageType: wcfanimb.pageTypeConfigs,
-    pageSettings: overrides.currentPageSettings || wcfanimb.animation_config,
+    currentPageSettings: overrides.currentPageSettings || wcfanimb.currentPageSettings,
     globalAnimation: overrides.globalAnimation || wcfanimb.global_animation,
     pageAnimation: overrides.pageAnimation || wcfanimb.page_animation,
     deviceConfig: wcfanimb.device_config,
@@ -266,11 +273,12 @@ function receivePageConfig() {
 
         if (currentPageSettings) {
           saveViaRest("current-page-settings", { pageTypeConfigs: wcfanimb.pageTypeConfigs, animationConfigs: currentPageSettings }, headers, () => {
-            wcfanimb.animation_config = currentPageSettings;
+            wcfanimb.currentPageSettings = currentPageSettings;
           });
         }
 
         if (globalAnimation) {
+
           saveViaRest("global-animation", { animationConfigs: globalAnimation }, headers, () => {
             wcfanimb.global_animation = globalAnimation;
           });

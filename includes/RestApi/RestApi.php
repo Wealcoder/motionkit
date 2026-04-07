@@ -71,7 +71,7 @@ final class RestApi
         ],
       ],
     ]);
-
+ 
     // DELETE /motionkit/v1/current-page-settings — delete page configs
     register_rest_route(self::NAMESPACE, '/current-page-settings', [
       'methods'             => \WP_REST_Server::DELETABLE,
@@ -427,13 +427,13 @@ final class RestApi
 
     // Use a separate option key for page animations
     $page_type_configs['option'] = str_replace('cfanim_build_config_', 'motionkit_page_animation_', $page_type_configs['option'] ?? '');
-
+    
     $this->page_type->saveConfig($page_type_configs, $animation_configs);
 
     return new \WP_REST_Response([
       'success' => true,
       'data'    => [
-        'msg'     => esc_html__('Page animations saved', 'motionkit'),
+        'msg'     => esc_html__('Animations saved', 'motionkit'),
         'configs' => $animation_configs,
       ],
     ], 200);
@@ -448,7 +448,9 @@ final class RestApi
   public function store_global_animation(\WP_REST_Request $request): \WP_REST_Response
   {
     $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
-    update_option('motionkit_global_animation', $animation_configs);
+    
+    update_option('motionkit_global_animations', $animation_configs);
+  
 
     return new \WP_REST_Response([
       'success' => true,
@@ -468,7 +470,7 @@ final class RestApi
   public function get_settings(\WP_REST_Request $request): \WP_REST_Response
   {
     $global_settings = get_option('motionkit_global_settings', []);
-    $global_animation = get_option('motionkit_global_animation', []);
+    $global_animation = get_option('motionkit_global_animations', []);
 
     return new \WP_REST_Response([
       'success' => true,

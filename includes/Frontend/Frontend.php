@@ -357,7 +357,7 @@ final class Frontend
     $global_settings = get_option('motionkit_global_settings', []);
 
     // Global animation list (global_animation bucket from editor)
-    $global_animation = get_option('motionkit_global_animation', []);
+    $global_animation = get_option('motionkit_global_animations', []);
 
     // Page-level animation list (page_animation bucket from editor)
     $page_type_config = $this->page_type->getCurrentPageType();
@@ -370,7 +370,7 @@ final class Frontend
 
     // Shared localized data for both frontend runner and editor bridge
     $localized_data = [
-      'animation_config'  => is_array($page_configs) ? $page_configs : [],
+      'currentPageSettings'  => is_array($page_configs) ? $page_configs : [],
       'device_config'     => $devices,
       'ajaxurl'           => admin_url('admin-ajax.php'),
       'nonce'             => wp_create_nonce('wcf-admin-preview-nonce'),
@@ -384,6 +384,7 @@ final class Frontend
       'platform'          => 'wordpress',
       'mk_token'          => $mk_token,
     ];
+    
 
     // Localize on the bridge (loads independently, no GSAP deps)
     wp_localize_script('motionkit-editor-bridge', 'wcfanimb', $localized_data);
@@ -456,7 +457,7 @@ final class Frontend
     $devices = $this->get_sanitized_devices();
 
     wp_localize_script('motionkit-frontend', 'wcfanimb', [
-      'animation_config' => $page_configs,
+      'currentPageSettings' => $page_configs,
       'device_config'    => $devices,
     ]);
 
