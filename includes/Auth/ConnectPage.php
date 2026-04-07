@@ -85,7 +85,7 @@ final class ConnectPage
   private function get_editor_url(): string
   {
     $page_url = home_url('/');
-    $query_args = ['site' => $page_url];
+    $query_args = ['site' => $page_url, 'platform' => 'wordpress'];
 
     if (OAuthHandler::is_connected()) {
       $query_args['token'] = JwtTokenManager::generate($page_url);

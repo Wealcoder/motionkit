@@ -382,7 +382,7 @@ final class Plugin
             $page_url = home_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? '/')));
         }
 
-        $query_args = ['site' => $page_url];
+        $query_args = ['site' => $page_url, 'platform' => 'wordpress'];
 
         // Include JWT token if connected
         if (OAuthHandler::is_connected()) {

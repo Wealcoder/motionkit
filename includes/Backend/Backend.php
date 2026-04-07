@@ -89,7 +89,7 @@ final class Backend {
 		}
 
 		$page_url   = get_the_permalink( $post->ID );
-		$query_args = array( 'site' => $page_url );
+		$query_args = array( 'site' => $page_url, 'platform' => 'wordpress' );
 
 		if ( OAuthHandler::is_connected() ) {
 			$query_args['token'] = JwtTokenManager::generate( $page_url );
@@ -120,7 +120,7 @@ final class Backend {
 			return $actions;
 		}
 
-		$query_args = array( 'site' => $page_url );
+		$query_args = array( 'site' => $page_url, 'platform' => 'wordpress' );
 
 		if ( OAuthHandler::is_connected() ) {
 			$query_args['token'] = JwtTokenManager::generate( $page_url );
