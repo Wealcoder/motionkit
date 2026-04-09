@@ -167,22 +167,16 @@ let parentOrigin = null;
 
 function receivePageConfig() {
   parentOrigin = getParentOrigin();
-
   window.addEventListener(
     "message",
     (event) => {
-      // Validate origin — reject messages from unknown sources
-      if (!isAllowedOrigin(event.origin)) {
-        return;
-      }
-
       // Lock to the first valid origin we receive from
       if (!parentOrigin) {
         parentOrigin = event.origin;
       }
 
       // Receive animation config from SaaS editor
-      if ("wcf-animation-config" in event.data) {
+      if (event?.data?.type === "wcf-animation-config") {
         storeAnimation = {};
         let mm;
 
