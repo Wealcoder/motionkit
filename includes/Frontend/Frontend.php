@@ -242,7 +242,7 @@ final class Frontend
    */
   public function allow_editor_iframe(): void
   {
-    
+
     if (!$this->is_editor_preview()) {
       return;
     }
@@ -269,7 +269,7 @@ final class Frontend
     if (defined('WCF_ADDONS_PRO_VERSION')) {
       return;
     }
-   
+
     add_action('wp_footer', [$this->smoother, 'run_scroll_smoother']);
   }
 
@@ -302,15 +302,15 @@ final class Frontend
    */
   private function enqueue_editor_preview_scripts(): void
   {
-   
-    
+
+
     $this->maybe_init_scroll_smoother();
-     
+
     $deps = apply_filters('motionkit_core_lib_deps', []);
     $deps = array_values(array_filter($deps, function ($dep) {
       return $dep !== 'wp-element';
     }));
-  
+
     // Enqueue frontend runner
     wp_register_script(
       'motionkit-frontend',
@@ -320,7 +320,7 @@ final class Frontend
       true
     );
     wp_enqueue_script('motionkit-frontend');
-   
+
     // Enqueue editor bridge — postMessage receiver for SaaS editor
     // No dependency on motionkit-frontend: the bridge only handles postMessage
     // and must load even if GSAP CDN scripts fail.
@@ -354,7 +354,7 @@ final class Frontend
     $page_configs = $this->page_type->getConfig();
 
     // Global animation configs (saved from editor, stored in wp_options)
-    $global_settings = get_option('motionkit_global_settings', []);
+    $global_settings = get_option('motionkit_global_settings', json_decode('{}'));
 
     // Global animation list (global_animation bucket from editor)
     $global_animation = get_option('motionkit_global_animations', []);
@@ -370,7 +370,7 @@ final class Frontend
 
     // Shared localized data for both frontend runner and editor bridge
     $localized_data = [
-      'currentPageSettings'  => is_array($page_configs) ? $page_configs : [],
+      'currentPageSettings'  => $page_configs ? $page_configs : json_decode('{}'),
       'device_config'     => $devices,
       'ajaxurl'           => admin_url('admin-ajax.php'),
       'nonce'             => wp_create_nonce('wcf-admin-preview-nonce'),
@@ -378,13 +378,13 @@ final class Frontend
       'rest_nonce'        => wp_create_nonce('wp_rest'),
       'pageTypeConfigs'   => $page_type_config,
       'base_domain'       => home_url(),
-      'global_settings'   => is_array($global_settings) ? $global_settings : [],
+      'global_settings'   => $global_settings ,
       'global_animation'  => is_array($global_animation) ? $global_animation : [],
       'page_animation'    => is_array($page_animation) ? $page_animation : [],
       'platform'          => 'wordpress',
       'mk_token'          => $mk_token,
     ];
-    
+
 
     // Localize on the bridge (loads independently, no GSAP deps)
     wp_localize_script('motionkit-editor-bridge', 'wcfanimb', $localized_data);
@@ -575,8 +575,8 @@ final class Frontend
 
     if (!is_array($config) || empty($config['presets'])) {
       return;
-    }    
-  
+    }
+
 
     $active_elements = $this->get_active_element_keys('aae_anim_builder_settings');
 
@@ -610,17 +610,17 @@ final class Frontend
   private function enqueue_all_presets(array $deps = []): void
   {
     $config_path = MOTIONKIT_PLUGIN_DIR . 'includes/Common/configs/animation-builder-assets.php';
-  
+
     if (!file_exists($config_path)) {
       return;
     }
 
     $config = include $config_path;
-   
+
     if (!is_array($config) || empty($config['presets'])) {
       return;
     }
- 
+
     foreach ($config['presets'] as $key => $element) {
       wp_enqueue_script(
         $key,
@@ -629,7 +629,7 @@ final class Frontend
         $element['version'] ?? MOTIONKIT_VERSION,
         true
       );
-     
+
     }
   }
 
@@ -838,7 +838,7 @@ final class Frontend
     }
 
     update_option('motionkit_global_settings', $animation_configs);
-    
+
     wp_send_json_success([
       'msg'     => esc_html__('Global configurations saved', 'motionkit'),
       'configs' => $animation_configs,
