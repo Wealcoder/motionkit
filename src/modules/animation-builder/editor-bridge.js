@@ -258,6 +258,14 @@ function receivePageConfig() {
           globalAnimation,
           pageAnimation,
         } = event.data.data || {};
+
+        console.log("Recived from motionkit connector", {
+          globalSettings,
+          currentPageSettings,
+          globalAnimation,
+          pageAnimation,
+        });
+
         const headers = getAuthHeaders();
 
         if (globalSettings) {
