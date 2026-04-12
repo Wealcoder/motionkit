@@ -79,7 +79,7 @@ final class ConnectPage
 
   private function get_menu_icon(): string
   {
-    return 'dashicons-admin-links';
+    return 'data:image/svg+xml;base64,' . base64_encode('<svg viewBox="0 0 245 245" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.7 87.7C2.7 40.7 40.7 2.7 87.7 2.7h69c47 0 85 38 85 85v69c0 47-38 85-85 85h-69c-47 0-85-38-85-85v-69z" fill="#599BFD"/><path d="M66.4 71.9c0-10.5 13.2-15.8 20.9-8.4l51.9 50.3c4.8 4.6 4.8 12.1 0 16.7l-51.9 50.3c-7.7 7.5-20.9 2.2-20.9-8.3V71.9z" fill="rgba(255,255,255,0.5)"/><path d="M157.5 63.5c7.5-7.5 20.2-2.2 20.2 8.4v100.6c0 10.6-12.8 15.8-20.2 8.4l-50.3-50.3c-4.6-4.6-4.6-12.1 0-16.8l50.3-50.3z" fill="white"/></svg>');
   }
 
   private function get_editor_url(): string
@@ -164,14 +164,14 @@ final class ConnectPage
       <div class="mk-header">
         <div class="mk-header-left">
           <div class="mk-header-logo">
-            <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
-              <circle cx="12" cy="24" r="6" fill="#FF6B6B"/>
-              <circle cx="24" cy="16" r="6" fill="#4ECDC4"/>
-              <circle cx="36" cy="24" r="6" fill="#45B7D1"/>
-              <circle cx="24" cy="32" r="6" fill="#F9CA24"/>
+            <svg width="30" height="30" viewBox="0 0 245 245" fill="none">
+              <path d="M2.7 87.7C2.7 40.7 40.7 2.7 87.7 2.7h69c47 0 85 38 85 85v69c0 47-38 85-85 85h-69c-47 0-85-38-85-85v-69z" fill="url(#mk_hdr_g)"/>
+              <path d="M66.4 71.9c0-10.5 13.2-15.8 20.9-8.4l51.9 50.3c4.8 4.6 4.8 12.1 0 16.7l-51.9 50.3c-7.7 7.5-20.9 2.2-20.9-8.3V71.9z" fill="#BFD8FE" stroke="#5EA1EC" stroke-width=".7"/>
+              <path d="M157.5 63.5c7.5-7.5 20.2-2.2 20.2 8.4v100.6c0 10.6-12.8 15.8-20.2 8.4l-50.3-50.3c-4.6-4.6-4.6-12.1 0-16.8l50.3-50.3z" fill="white" stroke="#5DA1EC" stroke-width=".7"/>
+              <defs><radialGradient id="mk_hdr_g" cx="0" cy="0" r="1" gradientTransform="matrix(-62.2 127 -127 -62.2 122.2 122.2)" gradientUnits="userSpaceOnUse"><stop stop-color="#1C7E92"/><stop offset="1" stop-color="#599BFD"/></radialGradient></defs>
             </svg>
           </div>
-          <span class="mk-header-title">Motionkit</span>
+          <span class="mk-header-title">MotionKit</span>
         </div>
         <div class="mk-header-right">
           <span class="mk-header-email"><?php echo esc_html($user_email); ?></span>
@@ -574,10 +574,17 @@ final class ConnectPage
     $messages = [
       'invalid_state'         => __('Security verification failed. Please try again.', 'motionkit'),
       'token_exchange_failed' => __('Could not complete the connection. Please try again.', 'motionkit'),
+      'limit_exceeded'        => __('Site limit reached. Upgrade your plan to connect more sites.', 'motionkit'),
       'unauthorized'          => __('You do not have permission to perform this action.', 'motionkit'),
       'nonce_failed'          => __('Security check failed. Please try again.', 'motionkit'),
       'empty_key'             => __('Please enter a license key.', 'motionkit'),
     ];
+
+    // Check for server-provided message in the URL.
+    $server_msg = isset($_GET['error_message']) ? sanitize_text_field(wp_unslash($_GET['error_message'])) : '';
+    if ($server_msg) {
+      return $server_msg;
+    }
 
     return $messages[$error] ?? __('An unknown error occurred. Please try again.', 'motionkit');
   }

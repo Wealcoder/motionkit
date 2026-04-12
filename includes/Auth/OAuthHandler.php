@@ -223,7 +223,11 @@ final class OAuthHandler
     $result = $this->exchange_code_for_token($code);
    
     if (is_wp_error($result)) {
-      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&error=' . $result->get_error_code()));
+      $redirect = admin_url('admin.php?page=motionkit-connect&tab=connect&error=' . $result->get_error_code());
+      if ($result->get_error_message()) {
+        $redirect = add_query_arg('error_message', rawurlencode($result->get_error_message()), $redirect);
+      }
+      wp_safe_redirect($redirect);
       exit;
     }
 
@@ -269,10 +273,9 @@ final class OAuthHandler
     $body = json_decode(wp_remote_retrieve_body($response), true);
 
     if ($status !== 200 || empty($body['access_token'])) {
-      return new \WP_Error(
-        'token_exchange_failed',
-        $body['error'] ?? 'Failed to exchange authorization code'
-      );
+      $error_code = !empty($body['limit_exceeded']) ? 'limit_exceeded' : 'token_exchange_failed';
+      $error_msg  = $body['message'] ?? $body['error'] ?? 'Failed to exchange authorization code';
+      return new \WP_Error($error_code, $error_msg);
     }
 
     return $body;
@@ -360,14 +363,19 @@ final class OAuthHandler
       return;
     }
 
-    // Attempt to revoke token on motionkit.io
+    // Attempt to revoke token on motionkit.io and get disconnect token.
     $token = self::get_access_token();
+    $disconnect_token = '';
     if ($token) {
-      wp_remote_post(self::get_revoke_url(), [
+      $response = wp_remote_post(self::get_revoke_url(), [
         'timeout' => 10,
         'headers' => ['Content-Type' => 'application/json'],
         'body'    => wp_json_encode(['access_token' => $token, 'site' => home_url()]),
       ]);
+      if (!is_wp_error($response)) {
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $disconnect_token = $body['disconnect_token'] ?? '';
+      }
     }
 
     // Clean up local storage

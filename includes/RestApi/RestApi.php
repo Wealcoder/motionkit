@@ -512,8 +512,7 @@ final class RestApi
     $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
 
     update_option('motionkit_global_animations', $animation_configs);
-
-
+    error_log('Saved global animations: ' . print_r($animation_configs, true));
     return new \WP_REST_Response([
       'success' => true,
       'data'    => [
