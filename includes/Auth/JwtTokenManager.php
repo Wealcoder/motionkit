@@ -30,12 +30,59 @@ final class JwtTokenManager
   private const JTI_OPTION = 'motionkit_used_jtis';
 
   /**
-   * Generate a signed JWT for an editor session.
+   * Generate a signed JWT by calling the MotionKit server's /connect/launch endpoint.
+   * The server is the single source of truth for token generation.
    *
    * @param string $site_url The WordPress site URL being edited
-   * @return string The encoded JWT string
+   * @return string The JWT token, or empty string on failure
    */
   public static function generate(string $site_url): string
+  {
+    // Get editor base URL from filter (supports dev override).
+    $editor_url = apply_filters('motionkit/editor/url', 'https://editor.motionkit.io/');
+    $editor_url = rtrim($editor_url, '/');
+
+    // Get the access token for server auth.
+    $access_token = OAuthHandler::get_access_token();
+    if (empty($access_token)) {
+      return self::generate_local($site_url);
+    }
+
+    $response = wp_remote_post(
+      $editor_url . '/connect/launch',
+      [
+        'headers' => [
+          'Content-Type'  => 'application/json',
+          'Authorization' => 'Bearer ' . $access_token,
+        ],
+        'body'    => wp_json_encode([
+          'site'     => home_url('/'),
+          'page_url' => $site_url,
+        ]),
+        'timeout' => 15,
+      ]
+    );
+
+    if (!is_wp_error($response)) {
+      $code = wp_remote_retrieve_response_code($response);
+      $body = json_decode(wp_remote_retrieve_body($response), true);
+
+      if ($code === 200 && !empty($body['token'])) {
+        return $body['token'];
+      }
+    }
+
+    // Fallback to local generation if server is unreachable.
+    return self::generate_local($site_url);
+  }
+
+  /**
+   * Fallback: generate a JWT locally (used when server is unreachable).
+   *
+   * @param string $site_url
+   * @return string
+   */
+  private static function generate_local(string $site_url): string
   {
     $secret = self::get_secret();
     $now = time();
@@ -158,8 +205,15 @@ final class JwtTokenManager
   }
 
   /**
-   * Get or create the HMAC secret key.
-   * Stored encrypted in wp_options, generated once.
+   * Get the HMAC secret key.
+   *
+   * Priority:
+   *  1. Cached in wp_options (motionkit_jwt_secret) — fastest
+   *  2. Fetched from MotionKit server's mk_settings table via connect API
+   *  3. Generate locally and save (fallback)
+   *
+   * The server's token_secret is the source of truth. When a site connects,
+   * the secret is synced from the server and cached in wp_options.
    *
    * @return string The secret key
    */
@@ -167,10 +221,36 @@ final class JwtTokenManager
   {
     $secret = get_option('motionkit_jwt_secret');
 
-    if (empty($secret)) {
-      $secret = bin2hex(random_bytes(32));
-      update_option('motionkit_jwt_secret', $secret, false);
+    if (!empty($secret)) {
+      return $secret;
     }
+
+    // Try to fetch from MotionKit server.
+    $editor_url = get_option('motionkit_editor_url', '');
+    $api_key = get_option('motionkit_api_key', '');
+
+    if ($editor_url && $api_key) {
+      $response = wp_remote_get(
+        rtrim($editor_url, '/') . '/connect/token-secret',
+        [
+          'headers' => ['Authorization' => 'Bearer ' . $api_key],
+          'timeout' => 10,
+        ]
+      );
+
+      if (!is_wp_error($response)) {
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!empty($body['token_secret'])) {
+          $secret = $body['token_secret'];
+          update_option('motionkit_jwt_secret', $secret, false);
+          return $secret;
+        }
+      }
+    }
+
+    // Fallback: generate locally.
+    $secret = bin2hex(random_bytes(32));
+    update_option('motionkit_jwt_secret', $secret, false);
 
     return $secret;
   }
