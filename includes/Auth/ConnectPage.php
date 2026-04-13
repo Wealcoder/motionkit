@@ -38,6 +38,7 @@ final class ConnectPage
   {
     add_action('admin_menu', [$this, 'register_menu']);
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_styles']);
+    add_action('admin_head', [$this, 'print_menu_icon_style']);
     add_action('admin_init', [$this, 'handle_license_activation']);
   }
 
@@ -77,9 +78,14 @@ final class ConnectPage
     );
   }
 
+  public function print_menu_icon_style(): void
+  {
+    echo '<style>#adminmenu #toplevel_page_motionkit-connect .wp-menu-image img{width:23px;height:23px;padding:7px 0 0;}</style>';
+  }
+
   private function get_menu_icon(): string
   {
-    return 'data:image/svg+xml;base64,' . base64_encode('<svg viewBox="0 0 245 245" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.7 87.7C2.7 40.7 40.7 2.7 87.7 2.7h69c47 0 85 38 85 85v69c0 47-38 85-85 85h-69c-47 0-85-38-85-85v-69z" fill="#599BFD"/><path d="M66.4 71.9c0-10.5 13.2-15.8 20.9-8.4l51.9 50.3c4.8 4.6 4.8 12.1 0 16.7l-51.9 50.3c-7.7 7.5-20.9 2.2-20.9-8.3V71.9z" fill="rgba(255,255,255,0.5)"/><path d="M157.5 63.5c7.5-7.5 20.2-2.2 20.2 8.4v100.6c0 10.6-12.8 15.8-20.2 8.4l-50.3-50.3c-4.6-4.6-4.6-12.1 0-16.8l50.3-50.3z" fill="white"/></svg>');
+    return 'data:image/svg+xml;base64,' . base64_encode('<svg viewBox="0 0 245 245" xmlns="http://www.w3.org/2000/svg"><path d="M66.4 71.9c0-10.5 13.2-15.8 20.9-8.4l51.9 50.3c4.8 4.6 4.8 12.1 0 16.7l-51.9 50.3c-7.7 7.5-20.9 2.2-20.9-8.3V71.9z" fill="currentColor" opacity="0.6"/><path d="M157.5 63.5c7.5-7.5 20.2-2.2 20.2 8.4v100.6c0 10.6-12.8 15.8-20.2 8.4l-50.3-50.3c-4.6-4.6-4.6-12.1 0-16.8l50.3-50.3z" fill="currentColor"/></svg>');
   }
 
   private function get_editor_url(): string

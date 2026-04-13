@@ -63,7 +63,18 @@ module.exports = {
   },
   plugins: [
     ...defaultConfig.plugins,
-    // Additional plugins can be added here
+    {
+      apply(compiler) {
+        compiler.hooks.afterEmit.tapAsync('CopyToEditorPlugin', (_compilation, cb) => {
+          try {
+            require('./scripts/copy-to-editor').copyToEditor({ quiet: true });
+          } catch (e) {
+            console.warn('[copy-to-editor] skipped:', e.message);
+          }
+          cb();
+        });
+      },
+    },
   ],
   resolve: {
     extensions: [".js", ".jsx"],

@@ -146,9 +146,6 @@ final class Frontend
 
     foreach ($libs as $handle => $lib) {
       wp_register_script($handle, $cdn . $lib['file'], $lib['deps'], $ver, true);
-      if($this->is_editor_preview()) {
-        wp_enqueue_script($handle);
-      }
     }
 
     $core_deps = ['gsap', 'ScrollSmoother' ];
@@ -302,47 +299,16 @@ final class Frontend
    */
   private function enqueue_editor_preview_scripts(): void
   {
+    // Editor preview mode: only load the bridge script for postMessage communication.
+    // GSAP, animation engine, and presets are NOT loaded — the editor handles
+    // animation rendering via its own runtime. This keeps the iframe lightweight
+    // and avoids conflicts with the editor's GSAP instance.
 
-
-    $this->maybe_init_scroll_smoother();
-
-    $deps = apply_filters('motionkit_core_lib_deps', []);
-    $deps = array_values(array_filter($deps, function ($dep) {
-      return $dep !== 'wp-element';
-    }));
-
-    // Enqueue frontend runner
-    wp_register_script(
-      'motionkit-frontend',
-      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend.js',
-      $deps,
-      MOTIONKIT_VERSION,
-      true
-    );
-    wp_enqueue_script('motionkit-frontend');
-
-    // Enqueue editor bridge — postMessage receiver for SaaS editor
-    // No dependency on motionkit-frontend: the bridge only handles postMessage
-    // and must load even if GSAP CDN scripts fail.
+    // Enqueue ONLY the editor bridge — postMessage receiver for SaaS editor.
     wp_enqueue_script(
       'motionkit-editor-bridge',
       MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/editor-bridge.js',
       [],
-      MOTIONKIT_VERSION,
-      true
-    );
-
-    // Enqueue ALL free presets (not filtered by page config)
-    $this->enqueue_all_free_presets();
-
-    // Enqueue ALL premium presets
-    $this->enqueue_all_presets($deps);
-
-    // Always enqueue the smart animation engine in editor preview
-    wp_enqueue_script(
-      'motionkit-custom-animation',
-      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/customAnimation.js',
-      ['motionkit-frontend'],
       MOTIONKIT_VERSION,
       true
     );
@@ -388,12 +354,6 @@ final class Frontend
 
     // Localize on the bridge (loads independently, no GSAP deps)
     wp_localize_script('motionkit-editor-bridge', 'wcfanimb', $localized_data);
-
-    // Also localize on frontend runner (for GSAP-dependent code)
-    wp_localize_script('motionkit-frontend', 'wcfanimb', $localized_data);
-
-    // Allow Pro to enqueue premium preset scripts
-    do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts', $deps, true, []);
   }
 
   /**

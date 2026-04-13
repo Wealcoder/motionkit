@@ -7,7 +7,7 @@ import { handleMediaQuery } from "./lib/utils";
 const storeAnimation = {};
 window.WCFFreeAnimBuilder = null;
 WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
-
+console.log("WCFFreeAnimBuilder", { WCFFreeAnimBuilder });
 function playAnimation() {
   try {
     if (
@@ -20,7 +20,7 @@ function playAnimation() {
           if (typeof ScrollTrigger !== "undefined") {
             ScrollTrigger.refresh();
           }
-         
+
           let mm;
 
           mm?.revert?.();
@@ -77,3 +77,4 @@ function playAnimation() {
 }
 
 playAnimation();
+console.log("storeAnimation", 'decx 2026 29 22666 oded', storeAnimation);
