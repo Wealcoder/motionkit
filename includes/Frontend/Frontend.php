@@ -397,6 +397,7 @@ final class Frontend
       MOTIONKIT_VERSION,
       true
     );
+    
     wp_enqueue_script('motionkit-frontend');
 
     // Conditionally enqueue free preset scripts

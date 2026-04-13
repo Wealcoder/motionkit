@@ -9,8 +9,6 @@
  * and dispatches CustomEvents for preset scripts to consume.
  */
 
-import { handleMediaQuery } from "@/lib/utils";
-
 // WCFFreeAnimBuilder is already initialized by frontend.js (loaded as dependency)
 
 /**
@@ -117,7 +115,6 @@ function saveViaRest(endpoint, body, headers, onSuccess) {
           .json()
           .catch(() => ({ message: `HTTP ${r.status}` }))
           .then((respBody) => {
-            console.log(respBody);
             const msg = respBody?.message || `HTTP ${r.status}`;
 
             try {
@@ -133,9 +130,7 @@ function saveViaRest(endpoint, body, headers, onSuccess) {
                 },
                 parentOrigin || "*",
               );
-            } catch (e) {
-              console.warn("MotionKit: postMessage failed", e);
-            }
+            } catch (e) { /* postMessage failed */ }
             return null;
           });
       }
@@ -145,7 +140,7 @@ function saveViaRest(endpoint, body, headers, onSuccess) {
     .then((res) => {
       if (res?.success) onSuccess(res);
     })
-    .catch((err) => console.error(`MotionKit: ${endpoint} save failed`, err));
+    .catch(() => { /* save failed */ });
 }
 
 /**
@@ -167,8 +162,12 @@ function buildResponsePayload(overrides = {}) {
   };
 }
 
-let storeAnimation = {};
 let parentOrigin = null;
+
+// Animation playback (`wcf-animation-config`, device resolution, dispatch of
+// `aae-animation-event`) lives in inject-bridge.js so HTML/static/Shopify and
+// WordPress all share one path. This bridge owns WP-specific concerns only:
+// REST save, page search, data hydration, ready signal.
 
 function receivePageConfig() {
   parentOrigin = getParentOrigin();
@@ -180,74 +179,8 @@ function receivePageConfig() {
         parentOrigin = event.origin;
       }
 
-      // Receive animation config from SaaS editor
-      if (event?.data?.type === "wcf-animation-config") {
-        storeAnimation = {};
-        let mm;
-        console.log("Received animation config from editor Play", event.data);
-        // GSAP-based animations (preset, custom)
-        if (window.gsap) {
-          mm?.revert();
-          mm = gsap.matchMedia();
-          wcfanimb?.device_config?.map((device) => {
-            mm.add(device.mediaQuery, () => {
-              event.data["wcf-animation-config"]?.[device?.key]?.forEach(
-                (section) => {
-                  if (section.enable) {
-                    if (section.type === "preset") {
-                      storeAnimation[section?.preset] = [
-                        ...(storeAnimation[section?.preset] || []),
-                        section,
-                      ];
-                    } else if (section.type === "custom") {
-                      storeAnimation["custom"] = [
-                        ...(storeAnimation["custom"] || []),
-                        section,
-                      ];
-                    }
-                  }
-                },
-              );
-            });
-          });
-        }
-
-        // CSS-based free animations (no GSAP dependency)
-        wcfanimb?.device_config?.map((device) => {
-          handleMediaQuery(device.mediaQuery, () => {
-            event.data["wcf-animation-config"]?.[device?.key]?.forEach(
-              (section) => {
-                if (section.enable && section.type === "free_animation") {
-                  storeAnimation[section?.preset] = [
-                    ...(storeAnimation[section?.preset] || []),
-                    section,
-                  ];
-                }
-              },
-            );
-          });
-        });
-
-        // Dispatch to preset scripts
-        document.dispatchEvent(
-          new CustomEvent("aae-animation-event", {
-            detail: storeAnimation,
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      }
-
-      // Reset animations
-      if ("wcf-animation-config-reset" in event.data) {
-        document.dispatchEvent(
-          new CustomEvent("aae-reset-animation", {
-            detail: "",
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      }
+      // wcf-animation-config and wcf-animation-config-reset are handled by
+      // inject-bridge.js (single source of truth across all platforms).
 
       // Receive global + current page settings from the editor
       if (event.data?.type === "motionkit-settings") {
@@ -257,13 +190,6 @@ function receivePageConfig() {
           globalAnimation,
           pageAnimation,
         } = event.data.data || {};
-
-        console.log("Recived from motionkit connector", {
-          globalSettings,
-          currentPageSettings,
-          globalAnimation,
-          pageAnimation,
-        });
 
         const headers = getAuthHeaders();
 
@@ -316,7 +242,7 @@ function receivePageConfig() {
             },
           );
         }
-       
+
         document.dispatchEvent(
           new CustomEvent("motionkit-settings-update", {
             detail: {

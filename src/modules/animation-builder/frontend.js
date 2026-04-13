@@ -8,57 +8,59 @@ const storeAnimation = {};
 window.WCFFreeAnimBuilder = null;
 WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 function playAnimation() {
+  console.log("Initializing animation playback on frontend...", wcfanimb);
   try {
     if (
       wcfanimb !== undefined &&
-      Object.keys(wcfanimb?.currentPageSettings)?.length
+      Object.keys(wcfanimb?.all_animations)?.length
     ) {
       window.addEventListener("load", () => {
         setTimeout(() => {
+          console.log("Processing animation settings for current page...", wcfanimb);
           // check it exist
-          if (typeof ScrollTrigger !== "undefined") {
-            ScrollTrigger.refresh();
-          }
+          // if (typeof ScrollTrigger !== "undefined") {
+          //   ScrollTrigger.refresh();
+          // }
 
-          let mm;
+          // let mm;
 
-          mm?.revert?.();
-          mm = gsap.matchMedia();
+          // mm?.revert?.();
+          // mm = gsap.matchMedia();
 
-          wcfanimb?.global_settings?.device_config?.map((device) => {
-            mm.add(device.mediaQuery, () => {
-              wcfanimb?.currentPageSettings?.[device?.key].forEach((section) => {
-                if (section.enable) {
-                  if (section.type === "preset") {
-                    storeAnimation[section?.preset] = [
-                      ...(storeAnimation[section?.preset] || []),
-                      section,
-                    ];
-                  } else if (section.type === "custom") {
-                    storeAnimation["custom"] = [
-                      ...(storeAnimation["custom"] || []),
-                      section,
-                    ];
-                  }
-                }
-              });
-            });
-          });
+          // wcfanimb?.global_settings?.device_config?.map((device) => {
+          //   mm.add(device.mediaQuery, () => {
+          //     wcfanimb?.currentPageSettings?.[device?.key].forEach((section) => {
+          //       if (section.enable) {
+          //         if (section.type === "preset") {
+          //           storeAnimation[section?.preset] = [
+          //             ...(storeAnimation[section?.preset] || []),
+          //             section,
+          //           ];
+          //         } else if (section.type === "custom") {
+          //           storeAnimation["custom"] = [
+          //             ...(storeAnimation["custom"] || []),
+          //             section,
+          //           ];
+          //         }
+          //       }
+          //     });
+          //   });
+          // });
 
-          wcfanimb?.global_settings?.device_config?.map((device) => {
-            handleMediaQuery(device.mediaQuery, () => {
-              wcfanimb?.currentPageSettings?.[device?.key].forEach((section) => {
-                if (section.enable) {
-                  if (section.type === "free_animation") {
-                    storeAnimation[section?.preset] = [
-                      ...(storeAnimation[section?.preset] || []),
-                      section,
-                    ];
-                  }
-                }
-              });
-            });
-          });
+          // wcfanimb?.global_settings?.device_config?.map((device) => {
+          //   handleMediaQuery(device.mediaQuery, () => {
+          //     wcfanimb?.currentPageSettings?.[device?.key].forEach((section) => {
+          //       if (section.enable) {
+          //         if (section.type === "free_animation") {
+          //           storeAnimation[section?.preset] = [
+          //             ...(storeAnimation[section?.preset] || []),
+          //             section,
+          //           ];
+          //         }
+          //       }
+          //     });
+          //   });
+          // });
 
           const event = new CustomEvent("aae-animation-event", {
             detail: storeAnimation, // payload
@@ -71,7 +73,7 @@ function playAnimation() {
       });
     }
   } catch (err) {
-    console.error("PlayAnimation Error", { err });
+    // console.error("PlayAnimation Error", { err });
   }
 }
 
