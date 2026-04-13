@@ -247,8 +247,11 @@ final class Frontend
     $allowed_origins = apply_filters('motionkit/editor/allowed_origins', [
       'https://editor.motionkit.io',
       'http://localhost:5173',
+      'http://127.0.0.1:5173',
       'http://localhost:5174',
+      'http://127.0.0.1:5174',
       'http://localhost:3000',
+      '*'
     ]);
 
     header_remove('X-Frame-Options');
@@ -417,7 +420,7 @@ final class Frontend
         MOTIONKIT_VERSION,
         true
       );
-    }   
+    }
 
     // Global settings + global animations (saved by editor to wp_options)
     $global_settings  = get_option('motionkit_global_settings', json_decode('{}'));
@@ -431,7 +434,7 @@ final class Frontend
     // Merge global and page animation lists — not override
     $merged_animation = array_merge(
       is_array($global_animation) ? $global_animation : [],
-      is_array($page_animation) ? $page_animation : []      
+      is_array($page_animation) ? $page_animation : []
     );
 
     // Merge global settings with current page settings on specific keys.
@@ -448,7 +451,7 @@ final class Frontend
 
     wp_localize_script('motionkit-frontend', 'wcfanimb', [
       'all_animations' => $merged_animation,
-      'all_settings'   => $merged_settings      
+      'all_settings'   => $merged_settings
     ]);
 
     // Allow Pro to enqueue premium preset scripts
