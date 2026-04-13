@@ -7,7 +7,6 @@ import { handleMediaQuery } from "./lib/utils";
 const storeAnimation = {};
 window.WCFFreeAnimBuilder = null;
 WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
-console.log("WCFFreeAnimBuilder", { WCFFreeAnimBuilder });
 function playAnimation() {
   try {
     if (
@@ -26,7 +25,7 @@ function playAnimation() {
           mm?.revert?.();
           mm = gsap.matchMedia();
 
-          wcfanimb?.device_config?.map((device) => {
+          wcfanimb?.global_settings?.device_config?.map((device) => {
             mm.add(device.mediaQuery, () => {
               wcfanimb?.currentPageSettings?.[device?.key].forEach((section) => {
                 if (section.enable) {
@@ -46,7 +45,7 @@ function playAnimation() {
             });
           });
 
-          wcfanimb?.device_config?.map((device) => {
+          wcfanimb?.global_settings?.device_config?.map((device) => {
             handleMediaQuery(device.mediaQuery, () => {
               wcfanimb?.currentPageSettings?.[device?.key].forEach((section) => {
                 if (section.enable) {
@@ -77,4 +76,3 @@ function playAnimation() {
 }
 
 playAnimation();
-console.log("storeAnimation", 'decx 2026 29 22666 oded', storeAnimation);

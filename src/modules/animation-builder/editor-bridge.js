@@ -108,6 +108,7 @@ function saveViaRest(endpoint, body, headers, onSuccess) {
   fetch(restUrl(endpoint), {
     method: "POST",
     headers,
+    credentials: "include",
     body: JSON.stringify(body),
   })
     .then((r) => {
@@ -119,18 +120,22 @@ function saveViaRest(endpoint, body, headers, onSuccess) {
             console.log(respBody);
             const msg = respBody?.message || `HTTP ${r.status}`;
 
-            window.parent.postMessage(
-              {
-                type: "motionkit-error",
-                data: {
-                  error: msg,
-                  code: respBody?.code || "save_failed",
-                  endpoint,
-                  status: r.status,
+            try {
+              window.parent.postMessage(
+                {
+                  type: "motionkit-error",
+                  data: {
+                    error: msg,
+                    code: respBody?.code || "save_failed",
+                    endpoint,
+                    status: r.status,
+                  },
                 },
-              },
-              parentOrigin,
-            );
+                parentOrigin || "*",
+              );
+            } catch (e) {
+              console.warn("MotionKit: postMessage failed", e);
+            }
             return null;
           });
       }
@@ -179,7 +184,7 @@ function receivePageConfig() {
       if (event?.data?.type === "wcf-animation-config") {
         storeAnimation = {};
         let mm;
-
+        console.log("Received animation config from editor Play", event.data);
         // GSAP-based animations (preset, custom)
         if (window.gsap) {
           mm?.revert();
@@ -311,20 +316,7 @@ function receivePageConfig() {
             },
           );
         }
-
-        // window.parent.postMessage(
-        //   {
-        //     type: "motionkit-response",
-        //     data: buildResponsePayload({
-        //       globalSettings,
-        //       currentPageSettings,
-        //       globalAnimation,
-        //       pageAnimation,
-        //     }),
-        //   },
-        //   parentOrigin,
-        // );
-
+       
         document.dispatchEvent(
           new CustomEvent("motionkit-settings-update", {
             detail: {

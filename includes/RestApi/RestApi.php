@@ -72,11 +72,11 @@ final class RestApi
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:3000',
-      "*"
     ]);
 
-    if (in_array($origin, $allowed_origins, true)) {
+    if (!empty($origin) && in_array($origin, $allowed_origins, true)) {
       header('Access-Control-Allow-Origin: ' . $origin);
+      header('Vary: Origin');
       header('Access-Control-Allow-Credentials: true');
       header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
       header('Access-Control-Allow-Headers: Content-Type, X-WP-Nonce, Authorization');
@@ -324,8 +324,9 @@ final class RestApi
       'http://localhost:3000',
     ]);
 
-    if (in_array($origin, $allowed_origins, true)) {
+    if (!empty($origin) && in_array($origin, $allowed_origins, true)) {
       header('Access-Control-Allow-Origin: ' . $origin);
+      header('Vary: Origin');
       header('Access-Control-Allow-Credentials: true');
       header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
       header('Access-Control-Allow-Headers: Content-Type, X-WP-Nonce, Authorization');

@@ -365,12 +365,17 @@ final class Frontend
   {
     $page_configs = $this->page_type->getConfig();
 
-    // Early return — no saved configs for this page
-    if (empty($page_configs) || !is_array($page_configs)) {
+    // Early return only if NO page configs AND NO global animations exist.
+    $global_animation_exists = !empty(get_option('motionkit_global_animations', []));
+    if ((empty($page_configs) || !is_array($page_configs)) && !$global_animation_exists) {
       return;
     }
 
-    // Page has configs — register ScrollSmoother wrapper for this page
+    if (!is_array($page_configs)) {
+      $page_configs = [];
+    }
+
+    // Register ScrollSmoother wrapper when page configs exist
     $this->maybe_init_scroll_smoother();
 
     // Determine which presets are active in the config
@@ -411,14 +416,38 @@ final class Frontend
         MOTIONKIT_VERSION,
         true
       );
+    }   
+
+    // Global settings + global animations (saved by editor to wp_options)
+    $global_settings  = get_option('motionkit_global_settings', json_decode('{}'));
+    $global_animation = get_option('motionkit_global_animations', []);
+
+    // Page-level animation bucket (separate from currentPageSettings)
+    $page_type_config = $this->page_type->getCurrentPageType();
+    $page_anim_config = $page_type_config;
+    $page_anim_config['option'] = str_replace('cfanim_build_config_', 'motionkit_page_animation_', $page_anim_config['option'] ?? '');
+    $page_animation = $this->page_type->getConfig($page_anim_config);
+    // Merge global and page animation lists — not override
+    $merged_animation = array_merge(
+      is_array($global_animation) ? $global_animation : [],
+      is_array($page_animation) ? $page_animation : []      
+    );
+
+    // Merge global settings with current page settings on specific keys.
+    // Page-level values override global when present.
+    $global_settings_arr = is_array($global_settings) ? $global_settings : (array) $global_settings;
+    $page_settings_arr   = is_array($page_configs) ? $page_configs : [];
+
+    $merged_settings = $global_settings_arr;
+    foreach (['pageTransition', 'scrollSmother', 'preloader'] as $key) {
+      if (!empty($page_settings_arr[$key]) && is_array($page_settings_arr[$key])) {
+        $merged_settings[$key] = $page_settings_arr[$key];
+      }
     }
 
-    // Load device breakpoints and localize
-    $devices = $this->get_sanitized_devices();
-
     wp_localize_script('motionkit-frontend', 'wcfanimb', [
-      'currentPageSettings' => $page_configs,
-      'device_config'    => $devices,
+      'all_animations' => $merged_animation,
+      'all_settings'   => $merged_settings      
     ]);
 
     // Allow Pro to enqueue premium preset scripts
@@ -591,6 +620,23 @@ final class Frontend
       );
 
     }
+  }
+
+  /**
+   * Merge multiple device-keyed animation maps into one.
+   * Each source: [ deviceKey => Section[] ]. Arrays concatenate per key.
+   */
+  private function merge_device_configs(array ...$sources): array
+  {
+    $merged = [];
+    foreach ($sources as $src) {
+      if (!is_array($src)) continue;
+      foreach ($src as $deviceKey => $sections) {
+        if (!is_array($sections)) continue;
+        $merged[$deviceKey] = array_merge($merged[$deviceKey] ?? [], $sections);
+      }
+    }
+    return $merged;
   }
 
   /**
