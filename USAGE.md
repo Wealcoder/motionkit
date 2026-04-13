@@ -92,17 +92,17 @@ AJAX requests run through `admin-ajax.php` where `is_admin() = true`. Frontend r
 
 | Page Type               | store_type  | option key pattern                         |
 | ----------------------- | ----------- | ------------------------------------------ |
-| Static front page       | `option`    | `cfanim_build_config_front_{page_id}`      |
-| Blog homepage           | `option`    | `cfanim_build_config_blog`                 |
-| Single post/page        | `post_meta` | `cfanim_build_config_{post_type}`          |
-| Category/Tag (global)   | `option`    | `cfanim_build_config_{taxonomy}`           |
-| Category/Tag (specific) | `term_meta` | `cfanim_build_config_{taxonomy}_{term_id}` |
-| Custom taxonomy         | `option`    | `cfanim_build_config_{taxonomy}`           |
-| Author archive          | `option`    | `cfanim_build_config_author`               |
-| 404 page                | `option`    | `cfanim_build_config_404`                  |
-| Search page             | `option`    | `cfanim_build_config_search`               |
-| Archive                 | `option`    | `cfanim_build_config_{path}`               |
-| Unknown URL             | `option`    | `cfanim_build_config_{path}`               |
+| Static front page       | `option`    | `mkit_pg_animation_front_{page_id}`      |
+| Blog homepage           | `option`    | `mkit_pg_animation_blog`                 |
+| Single post/page        | `post_meta` | `mkit_pg_animation_{post_type}`          |
+| Category/Tag (global)   | `option`    | `mkit_pg_animation_{taxonomy}`           |
+| Category/Tag (specific) | `term_meta` | `mkit_pg_animation_{taxonomy}_{term_id}` |
+| Custom taxonomy         | `option`    | `mkit_pg_animation_{taxonomy}`           |
+| Author archive          | `option`    | `mkit_pg_animation_author`               |
+| 404 page                | `option`    | `mkit_pg_animation_404`                  |
+| Search page             | `option`    | `mkit_pg_animation_search`               |
+| Archive                 | `option`    | `mkit_pg_animation_{path}`               |
+| Unknown URL             | `option`    | `mkit_pg_animation_{path}`               |
 
 Config array shape:
 
@@ -111,7 +111,7 @@ Config array shape:
     'type'       => 'post',          // page category
     'store_type' => 'post_meta',     // storage backend: option | post_meta | term_meta
     'id'         => 123,             // post/term ID (when applicable)
-    'option'     => 'cfanim_build_config_post',  // storage key
+    'option'     => 'mkit_pg_animation_post',  // storage key
     'taxonomy'   => 'category',      // taxonomy slug (when applicable)
 ]
 ```
@@ -236,7 +236,7 @@ Each animation entry in the config:
 | `aae_anim_builder_settings`                | Premium preset toggle states (JSON) |
 | `wcf_anim_builder_free_animation_settings` | Free animation toggle states (JSON) |
 | `motionkit_global_settings`                | Global animation configs (JSON)     |
-| `cfanim_build_config_*`                    | Per-page animation configs          |
+| `mkit_pg_animation_*`                    | Per-page animation configs          |
 
 ---
 

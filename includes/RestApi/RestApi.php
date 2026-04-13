@@ -491,9 +491,6 @@ final class RestApi
     $page_type_configs = $this->parse_json_param($request->get_param('pageTypeConfigs'));
     $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
 
-    // Use a separate option key for page animations
-    $page_type_configs['option'] = str_replace('cfanim_build_config_', 'motionkit_page_animation_', $page_type_configs['option'] ?? '');
-
     $this->page_type->saveConfig($page_type_configs, $animation_configs);
 
     return new \WP_REST_Response([

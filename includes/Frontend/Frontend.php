@@ -284,6 +284,7 @@ final class Frontend
    */
   public function enqueue_frontend_scripts(): void
   {
+  
     if ($this->is_editor_preview()) {
       $this->enqueue_editor_preview_scripts();
       return;
@@ -331,7 +332,6 @@ final class Frontend
     // Page-level animation list (page_animation bucket from editor)
     $page_type_config = $this->page_type->getCurrentPageType();
     $page_anim_config = $page_type_config;
-    $page_anim_config['option'] = str_replace('cfanim_build_config_', 'motionkit_page_animation_', $page_anim_config['option'] ?? '');
     $page_animation = $this->page_type->getConfig($page_anim_config);
 
     // mk_token is already validated by is_editor_preview() — safe to pass through
@@ -367,9 +367,9 @@ final class Frontend
   private function enqueue_page_scripts(): void
   {
     $page_configs = $this->page_type->getConfig();
-
     // Early return only if NO page configs AND NO global animations exist.
     $global_animation_exists = !empty(get_option('motionkit_global_animations', []));
+    
     if ((empty($page_configs) || !is_array($page_configs)) && !$global_animation_exists) {
       return;
     }
@@ -429,7 +429,6 @@ final class Frontend
     // Page-level animation bucket (separate from currentPageSettings)
     $page_type_config = $this->page_type->getCurrentPageType();
     $page_anim_config = $page_type_config;
-    $page_anim_config['option'] = str_replace('cfanim_build_config_', 'motionkit_page_animation_', $page_anim_config['option'] ?? '');
     $page_animation = $this->page_type->getConfig($page_anim_config);
     // Merge global and page animation lists — not override
     $merged_animation = array_merge(
@@ -442,7 +441,14 @@ final class Frontend
     $global_settings_arr = is_array($global_settings) ? $global_settings : (array) $global_settings;
     $page_settings_arr   = is_array($page_configs) ? $page_configs : [];
 
-    $merged_settings = $global_settings_arr;
+    // Default settings baseline — always present so the frontend runtime has
+    // sane initial state (device breakpoints, etc.) even when the editor
+    // never saved anything. User-saved settings overlay on top.
+    $default_settings = [
+      'deviceConfig' => $this->get_sanitized_devices(),
+    ];
+
+    $merged_settings = array_merge($default_settings, $global_settings_arr);
     foreach (['pageTransition', 'scrollSmother', 'preloader'] as $key) {
       if (!empty($page_settings_arr[$key]) && is_array($page_settings_arr[$key])) {
         $merged_settings[$key] = $page_settings_arr[$key];

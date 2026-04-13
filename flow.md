@@ -1080,7 +1080,7 @@ await supabase<br>
               {<br>
               &nbsp;&nbsp;<span style="color:#c4b5fd;">"store_type"</span>: <span style="color:#fcd34d;">"post_meta"</span>,&nbsp;<span style="color:#64748b;">// post_meta | term_meta | option</span><br>
               &nbsp;&nbsp;<span style="color:#c4b5fd;">"id"</span>: <span style="color:#86efac;">42</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#64748b;">// post_id or term_id</span><br>
-              &nbsp;&nbsp;<span style="color:#c4b5fd;">"option"</span>: <span style="color:#fcd34d;">"cfanim_build_config_42"</span><br>
+              &nbsp;&nbsp;<span style="color:#c4b5fd;">"option"</span>: <span style="color:#fcd34d;">"mkit_pg_animation_42"</span><br>
               }<br><br>
               <span style="color:#64748b;">// animationConfigs — the animation data</span><br>
               {<br>

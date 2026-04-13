@@ -30,6 +30,7 @@ module.exports = {
         "./src/modules/animation-builder/editor-bridge.js",
       "modules/animation-builder/freeAnim": "./src/css/freeAnim.css",
       "admin": "./src/css/admin.css",
+      "admin-tools": "./src/css/admin-tools.css",
       // auto-generated free preset entries (frontend)
       ...getPresetEntries({
         folder:

@@ -153,7 +153,7 @@ This is the #1 priority before going to production.
 **Request body (JSON):**
 ```json
 // POST /configs
-{ "pageTypeConfigs": { "store_type": "post_meta", "id": 42, "option": "cfanim_build_config_42" },
+{ "pageTypeConfigs": { "store_type": "post_meta", "id": 42, "option": "mkit_pg_animation_42" },
   "animationConfigs": { "desktop": [...], "laptop": [...], "mobile": [...] } }
 
 // POST /global-settings
@@ -264,7 +264,7 @@ wcfanimb = {
   // Animation data
   animation_config:  { desktop: [], laptop: [], tab_land: [], tab: [], mobile: [] },
   device_config:     [{ key, title, viewWidth, mediaQuery }, ...],
-  pageTypeConfigs:   { store_type: 'post_meta', id: 42, option: 'cfanim_build_config_42' },
+  pageTypeConfigs:   { store_type: 'post_meta', id: 42, option: 'mkit_pg_animation_42' },
   global_settings:   { ... },
 
   // Legacy AJAX (still registered, not used by editor-bridge for saves)
@@ -308,7 +308,7 @@ Allowed postMessage origins:
 | Key | Set by | Contains |
 |---|---|---|
 | `motionkit_global_settings` | `RestApi::store_global_settings()` | Global animation config |
-| `cfanim_build_config_{id}` | `AnimationBuilderPageType::saveConfig()` | Per-page config (option store_type) |
+| `mkit_pg_animation_{id}` | `AnimationBuilderPageType::saveConfig()` | Per-page config (option store_type) |
 | `motionkit_jwt_secret` | `JwtTokenManager::get_secret()` | HMAC secret |
 | `motionkit_api_key` | `JwtTokenManager::get_api_key()` | REST token endpoint key |
 | `mk_access_token` | `ConnectPage::handle_oauth_callback()` | Encrypted OAuth token |
