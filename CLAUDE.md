@@ -23,37 +23,48 @@ You are working on **MotionKit**, a WordPress plugin that connects customer site
 
 ```
 gsap-animation-builder-for-wordpress.php   ← Entry: constants + Plugin::get_instance()
+uninstall.php                              ← Cleanup wp_options + user_meta on delete
 │
 includes/
-├── Plugin.php                             ← Singleton: init_frontend() + init_backend() + init_rest_api()
+├── Plugin.php                             ← Singleton: init_auth/frontend/backend/rest_api/admin_notices
 ├── Autoloader.php                         ← PSR-4 loader
 │
 ├── RestApi/
-│   └── RestApi.php                        ← WP REST API: motionkit/v1/* routes + CORS
+│   └── RestApi.php                        ← motionkit/v1/save + /pages (CORS simple request)
+│
+├── Auth/
+│   ├── JwtTokenManager.php                ← Mint + validate editor session JWTs
+│   ├── OAuthHandler.php                   ← OAuth connect/disconnect to motionkit.io
+│   └── ConnectPage.php                    ← Admin "MotionKit" menu (Connect/License/Tools/Help tabs)
+│
+├── Migrations/
+│   └── SettingsKeyMigration.php           ← One-time: mkit_pg_animation_* → mkit_pg_settings_*
+│
+├── Admin/
+│   └── PermalinkNotice.php                ← Plain-permalinks nag notice
 │
 ├── Backend/
-│   └── Backend.php                        ← Admin hooks (ConnectPage to be added here)
+│   └── Backend.php                        ← Admin hooks
 │
 ├── Frontend/
-│   └── Frontend.php                       ← Script enqueue, AJAX handlers, wcfanimb localization
+│   └── Frontend.php                       ← Script enqueue, no-cache headers, wcfanimb localization
 │
 ├── Common/
 │   ├── AnimationBuilderPageType.php       ← Page type detection + saveConfig/getConfig/deleteConfig
-│   ├── Assets/
-│   │   └── AssetLoader.php                ← wp_enqueue wrapper with deduplication
+│   ├── Assets/AssetLoader.php             ← wp_enqueue wrapper with deduplication
 │   └── configs/
 │       ├── animation-builder-assets.php   ← Preset asset registry
 │       └── animation-builder-device.php   ← Device breakpoints
 │
 ├── Factory/
-│   └── ComponentFactory.php               ← create_frontend(), create_backend(), create_asset_loader()
+│   └── ComponentFactory.php               ← create_frontend(), create_backend()
 │
 └── Helpers/
     └── Helper.php                         ← get_option(), update_option(), log()
 
 src/modules/animation-builder/
 ├── frontend.js                            ← Main animation runner (gsap.matchMedia loop)
-├── editor-bridge.js                       ← postMessage bridge + REST API save calls
+├── editor-bridge.js                       ← postMessage bridge + REST calls to /save
 └── ...                                    ← Animation modules, presets, helpers
 
 assets/build/                              ← Webpack compiled output — never edit directly
@@ -67,74 +78,18 @@ assets/build/                              ← Webpack compiled output — never
 gsap-animation-builder-for-wordpress.php
   └─ Plugin::get_instance($file)
        └─ plugins_loaded → Plugin::init()
-            ├─ init_frontend()     → Frontend::init()   [all contexts]
-            ├─ init_backend()      → Backend::init()    [is_admin() only]
-            ├─ init_rest_api()     → RestApi::init()    [all contexts]
-            ├─ admin_bar_menu      → add_admin_bar_build_animation()
-            └─ wp_head/admin_head  → admin_bar_inline_css()
+            ├─ init_auth()            → OAuthHandler + (is_admin) ConnectPage
+            ├─ init_frontend()        → Frontend::init()     [all contexts]
+            ├─ init_backend()         → Backend::init()      [is_admin() only]
+            ├─ init_rest_api()        → RestApi::init()      [all contexts]
+            ├─ init_admin_notices()   → PermalinkNotice + SettingsKeyMigration [is_admin]
+            ├─ admin_bar_menu         → add_admin_bar_build_animation()
+            └─ wp_head/admin_head     → admin_bar_inline_css()
 ```
 
-`init_rest_api()` is called unconditionally — REST must work on all request contexts including frontend iframes.
-
----
-
-## ⚠️ Key Changes vs Previous Session
-
-### 1. AJAX → REST API (biggest change)
-
-`editor-bridge.js` now uses **WP REST API** instead of `admin-ajax.php` for config saves.
-
-**Old (AJAX):**
-```js
-fetch(wcfanimb.ajaxurl, { body: new URLSearchParams({ action: 'wcf_anim_builder_configs_store', wcf_nonce, ... }) })
-```
-
-**New (REST):**
-```js
-fetch(restUrl("configs"), {
-  method: "POST",
-  headers: { "Content-Type": "application/json", "X-WP-Nonce": wcfanimb.rest_nonce },
-  credentials: "include",
-  body: JSON.stringify({ pageTypeConfigs, animationConfigs })
-})
-```
-
-### 2. New class: `includes/RestApi/RestApi.php`
-
-Full WP REST API class at `WcfAnimationBuilder\RestApi\RestApi`. See the REST API section below.
-
-### 3. `Plugin.php` additions
-
-- `use WcfAnimationBuilder\RestApi\RestApi`
-- `private ?RestApi $rest_api` property
-- `init_rest_api()` called in `init()`
-- `add_admin_bar_build_animation()` — frontend admin bar link to editor
-- `admin_bar_inline_css()` — icon styles
-
-### 4. `wcfanimb` has 5 new fields
-
-```php
-'rest_url'        => rest_url('motionkit/v1/'),
-'rest_nonce'      => wp_create_nonce('wp_rest'),
-'base_domain'     => home_url(),
-'global_settings' => get_option('motionkit_global_settings', []),
-'platform'        => 'wordpress',
-```
-
-### 5. Global settings option key changed
-
-| Old | New |
-|---|---|
-| `wcf_global_animation_builder_configs` | `motionkit_global_settings` |
-
-### 6. `check_permission()` is an open placeholder — must fix
-
-```php
-// CURRENT STATE — insecure:
-public function check_permission() { return true; }
-```
-
-This is the #1 priority before going to production.
+`init_rest_api()` runs unconditionally — REST must serve requests from frontend iframes
+and the external editor. `SettingsKeyMigration` is idempotent (sentinel option) so it
+runs at most once per site.
 
 ---
 
@@ -142,178 +97,207 @@ This is the #1 priority before going to production.
 
 **Namespace:** `motionkit/v1`
 
+Only two endpoints; `/save` is a single dispatcher for all write/read actions.
+
 | Method | Route | Handler | Description |
 |---|---|---|---|
-| POST | `/configs` | `store_configs()` | Save page animation config |
-| DELETE | `/configs` | `delete_configs()` | Delete page animation config |
-| POST | `/global-settings` | `store_global_settings()` | Save global settings |
-| DELETE | `/global-settings` | `delete_global_settings()` | Delete global settings |
-| GET | `/settings` | `get_settings()` | Get global settings |
+| POST | `/save` | `dispatch_simple()` | Unified dispatcher for all save/delete/get actions |
+| GET  | `/pages` | `search_pages()` | Search animatable pages |
 
-**Request body (JSON):**
+### `/save` — CORS simple request pattern
+
+Uses `Content-Type: text/plain;charset=UTF-8` with JSON-as-body, and the JWT inside the
+body (not `Authorization` header). This keeps the request in the CORS "simple" category
+so browsers skip the OPTIONS preflight entirely — no server config, `.htaccess`, WAF, or
+Cloudflare policy can 405 us.
+
+**Request body:**
 ```json
-// POST /configs
-{ "pageTypeConfigs": { "store_type": "post_meta", "id": 42, "option": "mkit_pg_animation_42" },
-  "animationConfigs": { "desktop": [...], "laptop": [...], "mobile": [...] } }
-
-// POST /global-settings
-{ "animationConfigs": { ... } }
+{
+  "token": "<editor session JWT>",
+  "action": "save_global_settings"
+          | "save_global_animation"
+          | "save_current_page_settings"
+          | "save_current_page_animation"
+          | "delete_global_settings"
+          | "delete_current_page_settings"
+          | "get_settings",
+  "payload": {
+    "pageTypeConfigs": { "store_type": "post_meta", "id": 42, "option": "mkit_pg_animation_page" },
+    "animationConfigs": { ... }
+  }
+}
 ```
 
 **Response:**
 ```json
-{ "success": true, "data": { "msg": "Configurations saved", "configs": {...} } }
+{ "success": true, "data": { "msg": "page_config_saved" } }
 ```
 
-**CORS** (`add_cors_headers()`):
-- Filter: `motionkit/editor/allowed_origins`
-- Current allowed: `https://editor.motionkit.io`, `localhost:5173/5174/3000`, `*`
-- ⚠️ Remove `*` before production
+**Auth:** `permission_callback => '__return_true'`; real auth happens inside
+`dispatch_simple()` via `JwtTokenManager::validate_reusable($token)`.
+
+### `/pages` — page search
+
+JWT via `?token=` query param (so it stays a CORS-simple GET with no Authorization header).
+Falls back to `Authorization: Bearer` and same-origin admin cookie.
+Permission callback: `check_permission_query_token`.
+
+### CORS
+
+- `add_cors_headers` filter on `rest_pre_serve_request` attaches
+  `Access-Control-Allow-Origin` for whitelisted editor origins so the browser lets
+  JS read the response body.
+- No OPTIONS preflight handler needed — `/save` never triggers one.
+- Filter hook: `motionkit/editor/allowed_origins`
+
+### Storage Keys (post-v1.1.0)
+
+**Settings and animations are split into two separate option keys** so settings can't
+overwrite animations (or vice versa):
+
+| What                              | Key                             | Store                     |
+|-----------------------------------|---------------------------------|---------------------------|
+| Page animations (timeline list)   | `mkit_pg_animation_<type>`      | post_meta/term_meta/option |
+| Page settings (scroll smoother…)  | `mkit_pg_settings_<type>`       | post_meta/term_meta/option |
+| Global settings                   | `motionkit_global_settings`     | option                    |
+| Global animations                 | `motionkit_global_animations`   | option                    |
+
+`<type>` examples: `page` (post/CPT), `category_<term_id>`, `front`, `search`, `404`.
+
+`save_current_page_settings` and `save_current_page_animation` share the same
+`pageTypeConfigs` envelope but the dispatcher rewrites the `option` prefix for
+settings via `settings_config()` helper.
+
+`delete_current_page_settings` clears BOTH keys.
+
+### SettingsKeyMigration
+
+`includes/Migrations/SettingsKeyMigration.php` runs on `admin_init` once per site
+(sentinel `motionkit_settings_key_migrated`). Scans post_meta, term_meta, and
+wp_options for `mkit_pg_animation_*` rows whose value is associative (settings-shaped,
+not a numerically-indexed animation list) and relocates them to `mkit_pg_settings_*`.
 
 ---
 
-## Where to Put the OAuth / JWT Code
+## Auth & Connect UI (already implemented)
 
-### `includes/Auth/JwtTokenManager.php` ← create new file
+- `includes/Auth/JwtTokenManager.php` — mints and validates editor session JWTs
+  (HMAC-SHA256 using `motionkit_jwt_secret`). Exposes `generate()`, `validate_reusable()`,
+  `get_secret()`, `rotate_secret()`.
+- `includes/Auth/OAuthHandler.php` — OAuth connect/disconnect flow to motionkit.io.
+  Fires `do_action('motionkit/oauth/connected')` on successful connect.
+- `includes/Auth/ConnectPage.php` — top-level admin menu ("MotionKit") with tabs:
+  Connect / License / Tools / Help. Render-methods per tab.
 
-```
-Namespace: WcfAnimationBuilder\Auth\JwtTokenManager
-File:      includes/Auth/JwtTokenManager.php
-```
+### Permission model (RestApi.php)
 
-PSR-4 autoloader resolves it automatically — no registration needed.
-
-Key methods (all static):
-- `generate(int $ttl = 300): string` — HMAC-SHA256, claims: iss/sub/iat/exp/jti
-- `validate(string $token): array|WP_Error` — sig + expiry + sub + single-use jti
-- `get_secret(): string` — lazy-creates 32-byte hex in `wp_options('motionkit_jwt_secret')`
-- `get_api_key(): string` — lazy-creates in `wp_options('motionkit_api_key')`
-- `rotate_secret(): string` — invalidates all active tokens
-
-### `includes/Backend/ConnectPage.php` ← create new file
-
-```
-Namespace: WcfAnimationBuilder\Backend\ConnectPage
-File:      includes/Backend/ConnectPage.php
-```
-
-Call `ConnectPage::register()` from `Backend::init()`.
-
-Key methods:
-- `register()` — registers all admin hooks
-- `register_menu()` — top-level "MotionKit" admin menu
-- `render_page()` — shows connect status / connected UI
-- `handle_connect()` — generates state token + redirects to motionkit.io/authorize
-- `handle_oauth_callback()` — validates state, exchanges code, saves token
-- `handle_launch()` — generates JWT + redirects to editor
-- `add_row_action()` — adds "Edit with MotionKit" to post/page row actions
-
-### Fix `RestApi::check_permission()` ← edit existing file
-
-Replace the `return true` placeholder:
-
-```php
-public function check_permission(\WP_REST_Request $request): bool|\WP_Error {
-    // Path 1: WP session — iframe loaded after JWT validation by Frontend.php
-    if (current_user_can('manage_options')) {
-        return true;
-    }
-
-    // Path 2: Bearer JWT — for external / SaaS-initiated requests
-    $auth_header = $request->get_header('Authorization');
-    if ($auth_header && str_starts_with($auth_header, 'Bearer ')) {
-        $token = substr($auth_header, 7);
-        $result = \WcfAnimationBuilder\Auth\JwtTokenManager::validate($token);
-        if (!is_wp_error($result)) {
-            return true;
-        }
-        return new \WP_Error('rest_forbidden', 'Invalid token', ['status' => 403]);
-    }
-
-    return new \WP_Error('rest_forbidden', 'Authentication required', ['status' => 401]);
-}
-```
-
-### Update `Frontend::enqueue_editor_preview_scripts()` ← edit existing file
-
-Current check is WP-session only. Add JWT path:
-
-```php
-private function enqueue_editor_preview_scripts(): void {
-    $mk_token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
-
-    if ($mk_token) {
-        $result = \WcfAnimationBuilder\Auth\JwtTokenManager::validate($mk_token);
-        if (is_wp_error($result)) {
-            wp_localize_script('motionkit-frontend', 'wcfanimb', ['auth_error' => $result->get_error_message()]);
-            return;
-        }
-    } elseif (!is_user_logged_in() || !current_user_can('manage_options')) {
-        return;
-    }
-    // ... rest of the method unchanged
-}
-```
+- `/save`: permission_callback `__return_true`; real auth happens inside
+  `dispatch_simple()` via `JwtTokenManager::validate_reusable()` on the body's `token` field.
+- `/pages`: `check_permission_query_token` accepts `?token=` query param
+  OR `Authorization: Bearer` header OR same-origin admin cookie.
+- No `current_user_can` gate for the editor session — the JWT IS the session.
 
 ---
 
-## `wcfanimb` JS Global — Full Shape (Editor Preview)
+## `wcfanimb` JS Global — Editor Preview Shape
+
+Set via `wp_localize_script` in `Frontend.php::enqueue_editor_preview_scripts()`:
 
 ```js
 wcfanimb = {
-  // Animation data
-  animation_config:  { desktop: [], laptop: [], tab_land: [], tab: [], mobile: [] },
-  device_config:     [{ key, title, viewWidth, mediaQuery }, ...],
-  pageTypeConfigs:   { store_type: 'post_meta', id: 42, option: 'mkit_pg_animation_42' },
-  global_settings:   { ... },
+  // REST endpoint base (supports both pretty + plain permalinks)
+  rest_url:             'https://yoursite.com/wp-json/motionkit/v1/',
+  rest_nonce:           'xyz789',   // wp_rest nonce (legacy; /save uses JWT body)
 
-  // Legacy AJAX (still registered, not used by editor-bridge for saves)
-  ajaxurl:           'https://yoursite.com/wp-admin/admin-ajax.php',
-  nonce:             'abc123',          // wcf-admin-preview-nonce
+  // Editor session JWT — bridge forwards this in /save body
+  mk_token:             '<JWT>',
 
-  // REST API (used by editor-bridge.js)
-  rest_url:          'https://yoursite.com/wp-json/motionkit/v1/',
-  rest_nonce:        'xyz789',          // wp_rest nonce
+  // Page identity
+  pageTypeConfigs:      { store_type: 'post_meta', id: 42, option: 'mkit_pg_animation_page' },
+  base_domain:          'https://yoursite.com',
+  platform:             'wordpress',
 
-  // Meta
-  base_domain:       'https://yoursite.com',
-  base_path:         'https://yoursite.com/wp-content/plugins/motionkit/',
-  platform:          'wordpress',
+  // Fresh data snapshots read on every editor-preview page load
+  currentPageSettings:  { ... },   // from mkit_pg_settings_<type>
+  page_animation:       [ ... ],   // from mkit_pg_animation_<type>
+  global_settings:      { ... },   // from motionkit_global_settings
+  global_animation:     [ ... ],   // from motionkit_global_animations
+  device_config:        [{ key, title, viewWidth, mediaQuery }, ...],
 
-  // Only present on JWT auth failure:
-  auth_error:        'Token expired'
+  // Legacy (not used by editor saves, kept for admin tools)
+  ajaxurl:              'https://yoursite.com/wp-admin/admin-ajax.php',
+  nonce:                'abc123',  // wcf-admin-preview-nonce
 }
+```
+
+**No-cache headers** are set on any `?action=motionkit-editor` request so page caches
+(LiteSpeed, WP Rocket, Cloudflare APO) can't serve a stale `wcfanimb` snapshot:
+
+```
+Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+Pragma: no-cache
 ```
 
 ---
 
 ## postMessage Contract
 
-| Message | Direction | Payload |
-|---|---|---|
-| `mk-ready` | iframe → editor | `{ type, nonce, ajaxurl, siteData: { animation_config, device_config, pageTypeConfigs, base_path } }` |
-| `mk-auth-error` | iframe → editor | `{ type, error: string }` |
-| `wcf-animation-config` | editor → iframe | animation config per device |
-| `wcf-animation-config-reset` | editor → iframe | (empty) |
+| Message                         | Direction     | Payload                                                  |
+|---------------------------------|---------------|----------------------------------------------------------|
+| `motionkit-ready`               | iframe → editor | `{ platform, base_domain, rest_url }` — lifecycle only |
+| `motionkit-request`             | editor → iframe | `{ request: 'get-data', sessionNonce }`                |
+| `motionkit-response`            | iframe → editor | Full payload from `buildResponsePayload()` (wcfanimb.*) |
+| `motionkit-auth`                | editor → iframe | `{ mk_token, sessionNonce }` — forwarded after ready   |
+| `motionkit-settings`            | editor → iframe | `{ data: { globalSettings?, currentPageSettings?, globalAnimation?, pageAnimation? }, saveId }` |
+| `motionkit-save-success`        | iframe → editor | `{ endpoint, action, saveId }` — per-part ack          |
+| `motionkit-save-error`          | iframe → editor | `{ endpoint, action, saveId, error, code, status }`    |
+| `motionkit-page-search`         | editor → iframe | `{ query, page, per_page }`                            |
+| `motionkit-page-search-result`  | iframe → editor | `{ data, query, page, has_more, total }`               |
+| `wcf-animation-config`          | editor → iframe | Animation config per device (preview)                  |
+| `wcf-animation-config-reset`    | editor → iframe | (empty)                                                |
 
-Allowed postMessage origins:
-```js
-["https://editor.motionkit.io", "http://localhost:5173", "http://localhost:5174", "http://localhost:3000"]
+### ⚠️ Listener timing
+`editor-bridge.js` calls `receivePageConfig()` **synchronously at script-execute time**
+(NOT on `window.load`) so the early `motionkit-request` from the editor isn't missed on
+heavy WP pages where assets block `window.load`.
+
+### ⚠️ Ready is not "connected"
+`motionkit-ready` is a lifecycle signal — it carries NO data. The editor responds to
+`ready` by (a) forwarding `motionkit-auth` and (b) calling `sendRequest()` to trigger
+`motionkit-request`. ONLY `motionkit-response` marks the session as connected. Older
+behavior incorrectly treated `ready` as connected and silently dropped requests.
+
+### Allowed origins
 ```
+https://editor.motionkit.io
+http://localhost:5173  http://127.0.0.1:5173
+http://localhost:5174  http://127.0.0.1:5174
+http://localhost:3000
+```
+Filter hook: `motionkit/editor/allowed_origins`
 
 ---
 
 ## wp_options Keys
 
-| Key | Set by | Contains |
-|---|---|---|
-| `motionkit_global_settings` | `RestApi::store_global_settings()` | Global animation config |
-| `mkit_pg_animation_{id}` | `AnimationBuilderPageType::saveConfig()` | Per-page config (option store_type) |
-| `motionkit_jwt_secret` | `JwtTokenManager::get_secret()` | HMAC secret |
-| `motionkit_api_key` | `JwtTokenManager::get_api_key()` | REST token endpoint key |
-| `mk_access_token` | `ConnectPage::handle_oauth_callback()` | Encrypted OAuth token |
-| `mk_user_email` | `ConnectPage::handle_oauth_callback()` | Connected user email |
-| `wcf_animation_builder_options` | `Plugin::set_default_options()` | General plugin options |
+| Key                                   | Set by                                  | Contains                                     |
+|---------------------------------------|-----------------------------------------|----------------------------------------------|
+| `motionkit_global_settings`           | `RestApi::dispatch_simple()`            | Global settings (scroll smoother, etc.)      |
+| `motionkit_global_animations`         | `RestApi::dispatch_simple()`            | Global animation list                        |
+| `mkit_pg_animation_<type>`            | `AnimationBuilderPageType::saveConfig()` | Per-page animation list (option store_type) |
+| `mkit_pg_settings_<type>`             | `AnimationBuilderPageType::saveConfig()` | Per-page settings (option store_type)       |
+| `motionkit_settings_key_migrated`     | `SettingsKeyMigration`                  | `'1'` once migration has run                 |
+| `motionkit_jwt_secret`                | `JwtTokenManager::get_secret()`         | HMAC secret                                  |
+| `motionkit_api_key`                   | OAuth flow                              | REST token endpoint key                      |
+| `motionkit_access_token`              | `OAuthHandler::handle_oauth_callback()` | Encrypted OAuth token                        |
+| `motionkit_connected_at`              | `OAuthHandler`                          | Connect timestamp                            |
+| `motionkit_connected_email`           | `OAuthHandler`                          | Connected user email                         |
+| `wcf_animation_builder_options`       | `Plugin::set_default_options()`         | General plugin options                       |
+| `wcf_animation_builder_version`       | `Plugin::activate()`                    | Last activated version                       |
+
+`uninstall.php` removes all of these plus transients (`_transient_mk_session_*`) and
+user meta (`motionkit_dismissed_permalink_notice`).
 
 ---
 
@@ -346,14 +330,15 @@ Allowed postMessage origins:
 
 ## Security Rules — Always Follow
 
-- `check_permission()` must **never return `true` unconditionally** in production
-- Every AJAX handler needs `check_ajax_referer()` + `current_user_can('manage_options')`
 - JWT validate order: signature → expiry → `sub` claim → single-use `jti` transient
 - OAuth `state` transient must be verified before processing callback
-- Sanitize all input: `sanitize_text_field()`, `wp_unslash()`, `json_decode()` with `json_last_error()`
+- Sanitize all input: `sanitize_text_field()`, `wp_unslash()`, `json_decode()` with
+  `json_last_error()`
 - Escape all output: `esc_html()`, `esc_url()`, `esc_attr()`
-- Remove `'*'` from CORS `allowed_origins` before production
-- Never store raw access tokens — always AES-256 encrypt
+- Never store raw access tokens — always AES-256 encrypt (handled by `OAuthHandler::encrypt()`)
+- CORS `allowed_origins` must NOT include `'*'` — the current list is explicit
+- Page settings and animations must go to their own keys (`mkit_pg_settings_*` vs
+  `mkit_pg_animation_*`) — never collapse back into a single key
 
 ---
 
