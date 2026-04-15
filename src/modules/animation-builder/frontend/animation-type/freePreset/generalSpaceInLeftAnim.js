@@ -9,6 +9,7 @@ export function generalSpaceInLeftAnim() {
   let allElements;
 
   function handler(e) {
+    console.log("Received animation event for generalSpaceInLeftAnim", e.detail);
     const sections = e.detail["wcf-ab-gen-sil-fa"] || [];
 
     // Organizing elements data by trigger type.
@@ -39,3 +40,5 @@ export function generalSpaceInLeftAnim() {
   return { destroy: resetAnimation };
 }
 generalSpaceInLeftAnim();
+
+console.log("generalSpaceInLeftAnim initialized");
