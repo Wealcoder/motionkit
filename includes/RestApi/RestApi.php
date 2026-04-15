@@ -43,50 +43,11 @@ final class RestApi
   public function init(): void
   {
     $this->page_type = AnimationBuilderPageType::instance();
-
     add_action('rest_api_init', [$this, 'register_routes']);
+    // CORS simple requests skip the OPTIONS preflight, but the response
+    // still needs Access-Control-Allow-Origin or the browser blocks JS
+    // from reading the body. This filter attaches those headers.
     add_filter('rest_pre_serve_request', [$this, 'add_cors_headers'], 10, 4);
-    add_action('init', [$this, 'handle_preflight']);
-  }
-
-  // Handle OPTIONS preflight before WP rejects with 405
-  public function handle_preflight(): void
-  {
-    if ($_SERVER['REQUEST_METHOD'] !== 'OPTIONS') {
-      return;
-    }
-
-    $rest_route = isset($_GET['rest_route']) ? sanitize_text_field($_GET['rest_route']) : '';
-    if (empty($rest_route)) {
-      $rest_route = isset($_SERVER['PATH_INFO']) ? sanitize_text_field($_SERVER['PATH_INFO']) : '';
-    }
-
-    if (strpos($rest_route, '/' . self::NAMESPACE) !== 0) {
-      return;
-    }
-
-    $origin = isset($_SERVER['HTTP_ORIGIN']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_ORIGIN'])) : '';
-
-    $allowed_origins = apply_filters('motionkit/editor/allowed_origins', [
-      'https://editor.motionkit.io',
-      'http://localhost:5173',
-      'http://127.0.0.1:5173',
-      'http://localhost:5174',
-      'http://127.0.0.1:5174',
-      'http://localhost:3000',
-      '*'
-    ]);
-
-    if (!empty($origin) && in_array($origin, $allowed_origins, true)) {
-      header('Access-Control-Allow-Origin: ' . $origin);
-      header('Vary: Origin');
-      header('Access-Control-Allow-Credentials: true');
-      header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-      header('Access-Control-Allow-Headers: Content-Type, X-WP-Nonce, Authorization');
-      header('Access-Control-Max-Age: 86400');
-      status_header(200);
-      exit;
-    }
   }
 
   /**
@@ -96,98 +57,25 @@ final class RestApi
    */
   public function register_routes(): void
   {
-    // POST /motionkit/v1/current-page-settings — save page configs
-    register_rest_route(self::NAMESPACE, '/current-page-settings', [
+    // POST /motionkit/v1/save — CORS-preflight-free endpoint.
+    //
+    // Accepts "simple requests" (text/plain body, no Authorization header,
+    // no X-WP-Nonce) so browsers never send an OPTIONS preflight. Token
+    // travels in the JSON body. Single dispatcher for all save/delete/get
+    // actions — the old split endpoints remain for same-origin admin use.
+    register_rest_route(self::NAMESPACE, '/save', [
       'methods'             => \WP_REST_Server::CREATABLE,
-      'callback'            => [$this, 'store_current_page_settings'],
-      'permission_callback' => [$this, 'check_permission'],
-      'args'                => [
-        'pageTypeConfigs'  => [
-          'required'          => true,
-          'validate_callback' => [$this, 'validate_json_object'],
-        ],
-        'animationConfigs' => [
-          'required'          => true,
-          'validate_callback' => [$this, 'validate_json_object'],
-        ],
-      ],
-    ]);
-
-    // DELETE /motionkit/v1/current-page-settings — delete page configs
-    register_rest_route(self::NAMESPACE, '/current-page-settings', [
-      'methods'             => \WP_REST_Server::DELETABLE,
-      'callback'            => [$this, 'delete_configs'],
-      'permission_callback' => [$this, 'check_permission'],
-      'args'                => [
-        'pageTypeConfigs' => [
-          'required'          => true,
-          'validate_callback' => [$this, 'validate_json_object'],
-        ],
-      ],
-    ]);
-
-    // POST /motionkit/v1/global-settings — save global settings
-    register_rest_route(self::NAMESPACE, '/global-settings', [
-      'methods'             => \WP_REST_Server::CREATABLE,
-      'callback'            => [$this, 'store_global_settings'],
-      'permission_callback' => [$this, 'check_permission'],
-      'args'                => [
-        'animationConfigs' => [
-          'required'          => true,
-          'validate_callback' => [$this, 'validate_json_object'],
-        ],
-      ],
-    ]);
-
-    // DELETE /motionkit/v1/global-settings — delete global settings
-    register_rest_route(self::NAMESPACE, '/global-settings', [
-      'methods'             => \WP_REST_Server::DELETABLE,
-      'callback'            => [$this, 'delete_global_settings'],
-      'permission_callback' => [$this, 'check_permission'],
-    ]);
-
-    // POST /motionkit/v1/current-page-animation — save page-level animations
-    register_rest_route(self::NAMESPACE, '/current-page-animation', [
-      'methods'             => \WP_REST_Server::CREATABLE,
-      'callback'            => [$this, 'store_current_page_animation'],
-      'permission_callback' => [$this, 'check_permission'],
-      'args'                => [
-        'pageTypeConfigs'  => [
-          'required'          => true,
-          'validate_callback' => [$this, 'validate_json_object'],
-        ],
-        'animationConfigs' => [
-          'required'          => true,
-          'validate_callback' => [$this, 'validate_json_object'],
-        ],
-      ],
-    ]);
-
-    // POST /motionkit/v1/global-animation — save global animations
-    register_rest_route(self::NAMESPACE, '/global-animation', [
-      'methods'             => \WP_REST_Server::CREATABLE,
-      'callback'            => [$this, 'store_global_animation'],
-      'permission_callback' => [$this, 'check_permission'],
-      'args'                => [
-        'animationConfigs' => [
-          'required'          => true,
-          'validate_callback' => [$this, 'validate_json_object'],
-        ],
-      ],
-    ]);
-
-    // GET /motionkit/v1/settings — get all settings (global + page)
-    register_rest_route(self::NAMESPACE, '/settings', [
-      'methods'             => \WP_REST_Server::READABLE,
-      'callback'            => [$this, 'get_settings'],
-      'permission_callback' => [$this, 'check_permission'],
+      'callback'            => [$this, 'dispatch_simple'],
+      'permission_callback' => '__return_true',
     ]);
 
     // GET /motionkit/v1/pages — search all animatable pages
+    // Permission accepts ?token=<jwt> query param as well as Authorization
+    // header, so the editor can GET as a CORS simple request.
     register_rest_route(self::NAMESPACE, '/pages', [
       'methods'             => \WP_REST_Server::READABLE,
       'callback'            => [$this, 'search_pages'],
-      'permission_callback' => [$this, 'check_permission'],
+      'permission_callback' => [$this, 'check_permission_query_token'],
       'args'                => [
         's' => [
           'required'          => false,
@@ -219,19 +107,35 @@ final class RestApi
    * @param \WP_REST_Request $request
    * @return bool|\WP_Error
    */
+  /**
+   * Permission callback that also accepts ?token=<jwt> in the query string,
+   * used by /pages so the editor can GET as a CORS simple request (no
+   * Authorization header → no preflight).
+   */
+  public function check_permission_query_token(\WP_REST_Request $request)
+  {
+    $token = (string) $request->get_param('token');
+    if ($token !== '') {
+      if (JwtTokenManager::validate_reusable($token) !== false) {
+        return true;
+      }
+      if ($this->verify_server_session($token)) {
+        return true;
+      }
+    }
+    return $this->check_permission($request);
+  }
+
   public function check_permission(?\WP_REST_Request $request = null)
   {
-    return true;
-    // Verify site is still connected
-    if (!OAuthHandler::is_connected()) {
-      return new \WP_Error(
-        'motionkit_disconnected',
-        esc_html__('Site is disconnected. Please reconnect from WordPress admin to save changes.', 'motionkit'),
-        ['status' => 403]
-      );
-    }
-
-    // JWT bearer token (cross-origin editor session)
+    // Public endpoints — authenticated only by JWT bearer token minted
+    // when the editor launched this site. No WP login required.
+    //
+    // Auth precedence:
+    //   1. Authorization: Bearer <mk_token> (editor session) → validate.
+    //   2. No header but site is connected & has a valid logged-in admin
+    //      (same-origin) → allow via cookie.
+    //   3. Otherwise → 401.
     $auth_header = '';
     if ($request && $request->get_header('Authorization')) {
       $auth_header = $request->get_header('Authorization');
@@ -242,16 +146,23 @@ final class RestApi
     if (preg_match('/^Bearer\s+(.+)$/i', $auth_header, $matches)) {
       $bearer_token = $matches[1];
 
-      // Try WP-generated JWT first (local, no HTTP call)
-      $payload = JwtTokenManager::validate_reusable($bearer_token);
-      if ($payload !== false) {
+      if (JwtTokenManager::validate_reusable($bearer_token) !== false) {
         return true;
       }
-
-      // Try server-generated JWT via SaaS API
       if ($this->verify_server_session($bearer_token)) {
         return true;
       }
+
+      return new \WP_Error(
+        'rest_forbidden',
+        esc_html__('Invalid or expired token.', 'motionkit'),
+        ['status' => 401]
+      );
+    }
+
+    // Same-origin admin fallback (e.g. built-in wp-admin UI)
+    if (is_user_logged_in() && current_user_can('manage_options')) {
+      return true;
     }
 
     return new \WP_Error(
@@ -323,7 +234,9 @@ final class RestApi
     $allowed_origins = apply_filters('motionkit/editor/allowed_origins', [
       'https://editor.motionkit.io',
       'http://localhost:5173',
+      'http://127.0.0.1:5173',
       'http://localhost:5174',
+      'http://127.0.0.1:5174',
       'http://localhost:3000',
     ]);
 
@@ -338,209 +251,126 @@ final class RestApi
     return $served;
   }
 
-  // ─── Validators ─────────────────────────────────────────────────
+  // ─── Validators / Helpers ───────────────────────────────────────
 
-  /**
-   * Validate that a param is a JSON-decodable object/array
-   *
-   * @param mixed            $value   The parameter value.
-   * @param \WP_REST_Request $request The request object.
-   * @param string           $param   The parameter name.
-   * @return bool|\WP_Error
-   */
   public function validate_json_object($value, $request, $param)
   {
     if (is_array($value) || is_object($value)) {
       return true;
     }
-
     if (is_string($value)) {
       $decoded = json_decode($value, true);
       if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
         return true;
       }
     }
-
     return new \WP_Error(
       'rest_invalid_param',
       sprintf(
         /* translators: %s: parameter name */
-        esc_html__('%s must be a valid JSON object', 'motionkit'),
+        esc_html__('%s must be a valid JSON object.', 'motionkit'),
         $param
       ),
       ['status' => 400]
     );
   }
 
-  // ─── Helpers ────────────────────────────────────────────────────
-
-  /**
-   * Parse a param that can be either a JSON string or already-decoded array
-   *
-   * @param mixed $value Raw parameter value
-   * @return array
-   */
   private function parse_json_param($value): array
   {
     if (is_array($value)) {
       return $value;
     }
-
     if (is_string($value)) {
-      return json_decode($value, true) ?: [];
+      $decoded = json_decode($value, true);
+      return is_array($decoded) ? $decoded : [];
     }
-
     return [];
   }
 
   // ─── Endpoint Handlers ──────────────────────────────────────────
 
   /**
-   * Store page-level animation configs
+   * Simple-request dispatcher.
    *
-   * @param \WP_REST_Request $request
-   * @return \WP_REST_Response
+   * The request's Content-Type is text/plain, so WP's REST server does NOT
+   * JSON-decode the body. We read php://input manually. Auth is the
+   * mk_token (JWT) inside the body, not an Authorization header — that
+   * header would trigger a CORS preflight we're trying to avoid.
+   *
+   * Body shape: { token: "<jwt>", action: "<name>", payload: {...} }
    */
-  public function store_current_page_settings(\WP_REST_Request $request): \WP_REST_Response
+  public function dispatch_simple(\WP_REST_Request $request): \WP_REST_Response
   {
+    $raw  = $request->get_body();
+    $data = json_decode((string) $raw, true);
+    if (!is_array($data)) {
+      return new \WP_REST_Response(['success' => false, 'error' => 'invalid_json'], 400);
+    }
 
-    $page_type_configs = $this->parse_json_param($request->get_param('pageTypeConfigs'));
-    $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
+    $token   = isset($data['token'])   ? (string) $data['token']   : '';
+    $action  = isset($data['action'])  ? (string) $data['action']  : '';
+    $payload = isset($data['payload']) && is_array($data['payload']) ? $data['payload'] : [];
 
-    $this->page_type->saveConfig($page_type_configs, $animation_configs);
+    if ($token === '' || $action === '') {
+      return new \WP_REST_Response(['success' => false, 'error' => 'missing_token_or_action'], 400);
+    }
 
-    return new \WP_REST_Response([
-      'success' => true,
-      'data'    => [
-        'msg'     => esc_html__('Configurations saved', 'motionkit'),
-        'configs' => $animation_configs,
-      ],
-    ], 200);
-  }
+    // Auth: validate JWT body token (same secret as Authorization Bearer).
+    if (JwtTokenManager::validate_reusable($token) === false) {
+      if (!$this->verify_server_session($token)) {
+        return new \WP_REST_Response(['success' => false, 'error' => 'invalid_token'], 401);
+      }
+    }
 
-  /**
-   * Delete page-level animation configs
-   *
-   * @param \WP_REST_Request $request
-   * @return \WP_REST_Response
-   */
-  public function delete_configs(\WP_REST_Request $request): \WP_REST_Response
-  {
-    $page_type_configs = $this->parse_json_param($request->get_param('pageTypeConfigs'));
+    $allowed = [
+      'save_global_settings',
+      'save_global_animation',
+      'save_current_page_settings',
+      'save_current_page_animation',
+      'delete_global_settings',
+      'delete_current_page_settings',
+      'get_settings',
+    ];
+    if (!in_array($action, $allowed, true)) {
+      return new \WP_REST_Response(['success' => false, 'error' => 'unknown_action'], 400);
+    }
 
-    $this->page_type->deleteConfig($page_type_configs);
+    switch ($action) {
+      case 'save_global_settings':
+        update_option('motionkit_global_settings', $payload['animationConfigs'] ?? []);
+        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_settings_saved']], 200);
 
-    return new \WP_REST_Response([
-      'success' => true,
-      'data'    => [
-        'msg' => esc_html__('Configurations deleted', 'motionkit'),
-      ],
-    ], 200);
-  }
+      case 'save_global_animation':
+        update_option('motionkit_global_animations', $payload['animationConfigs'] ?? []);
+        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_animation_saved']], 200);
 
-  /**
-   * Store global animation settings
-   *
-   * @param \WP_REST_Request $request
-   * @return \WP_REST_Response
-   */
-  public function store_global_settings(\WP_REST_Request $request): \WP_REST_Response
-  {
+      case 'save_current_page_settings':
+      case 'save_current_page_animation':
+        $this->page_type->saveConfig(
+          $payload['pageTypeConfigs'] ?? [],
+          $payload['animationConfigs'] ?? []
+        );
+        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_config_saved']], 200);
 
-    $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
-    update_option('motionkit_global_settings', $animation_configs);
+      case 'delete_global_settings':
+        delete_option('motionkit_global_settings');
+        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_settings_deleted']], 200);
 
-    return new \WP_REST_Response([
-      'success' => true,
-      'data'    => [
-        'msg'     => esc_html__('Global configurations saved', 'motionkit'),
-        'configs' => $animation_configs,
-      ],
-    ], 200);
-  }
+      case 'delete_current_page_settings':
+        $this->page_type->deleteConfig($payload['pageTypeConfigs'] ?? []);
+        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_config_deleted']], 200);
 
-  /**
-   * Delete global animation settings
-   *
-   * @param \WP_REST_Request $request
-   * @return \WP_REST_Response
-   */
-  public function delete_global_settings(\WP_REST_Request $request): \WP_REST_Response
-  {
-    delete_option('motionkit_global_settings');
+      case 'get_settings':
+        return new \WP_REST_Response([
+          'success' => true,
+          'data'    => [
+            'globalSettings'  => get_option('motionkit_global_settings', []),
+            'globalAnimation' => get_option('motionkit_global_animations', []),
+          ],
+        ], 200);
+    }
 
-    return new \WP_REST_Response([
-      'success' => true,
-      'data'    => [
-        'msg' => esc_html__('Global configurations deleted', 'motionkit'),
-      ],
-    ], 200);
-  }
-
-  /**
-   * Store page-level animations (page_animation bucket from editor)
-   *
-   * Uses the same page-type routing as current-page-settings but with
-   * a separate option key prefix to keep animations apart from settings.
-   *
-   * @param \WP_REST_Request $request
-   * @return \WP_REST_Response
-   */
-  public function store_current_page_animation(\WP_REST_Request $request): \WP_REST_Response
-  {
-    $page_type_configs = $this->parse_json_param($request->get_param('pageTypeConfigs'));
-    $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
-
-    $this->page_type->saveConfig($page_type_configs, $animation_configs);
-
-    return new \WP_REST_Response([
-      'success' => true,
-      'data'    => [
-        'msg'     => esc_html__('Animations saved', 'motionkit'),
-        'configs' => $animation_configs,
-      ],
-    ], 200);
-  }
-
-  /**
-   * Store global animations (global_animation bucket from editor)
-   *
-   * @param \WP_REST_Request $request
-   * @return \WP_REST_Response
-   */
-  public function store_global_animation(\WP_REST_Request $request): \WP_REST_Response
-  {
-    $animation_configs = $this->parse_json_param($request->get_param('animationConfigs'));
-
-    update_option('motionkit_global_animations', $animation_configs);
-    error_log('Saved global animations: ' . print_r($animation_configs, true));
-    return new \WP_REST_Response([
-      'success' => true,
-      'data'    => [
-        'msg'     => esc_html__('Global animations saved', 'motionkit'),
-        'configs' => $animation_configs,
-      ],
-    ], 200);
-  }
-
-  /**
-   * Get all settings (global + current page)
-   *
-   * @param \WP_REST_Request $request
-   * @return \WP_REST_Response
-   */
-  public function get_settings(\WP_REST_Request $request): \WP_REST_Response
-  {
-    $global_settings = get_option('motionkit_global_settings', []);
-    $global_animation = get_option('motionkit_global_animations', []);
-
-    return new \WP_REST_Response([
-      'success' => true,
-      'data'    => [
-        'globalSettings'  => is_array($global_settings) ? $global_settings : [],
-        'globalAnimation' => is_array($global_animation) ? $global_animation : [],
-      ],
-    ], 200);
+    return new \WP_REST_Response(['success' => false, 'error' => 'unreachable'], 500);
   }
 
   /**

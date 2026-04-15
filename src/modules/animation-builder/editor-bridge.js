@@ -52,8 +52,8 @@ function getParentOrigin() {
 
 /**
  * Build a full REST API URL.
- * Uses plain permalink format (?rest_route=) to avoid permalink flush requirements.
- * e.g. https://site.com/?rest_route=/motionkit/v1/ + "global-animation"
+ * wcfanimb.rest_url is pre-built by PHP and handles both pretty
+ * (/wp-json/motionkit/v1/) and plain (?rest_route=/motionkit/v1/) forms.
  */
 function restUrl(endpoint) {
   return (wcfanimb.rest_url || "") + endpoint;
@@ -79,38 +79,56 @@ function getMkToken() {
 }
 
 /**
- * Build auth headers for REST API calls.
- * Uses JWT Bearer token if mk_token exists (cross-origin editor session),
- * otherwise falls back to WP nonce (same-origin admin session).
+ * Bridge endpoint names → simple-dispatcher action names.
  */
-function getAuthHeaders() {
-  const headers = { "Content-Type": "application/json" };
-  const token = getMkToken();
-
-  if (token) {
-    headers["Authorization"] = "Bearer " + token;
-  } else if (wcfanimb.rest_nonce) {
-    headers["X-WP-Nonce"] = wcfanimb.rest_nonce;
-  }
-
-  return headers;
-}
+const ENDPOINT_TO_ACTION = {
+  "global-settings": "save_global_settings",
+  "global-animation": "save_global_animation",
+  "current-page-settings": "save_current_page_settings",
+  "current-page-animation": "save_current_page_animation",
+};
 
 /**
- * POST data to a REST endpoint with standardized error handling.
- * On failure, sends a motionkit-error postMessage to the parent editor.
- *
- * @param {string}   endpoint   REST endpoint name (e.g. "global-settings")
- * @param {object}   body       JSON body to POST
- * @param {object}   headers    Pre-built auth headers from getAuthHeaders()
- * @param {function} onSuccess  Callback invoked with the parsed JSON on success
+ * No-op retained for call-site compatibility — we no longer use custom
+ * auth headers (they'd trigger a CORS preflight).
  */
-function saveViaRest(endpoint, body, headers, onSuccess) {
-  fetch(restUrl(endpoint), {
+function getAuthHeaders() { return {}; }
+
+/**
+ * POST to /motionkit/v1/save as a CORS "simple request":
+ *   - Content-Type: text/plain
+ *   - No Authorization header, no X-WP-Nonce
+ *   - JWT travels in the JSON body
+ *
+ * Simple requests skip the OPTIONS preflight entirely, so no server
+ * config, .htaccess, WAF, or host policy can 405 us.
+ */
+function saveViaRest(endpoint, body, _headers, onSuccess, saveId) {
+  const action = ENDPOINT_TO_ACTION[endpoint];
+  if (!action) return;
+
+  const payload = JSON.stringify({
+    token: getMkToken(),
+    action,
+    payload: body,
+  });
+
+  const ack = (ok, extra = {}) => {
+    try {
+      window.parent.postMessage(
+        {
+          type: ok ? "motionkit-save-success" : "motionkit-save-error",
+          data: { endpoint, action, saveId, ...extra },
+        },
+        parentOrigin || "*",
+      );
+    } catch (e) { /* postMessage failed */ }
+  };
+
+  fetch(restUrl("save"), {
     method: "POST",
-    headers,
-    credentials: "include",
-    body: JSON.stringify(body),
+    headers: { "Content-Type": "text/plain;charset=UTF-8" },
+    body: payload,
   })
     .then((r) => {
       if (!r.ok) {
@@ -118,32 +136,27 @@ function saveViaRest(endpoint, body, headers, onSuccess) {
           .json()
           .catch(() => ({ message: `HTTP ${r.status}` }))
           .then((respBody) => {
-            const msg = respBody?.message || `HTTP ${r.status}`;
-
-            try {
-              window.parent.postMessage(
-                {
-                  type: "motionkit-error",
-                  data: {
-                    error: msg,
-                    code: respBody?.code || "save_failed",
-                    endpoint,
-                    status: r.status,
-                  },
-                },
-                parentOrigin || "*",
-              );
-            } catch (e) { /* postMessage failed */ }
+            ack(false, {
+              error: respBody?.message || respBody?.error || `HTTP ${r.status}`,
+              code: respBody?.code || "save_failed",
+              status: r.status,
+            });
             return null;
           });
       }
-
       return r.json();
     })
     .then((res) => {
-      if (res?.success) onSuccess(res);
+      if (res?.success) {
+        ack(true);
+        onSuccess(res);
+      } else if (res !== null) {
+        ack(false, { error: res?.error || "unknown_error" });
+      }
     })
-    .catch(() => { /* save failed */ });
+    .catch((err) => {
+      ack(false, { error: String(err?.message || err || "network_error") });
+    });
 }
 
 /**
@@ -193,6 +206,8 @@ function receivePageConfig() {
           globalAnimation,
           pageAnimation,
         } = event.data.data || {};
+        // Editor-assigned id so ack postMessages can match the toast.
+        const saveId = event.data.saveId || null;
 
         const headers = getAuthHeaders();
 
@@ -204,6 +219,7 @@ function receivePageConfig() {
             () => {
               wcfanimb.global_settings = globalSettings;
             },
+            saveId,
           );
         }
 
@@ -218,6 +234,7 @@ function receivePageConfig() {
             () => {
               wcfanimb.currentPageSettings = currentPageSettings;
             },
+            saveId,
           );
         }
 
@@ -229,6 +246,7 @@ function receivePageConfig() {
             () => {
               wcfanimb.global_animation = globalAnimation;
             },
+            saveId,
           );
         }
 
@@ -243,6 +261,7 @@ function receivePageConfig() {
             () => {
               wcfanimb.page_animation = pageAnimation;
             },
+            saveId,
           );
         }
 
@@ -265,7 +284,9 @@ function receivePageConfig() {
         const query = event.data.query || "";
         const page = event.data.page || 1;
         const perPage = event.data.per_page || 10;
-        const headers = getAuthHeaders();
+        const token = getMkToken();
+        // Token in query param — keeps the request as a CORS simple GET
+        // (no Authorization header, no preflight).
         const searchUrl =
           restUrl("pages") +
           "&s=" +
@@ -273,9 +294,10 @@ function receivePageConfig() {
           "&page=" +
           page +
           "&per_page=" +
-          perPage;
+          perPage +
+          (token ? "&token=" + encodeURIComponent(token) : "");
 
-        fetch(searchUrl, { headers })
+        fetch(searchUrl)
           .then((r) => r.json())
           .then((res) => {
             window.parent.postMessage(

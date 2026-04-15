@@ -240,6 +240,8 @@ final class OAuthHandler
       update_option(self::OPT_CONNECTED_EMAIL, sanitize_email($result['email']), false);
     }
 
+    do_action('motionkit/oauth/connected');
+
     wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&connected=1'));
     exit;
   }

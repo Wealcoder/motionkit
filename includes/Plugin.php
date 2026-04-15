@@ -17,6 +17,7 @@ if (!defined('ABSPATH')) {
 use WcfAnimationBuilder\Backend\Backend;
 use WcfAnimationBuilder\Frontend\Frontend;
 use WcfAnimationBuilder\RestApi\RestApi;
+use WcfAnimationBuilder\Admin\PermalinkNotice;
 use WcfAnimationBuilder\Auth\OAuthHandler;
 use WcfAnimationBuilder\Auth\ConnectPage;
 use WcfAnimationBuilder\Includes\Autoloader;
@@ -33,7 +34,7 @@ final class Plugin
     /**
      * Plugin version
      */
-    public const VERSION = '1.0.0';
+    public const VERSION = '1.1.0';
 
     /**
      * Plugin name
@@ -186,6 +187,7 @@ final class Plugin
         $this->init_frontend();
         $this->init_backend();
         $this->init_rest_api();
+        $this->init_admin_notices();
 
         // Admin bar runs on both frontend and admin
         add_action('admin_bar_menu', [$this, 'add_admin_bar_build_animation'], 100);
@@ -275,6 +277,16 @@ final class Plugin
     }
 
     /**
+     * Register admin notices (permalink nag, etc.).
+     */
+    private function init_admin_notices(): void
+    {
+        if (is_admin()) {
+            (new PermalinkNotice())->init();
+        }
+    }
+
+    /**
      * Send X-Motionkit-Platform header so the SaaS detect-platform endpoint
      * can instantly identify WordPress sites with MotionKit installed.
      *
@@ -306,8 +318,8 @@ final class Plugin
     public function activate(): void
     {
         // Set default options
-        $this->set_default_options();   
-        // Flush rewrite rules
+        $this->set_default_options();
+        // Flush rewrite rules so REST routes (/wp-json/motionkit/v1/...) work
         flush_rewrite_rules();
         update_option('wcf_animation_builder_version', self::VERSION);
         update_option('wcf_animation_builder_creation_date', gmdate('Y-m-d H:i:s'));

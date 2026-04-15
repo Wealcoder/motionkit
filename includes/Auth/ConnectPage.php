@@ -176,8 +176,9 @@ final class ConnectPage
       'connect' => ['label' => __('Connect', 'motionkit'), 'icon' => '&#128279;'],
       'license' => ['label' => __('License', 'motionkit'), 'icon' => '&#128196;'],
       'tools'   => ['label' => __('Tools', 'motionkit'),   'icon' => '&#128295;'],
-      'help'    => ['label' => __('Help', 'motionkit'),    'icon' => '&#9432;'],
     ];
+
+    $tabs['help'] = ['label' => __('Help', 'motionkit'), 'icon' => '&#9432;'];
 
     ?>
     <div class="mk-page">
@@ -599,8 +600,10 @@ final class ConnectPage
         </a>
       </div>
     </div>
+
     <?php
   }
+
 
   // ─── Helpers ─────────────────────────────────────────────────
 
