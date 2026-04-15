@@ -18,6 +18,7 @@ use WcfAnimationBuilder\Backend\Backend;
 use WcfAnimationBuilder\Frontend\Frontend;
 use WcfAnimationBuilder\RestApi\RestApi;
 use WcfAnimationBuilder\Admin\PermalinkNotice;
+use WcfAnimationBuilder\Migrations\SettingsKeyMigration;
 use WcfAnimationBuilder\Auth\OAuthHandler;
 use WcfAnimationBuilder\Auth\ConnectPage;
 use WcfAnimationBuilder\Includes\Autoloader;
@@ -283,6 +284,7 @@ final class Plugin
     {
         if (is_admin()) {
             (new PermalinkNotice())->init();
+            (new SettingsKeyMigration())->init();
         }
     }
 

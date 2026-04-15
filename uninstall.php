@@ -30,6 +30,9 @@ $options_to_delete = [
   'motionkit_access_token',
   'motionkit_connected_at',
   'motionkit_connected_email',
+
+  // Migration sentinels
+  'motionkit_settings_key_migrated',
 ];
 
 foreach ($options_to_delete as $option) {

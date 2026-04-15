@@ -26,6 +26,7 @@ const ALLOWED_ORIGINS = [
   "*",
 ];
 
+
 /**
  * Validate that a message event comes from an allowed editor origin.
  */
@@ -164,18 +165,21 @@ function saveViaRest(endpoint, body, _headers, onSuccess, saveId) {
  * merging optional overrides over the cached wcfanimb values.
  */
 function buildResponsePayload(overrides = {}) {
-  return {
+  // Use ?? so legitimate empty values ([], {}, 0) from the new page
+  // overwrite stale wcfanimb cached values from the previous load.
+  const payload = {
     platform: wcfanimb.platform,
-    globalSettings: overrides.globalSettings || wcfanimb.global_settings,
+    globalSettings: overrides.globalSettings ?? wcfanimb.global_settings,
     pageType: wcfanimb.pageTypeConfigs,
     currentPageSettings:
-      overrides.currentPageSettings || wcfanimb.currentPageSettings,
-    globalAnimation: overrides.globalAnimation || wcfanimb.global_animation,
-    pageAnimation: overrides.pageAnimation || wcfanimb.page_animation,
+      overrides.currentPageSettings ?? wcfanimb.currentPageSettings,
+    globalAnimation: overrides.globalAnimation ?? wcfanimb.global_animation,
+    pageAnimation: overrides.pageAnimation ?? wcfanimb.page_animation,
     deviceConfig: wcfanimb.device_config,
     base_domain: wcfanimb.base_domain,
     rest_url: wcfanimb.rest_url,
   };
+  return payload;
 }
 
 let parentOrigin = null;
@@ -190,11 +194,6 @@ function receivePageConfig() {
   window.addEventListener(
     "message",
     (event) => {
-      // Lock to the first valid origin we receive from
-      if (!parentOrigin) {
-        parentOrigin = event.origin;
-      }
-
       // wcf-animation-config and wcf-animation-config-reset are handled by
       // inject-bridge.js (single source of truth across all platforms).
 
@@ -357,7 +356,7 @@ function receivePageConfig() {
   }, 1000);
 }
 
-// Initialize on page load
-window.addEventListener("load", () => {
-  receivePageConfig();
-});
+// Initialize message listener as early as possible (not on window.load) so
+// we don't miss any motionkit-request from the editor while WP assets are
+// still loading. motionkit-ready is still posted after its own timer below.
+receivePageConfig();

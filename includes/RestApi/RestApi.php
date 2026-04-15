@@ -299,6 +299,27 @@ final class RestApi
    *
    * Body shape: { token: "<jwt>", action: "<name>", payload: {...} }
    */
+  /**
+   * Derive the page-settings config from the page-animation config by
+   * swapping the option key prefix. Animations use mkit_pg_animation_*,
+   * settings use mkit_pg_settings_* — same store_type and id.
+   *
+   * @param array $animation_config
+   * @return array
+   */
+  private function settings_config(array $animation_config): array
+  {
+    $cfg = $animation_config;
+    if (!empty($cfg['option']) && is_string($cfg['option'])) {
+      $cfg['option'] = preg_replace(
+        '/^mkit_pg_animation_/',
+        'mkit_pg_settings_',
+        $cfg['option']
+      );
+    }
+    return $cfg;
+  }
+
   public function dispatch_simple(\WP_REST_Request $request): \WP_REST_Response
   {
     $raw  = $request->get_body();
@@ -344,19 +365,29 @@ final class RestApi
         update_option('motionkit_global_animations', $payload['animationConfigs'] ?? []);
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_animation_saved']], 200);
 
-      case 'save_current_page_settings':
       case 'save_current_page_animation':
+        // Animations live under the original key (default: mkit_pg_animation_<type>)
         $this->page_type->saveConfig(
           $payload['pageTypeConfigs'] ?? [],
           $payload['animationConfigs'] ?? []
         );
-        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_config_saved']], 200);
+        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_animation_saved']], 200);
+
+      case 'save_current_page_settings':
+        // Settings live under a distinct key so they don't overwrite animations.
+        $this->page_type->saveConfig(
+          $this->settings_config($payload['pageTypeConfigs'] ?? []),
+          $payload['animationConfigs'] ?? []
+        );
+        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_settings_saved']], 200);
 
       case 'delete_global_settings':
         delete_option('motionkit_global_settings');
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_settings_deleted']], 200);
 
       case 'delete_current_page_settings':
+        // Delete BOTH the settings key and the animation key so the page is fully cleared.
+        $this->page_type->deleteConfig($this->settings_config($payload['pageTypeConfigs'] ?? []));
         $this->page_type->deleteConfig($payload['pageTypeConfigs'] ?? []);
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_config_deleted']], 200);
 

@@ -284,8 +284,13 @@ final class Frontend
    */
   public function enqueue_frontend_scripts(): void
   {
-  
+
     if ($this->is_editor_preview()) {
+      // Force fresh response — page caches and CDNs would otherwise serve
+      // a stale snapshot, leaving the editor with outdated wcfanimb data.
+      nocache_headers();
+      header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+      header('Pragma: no-cache');
       $this->enqueue_editor_preview_scripts();
       return;
     }
@@ -320,19 +325,26 @@ final class Frontend
     // Load device breakpoints
     $devices = $this->get_sanitized_devices();
 
-    // Get existing page config (may be empty for new pages)
-    $page_configs = $this->page_type->getConfig();
+    // Page-type descriptor (store_type, id, option) — used for both reads + writes.
+    $page_type_config = $this->page_type->getCurrentPageType();
 
-    // Global animation configs (saved from editor, stored in wp_options)
-    $global_settings = get_option('motionkit_global_settings', json_decode('{}'));
+    // Page settings live under mkit_pg_settings_<type> (separate key from animations).
+    $settings_config = $page_type_config;
+    if (!empty($settings_config['option']) && is_string($settings_config['option'])) {
+      $settings_config['option'] = preg_replace(
+        '/^mkit_pg_animation_/',
+        'mkit_pg_settings_',
+        $settings_config['option']
+      );
+    }
+    $page_configs = $this->page_type->getConfig($settings_config);
 
-    // Global animation list (global_animation bucket from editor)
+    // Global settings + global animations (wp_options).
+    $global_settings  = get_option('motionkit_global_settings', json_decode('{}'));
     $global_animation = get_option('motionkit_global_animations', []);
 
-    // Page-level animation list (page_animation bucket from editor)
-    $page_type_config = $this->page_type->getCurrentPageType();
-    $page_anim_config = $page_type_config;
-    $page_animation = $this->page_type->getConfig($page_anim_config);
+    // Page-level animation list — original key (mkit_pg_animation_<type>).
+    $page_animation = $this->page_type->getConfig($page_type_config);
 
     // mk_token is already validated by is_editor_preview() — safe to pass through
     $mk_token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
