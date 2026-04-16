@@ -23,13 +23,15 @@ module.exports = {
   },
   entry: () => {
     return {
-      ...getWebpackEntryPoints(),   
+      ...getWebpackEntryPoints(),
       "modules/animation-builder/frontend":
         "./src/modules/animation-builder/frontend.js",
       "modules/animation-builder/editor-bridge":
         "./src/modules/animation-builder/editor-bridge.js",
+      "modules/animation-builder/frontend/editor-reset":
+        "./src/modules/animation-builder/frontend/editor-reset.js",
       "modules/animation-builder/freeAnim": "./src/css/freeAnim.css",
-      "admin": "./src/css/admin.css",
+      admin: "./src/css/admin.css",
       "admin-tools": "./src/css/admin-tools.css",
       // auto-generated free preset entries (frontend)
       ...getPresetEntries({
@@ -46,8 +48,9 @@ module.exports = {
       // smart engine — custom animation entry point
       "modules/animation-builder/frontend/customAnimation":
         "./src/modules/animation-builder/frontend/animation-type/customAnimation.js",
-    
-      
+      // free animation engine entry point
+      "modules/animation-builder/frontend/freeAnimationEngine":
+        "./src/modules/animation-builder/frontend/animation-type/freeAnimationEngine.js",
     };
   },
   output: {
@@ -66,14 +69,17 @@ module.exports = {
     ...defaultConfig.plugins,
     {
       apply(compiler) {
-        compiler.hooks.afterEmit.tapAsync('CopyToEditorPlugin', (_compilation, cb) => {
-          try {
-            require('./scripts/copy-to-editor').copyToEditor({ quiet: true });
-          } catch (e) {
-            console.warn('[copy-to-editor] skipped:', e.message);
-          }
-          cb();
-        });
+        compiler.hooks.afterEmit.tapAsync(
+          "CopyToEditorPlugin",
+          (_compilation, cb) => {
+            try {
+              require("./scripts/copy-to-editor").copyToEditor({ quiet: true });
+            } catch (e) {
+              console.warn("[copy-to-editor] skipped:", e.message);
+            }
+            cb();
+          },
+        );
       },
     },
   ],
@@ -81,7 +87,7 @@ module.exports = {
     extensions: [".js", ".jsx"],
     modules: [path.resolve(__dirname, "/src"), "node_modules"],
     alias: {
-      "@": path.resolve(__dirname, "src/modules/animation-builder/"),      
+      "@": path.resolve(__dirname, "src/modules/animation-builder/"),
     },
   },
 };

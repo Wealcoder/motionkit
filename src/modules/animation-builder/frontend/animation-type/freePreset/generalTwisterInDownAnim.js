@@ -1,40 +1,44 @@
-import {
-  handleOnScrollAnimation,
-  handleOrganizedSectionByTriggerType,
-  handlePageLoadAnimation,
-  resetAnimation,
-} from "./Shared/freeAnimationHelper";
+import { normalizeToCssVars } from "@/lib/FreeAnimation/normalizeToCssVars";
 
-export function generalSpaceInLeftAnim() {
-  let allElements;
+const PRESET_KEY = "wcf-mk-gen-ti-fa";
+const CLASS_LIST = [
+  "wcf-free-ab-25",
+  "wcf-free-ab-freeAnimGeneral",
+  "wcf-free-ab-twisterInDown",
+];
 
+export function generalTwisterInDownAnim() {
   function handler(e) {
-    const sections = e.detail["wcf-general-tid-free-animation"] || [];
-
-    // Organizing elements data by trigger type.
-    allElements = handleOrganizedSectionByTriggerType(sections);
-
-    const allOnScrollElements = allElements?.get("on_scroll");
-    const allPageLoadAnimation = allElements?.get("page_load");
-
-    if (allOnScrollElements?.length > 0) {
-      handleOnScrollAnimation({ elements: allOnScrollElements });
+    const anim = e?.detail;
+    if (!anim || anim.presetKey !== PRESET_KEY) return;
+    if (!anim?.itemClass) return;
+    const engine = window.WCFFreeAnimBuilder;
+    if (!engine) {
+      console.error("Free Animation engine not initialized!");
+      return;
     }
 
-    if (allPageLoadAnimation?.length > 0) {
-      handlePageLoadAnimation({ elements: allPageLoadAnimation });
+    const element = {
+      id: anim.id,
+      trigger: anim.itemClass,
+      classToAdd: CLASS_LIST,
+      styles: normalizeToCssVars(anim.vars),
+      initElementStyle: anim.initElementStyle || {
+        visibility: "hidden",
+        opacity: "0",
+      },
+    };
+
+    const triggerType = anim.trigger?.type || "on_scroll";
+
+    if (triggerType === "page_load") {
+      engine.initOnPageLoadEvent([element]);
+    } else {
+      engine.triggerOnScrollObserver([element]);
     }
-    return;
   }
 
-  // wordpress events
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", () => {
-    if (allElements) {
-      resetAnimation(allElements);
-    }
-  });
-
-  return { destroy: resetAnimation };
 }
-generalSpaceInLeftAnim();
+
+generalTwisterInDownAnim();

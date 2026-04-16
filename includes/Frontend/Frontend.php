@@ -148,7 +148,7 @@ final class Frontend
       wp_register_script($handle, $cdn . $lib['file'], $lib['deps'], $ver, true);
     }
 
-    $core_deps = ['gsap', 'ScrollSmoother' ];
+    $core_deps = ['gsap', 'ScrollSmoother'];
 
     return array_merge($deps, $core_deps);
   }
@@ -346,6 +346,28 @@ final class Frontend
     // Page-level animation list — original key (mkit_pg_animation_<type>).
     $page_animation = $this->page_type->getConfig($page_type_config);
 
+    // Merge global and page animation lists — not override
+    $merged_animation = array_merge(
+      is_array($global_animation) ? $global_animation : [],
+      is_array($page_animation) ? $page_animation : []
+    );
+
+    // Merge global settings with current page settings on specific keys.
+    // Page-level values override global when present.
+    $global_settings_arr = is_array($global_settings) ? $global_settings : (array) $global_settings;
+    $page_settings_arr   = is_array($page_configs) ? $page_configs : [];
+
+    $default_settings = [
+      'deviceConfig' => $devices,
+    ];
+
+    $merged_settings = array_merge($default_settings, $global_settings_arr);
+    foreach (['pageTransition', 'scrollSmother', 'preloader'] as $key) {
+      if (!empty($page_settings_arr[$key]) && is_array($page_settings_arr[$key])) {
+        $merged_settings[$key] = $page_settings_arr[$key];
+      }
+    }
+
     // mk_token is already validated by is_editor_preview() — safe to pass through
     $mk_token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
 
@@ -359,11 +381,13 @@ final class Frontend
       'rest_nonce'        => wp_create_nonce('wp_rest'),
       'pageTypeConfigs'   => $page_type_config,
       'base_domain'       => home_url(),
-      'global_settings'   => $global_settings ,
+      'global_settings'   => $global_settings,
       'global_animation'  => is_array($global_animation) ? $global_animation : [],
       'page_animation'    => is_array($page_animation) ? $page_animation : [],
       'platform'          => 'wordpress',
       'mk_token'          => $mk_token,
+      'all_animations'    => $merged_animation,
+      'all_settings'      => $merged_settings,
     ];
 
 
@@ -381,7 +405,7 @@ final class Frontend
     $page_configs = $this->page_type->getConfig();
     // Early return only if NO page configs AND NO global animations exist.
     $global_animation_exists = !empty(get_option('motionkit_global_animations', []));
-    
+
     if ((empty($page_configs) || !is_array($page_configs)) && !$global_animation_exists) {
       return;
     }
@@ -412,7 +436,7 @@ final class Frontend
       MOTIONKIT_VERSION,
       true
     );
-    
+
     wp_enqueue_script('motionkit-frontend');
 
     // Conditionally enqueue free preset scripts
@@ -640,7 +664,6 @@ final class Frontend
         $element['version'] ?? MOTIONKIT_VERSION,
         true
       );
-
     }
   }
 

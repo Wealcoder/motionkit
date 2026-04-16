@@ -1,0 +1,17 @@
+export const CSS_EASE_MAP = {
+  none: "linear",
+  linear: "linear",
+  ease: "ease",
+  "power1.in": "cubic-bezier(0.11, 0, 0.5, 0)",
+  "power1.out": "cubic-bezier(0.5, 1, 0.89, 1)",
+  "power1.inOut": "cubic-bezier(0.45, 0, 0.55, 1)",
+  "power2.in": "cubic-bezier(0.36, 0, 0.66, -0.56)",
+  "power2.out": "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+  "power2.inOut": "cubic-bezier(0.65, 0, 0.35, 1)",
+  "power3.in": "cubic-bezier(0.64, 0, 0.78, 0)",
+  "power3.out": "cubic-bezier(0.22, 1, 0.36, 1)",
+  "power3.inOut": "cubic-bezier(0.83, 0, 0.17, 1)",
+  "power4.in": "cubic-bezier(0.7, 0, 0.84, 0)",
+  "power4.out": "cubic-bezier(0.16, 1, 0.3, 1)",
+  "power4.inOut": "cubic-bezier(0.87, 0, 0.13, 1)",
+};
