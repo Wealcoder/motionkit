@@ -1,116 +1,120 @@
 class FreeAnimationEventHelperClass {
   #onScrollObserver = null;
   #totalOnScrollObserver = 0;
-  #onPageLoadEvent = null;
+  #completedCount = 0;
 
-  // Events Functions
-  // on scroll
   initOnScrollObserver() {
     if (this.#onScrollObserver) return;
     this.#onScrollObserver = new IntersectionObserver(
       (entries) => {
-        let isAllCompleted = 0; // using for clean up purpose
-        entries?.forEach((entry) => {
-          if (entry?.isIntersecting) {
-            // removing initial props classes style.
+        entries.forEach((entry) => {
+          const target = entry.target;
+          const cfg = target.__wcfFreeAnimConfig;
+          if (!cfg) return;
+
+          if (entry.isIntersecting) {
             this.handleRemoveClassName({
-              element: entry?.target,
+              element: target,
               classList: ["wcf-free-ab-init-style-props"],
-              style: entry?.target?.__wcfFreeAnimConfig?.initElementStyle,
+              style: cfg.initElementStyle,
             });
-
-            // Adding animation classnames and styles.
             this.handleAddClassName({
-              element: entry?.target,
-              classList: entry?.target?.__wcfFreeAnimConfig?.classToAdd,
-              style: entry?.target?.__wcfFreeAnimConfig?.styles,
+              element: target,
+              classList: cfg.classToAdd,
+              style: cfg.styles,
             });
-
-            // removing observation for cleanup.
-            this.#onScrollObserver.unobserve(entry?.target);
-            isAllCompleted++;
-          } else {
-            // applying initial element styles (like controlling opacity or visibility).
-            if (
-              entry?.target?.__wcfFreeAnimConfig?.initElementStyle &&
-              Object.keys(
-                entry?.target?.__wcfFreeAnimConfig?.initElementStyle ?? {}
-              )?.length > 0
-            ) {
-              this.handleAddClassName({
-                element: entry?.target,
-                classList: ["wcf-free-ab-init-style-props"],
-                style: entry?.target?.__wcfFreeAnimConfig?.initElementStyle,
-              });
-            }
-          }
-          // cleaning observer.
-          if (isAllCompleted === this.#totalOnScrollObserver) {
-            this.killOnScrollObserver();
+            // Marker for the editor overlay to detect animated elements
+            if (cfg.id) target.setAttribute("data-wcf-anim-id", cfg.id);
+            this.#onScrollObserver.unobserve(target);
+            // Drop back-reference so GC can reclaim the config graph
+            delete target.__wcfFreeAnimConfig;
+            this.#completedCount++;
+          } else if (
+            cfg.initElementStyle &&
+            Object.keys(cfg.initElementStyle).length > 0
+          ) {
+            this.handleAddClassName({
+              element: target,
+              classList: ["wcf-free-ab-init-style-props"],
+              style: cfg.initElementStyle,
+            });
           }
         });
+
+        // Tear down only after the full set of observed nodes has animated in.
+        // Check outside the loop so mid-iteration unobserve calls still see a live observer.
+        if (
+          this.#totalOnScrollObserver > 0 &&
+          this.#completedCount >= this.#totalOnScrollObserver
+        ) {
+          this.killOnScrollObserver();
+        }
       },
       {
         threshold: 0,
         rootMargin: "50% 0px -20% 0px",
-      }
+      },
     );
   }
 
   killOnScrollObserver() {
-    if (this.#onScrollObserver) {
-      this.#onScrollObserver.disconnect();
-      this.#onScrollObserver = null;
-      this.#totalOnScrollObserver = 0;
-    }
-    return;
+    if (!this.#onScrollObserver) return;
+    this.#onScrollObserver.disconnect();
+    this.#onScrollObserver = null;
+    this.#totalOnScrollObserver = 0;
+    this.#completedCount = 0;
   }
 
   triggerOnScrollObserver(elements = []) {
     if (!elements?.length) return;
-    if (!this.#onScrollObserver) this.initOnScrollObserver();
-    this.#totalOnScrollObserver = elements?.length;
+    this.initOnScrollObserver();
+
+    // Accumulate across calls — presets register one-by-one,
+    // so totals/completions must persist between invocations.
+    let added = 0;
     elements.forEach((elementConfig) => {
-      if (elementConfig?.trigger) {
-        // getting all node by trigger.
-        const nodes = document.querySelectorAll(elementConfig?.trigger);
-        nodes.forEach((node) => {
-          node.__wcfFreeAnimConfig = elementConfig; // assigning animation value.
-          this.#onScrollObserver.observe(node); // observing
-        });
-      }
+      const trigger = elementConfig?.trigger;
+      if (typeof trigger !== "string" || !trigger) return;
+      const nodes = document.querySelectorAll(trigger);
+      nodes.forEach((node) => {
+        node.__wcfFreeAnimConfig = elementConfig;
+        this.#onScrollObserver.observe(node);
+        this.#totalOnScrollObserver++;
+        added++;
+      });
     });
+
+    // No new targets AND nothing in-flight — observer would sit idle forever.
+    if (added === 0 && this.#totalOnScrollObserver === 0) {
+      this.killOnScrollObserver();
+    }
   }
 
-  // on page load
   initOnPageLoadEvent(elements = []) {
     if (!elements?.length) return;
-    elements?.forEach((element) => {
-      const { trigger, classToAdd, styles } = element || {};
+    elements.forEach((element) => {
+      const { id, trigger, classToAdd, styles } = element || {};
+      if (typeof trigger !== "string" || !trigger) return;
       const nodes = document.querySelectorAll(trigger);
-      if (!nodes?.length) return;
-      nodes.forEach((entry) => {
+      nodes.forEach((node) => {
         this.handleAddClassName({
-          element: entry,
+          element: node,
           classList: classToAdd,
           style: styles,
         });
+        // Marker for the editor overlay to detect animated elements
+        if (id) node.setAttribute("data-wcf-anim-id", id);
       });
     });
   }
 
-  // Helper Functions
   handleAddClassName({ element = null, classList = [], style = {} }) {
     if (!element) return;
-    // Applying inline general styles.
-    if (style && typeof style === "object") {
+    if (style && typeof style === "object" && element.style) {
       Object.entries(style).forEach(([key, value]) => {
-        if (key !== null && element.style) {
-          element.style.setProperty(`--${key}`, value);
-        }
+        element.style.setProperty(`--${key}`, value);
       });
     }
-    // Applying mapped classname from freeAnimClassMapping.js under register into the target.
     if (Array.isArray(classList) && classList.length) {
       element.classList.add(...classList);
     }
@@ -118,15 +122,11 @@ class FreeAnimationEventHelperClass {
 
   handleRemoveClassName({ element = null, classList = [], style = {} }) {
     if (!element) return;
-    // Removing inline general styles.
-    if (style && typeof style === "object") {
-      Object.entries(style).forEach(([key, _]) => {
-        if (key !== null && element.style) {
-          element.style.removeProperty(`--${key}`);
-        }
+    if (style && typeof style === "object" && element.style) {
+      Object.keys(style).forEach((key) => {
+        element.style.removeProperty(`--${key}`);
       });
     }
-    // Apping mapped classname from freeAnimClassMapping.js under register
     if (Array.isArray(classList) && classList.length) {
       element.classList.remove(...classList);
     }

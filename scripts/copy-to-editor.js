@@ -26,6 +26,7 @@ const FILES = [
   'frontend.js',
   'freeAnim.js',
   'frontend/customAnimation.js',
+  'frontend/editor-reset.js',
   'frontend/freePresets/generalSpaceInLeftAnim.js',
   'frontend/freePresets/generalSpeceInRightAnim.js',
   'frontend/freePresets/generalSwapAnim.js',
