@@ -13,6 +13,26 @@
 const fs = require('fs');
 const path = require('path');
 
+// Load .env from the plugin root so MOTIONKIT_EDITOR_PATH (and any other keys)
+// are available via process.env without a dotenv dependency.
+(function loadDotEnv() {
+  const envFile = path.resolve(__dirname, '../.env');
+  if (!fs.existsSync(envFile)) return;
+  const lines = fs.readFileSync(envFile, 'utf8').split(/\r?\n/);
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const eq = line.indexOf('=');
+    if (eq === -1) continue;
+    const key = line.slice(0, eq).trim();
+    let val = line.slice(eq + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (!(key in process.env)) process.env[key] = val;
+  }
+})();
+
 const SRC = path.resolve(__dirname, '../assets/build/modules/animation-builder');
 
 const DEST_CANDIDATES = [
