@@ -368,12 +368,12 @@ export function popupMediaAnim() {
     const savedScroll = window.pageYOffset;
 
     const overlay = document.createElement("div");
-    overlay.className = "popup-overlay";
+    overlay.className = "popup-overlay wcfanimb-skip-selector-full";
     overlay.dataset.popupId = popupId;
     overlay.dataset.scrollPosition = String(savedScroll);
 
     const content = document.createElement("div");
-    content.className = "popup-content";
+    content.className = "popup-content wcfanimb-skip-selector-full";
 
     const closeBtn = document.createElement("button");
     closeBtn.className = "popup-close";

@@ -31,6 +31,7 @@ export function cursorHoverMoveAnim() {
     // Tag so the global reset sweep runs clearProps on this node alongside
     // our local teardown.
     itemEl.setAttribute("data-wcf-anim-id", id);
+    itemEl.classList.add("wcfanimb-skip-selector-full");
 
     // One reusable tween per axis is MUCH cheaper than firing gsap.to() on
     // every mousemove event (which used to create ~60 fresh tweens/sec).
@@ -71,6 +72,7 @@ export function cursorHoverMoveAnim() {
       itemEl.removeEventListener("mousemove", onMouseMove);
       gsap.killTweensOf(itemEl);
       gsap.set(itemEl, { clearProps: "transform" });
+      itemEl.classList.remove("wcfanimb-skip-selector-full");
     };
   }
 
