@@ -95,7 +95,7 @@ export function containerFadeAnimation() {
     });
   }
 
-  function handlePageLoadAnimation(id, config, itemClass) {
+  function handlePageLoadAnimation(_id, config, itemClass) {
     setWillChange(itemClass);
     gsap.set(itemClass, {
       x: config.x,
@@ -245,7 +245,16 @@ export function containerFadeAnimation() {
     const anim = e?.detail;
     if (!anim || anim.presetKey !== PRESET_KEY) return;
     if (anim.isPublished === false) return;
-    if (!anim.itemClass || !document.querySelector(anim.itemClass)) return;
+    if (!anim.itemClass) return;
+    try {
+      if (!document.querySelector(anim.itemClass)) return;
+    } catch (err) {
+      console.warn(
+        `[containerFade] invalid itemClass selector "${anim.itemClass}":`,
+        err.message,
+      );
+      return;
+    }
 
     const {
       id,
