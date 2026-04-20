@@ -1,3 +1,5 @@
+import { isPreviewMode } from "@/utils/isPreviewMode";
+
 const PRESET_KEY = "wcf-mk-container-fade-fa";
 
 // Register ScrollTrigger once so `scrollTrigger: {...}` on from/to/fromTo works.
@@ -87,7 +89,7 @@ export function containerFadeAnimation() {
         toggleActions: "play none none none",
         start: start || "top 80%",
         end: end || "bottom 20%",
-        markers,
+        markers: markers === true && isPreviewMode(),
       },
       onComplete: () => clearWillChange(itemClass),
     });
@@ -332,17 +334,17 @@ export function containerFadeAnimation() {
     if (tween) activeTweens.set(id, tween);
   }
 
-  // Forward the editor's document-level reset signal to the global
-  // listener in lib/resetAllAnimations.js (which listens on window messages).
-  function forwardResetToGlobal() {
-    window.postMessage({ type: "aae-reset-animation" }, "*");
-    activeTweens.clear();
-  }
-
+  // Reset is handled globally by lib/resetAllAnimations.js, which listens on
+  // both the document "aae-reset-animation" event AND window messages. We
+  // only need to drop our local tween refs when that happens.
+  document.addEventListener("aae-reset-animation", () => activeTweens.clear());
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", forwardResetToGlobal);
 
-  return { destroy: forwardResetToGlobal };
+  return {
+    destroy: () => {
+      document.dispatchEvent(new CustomEvent("aae-reset-animation"));
+    },
+  };
 }
 
 containerFadeAnimation();
