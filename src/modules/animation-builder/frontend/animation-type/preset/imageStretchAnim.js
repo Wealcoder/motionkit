@@ -1,74 +1,117 @@
+import { isPreviewMode } from "@/utils/isPreviewMode";
+
+const PRESET_KEY = "wcf-mk-image-stretch-fa";
+
 export function imageStretchAnim() {
-  let sTimeline = {};
-  let sContainerClass = [];
-  let sItemClass = [];
+  // id -> { timelines: GSAPTimeline[] }
+  const instances = new Map();
 
-  const handler = (e) => {
-    (e.detail["wcf-image-stretch-animation"] || []).forEach((section) => {
-      const {
-        containerClass,
-        containerHeight,
-        itemClass,
-        itemMaxWidth,
-        itemMinWidth,
-        itemHeight,
-        start,
-        startCustom,
-        end,
-        endCustom,
-        objectFit,
-        markers
-      } = section || {};
-
-      if (!(containerClass && containerHeight && itemClass)) return;
-
-      const containerEl = document.querySelector(containerClass);
-      if (!containerEl) return;
-
-      gsap.set(containerClass, {
-        height: containerHeight,
-        transition: "none",
-      });
-      gsap.set(itemClass, { objectFit, width: itemMinWidth, height: itemHeight });
-
-      const istTimeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: containerClass,
-          pin: true,
-          start: start === "custom" ? startCustom : start || "top top",
-          end: end === "custom" ? endCustom : end || "bottom bottom",
-          scrub: true,
-          pinSpacing: false,
-          markers: markers === "true" ? true : false
-        },
-      });
-
-      istTimeline.to(itemClass, { width: itemMaxWidth ?? '100%' });
-
-      sTimeline[section.id] = istTimeline;
-      sContainerClass.push(containerClass);
-      sItemClass.push(itemClass);
-
+  function teardown(id) {
+    const inst = instances.get(id);
+    if (!inst) return;
+    inst.timelines.forEach((tl) => {
+      try {
+        tl.revert();
+        tl.kill();
+      } catch (err) {
+        console.warn("[imageStretch] timeline teardown error:", err);
+      }
     });
-  };
+    instances.delete(id);
+  }
 
-  function removeAnimation() {
-    for (let x in sTimeline) {
-      sTimeline[x].revert();
-      sTimeline[x].kill();
+  function teardownAll() {
+    for (const id of [...instances.keys()]) teardown(id);
+  }
+
+  function handler(e) {
+    const anim = e?.detail;
+    if (!anim || anim.presetKey !== PRESET_KEY) return;
+    if (anim.isPublished === false) return;
+    if (!anim.itemClass || !anim.containerClass) return;
+
+    const { id, containerClass, itemClass, vars = {} } = anim;
+    const {
+      containerHeight,
+      itemMaxWidth,
+      itemMinWidth,
+      itemHeight,
+      start,
+      startCustom,
+      end,
+      endCustom,
+      objectFit,
+      markers,
+    } = vars;
+
+    if (!containerHeight) return;
+
+    let containerEl;
+    try {
+      containerEl = document.querySelector(containerClass);
+    } catch (err) {
+      console.warn(
+        `[imageStretch] invalid containerClass selector "${containerClass}":`,
+        err.message,
+      );
+      return;
     }
+    if (!containerEl) return;
 
+    let items;
+    try {
+      items = document.querySelectorAll(itemClass);
+    } catch (err) {
+      console.warn(
+        `[imageStretch] invalid itemClass selector "${itemClass}":`,
+        err.message,
+      );
+      return;
+    }
+    if (!items.length) return;
 
-    sContainerClass?.forEach((containerEl) => {
-      gsap.set(containerEl, { clearProps: "all" });
+    teardown(id);
+
+    // Tag both layers so the global reset sweep runs clearProps on them.
+    containerEl.setAttribute("data-wcf-anim-id", id);
+    items.forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+
+    gsap.set(containerEl, {
+      height: containerHeight,
+      transition: "none",
     });
-    sItemClass?.forEach((itemEl) => {
-      gsap.set(itemEl, { clearProps: "all" });
+    gsap.set(itemClass, {
+      objectFit,
+      width: itemMinWidth,
+      height: itemHeight,
     });
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: containerEl,
+        pin: true,
+        start: start === "custom" ? startCustom : start || "top top",
+        end: end === "custom" ? endCustom : end || "bottom bottom",
+        scrub: true,
+        pinSpacing: false,
+        // Markers are editor-only — gate on isPreviewMode so they never
+        // render on the public frontend.
+        markers: markers === true && isPreviewMode(),
+      },
+    });
+
+    tl.to(itemClass, { width: itemMaxWidth ?? "100%" });
+
+    instances.set(id, { timelines: [tl] });
   }
 
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", removeAnimation);
+  document.addEventListener("aae-reset-animation", teardownAll);
+
+  return {
+    destroy: () =>
+      document.dispatchEvent(new CustomEvent("aae-reset-animation")),
+  };
 }
 
 imageStretchAnim();
