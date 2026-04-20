@@ -1,379 +1,291 @@
-export function textRotateAnim() {
-  let sContainerClass = [];
-  let sItemClass = [];
-  let activeTweens = new Map();
-  let splitTextInstances = new Map();
+import { isPreviewMode } from "@/utils/isPreviewMode";
 
-  const handler = (e) => {
-    (e.detail["wcf-text-rotate-animation"] || []).forEach((section) => {
-      const {
-        id,
-        triggerClass,
-        triggerType,
-        itemClass,
+const PRESET_KEY = "wcf-mk-text-rotate-fa";
+
+export function textRotateAnim() {
+  // id -> { tweens: [], splits: [], cleanups: [] }
+  const instances = new Map();
+
+  function teardown(id) {
+    const inst = instances.get(id);
+    if (!inst) return;
+    inst.tweens.forEach((t) => { try { t.kill(); } catch {} });
+    inst.splits.forEach((s) => { try { s.revert(); } catch {} });
+    inst.cleanups.forEach((fn) => { try { fn(); } catch {} });
+    if (window.ScrollTrigger) {
+      const st = window.ScrollTrigger.getById(id);
+      if (st) { try { st.kill(); } catch {} }
+    }
+    instances.delete(id);
+  }
+
+  function teardownAll() {
+    for (const id of [...instances.keys()]) teardown(id);
+  }
+
+  function handler(e) {
+    const anim = e?.detail;
+    if (!anim || anim.presetKey !== PRESET_KEY) return;
+    if (anim.isPublished === false) return;
+    if (!anim.itemClass) return;
+
+    const {
+      id,
+      itemClass,
+      trigger: { type: triggerType, selector: triggerSelector } = {},
+      vars: {
         start,
         startCustom,
         end,
         endCustom,
-        delay,
-        duration,
-        stagger,
+        delay = 0,
+        duration = 1,
+        stagger = 0.05,
         rotationX,
         rotationY,
         transformOrigin,
-        markers,
         ease,
-        timeout = 0,
-      } = section || {};
+        markers,
+      } = {},
+    } = anim;
 
-      if (!itemClass) {
-        return;
-      }
+    let items;
+    try {
+      items = document.querySelectorAll(itemClass);
+    } catch (err) {
+      console.warn(
+        `[textRotate] invalid itemClass "${itemClass}":`,
+        err.message,
+      );
+      return;
+    }
+    if (!items.length) return;
 
+    teardown(id);
 
-      const itemElements = document.querySelectorAll(itemClass);
-      if (!itemElements.length) {
-        return;
-      }
+    const tweens = [];
+    const splits = [];
+    const cleanups = [];
 
-      try {
-
-        gsap.set(itemClass, {
-          transition: "none"
-        })
-
-        if (triggerClass) {
-          gsap.set(triggerClass, {
-            transition: "none"
-          })
-        }
-
-        const splitInstance = new SplitText(itemClass, { type: "lines" });
-
-
-        splitTextInstances.set(id, splitInstance);
-
-        const target = splitInstance["lines"];
-
-        if (!target || target.length === 0) {
-          console.warn("No split targets found for", "chars");
-          return;
-        }
-
-
-        gsap.killTweensOf(target);
-        if (activeTweens.has(id)) {
-          activeTweens.get(id).kill();
-          activeTweens.delete(id);
-        }
-
-        const animationConfig = {
-          rotationX: rotationX || 0,
-          rotationY: rotationY || 0,
-          force3D: true,
-          transformOrigin: transformOrigin,
-          autoAlpha: 0,
-          delay: delay || 0,
-          stagger: stagger || 0.05,
-          duration: duration || 1,
-          ease
-        };
-
-        const runAnimation = () => {
-
-          if (activeTweens.has(id)) {
-            activeTweens.get(id).kill();
-          }
-
-          if (triggerType === "on_scroll") {
-            const scrollTriggerConfig = {
-              id: id,
-              trigger: triggerClass || itemClass,
-              start: start === "custom" ? startCustom : start || "top 80%",
-              end: end === "custom" ? endCustom : end || "bottom 20%",
-              once: false,
-            };
-
-            if (markers) scrollTriggerConfig.markers = markers === "true" ? true : false;
-
-            if (window.ScrollTrigger) {
-              const existing = ScrollTrigger.getById(id);
-              if (existing) existing.kill();
-            }
-
-            gsap.set(target, {
-              rotationX: animationConfig.rotationX,
-              rotationY: animationConfig.rotationY,
-              autoAlpha: 0
-            });
-
-
-            const tween = gsap.to(target, {
-              rotationX: 0,
-              rotationY: 0,
-              force3D: true,
-              transformOrigin: transformOrigin,
-              autoAlpha: 1,
-              delay: animationConfig.delay,
-              stagger: animationConfig.stagger,
-              duration: animationConfig.duration,
-              ease: animationConfig.ease,
-              scrollTrigger: scrollTriggerConfig
-            });
-
-            activeTweens.set(id, tween);
-
-          } else if (triggerType === "play_with_scroll") {
-            const scrollTriggerConfig = {
-              id: id,
-              trigger: triggerClass || itemClass,
-              start: start === "custom" ? startCustom : start || "top bottom",
-              end: end === "custom" ? endCustom : end || "bottom top",
-              scrub: 1,
-            };
-
-
-            if (markers) scrollTriggerConfig.markers = markers === "true" ? true : false;
-
-            if (window.ScrollTrigger) {
-              const existing = ScrollTrigger.getById(id);
-              if (existing) existing.kill();
-            }
-
-            const tween = gsap.fromTo(target,
-              {
-                rotationX: animationConfig.rotationX,
-                rotationY: animationConfig.rotationY,
-                autoAlpha: 0
-              },
-              {
-                rotationX: 0,
-                rotationY: 0,
-                autoAlpha: 1,
-                force3D: true,
-                transformOrigin: transformOrigin,
-                stagger: animationConfig.stagger,
-                duration: 1,
-                ease: "none",
-                scrollTrigger: scrollTriggerConfig
-              }
-            );
-
-            activeTweens.set(id, tween);
-
-          } else if (triggerType === "page_load") {
-            gsap.set(target, {
-              rotationX: animationConfig.rotationX,
-              rotationY: animationConfig.rotationY,
-              autoAlpha: 0
-            });
-
-            setTimeout(() => {
-              const tween = gsap.to(target, {
-                rotationX: 0,
-                rotationY: 0,
-                autoAlpha: 1,
-                force3D: true,
-                transformOrigin: transformOrigin,
-                delay: animationConfig.delay,
-                stagger: animationConfig.stagger,
-                duration: animationConfig.duration,
-                ease: animationConfig.ease
-              });
-              activeTweens.set(id, tween);
-            }, timeout);
-
-          } else if (triggerType === "hover" || triggerType === "click") {
-            gsap.set(target, {
-              rotationX: animationConfig.rotationX,
-              rotationY: animationConfig.rotationY,
-              autoAlpha: 0
-            });
-          }
-        };
-
-        if (triggerType === "hover") {
-          if (triggerClass) {
-            gsap.set(target, {
-              rotationX: animationConfig.rotationX,
-              rotationY: animationConfig.rotationY,
-              autoAlpha: 0
-            });
-
-            const triggerElements = document.querySelectorAll(triggerClass);
-
-            triggerElements.forEach((triggerElement, index) => {
-              const uniqueId = `${id}_${index}`;
-
-              const handleMouseEnter = () => {
-                gsap.killTweensOf(target);
-                if (activeTweens.has(uniqueId)) {
-                  activeTweens.get(uniqueId).kill();
-                  activeTweens.delete(uniqueId);
-                }
-
-                const tween = gsap.to(target, {
-                  rotationX: 0,
-                  rotationY: 0,
-                  autoAlpha: 1,
-                  force3D: true,
-                  transformOrigin: transformOrigin,
-                  delay: animationConfig.delay,
-                  stagger: animationConfig.stagger,
-                  duration: animationConfig.duration,
-                  ease: animationConfig.ease
-                });
-
-                activeTweens.set(uniqueId, tween);
-              };
-
-              const handleMouseLeave = () => {
-                gsap.killTweensOf(target);
-                if (activeTweens.has(uniqueId)) {
-                  activeTweens.get(uniqueId).kill();
-                  activeTweens.delete(uniqueId);
-                }
-
-                const tween = gsap.to(target, {
-                  rotationX: animationConfig.rotationX,
-                  rotationY: animationConfig.rotationY,
-                  autoAlpha: 0,
-                  force3D: true,
-                  transformOrigin: transformOrigin,
-                  duration: animationConfig.duration * 0.6,
-                  stagger: animationConfig.stagger * 0.5,
-                  ease: animationConfig.ease
-                });
-
-                activeTweens.set(uniqueId, tween);
-              };
-
-              const newTriggerElement = triggerElement.cloneNode(true);
-              triggerElement.parentNode.replaceChild(newTriggerElement, triggerElement);
-
-              newTriggerElement.addEventListener("mouseenter", handleMouseEnter);
-              newTriggerElement.addEventListener("mouseleave", handleMouseLeave);
-
-              newTriggerElement.addEventListener("hover", handleMouseEnter);
-              newTriggerElement.addEventListener("mouseout", handleMouseLeave);
-            });
-          }
-
-        } else if (triggerType === "click") {
-          if (triggerClass) {
-            const triggerElements = document.querySelectorAll(triggerClass);
-
-            triggerElements.forEach((triggerElement, index) => {
-              const uniqueId = `${id}_click_${index}`;
-
-              gsap.set(target, {
-                rotationX: animationConfig.rotationX,
-                rotationY: animationConfig.rotationY,
-                autoAlpha: 0
-              });
-
-              const handleClick = () => {
-                if (activeTweens.has(uniqueId)) {
-                  activeTweens.get(uniqueId).kill();
-                }
-
-                gsap.set(target, {
-                  rotationX: animationConfig.rotationX,
-                  rotationY: animationConfig.rotationY,
-                  autoAlpha: 0
-                });
-
-                const tween = gsap.to(target, {
-                  rotationX: 0,
-                  rotationY: 0,
-                  autoAlpha: 1,
-                  force3D: true,
-                  transformOrigin: transformOrigin,
-                  delay: animationConfig.delay,
-                  stagger: animationConfig.stagger,
-                  duration: animationConfig.duration,
-                  ease: animationConfig.ease
-                });
-
-                activeTweens.set(uniqueId, tween);
-              };
-
-              triggerElement.removeEventListener("click", handleClick);
-
-              triggerElement.addEventListener("click", handleClick);
-            });
-          }
-
-        } else {
-          runAnimation();
-        }
-
-      } catch (err) {
-        console.error("Text Split Animation: Error splitting text", err);
-      } finally {
-        sContainerClass.push(triggerClass);
-        sItemClass.push(itemClass);
-      }
-    });
-  };
-
-  function removeAnimation() {
-    activeTweens.forEach((tween) => {
-      if (tween && tween.kill) {
-        tween.kill();
-      }
-    });
-    activeTweens.clear();
-
-    if (window.ScrollTrigger) {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    gsap.set(itemClass, { transition: "none" });
+    if (triggerSelector) {
+      try { gsap.set(triggerSelector, { transition: "none" }); } catch {}
     }
 
-    splitTextInstances.forEach((splitInstance, id) => {
+    let splitInstance;
+    try {
+      splitInstance = new SplitText(itemClass, { type: "lines" });
+    } catch (err) {
+      console.error("[textRotate] SplitText failed:", err);
+      return;
+    }
+    splits.push(splitInstance);
+    const target = splitInstance.lines;
+    if (!target?.length) return;
+
+    items.forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+
+    const config = {
+      rotationX: rotationX || 0,
+      rotationY: rotationY || 0,
+      transformOrigin,
+      autoAlpha: 0,
+      delay,
+      duration,
+      stagger,
+      ease,
+      force3D: true,
+    };
+
+    const previewMarkers = markers === true && isPreviewMode();
+
+    const runScroll = () => {
+      gsap.set(target, {
+        rotationX: config.rotationX,
+        rotationY: config.rotationY,
+        autoAlpha: 0,
+      });
+      const tween = gsap.to(target, {
+        rotationX: 0,
+        rotationY: 0,
+        autoAlpha: 1,
+        force3D: true,
+        transformOrigin,
+        delay,
+        duration,
+        stagger,
+        ease,
+        scrollTrigger: {
+          id,
+          trigger: triggerSelector || itemClass,
+          start: start === "custom" ? startCustom : start || "top 80%",
+          end: end === "custom" ? endCustom : end || "bottom 20%",
+          markers: previewMarkers,
+        },
+      });
+      tweens.push(tween);
+    };
+
+    const runPlayWithScroll = () => {
+      const tween = gsap.fromTo(
+        target,
+        {
+          rotationX: config.rotationX,
+          rotationY: config.rotationY,
+          autoAlpha: 0,
+        },
+        {
+          rotationX: 0,
+          rotationY: 0,
+          autoAlpha: 1,
+          force3D: true,
+          transformOrigin,
+          stagger,
+          duration: 1,
+          ease: "none",
+          scrollTrigger: {
+            id,
+            trigger: triggerSelector || itemClass,
+            start: start === "custom" ? startCustom : start || "top bottom",
+            end: end === "custom" ? endCustom : end || "bottom top",
+            scrub: 1,
+            markers: previewMarkers,
+          },
+        },
+      );
+      tweens.push(tween);
+    };
+
+    const runPageLoad = () => {
+      gsap.set(target, {
+        rotationX: config.rotationX,
+        rotationY: config.rotationY,
+        autoAlpha: 0,
+      });
+      const tween = gsap.to(target, {
+        rotationX: 0,
+        rotationY: 0,
+        autoAlpha: 1,
+        force3D: true,
+        transformOrigin,
+        delay,
+        duration,
+        stagger,
+        ease,
+      });
+      tweens.push(tween);
+    };
+
+    const attachHover = () => {
+      if (!triggerSelector) return;
+      gsap.set(target, {
+        rotationX: config.rotationX,
+        rotationY: config.rotationY,
+        autoAlpha: 0,
+      });
+      let triggers;
       try {
-        if (splitInstance && splitInstance.revert) {
-          splitInstance.revert();
-        }
-      } catch (e) {
-        console.warn(`Could not revert split text instance for ${id}:`, e);
+        triggers = document.querySelectorAll(triggerSelector);
+      } catch (err) {
+        return;
       }
-    });
-    splitTextInstances.clear();
-
-    [...sContainerClass, ...sItemClass].forEach((className) => {
-      if (className) {
-        const elements = document.querySelectorAll(className);
-        elements.forEach(el => {
-          gsap.set(el, { clearProps: "all" });
-
-          if (el.style) {
-            el.style.transform = '';
-            el.style.opacity = '';
-            el.style.visibility = '';
-            el.style.display = '';
-          }
+      triggers.forEach((el) => {
+        const onEnter = () => {
+          tweens.push(
+            gsap.to(target, {
+              rotationX: 0,
+              rotationY: 0,
+              autoAlpha: 1,
+              force3D: true,
+              transformOrigin,
+              delay,
+              duration,
+              stagger,
+              ease,
+            }),
+          );
+        };
+        const onLeave = () => {
+          tweens.push(
+            gsap.to(target, {
+              rotationX: config.rotationX,
+              rotationY: config.rotationY,
+              autoAlpha: 0,
+              force3D: true,
+              transformOrigin,
+              duration: duration * 0.6,
+              stagger: stagger * 0.5,
+              ease,
+            }),
+          );
+        };
+        el.addEventListener("mouseenter", onEnter);
+        el.addEventListener("mouseleave", onLeave);
+        cleanups.push(() => {
+          el.removeEventListener("mouseenter", onEnter);
+          el.removeEventListener("mouseleave", onLeave);
         });
-      }
-    });
+      });
+    };
 
-    sContainerClass.length = 0;
-    sItemClass.length = 0;
-
-    document.querySelectorAll('[data-split-animation]').forEach(el => {
-      const newEl = el.cloneNode(true);
-      if (el.parentNode) {
-        el.parentNode.replaceChild(newEl, el);
+    const attachClick = () => {
+      if (!triggerSelector) return;
+      gsap.set(target, {
+        rotationX: config.rotationX,
+        rotationY: config.rotationY,
+        autoAlpha: 0,
+      });
+      let triggers;
+      try {
+        triggers = document.querySelectorAll(triggerSelector);
+      } catch (err) {
+        return;
       }
-    });
+      triggers.forEach((el) => {
+        const onClick = () => {
+          gsap.set(target, {
+            rotationX: config.rotationX,
+            rotationY: config.rotationY,
+            autoAlpha: 0,
+          });
+          tweens.push(
+            gsap.to(target, {
+              rotationX: 0,
+              rotationY: 0,
+              autoAlpha: 1,
+              force3D: true,
+              transformOrigin,
+              delay,
+              duration,
+              stagger,
+              ease,
+            }),
+          );
+        };
+        el.addEventListener("click", onClick);
+        cleanups.push(() => el.removeEventListener("click", onClick));
+      });
+    };
+
+    switch (triggerType) {
+      case "on_scroll":       runScroll(); break;
+      case "play_with_scroll": runPlayWithScroll(); break;
+      case "page_load":       runPageLoad(); break;
+      case "hover":           attachHover(); break;
+      case "click":           attachClick(); break;
+      default: break;
+    }
+
+    instances.set(id, { tweens, splits, cleanups });
   }
 
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", removeAnimation);
+  document.addEventListener("aae-reset-animation", teardownAll);
 
   return {
-    destroy: removeAnimation
+    destroy: () =>
+      document.dispatchEvent(new CustomEvent("aae-reset-animation")),
   };
 }
 
-// Initialize
 textRotateAnim();

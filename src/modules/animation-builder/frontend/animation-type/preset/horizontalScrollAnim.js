@@ -1,102 +1,126 @@
+const PRESET_KEY = "wcf-mk-scroll-horizontal-fa";
+
 export function horizontalScrollAnim() {
-  let sTimeline = {};
-  let sContainerClass = [];
-  let sItemClass = [];
+  // id -> { timelines: GSAPTimeline[] }
+  const instances = new Map();
 
   function convertToPixels(value) {
-    if (value.endsWith("px")) {
-      return parseFloat(value);
-    } else if (value.endsWith("vw")) {
-      return (parseFloat(value) / 100) * window.innerWidth;
-    } else if (value.endsWith("%")) {
-      return (parseFloat(value) / 100) * window.innerWidth;
-    } else {
-      console.warn("Unsupported unit in itemWidth:", value);
-      return 0;
-    }
+    if (value == null || value === "") return 0;
+    const str = String(value);
+    if (str.endsWith("px")) return parseFloat(str);
+    if (str.endsWith("vw")) return (parseFloat(str) / 100) * window.innerWidth;
+    if (str.endsWith("%")) return (parseFloat(str) / 100) * window.innerWidth;
+    const num = parseFloat(str);
+    if (Number.isFinite(num)) return num;
+    console.warn("[horizontalScroll] unsupported unit:", value);
+    return 0;
   }
 
-  const handler = (e) => {
-    (e.detail["wcf-horizontal-scroll-animation"] || []).forEach((section) => {
-      const {
-        containerClass,
-        containerHeight,
-        itemClass,
-        itemWidth,
-        itemWidthType,
-        itemsWidth,
-      } = section || {};
-
-      if (!(containerClass && containerHeight && itemClass)) return;
-
-      const containerEl = document.querySelector(containerClass);
-      if (!containerEl) return;
-
-      const items = Array.from(containerEl.querySelectorAll(itemClass));
-      const itemCount = items.length;
-      if (!itemCount) return;
-
-      let widthsPx;
-      if (itemWidthType === "custom" && itemsWidth.length) {
-        widthsPx = itemsWidth
-          .slice(0, itemCount)
-          .map((w) => convertToPixels(w));
-      } else {
-        const def = convertToPixels(itemWidth);
-        widthsPx = new Array(itemCount).fill(def);
+  function teardown(id) {
+    const inst = instances.get(id);
+    if (!inst) return;
+    inst.timelines.forEach((tl) => {
+      try {
+        tl.revert();
+        tl.kill();
+      } catch (err) {
+        console.warn("[horizontalScroll] timeline teardown error:", err);
       }
-
-      const totalWidth = widthsPx.reduce((sum, w) => sum + w, 0);
-      const totalScrollPx = totalWidth - containerEl.offsetWidth;
-
-      gsap.set(containerClass, {
-        width: totalScrollPx,
-        height: containerHeight,
-        transition: "none",
-      });
-
-      items.forEach((el, i) =>
-        gsap.set(el, { width: widthsPx[i], flexShrink: 0 })
-      );
-
-      const hzTimeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: containerClass,
-          pin: true,
-          start: "top top",
-          end: "bottom bottom",
-          // end: `+=${totalScrollPx}`,
-          scrub: true,
-          pinSpacing: false,
-        },
-      });
-
-      hzTimeline.to(items, { x: () => -totalScrollPx, ease: "none" });
-
-      sTimeline[section.id] = hzTimeline;
-      sContainerClass.push(containerClass);
-      sItemClass.push(itemClass);
     });
-  };
+    instances.delete(id);
+  }
 
-  function removeAnimation() {
-    for (let x in sTimeline) {
-      sTimeline[x].revert();
-      sTimeline[x].kill();
+  function teardownAll() {
+    for (const id of [...instances.keys()]) teardown(id);
+  }
+
+  function handler(e) {
+    const anim = e?.detail;
+    if (!anim || anim.presetKey !== PRESET_KEY) return;
+    if (anim.isPublished === false) return;
+    if (!anim.containerClass || !anim.itemClass) return;
+
+    const { id, containerClass, itemClass, itemWidthType, vars = {} } = anim;
+    const { containerHeight, itemWidth, itemsWidth } = vars;
+    if (!containerHeight) return;
+
+    let containerEl;
+    try {
+      containerEl = document.querySelector(containerClass);
+    } catch (err) {
+      console.warn(
+        `[horizontalScroll] invalid containerClass "${containerClass}":`,
+        err.message,
+      );
+      return;
+    }
+    if (!containerEl) return;
+
+    let items;
+    try {
+      items = Array.from(containerEl.querySelectorAll(itemClass));
+    } catch (err) {
+      console.warn(
+        `[horizontalScroll] invalid itemClass "${itemClass}":`,
+        err.message,
+      );
+      return;
+    }
+    if (!items.length) return;
+
+    teardown(id);
+
+    containerEl.setAttribute("data-wcf-anim-id", id);
+    items.forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+
+    let widthsPx;
+    if (
+      itemWidthType === "custom" &&
+      Array.isArray(itemsWidth) &&
+      itemsWidth.length
+    ) {
+      widthsPx = itemsWidth.slice(0, items.length).map((w) => convertToPixels(w));
+    } else {
+      const def = convertToPixels(itemWidth);
+      widthsPx = new Array(items.length).fill(def);
     }
 
-    sContainerClass?.forEach((containerClass) => {
-      gsap.set(containerClass, { clearProps: "all" });
+    const totalWidth = widthsPx.reduce((sum, w) => sum + w, 0);
+    const totalScrollPx = totalWidth - containerEl.offsetWidth;
+
+    gsap.set(containerEl, {
+      width: totalScrollPx,
+      height: containerHeight,
+      transition: "none",
     });
 
-    sItemClass?.forEach((itemClass) => {
-      gsap.set(itemClass, { clearProps: "all" });
+    items.forEach((el, i) =>
+      gsap.set(el, { width: widthsPx[i], flexShrink: 0 }),
+    );
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: containerEl,
+        pin: true,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+        pinSpacing: false,
+      },
     });
+
+    tl.to(items, { x: () => -totalScrollPx, ease: "none" });
+
+    instances.set(id, { timelines: [tl] });
   }
 
   document.addEventListener("aae-animation-event", handler);
+  document.addEventListener("aae-reset-animation", teardownAll);
 
-  document.addEventListener("aae-reset-animation", removeAnimation);
+  return {
+    destroy: () =>
+      document.dispatchEvent(new CustomEvent("aae-reset-animation")),
+  };
 }
 
 horizontalScrollAnim();
