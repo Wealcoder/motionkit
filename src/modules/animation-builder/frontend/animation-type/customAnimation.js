@@ -1,16 +1,16 @@
-import { Hooks } from '../smart-engine/core/infra.js';
-import { Engine } from '../smart-engine/core/engine.js';
+import { Hooks } from "../smart-engine/core/infra.js";
+import { Engine } from "../smart-engine/core/engine.js";
 import {
   SplitTextCommand,
   DrawSVGCommand,
   ParallaxCommand,
   CounterCommand,
   RevealCommand,
-} from '../smart-engine/commands/complex.js';
+} from "../smart-engine/commands/complex.js";
 
 // ─── Bootstrap ────────────────────────────────────────────────────
 
-if (typeof ScrollTrigger !== 'undefined') {
+if (typeof ScrollTrigger !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
@@ -29,21 +29,27 @@ window.MotionLy = {
       readyCallbacks.push(callback);
     }
   },
-  get hooks() { return hooks; },
-  get engine() { return engineInstance; },
-  get bus() { return engineInstance?.bus; },
+  get hooks() {
+    return hooks;
+  },
+  get engine() {
+    return engineInstance;
+  },
+  get bus() {
+    return engineInstance?.bus;
+  },
 };
 
 // ─── Engine Init ─────────────────────────────────────────────────
 
 function initEngine() {
   // Register complex commands before engine initialises
-  hooks.addAction('engine.init', (eng) => {
-    eng.commands.register('splitText', SplitTextCommand);
-    eng.commands.register('drawSVG', DrawSVGCommand);
-    eng.commands.register('parallax', ParallaxCommand);
-    eng.commands.register('counter', CounterCommand);
-    eng.commands.register('reveal', RevealCommand);
+  hooks.addAction("engine.init", (eng) => {
+    eng.commands.register("splitText", SplitTextCommand);
+    eng.commands.register("drawSVG", DrawSVGCommand);
+    eng.commands.register("parallax", ParallaxCommand);
+    eng.commands.register("counter", CounterCommand);
+    eng.commands.register("reveal", RevealCommand);
   });
 
   engineInstance = new Engine({ hooks });
@@ -52,13 +58,13 @@ function initEngine() {
   isInitialized = true;
 
   readyCallbacks.forEach((cb) =>
-    cb({ hooks, engine: engineInstance, bus: engineInstance.bus })
+    cb({ hooks, engine: engineInstance, bus: engineInstance.bus }),
   );
 
   window.dispatchEvent(
-    new CustomEvent('motionlyready', {
+    new CustomEvent("motionlyready", {
       detail: { hooks, engine: engineInstance, bus: engineInstance.bus },
-    })
+    }),
   );
 }
 
@@ -67,26 +73,24 @@ setTimeout(initEngine, 0);
 
 // ─── Listen for custom animation data from frontend.js ───────────
 
-document.addEventListener('aae-animation-event', (e) => {
+document.addEventListener("aae-animation-event", (e) => {
   const custom = e.detail?.custom;
   if (!Array.isArray(custom) || !custom.length) return;
 
   MotionLy.ready(({ bus }) => {
     custom.forEach((dsl) => {
-      bus.execute({ type: 'ADD_ANIMATION', payload: dsl });
+      bus.execute({ type: "ADD_ANIMATION", payload: dsl });
     });
 
-    if (typeof ScrollTrigger !== 'undefined') {
+    if (typeof ScrollTrigger !== "undefined") {
       ScrollTrigger.refresh();
     }
   });
 });
-console.log('hhhhh');
 // ─── Reset / cleanup on device breakpoint switch ─────────────────
 
-document.addEventListener('aae-reset-animation', () => {
+document.addEventListener("aae-reset-animation", () => {
   if (engineInstance) {
     engineInstance.destroyAll();
   }
 });
-

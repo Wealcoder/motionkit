@@ -165,27 +165,17 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
       currentDevice.key,
     );
 
-    console.log({ animationsForDevice });
+    console.log("resolveAndDispatch", { animationsForDevice });
 
     // loop animationsForDevice and log each one's id and preset/type
     animationsForDevice.forEach(function (anim) {
-      if (anim.group === "free_preset_animation") {
-        document.dispatchEvent(
-          new CustomEvent("aae-animation-event", {
-            detail: anim,
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      }
-
-      if (anim.group === "custom_animation") {
-        //console.log('Custom animation:', anim.id);
-      }
-
-      if (anim.group === "premium_preset_animation") {
-        //console.log('Premium preset animation:', anim.id);
-      }
+      document.dispatchEvent(
+        new CustomEvent("aae-animation-event", {
+          detail: anim,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
     });
 
     // GSAP-driven path (preset, custom)
