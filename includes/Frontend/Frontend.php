@@ -167,7 +167,7 @@ final class Frontend
    */
   private function is_editor_preview(): bool
   {
-  
+    
     if (!isset($_GET['action']) || sanitize_text_field(wp_unslash($_GET['action'])) !== 'motionkit-editor') {
       return false;
     }
@@ -285,7 +285,17 @@ final class Frontend
    */
   public function enqueue_frontend_scripts(): void
   {
-    
+
+    // Full Preview mode — SaaS proxy injects its own GSAP + presets + frontend.js
+    // seeded from the editor's in-memory state. WP must enqueue NOTHING to avoid
+    // duplicate libraries and stale wcfanimb data.
+    if ($this->is_full_preview()) {
+      nocache_headers();
+      header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+      header('Pragma: no-cache');
+      return;
+    }
+
     if ($this->is_editor_preview()) {
       // Force fresh response — page caches and CDNs would otherwise serve
       // a stale snapshot, leaving the editor with outdated wcfanimb data.
@@ -297,6 +307,17 @@ final class Frontend
     }
 
     $this->enqueue_page_scripts();
+  }
+
+  /**
+   * Detect Full Preview mode — SaaS editor opening the site in a new tab
+   * with all animation runtime injected by the proxy.
+   *
+   * @return bool
+   */
+  private function is_full_preview(): bool
+  {
+    return isset($_GET['mk_full_preview']) && $_GET['mk_full_preview'] === '1';
   }
 
   /**
@@ -369,7 +390,7 @@ final class Frontend
       }
     }
 
-    // mk_token is already validated by is_editor_preview() — safe to pass through
+   
     $mk_token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
 
     // Shared localized data for both frontend runner and editor bridge
@@ -403,6 +424,11 @@ final class Frontend
    */
   private function enqueue_page_scripts(): void
   {
+   
+    if ($this->is_editor_preview()) {
+      return;
+    }
+    
     $page_configs = $this->page_type->getConfig();
     // Early return only if NO page configs AND NO global animations exist.
     $global_animation_exists = !empty(get_option('motionkit_global_animations', []));
