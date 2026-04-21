@@ -1,86 +1,125 @@
+const PRESET_KEY = "wcf-mk-cursor-cm-fa";
+
 export function cursorHoverMoveAnim() {
-  let sTimeline = {};
-  let sItemClass = [];
-  let eventListeners = [];
+  // id -> array of per-item teardown fns
+  const instances = new Map();
 
-  const handler = (e) => {
-    (e.detail["wcf-cursor-hover-move-animation"] || []).forEach((section) => {
-      const { itemClass, moveX, moveY, duration } = section || {};
+  function toNumber(value, fallback) {
+    if (value == null || value === "") return fallback;
+    const num = parseFloat(value);
+    return Number.isFinite(num) ? num : fallback;
+  }
 
-      if (!itemClass) return;
-
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-
-      document.querySelectorAll(itemClass).forEach((itemEl) => {
-        sItemClass.push(itemEl);
-
-        const mouseMoveHandler = (evt) => {
-          const xPosPercent = evt.clientX / windowWidth - 0.5;
-          const yPosPercent = evt.clientY / windowHeight - 0.5;
-
-          const config = {
-            x: xPosPercent * (moveX || 0),
-            y: yPosPercent * (moveY || 0),
-            ease: "power3.out",
-            duration: Number(duration)
-          };
-
-          gsap.to(itemEl, config);
-        };
-
-        const mouseEnterHandler = () => {
-          itemEl.addEventListener("mousemove", mouseMoveHandler);
-        };
-
-        const mouseLeaveHandler = () => {
-          itemEl.removeEventListener("mousemove", mouseMoveHandler);
-
-          gsap.to(itemEl, {
-            x: 0,
-            y: 0,
-            ease: "power3.out",
-            duration: 0.6
-          });
-        };
-
-        itemEl.addEventListener("mouseenter", mouseEnterHandler);
-        itemEl.addEventListener("mouseleave", mouseLeaveHandler);
-
-        eventListeners.push({
-          element: itemEl,
-          enterHandler: mouseEnterHandler,
-          leaveHandler: mouseLeaveHandler,
-          moveHandler: mouseMoveHandler
-        });
-
-        sTimeline[`${section.id}-${Math.random()}`] = true;
-      });
+  function teardown(id) {
+    const fns = instances.get(id);
+    if (!fns) return;
+    fns.forEach((fn) => {
+      try {
+        fn();
+      } catch (err) {
+        console.warn("[cursorMove] teardown error:", err);
+      }
     });
-  };
+    instances.delete(id);
+  }
 
-  function removeAnimation() {
-    for (let x in sTimeline) {
-      delete sTimeline[x];
+  function teardownAll() {
+    for (const id of [...instances.keys()]) teardown(id);
+  }
+
+  function attachToItem({ id, itemEl, moveX, moveY, duration }) {
+    // Tag so the global reset sweep runs clearProps on this node alongside
+    // our local teardown.
+    itemEl.setAttribute("data-wcf-anim-id", id);
+    itemEl.classList.add("wcfanimb-skip-selector-full");
+
+    // One reusable tween per axis is MUCH cheaper than firing gsap.to() on
+    // every mousemove event (which used to create ~60 fresh tweens/sec).
+    const xTo = gsap.quickTo(itemEl, "x", {
+      duration,
+      ease: "power3.out",
+    });
+    const yTo = gsap.quickTo(itemEl, "y", {
+      duration,
+      ease: "power3.out",
+    });
+
+    const onMouseMove = (evt) => {
+      // Read viewport size fresh each frame so resizes don't desync the basis.
+      const xPercent = evt.clientX / window.innerWidth - 0.5;
+      const yPercent = evt.clientY / window.innerHeight - 0.5;
+      xTo(xPercent * moveX);
+      yTo(yPercent * moveY);
+    };
+
+    const onMouseEnter = () => {
+      itemEl.addEventListener("mousemove", onMouseMove);
+    };
+
+    const onMouseLeave = () => {
+      itemEl.removeEventListener("mousemove", onMouseMove);
+      // Ease back to the origin when the pointer leaves.
+      xTo(0);
+      yTo(0);
+    };
+
+    itemEl.addEventListener("mouseenter", onMouseEnter);
+    itemEl.addEventListener("mouseleave", onMouseLeave);
+
+    return () => {
+      itemEl.removeEventListener("mouseenter", onMouseEnter);
+      itemEl.removeEventListener("mouseleave", onMouseLeave);
+      itemEl.removeEventListener("mousemove", onMouseMove);
+      gsap.killTweensOf(itemEl);
+      gsap.set(itemEl, { clearProps: "transform" });
+      itemEl.classList.remove("wcfanimb-skip-selector-full");
+    };
+  }
+
+  function handler(e) {
+    const anim = e?.detail;
+    if (!anim || anim.presetKey !== PRESET_KEY) return;
+    if (anim.isPublished === false) return;
+    if (!anim.itemClass) return;
+
+    let items;
+    try {
+      items = document.querySelectorAll(anim.itemClass);
+    } catch (err) {
+      console.warn(
+        `[cursorMove] invalid itemClass selector "${anim.itemClass}":`,
+        err.message,
+      );
+      return;
     }
+    if (!items.length) return;
 
-    eventListeners.forEach(({ element, enterHandler, leaveHandler, moveHandler }) => {
-      element.removeEventListener("mouseenter", enterHandler);
-      element.removeEventListener("mouseleave", leaveHandler);
-      element.removeEventListener("mousemove", moveHandler);
+    const { id, vars = {} } = anim;
+    const moveX = toNumber(vars.moveX, 0);
+    const moveY = toNumber(vars.moveY, 0);
+    const duration = toNumber(vars.duration, 0.6);
+
+    // Nothing to do if both axes are zero.
+    if (moveX === 0 && moveY === 0) return;
+
+    // Live-update safety: drop the prior setup for this id before rebuild.
+    teardown(id);
+
+    const teardowns = [];
+    items.forEach((itemEl) => {
+      teardowns.push(attachToItem({ id, itemEl, moveX, moveY, duration }));
     });
 
-    sItemClass?.forEach((itemEl) => {
-      gsap.set(itemEl, { clearProps: "all" });
-    });
-
-    sTimeline = {};
-    sItemClass = [];
-    eventListeners = [];
+    instances.set(id, teardowns);
   }
 
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", removeAnimation);
+  document.addEventListener("aae-reset-animation", teardownAll);
+
+  return {
+    destroy: () =>
+      document.dispatchEvent(new CustomEvent("aae-reset-animation")),
+  };
 }
 
 cursorHoverMoveAnim();

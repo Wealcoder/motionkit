@@ -1,177 +1,186 @@
+const PRESET_KEY = "wcf-mk-image-hr-fa";
+
 export function imageHoverRevealAnim() {
-  let sTimeline = {};
-  let sItemClass = [];
-  let cursorImages = [];
-  let eventListeners = [];
+  // id -> array of per-item teardown fns
+  const instances = new Map();
 
-  const handler = (e) => {
-    (e.detail["wcf-image-hover-reveal-animation"] || []).forEach((section) => {
-      const {
-        itemClass,
-        imageUrl,
-        imageWidth,
-        imageHeight,
-        zIndex,
-        animationPosition
-      } = section || {};
+  function toCssLength(value, fallback) {
+    if (value == null || value === "") return fallback;
+    const str = String(value);
+    return /[a-z%]$/i.test(str) ? str : `${str}px`;
+  }
 
-      if (!(itemClass && imageUrl)) return;
-
-      gsap.set(itemClass, {
-        transition: "none"
-      })
-
-      document.querySelectorAll(itemClass).forEach((itemEl) => {
-        sItemClass.push(itemEl);
-
-        const cursorImg = document.createElement("div");
-
-        const width = imageWidth?.includes('px') ? imageWidth : `${imageWidth || 300}px`;
-        const height = imageHeight?.includes('px') ? imageHeight : `${imageHeight || 300}px`;
-
-        cursorImg.style.cssText = `
-          position: absolute;
-          width: ${width};
-          height: ${height};
-          background-image: url('${imageUrl}');
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
-          pointer-events: none;
-          z-index: ${zIndex || 999};
-          border-radius: 8px;
-          top: 0;
-          left: 0;
-          will-change: transform;
-        `;
-
-        const parentEl = itemEl.parentElement;
-        if (parentEl) {
-          const parentPosition = window.getComputedStyle(parentEl).position;
-          if (parentPosition === 'static') {
-            parentEl.style.position = 'relative';
-          }
-
-          parentEl.appendChild(cursorImg);
-          cursorImages.push(cursorImg);
-        }
-
-        let initialPosition = { scale: 0, opacity: 0 };
-
-        switch (animationPosition) {
-          case "center":
-            initialPosition.xPercent = -50;
-            initialPosition.yPercent = -50;
-            break;
-          case "left":
-            initialPosition.xPercent = -100;
-            initialPosition.yPercent = -50;
-            break;
-          case "right":
-            initialPosition.xPercent = 0;
-            initialPosition.yPercent = -50;
-            break;
-          case "top":
-            initialPosition.xPercent = -50;
-            initialPosition.yPercent = -100;
-            break;
-          case "bottom":
-
-            initialPosition.xPercent = -50;
-            initialPosition.yPercent = 0;
-            break;
-          default:
-            initialPosition.xPercent = -50;
-            initialPosition.yPercent = -50;
-        }
-
-        gsap.set(cursorImg, {
-          ...initialPosition,
-          force3D: true
-        });
-
-        const setCursorX = gsap.quickTo(cursorImg, "x", {
-          duration: 0.6,
-          ease: "expo"
-        });
-
-        const setCursorY = gsap.quickTo(cursorImg, "y", {
-          duration: 0.6,
-          ease: "expo"
-        });
-
-        const mouseMoveHandler = (evt) => {
-          const parentRect = parentEl.getBoundingClientRect();
-          const relativeX = evt.clientX - parentRect.left;
-          const relativeY = evt.clientY - parentRect.top;
-
-          setCursorX(relativeX);
-          setCursorY(relativeY);
-        };
-
-        const tl = gsap.timeline({
-          paused: true
-        });
-
-        tl.to(cursorImg, {
-          scale: 1,
-          opacity: 1,
-          duration: 0.5,
-          ease: "expo.inOut"
-        });
-
-        const mouseEnterHandler = () => {
-          itemEl.addEventListener("mousemove", mouseMoveHandler);
-          tl.play();
-        };
-
-        const mouseLeaveHandler = () => {
-          itemEl.removeEventListener("mousemove", mouseMoveHandler);
-          tl.reverse();
-        };
-
-        itemEl.addEventListener("mouseenter", mouseEnterHandler);
-        itemEl.addEventListener("mouseleave", mouseLeaveHandler);
-
-        eventListeners.push({
-          element: itemEl,
-          enterHandler: mouseEnterHandler,
-          leaveHandler: mouseLeaveHandler,
-          moveHandler: mouseMoveHandler
-        });
-
-        sTimeline[`${section.id}-${Math.random()}`] = tl;
-      });
+  function teardown(id) {
+    const fns = instances.get(id);
+    if (!fns) return;
+    fns.forEach((fn) => {
+      try {
+        fn();
+      } catch (err) {
+        console.warn("[imageHoverReveal] teardown error:", err);
+      }
     });
-  };
+    instances.delete(id);
+  }
 
-  function removeAnimation() {
-    for (let x in sTimeline) {
-      sTimeline[x].kill();
+  function teardownAll() {
+    for (const id of [...instances.keys()]) teardown(id);
+  }
+
+  function resolveInitialOffset(animationPosition) {
+    switch (animationPosition) {
+      case "left":
+        return { xPercent: -100, yPercent: -50 };
+      case "right":
+        return { xPercent: 0, yPercent: -50 };
+      case "top":
+        return { xPercent: -50, yPercent: -100 };
+      case "bottom":
+        return { xPercent: -50, yPercent: 0 };
+      case "center":
+      default:
+        return { xPercent: -50, yPercent: -50 };
     }
+  }
 
-    eventListeners.forEach(({ element, enterHandler, leaveHandler, moveHandler }) => {
-      element.removeEventListener("mouseenter", enterHandler);
-      element.removeEventListener("mouseleave", leaveHandler);
-      element.removeEventListener("mousemove", moveHandler);
+  function attachToItem({ id, itemEl, cursorImgConfig, animationPosition }) {
+    const parentEl = itemEl.parentElement;
+    if (!parentEl) return () => {};
+
+    const cursorImg = document.createElement("div");
+    cursorImg.setAttribute("data-wcf-image-hover-reveal", "");
+    cursorImg.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: ${cursorImgConfig.width};
+      height: ${cursorImgConfig.height};
+      background-image: url('${cursorImgConfig.imageUrl}');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      z-index: ${cursorImgConfig.zIndex};
+      border-radius: 8px;
+      will-change: transform, opacity;
+    `;
+
+    const priorParentPosition = parentEl.style.position;
+    if (window.getComputedStyle(parentEl).position === "static") {
+      parentEl.style.position = "relative";
+    }
+    parentEl.appendChild(cursorImg);
+
+    // Tag both nodes so the global reset sweep runs clearProps on them.
+    itemEl.setAttribute("data-wcf-anim-id", id);
+    parentEl.setAttribute("data-wcf-anim-id", id);
+
+    const initial = {
+      ...resolveInitialOffset(animationPosition),
+      scale: 0,
+      opacity: 0,
+      force3D: true,
+    };
+    gsap.set(cursorImg, initial);
+
+    const setCursorX = gsap.quickTo(cursorImg, "x", {
+      duration: 0.6,
+      ease: "expo",
+    });
+    const setCursorY = gsap.quickTo(cursorImg, "y", {
+      duration: 0.6,
+      ease: "expo",
     });
 
-    cursorImages.forEach((img) => {
-      img.remove();
+    const moveToEvent = (evt) => {
+      const rect = parentEl.getBoundingClientRect();
+      setCursorX(evt.clientX - rect.left);
+      setCursorY(evt.clientY - rect.top);
+    };
+
+    const revealTl = gsap.timeline({ paused: true }).to(cursorImg, {
+      scale: 1,
+      opacity: 1,
+      duration: 0.5,
+      ease: "expo.inOut",
     });
 
-    sItemClass?.forEach((itemEl) => {
-      gsap.set(itemEl, { clearProps: "all" });
+    const onMouseEnter = (evt) => {
+      moveToEvent(evt);
+      itemEl.addEventListener("mousemove", moveToEvent);
+      revealTl.play();
+    };
+
+    const onMouseLeave = () => {
+      itemEl.removeEventListener("mousemove", moveToEvent);
+      revealTl.reverse();
+    };
+
+    itemEl.addEventListener("mouseenter", onMouseEnter);
+    itemEl.addEventListener("mouseleave", onMouseLeave);
+
+    return () => {
+      itemEl.removeEventListener("mouseenter", onMouseEnter);
+      itemEl.removeEventListener("mouseleave", onMouseLeave);
+      itemEl.removeEventListener("mousemove", moveToEvent);
+      revealTl.kill();
+      cursorImg.remove();
+      parentEl.style.position = priorParentPosition;
+    };
+  }
+
+  function handler(e) {
+    const anim = e?.detail;
+    if (!anim || anim.presetKey !== PRESET_KEY) return;
+    if (anim.isPublished === false) return;
+    if (!anim.itemClass || !anim.imageUrl) return;
+
+    let items;
+    try {
+      items = document.querySelectorAll(anim.itemClass);
+    } catch (err) {
+      console.warn(
+        `[imageHoverReveal] invalid itemClass selector "${anim.itemClass}":`,
+        err.message,
+      );
+      return;
+    }
+    if (!items.length) return;
+
+    const { id, imageUrl, vars = {} } = anim;
+    const {
+      imageWidth = "300px",
+      imageHeight = "400px",
+      animationPosition = "center",
+      zIndex,
+    } = vars;
+
+    const cursorImgConfig = {
+      imageUrl,
+      width: toCssLength(imageWidth, "300px"),
+      height: toCssLength(imageHeight, "400px"),
+      zIndex: zIndex === "" || zIndex == null ? 999 : zIndex,
+    };
+
+    teardown(id);
+
+    const teardowns = [];
+    items.forEach((itemEl) => {
+      teardowns.push(
+        attachToItem({ id, itemEl, cursorImgConfig, animationPosition }),
+      );
     });
 
-    sTimeline = {};
-    sItemClass = [];
-    cursorImages = [];
-    eventListeners = [];
+    instances.set(id, teardowns);
   }
 
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", removeAnimation);
+  document.addEventListener("aae-reset-animation", teardownAll);
+
+  return {
+    destroy: () =>
+      document.dispatchEvent(new CustomEvent("aae-reset-animation")),
+  };
 }
 
 imageHoverRevealAnim();

@@ -1,3 +1,6 @@
+const toKebab = (key) =>
+  String(key).replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+
 class FreeAnimationEventHelperClass {
   #onScrollObserver = null;
   #totalOnScrollObserver = 0;
@@ -112,7 +115,7 @@ class FreeAnimationEventHelperClass {
     if (!element) return;
     if (style && typeof style === "object" && element.style) {
       Object.entries(style).forEach(([key, value]) => {
-        element.style.setProperty(`--${key}`, value);
+        element.style.setProperty(toKebab(key), value);
       });
     }
     if (Array.isArray(classList) && classList.length) {
@@ -124,7 +127,7 @@ class FreeAnimationEventHelperClass {
     if (!element) return;
     if (style && typeof style === "object" && element.style) {
       Object.keys(style).forEach((key) => {
-        element.style.removeProperty(`--${key}`);
+        element.style.removeProperty(toKebab(key));
       });
     }
     if (Array.isArray(classList) && classList.length) {

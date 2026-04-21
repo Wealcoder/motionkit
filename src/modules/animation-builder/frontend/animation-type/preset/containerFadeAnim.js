@@ -1,9 +1,15 @@
-export function containerFadeAnimation() {
-  let containerClasses = [];
-  let itemClasses = [];
-  let activeTweens = new Map();
+import { isPreviewMode } from "@/utils/isPreviewMode";
 
-  // Helper functions
+const PRESET_KEY = "wcf-mk-container-fade-fa";
+
+// Register ScrollTrigger once so `scrollTrigger: {...}` on from/to/fromTo works.
+if (typeof window !== "undefined" && window.gsap && window.ScrollTrigger) {
+  window.gsap.registerPlugin(window.ScrollTrigger);
+}
+
+export function containerFadeAnimation() {
+  const activeTweens = new Map();
+
   function calculateFadeAxis(direction, offset = 40) {
     switch (direction) {
       case "top":
@@ -20,62 +26,34 @@ export function containerFadeAnimation() {
     }
   }
 
-  function runAnimation({
-    config = {},
-    secondaryConfig = {},
-    target = "",
-    method = "from",
-  }) {
-    let resolveCompleted;
-    const isCompleted = new Promise((resolve) => (resolveCompleted = resolve));
-
-    // handling gsap fromTo animation
-    if (Object.keys(secondaryConfig)?.length) {
-      const tween = gsap[method](target, config, {
-        ...secondaryConfig,
-        onComplete: () => resolveCompleted(true),
-      });
-      return { tween, isCompleted };
-    }
-
-    // handling general animation (from or To)
-    const tween = gsap[method](target, {
-      ...config,
-      onComplete: () => resolveCompleted(true),
+  // Browser hint: promote animated nodes to their own layer. Cleared on
+  // completion so the layer doesn't stay resident forever.
+  function setWillChange(target) {
+    document.querySelectorAll(target).forEach((el) => {
+      el.style.willChange = "transform, opacity";
     });
-    return { tween, isCompleted };
   }
 
-  function handleKillAnimation(target) {
-    if (window?.ScrollTrigger) {
-      const animation = ScrollTrigger?.getById(target);
-      if (animation) animation?.kill();
+  function clearWillChange(target) {
+    document.querySelectorAll(target).forEach((el) => {
+      el.style.willChange = "";
+    });
+  }
+
+  function killScrollTrigger(id) {
+    if (!id || !window.ScrollTrigger) return;
+    const st = window.ScrollTrigger.getById(id);
+    if (st) st.kill();
+  }
+
+  function killTween(id) {
+    const tween = activeTweens.get(id);
+    if (tween) {
+      tween.kill();
+      activeTweens.delete(id);
     }
-    return;
   }
 
-  function handleSetConfigAnimation({ config = {}, target = "" }) {
-    if (!target) {
-      console.error("Container Fade Animation: Target not found!");
-      return;
-    }
-    gsap.set(target, config);
-    return;
-  }
-
-  function handleCleanUpTweens(target, activeTweens) {
-    
-    if (typeof activeTweens !== "object" || !target) {
-      console.error(
-        "Container Fade Animation: Animation cleanup not working or target not found!"
-      );
-    }
-    activeTweens.get(target).kill();
-    activeTweens.delete(target);
-    return;
-  }
-
-  // Animation functions
   function handleScrollAnimation({
     id,
     config,
@@ -85,36 +63,54 @@ export function containerFadeAnimation() {
     end,
     markers,
   }) {
-    // killing others animation
-    handleKillAnimation(id);
-
-    config.scrollTrigger = {
-      id,
-      trigger: triggerClass || itemClass,
-      toggleActions: "play pause none pause",
-      start: start || "top 80%",
-      end: end || "bottom 20%",
-      markers: markers === "true",
-    };
-    const { tween, isCompleted } = runAnimation({ config, target: itemClass });
-    if (isCompleted) return tween;
-    return;
+    killScrollTrigger(id);
+    setWillChange(itemClass);
+    // Pre-hide synchronously to avoid FOUC between HTML paint and tween setup.
+    gsap.set(itemClass, {
+      x: config.x,
+      y: config.y,
+      autoAlpha: 0,
+      force3D: true,
+    });
+    // Animate TO the visible/natural state; using .to() (not .from()) so the
+    // pre-hide above doesn't collapse the tween's start and end values.
+    return gsap.to(itemClass, {
+      x: 0,
+      y: 0,
+      autoAlpha: 1,
+      delay: config.delay,
+      duration: config.duration,
+      stagger: config.stagger,
+      ease: config.ease,
+      force3D: true,
+      scrollTrigger: {
+        id,
+        trigger: triggerClass || itemClass,
+        toggleActions: "play none none none",
+        start: start || "top 80%",
+        end: end || "bottom 20%",
+        markers: markers === true && isPreviewMode(),
+      },
+      onComplete: () => clearWillChange(itemClass),
+    });
   }
 
-  function handlePageLoadAnimation(id, config, itemClass) {
-    const intialConfig = { x: config.x, y: config.y, autoAlpha: 0 };
-    handleSetConfigAnimation({ config: intialConfig, target: itemClass });
-
-    const currentConfig = { ...config, x: 0, y: 0, autoAlpha: 1 };
-
-    const { tween, isCompleted } = runAnimation({
-      config: currentConfig,
-      target: itemClass,
-      method: "to",
+  function handlePageLoadAnimation(_id, config, itemClass) {
+    setWillChange(itemClass);
+    gsap.set(itemClass, {
+      x: config.x,
+      y: config.y,
+      autoAlpha: 0,
+      force3D: true,
     });
-
-    if (isCompleted) return tween;
-    return;
+    return gsap.to(itemClass, {
+      ...config,
+      x: 0,
+      y: 0,
+      autoAlpha: 1,
+      force3D: true,
+      onComplete: () => clearWillChange(itemClass),
+    });
   }
 
   function handlePlayWithScroll({
@@ -126,211 +122,147 @@ export function containerFadeAnimation() {
     end,
     markers,
   }) {
-    console.log({
-      id,
-      config,
+    killScrollTrigger(id);
+    setWillChange(itemClass);
+    return gsap.fromTo(
       itemClass,
-      triggerClass,
-      start,
-      end,
-      markers,
-    });
-
-    // killing others animation
-    handleKillAnimation();
-    // preventing inital component render
-    const fromConfig = {
-      x: config.x,
-      y: config.y,
-      autoAlpha: 0,
-      scrollTrigger: {
-        markers: markers == "true",
+      { x: config.x, y: config.y, autoAlpha: 0, force3D: true },
+      {
+        x: 0,
+        y: 0,
+        autoAlpha: 1,
+        stagger: config.stagger,
+        ease: "none",
+        force3D: true,
+        scrollTrigger: {
+          id,
+          trigger: triggerClass || itemClass,
+          scrub: 1,
+          start: start || "top bottom",
+          end: end || "bottom top",
+          markers,
+        },
       },
-    };
-
-    const toConfig = {
-      x: 0,
-      y: 0,
-      autoAlpha: 1,
-      stagger: config.stagger,
-      ease: "none",
-      scrollTrigger: {
-        id,
-        trigger: triggerClass || itemClass,
-        scrub: 1,
-        start: start || "top bottom",
-        end: end || "bottom top",
-        markers: markers === "true",
-      },
-    };
-
-    const { tween, isCompleted } = runAnimation({
-      config: fromConfig,
-      secondaryConfig: toConfig,
-      target: itemClass,
-      method: "fromTo",
-    });
-
-    if (isCompleted) return tween;
-    return;
+    );
   }
 
-  function handleHoverAnimation(
-    id = "",
-    config = {},
-    itemClass = "",
-    triggerClass = "",
-    activeTweens = {}
-  ) {
+  function handleHoverAnimation({ id, config, itemClass, triggerClass }) {
     if (!triggerClass) {
       console.error("Container Fade Animation: Trigger class not found!");
       return;
     }
-
     const triggers = document.querySelectorAll(triggerClass);
-    if (!triggers) {
-      console.error("Container Fade Animation: Trigger elements not exits!");
-      return;
-    }
+    if (!triggers.length) return;
 
-    // setting initial config
-    const initialConfig = { x: config.x, y: config.y, autoAlpha: 0 };
-    handleSetConfigAnimation({ config: initialConfig, target: itemClass });
+    gsap.set(itemClass, {
+      x: config.x,
+      y: config.y,
+      autoAlpha: 0,
+      force3D: true,
+    });
 
-    const mouseEnterConfig = {
-      ...config,
-      x: 0,
-      y: 0,
-      autoAlpha: 1,
-    };
-
-    const mouseLeaveConfig = {
+    const enterVars = { ...config, x: 0, y: 0, autoAlpha: 1, force3D: true };
+    const leaveVars = {
       x: config.x,
       y: config.y,
       autoAlpha: 0,
       duration: config.duration * 0.6,
       stagger: config.stagger * 0.5,
       ease: config.ease,
+      force3D: true,
     };
 
-    triggers.forEach((triggerElement, index) => {
+    triggers.forEach((original, index) => {
       const uniqueId = `${id}_hover_${index}`;
-      const mouseEnter = () => {
-        if (activeTweens.has(uniqueId)) {
-          handleCleanUpTweens(uniqueId, activeTweens);
-        }
-        const { tween, isCompleted } = runAnimation({
-          config: mouseEnterConfig,
-          target: itemClass,
-          method: "to",
-        });
-        if (isCompleted) activeTweens.set(uniqueId, tween);
-        return;
-      };
+      // Clone to strip any prior listeners on re-setup.
+      const el = original.cloneNode(true);
+      original.parentNode.replaceChild(el, original);
 
-      const mouseLeave = () => {
-        if (activeTweens.has(uniqueId)) {
-          handleCleanUpTweens(uniqueId, activeTweens);
-        }
-        const { tween, isCompleted } = runAnimation({
-          config: mouseLeaveConfig,
-          target: itemClass,
-          method: "to",
-        });
-        if (isCompleted) activeTweens.set(uniqueId, tween);
-        return;
-      };
+      el.addEventListener("mouseenter", () => {
+        killTween(uniqueId);
+        setWillChange(itemClass);
+        activeTweens.set(uniqueId, gsap.to(itemClass, enterVars));
+      });
 
-      const newTriggerElement = triggerElement.cloneNode(true);
-      triggerElement.parentNode.replaceChild(newTriggerElement, triggerElement);
-      newTriggerElement.addEventListener("mouseenter", mouseEnter);
-      newTriggerElement.addEventListener("mouseleave", mouseLeave);
+      el.addEventListener("mouseleave", () => {
+        killTween(uniqueId);
+        activeTweens.set(
+          uniqueId,
+          gsap.to(itemClass, {
+            ...leaveVars,
+            onComplete: () => clearWillChange(itemClass),
+          }),
+        );
+      });
     });
   }
 
-  function handleClickAnimation(
-    id = "",
-    config = {},
-    itemClass = "",
-    triggerClass = "",
-    activeTweens = {}
-  ) {
+  function handleClickAnimation({ id, config, itemClass, triggerClass }) {
     if (!triggerClass) {
       console.error("Container Fade Animation: Trigger class not found!");
       return;
     }
     const triggers = document.querySelectorAll(triggerClass);
+    if (!triggers.length) return;
 
-    if (!triggers) {
-      console.error("Container Fade Animation: Trigger elements not exits!");
-      return;
-    }
-
-    triggers.forEach((triggerElement, index) => {
-      const uniqueId = `${id}_click_${index}`;
-      const preConfig = { x: config.x, y: config.y, autoAlpha: 0 };
-      handleSetConfigAnimation({ config: preConfig, target: itemClass });
-
-      const handleClick = () => {
-        if (activeTweens.has(uniqueId)) {
-          handleCleanUpTweens(uniqueId, activeTweens);
-        }
-        const intialCofig = { x: config.x, y: config.y, autoAlpha: 0 };
-        handleSetConfigAnimation({ config: intialCofig, target: itemClass });
-
-        const currentConfig = {
-          ...config,
-          x: 0,
-          y: 0,
-          autoAlpha: 1,
-        };
-
-        const { tween, isCompleted } = runAnimation({
-          currentConfig,
-          target: itemClass,
-          method: "to",
-        });
-
-        if (isCompleted) activeTweens.set(uniqueId, tween);
-        return;
-      };
-
-      triggerElement.replaceWith(triggerElement.cloneNode(true));
-      triggerElement = document.querySelectorAll(triggerClass)[index];
-      triggerElement.addEventListener("click", handleClick);
+    gsap.set(itemClass, {
+      x: config.x,
+      y: config.y,
+      autoAlpha: 0,
+      force3D: true,
     });
-  }
 
-  function resetAnimation() {
-    activeTweens.forEach((t) => t.kill?.());
-    activeTweens.clear();
+    triggers.forEach((original, index) => {
+      const uniqueId = `${id}_click_${index}`;
+      const el = original.cloneNode(true);
+      original.parentNode.replaceChild(el, original);
 
-    if (window.ScrollTrigger) {
-      ScrollTrigger.getAll().forEach((st) => st.kill());
-    }
-
-    [...containerClasses, ...itemClasses].forEach((cls) => {
-      if (!cls) return;
-      document.querySelectorAll(cls).forEach((el) => {
-        gsap.set(el, { clearProps: "all" });
-        el.style.transform = "";
-        el.style.opacity = "";
-        el.style.visibility = "";
+      el.addEventListener("click", () => {
+        killTween(uniqueId);
+        setWillChange(itemClass);
+        gsap.set(itemClass, {
+          x: config.x,
+          y: config.y,
+          autoAlpha: 0,
+          force3D: true,
+        });
+        activeTweens.set(
+          uniqueId,
+          gsap.to(itemClass, {
+            ...config,
+            x: 0,
+            y: 0,
+            autoAlpha: 1,
+            force3D: true,
+            onComplete: () => clearWillChange(itemClass),
+          }),
+        );
       });
     });
-
-    containerClasses = [];
-    itemClasses = [];
   }
 
   function handler(e) {
-    const sections = e.detail["wcf-container-fade-animation"] || [];
-    sections.forEach((sections) => {
-      const {
-        id,
-        triggerClass,
-        triggerType,
-        itemClass,
+    const anim = e?.detail;
+    if (!anim || anim.presetKey !== PRESET_KEY) return;
+    if (anim.isPublished === false) return;
+    if (!anim.itemClass) return;
+    try {
+      if (!document.querySelector(anim.itemClass)) return;
+    } catch (err) {
+      console.warn(
+        `[containerFade] invalid itemClass selector "${anim.itemClass}":`,
+        err.message,
+      );
+      return;
+    }
+
+    const {
+      id,
+      itemClass,
+      triggerClass,
+      markers,
+      trigger: { type: triggerType, selector: triggerSelector } = {},
+      vars: {
         fadeDirection,
         fadeOffset,
         delay,
@@ -339,93 +271,89 @@ export function containerFadeAnimation() {
         ease,
         start,
         end,
-        markers,
-      } = sections || {};
+      } = {},
+    } = anim;
 
-      // validating itemclass
-      if (!itemClass || !document.querySelector(itemClass)) return;
+    const resolvedTriggerClass = triggerSelector || triggerClass;
 
-      // calculating x and y axis for gsap
-      const { x, y } = calculateFadeAxis(fadeDirection, fadeOffset);
+    // tag matched items so the global reset sweep can clear them
+    document
+      .querySelectorAll(itemClass)
+      .forEach((el) => el.setAttribute("data-wcf-anim-id", id));
 
-      // main config
-      const config = {
-        x,
-        y,
-        delay: delay || 0,
-        duration: duration || 1,
-        stagger: stagger || 0.05,
-        ease: ease || "power1.out",
-        autoAlpha: 0,
-      };
+    const { x, y } = calculateFadeAxis(fadeDirection, fadeOffset);
 
-      // killing existing animation for performance optimization
-      if (activeTweens.has(id)) {
-        handleCleanUpTweens(id, activeTweens);
-      }
+    const config = {
+      x,
+      y,
+      delay: delay || 0,
+      duration: duration || 1,
+      stagger: stagger || 0.05,
+      ease: ease || "power1.out",
+      autoAlpha: 0,
+    };
 
-      let tween;
+    killTween(id);
 
-      // handling animation
-      switch (triggerType) {
-        case "on_scroll":
-          tween = handleScrollAnimation({
-            id,
-            config,
-            itemClass,
-            triggerClass,
-            start,
-            end,
-            markers,
-          });
-          break;
-        case "page_load":
-          tween = handlePageLoadAnimation(id, config, itemClass);
-          break;
-        case "play_with_scroll":
-          tween = handlePlayWithScroll({
-            id,
-            config,
-            itemClass,
-            triggerClass,
-            start,
-            end,
-            markers,
-          });
-          break;
-        case "hover":
-          handleHoverAnimation(
-            id,
-            config,
-            itemClass,
-            triggerClass,
-            activeTweens
-          );
-          break;
-        case "click":
-          handleClickAnimation(
-            id,
-            config,
-            itemClass,
-            triggerClass,
-            activeTweens
-          );
-          break;
-        default:
-          break;
-      }
-      if (tween) activeTweens.set(id, tween);
-      containerClasses.push(triggerClass);
-      itemClasses.push(itemClass);
-    });
+    let tween;
+    switch (triggerType) {
+      case "on_scroll":
+        tween = handleScrollAnimation({
+          id,
+          config,
+          itemClass,
+          triggerClass: resolvedTriggerClass,
+          start,
+          end,
+          markers,
+        });
+        break;
+      case "page_load":
+        tween = handlePageLoadAnimation(id, config, itemClass);
+        break;
+      case "play_with_scroll":
+        tween = handlePlayWithScroll({
+          id,
+          config,
+          itemClass,
+          triggerClass: resolvedTriggerClass,
+          start,
+          end,
+          markers,
+        });
+        break;
+      case "hover":
+        handleHoverAnimation({
+          id,
+          config,
+          itemClass,
+          triggerClass: resolvedTriggerClass,
+        });
+        break;
+      case "click":
+        handleClickAnimation({
+          id,
+          config,
+          itemClass,
+          triggerClass: resolvedTriggerClass,
+        });
+        break;
+    }
+
+    if (tween) activeTweens.set(id, tween);
   }
 
-  // wordpress events
+  // Reset is handled globally by lib/resetAllAnimations.js, which listens on
+  // both the document "aae-reset-animation" event AND window messages. We
+  // only need to drop our local tween refs when that happens.
+  document.addEventListener("aae-reset-animation", () => activeTweens.clear());
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", resetAnimation);
 
-  return { destroy: resetAnimation };
+  return {
+    destroy: () => {
+      document.dispatchEvent(new CustomEvent("aae-reset-animation"));
+    },
+  };
 }
 
-// Init
 containerFadeAnimation();

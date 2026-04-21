@@ -33,14 +33,20 @@ function killGsap(nodes) {
   }
 }
 
+function runGlobalReset() {
+  const animatedNodes = [...document.querySelectorAll("[data-wcf-anim-id]")];
+  killGsap(animatedNodes);
+  animatedNodes.forEach((node) => {
+    clearFreeAnimationNode(node);
+    node.removeAttribute("data-wcf-anim-id");
+  });
+  window.WCFFreeAnimBuilder?.killOnScrollObserver?.();
+}
+
+// Two channels so presets don't need to forward:
+// - window.message: external triggers (cross-frame, explicit postMessage)
+// - document event: what frontend.js dispatches for `wcf-animation-config-reset`
 window.addEventListener("message", (e) => {
-  if (e.data?.type === "aae-reset-animation") {
-    const animatedNodes = [...document.querySelectorAll("[data-wcf-anim-id]")];
-    killGsap(animatedNodes);
-    animatedNodes.forEach((node) => {
-      clearFreeAnimationNode(node);
-      node.removeAttribute("data-wcf-anim-id");
-    });
-    window.WCFFreeAnimBuilder?.killOnScrollObserver?.();
-  }
+  if (e.data?.type === "aae-reset-animation") runGlobalReset();
 });
+document.addEventListener("aae-reset-animation", runGlobalReset);

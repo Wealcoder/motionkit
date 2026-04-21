@@ -1,86 +1,115 @@
-export function textInvertAnim() {
-  let sTimeline = {};
-  let sSplitText = [];
+import { isPreviewMode } from "@/utils/isPreviewMode";
 
-  const handler = (e) => {
-    (e.detail["wcf-text-invert-animation"] || []).forEach((section) => {
-      const {
-        triggerClass,
-        itemClass,
+const PRESET_KEY = "wcf-mk-text-invert-fa";
+
+export function textInvertAnim() {
+  // id -> { timelines: [], splits: [] }
+  const instances = new Map();
+
+  function teardown(id) {
+    const inst = instances.get(id);
+    if (!inst) return;
+    inst.timelines.forEach((tl) => {
+      try {
+        tl.revert();
+        tl.kill();
+      } catch (err) {
+        console.warn("[textInvert] timeline teardown error:", err);
+      }
+    });
+    inst.splits.forEach((split) => {
+      try {
+        split.revert();
+      } catch (err) {
+        console.warn("[textInvert] split revert error:", err);
+      }
+    });
+    instances.delete(id);
+  }
+
+  function teardownAll() {
+    for (const id of [...instances.keys()]) teardown(id);
+  }
+
+  function handler(e) {
+    const anim = e?.detail;
+    if (!anim || anim.presetKey !== PRESET_KEY) return;
+    if (anim.isPublished === false) return;
+    if (!anim.itemClass) return;
+
+    const {
+      id,
+      itemClass,
+      trigger: { selector: triggerSelector } = {},
+      vars: {
         start,
         startCustom,
         end,
         endCustom,
-        markers = false,
-      } = section || {};
+        markers,
+      } = {},
+    } = anim;
 
-      if (!itemClass) return;
+    let elements;
+    try {
+      elements = document.querySelectorAll(itemClass);
+    } catch (err) {
+      console.warn(
+        `[textInvert] invalid itemClass "${itemClass}":`,
+        err.message,
+      );
+      return;
+    }
+    if (!elements.length) return;
 
-      gsap.set(itemClass, {
-        transition: "none"
-      })
+    teardown(id);
 
-      if (triggerClass) {
-        gsap.set(triggerClass, {
-          transition: "none"
-        })
-      }
-      const elements = document.querySelectorAll(itemClass);
-      elements.forEach((element, index) => {
-        const split = new SplitText(element, {
-          type: "lines",
-          linesClass: "invert-line",
-        });
+    const timelines = [];
+    const splits = [];
 
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: triggerClass || itemClass,
-            start: start === 'custom' ? startCustom : start,
-            end: end === 'custom' ? endCustom : end,
-            scrub: 1,
-            markers: markers === 'true' ? true : false,
-          },
-        });
-
-        const lines = element.querySelectorAll(".invert-line");
-        tl.from(lines, {
-          opacity: 0.2,
-          ease: "none",
-          stagger: 0.1,
-        });
-
-        const uniqueId = `${section.id}_${index}`;
-        sTimeline[uniqueId] = { timeline: tl, split };
-        sSplitText.push(split);
-      });
-    });
-  };
-
-  function removeAnimation() {
-    for (let x in sTimeline) {
-      const { timeline, split } = sTimeline[x];
-
-      if (timeline) {
-        timeline.revert();
-        timeline.kill();
-      }
-
-      if (split) {
-        split.revert();
+    gsap.set(itemClass, { transition: "none" });
+    if (triggerSelector) {
+      try {
+        gsap.set(triggerSelector, { transition: "none" });
+      } catch (err) {
+        /* selector may not match — safe to ignore */
       }
     }
 
-    sTimeline = {};
-    sSplitText = [];
+    elements.forEach((element, index) => {
+      element.setAttribute("data-wcf-anim-id", id);
+
+      const split = new SplitText(element, {
+        type: "lines",
+        linesClass: "invert-line",
+      });
+      splits.push(split);
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: triggerSelector || element,
+          start: start === "custom" ? startCustom : start,
+          end: end === "custom" ? endCustom : end,
+          scrub: 1,
+          markers: markers === true && isPreviewMode(),
+        },
+      });
+
+      const lines = element.querySelectorAll(".invert-line");
+      tl.from(lines, { opacity: 0.2, ease: "none", stagger: 0.1 });
+      timelines.push(tl);
+    });
+
+    instances.set(id, { timelines, splits });
   }
 
   document.addEventListener("aae-animation-event", handler);
-  document.addEventListener("aae-reset-animation", removeAnimation);
+  document.addEventListener("aae-reset-animation", teardownAll);
 
   return {
-    destroy: removeAnimation
+    destroy: () =>
+      document.dispatchEvent(new CustomEvent("aae-reset-animation")),
   };
 }
 
-// Initialize
 textInvertAnim();
