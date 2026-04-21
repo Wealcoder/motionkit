@@ -167,6 +167,7 @@ final class Frontend
    */
   private function is_editor_preview(): bool
   {
+  
     if (!isset($_GET['action']) || sanitize_text_field(wp_unslash($_GET['action'])) !== 'motionkit-editor') {
       return false;
     }
@@ -284,7 +285,7 @@ final class Frontend
    */
   public function enqueue_frontend_scripts(): void
   {
-
+    
     if ($this->is_editor_preview()) {
       // Force fresh response — page caches and CDNs would otherwise serve
       // a stale snapshot, leaving the editor with outdated wcfanimb data.
