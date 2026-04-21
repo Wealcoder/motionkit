@@ -1,5 +1,5 @@
-import { buildTimeline } from "./build/timeline.js";
-import { buildScrollTriggerConfig } from "./build/scrollTrigger.js";
+import { buildTimeline } from "./mbuild/timeline.js";
+import { buildScrollTriggerConfig } from "./mbuild/scrollTrigger.js";
 import { findRoutedScrollTriggers } from "./select/find.js";
 import { querySelectorAllCached, requestRefresh } from "./scheduler.js";
 import { setActive, getActive } from "./registry.js";
