@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-sticky-hs-fa";
+const PRESET_KEY = "wcf-mk-sticky-hs-pa";
 
 export function headerStickyAnim() {
   // id -> { timelines, cleanups, wrapper, item, clone }
@@ -19,15 +19,21 @@ export function headerStickyAnim() {
   }
 
   function isScrollSmootherActive() {
-    return typeof window.ScrollSmoother !== "undefined" &&
-      !!window.ScrollSmoother.get?.();
+    return (
+      typeof window.ScrollSmoother !== "undefined" &&
+      !!window.ScrollSmoother.get?.()
+    );
   }
 
   function teardown(id) {
     const inst = instances.get(id);
     if (!inst) return;
     inst.cleanups.forEach((fn) => {
-      try { fn(); } catch (err) { console.warn("[headerSticky] cleanup error:", err); }
+      try {
+        fn();
+      } catch (err) {
+        console.warn("[headerSticky] cleanup error:", err);
+      }
     });
     inst.timelines.forEach((tl) => {
       try {
@@ -56,7 +62,13 @@ export function headerStickyAnim() {
     if (anim.isPublished === false) return;
     if (!anim.itemClass) return;
 
-    const { id, itemClass, endClass: endClassRaw, styleClass, vars = {} } = anim;
+    const {
+      id,
+      itemClass,
+      endClass: endClassRaw,
+      styleClass,
+      vars = {},
+    } = anim;
     const {
       startPosition = 0,
       zIndex = 9999,
@@ -81,9 +93,13 @@ export function headerStickyAnim() {
 
     const defaultTop = 0;
     const calculatedPosition = convertToPixels(startPosition);
-    const calculateItemPosition = isScrollSmootherActive() ? calculatedPosition : 0;
+    const calculateItemPosition = isScrollSmootherActive()
+      ? calculatedPosition
+      : 0;
     const endClass =
-      endClassRaw && endClassRaw !== "" ? endClassRaw : ".wcf-ab-pin-end-selector-26";
+      endClassRaw && endClassRaw !== ""
+        ? endClassRaw
+        : ".wcf-ab-pin-end-selector-26";
 
     // Clone the item — the clone is what GSAP animates.
     const itemClone = item.cloneNode(true);

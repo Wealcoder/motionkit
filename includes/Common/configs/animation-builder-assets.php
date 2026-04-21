@@ -9,88 +9,101 @@ defined('ABSPATH') || die();
 
 return [
   'premiumPresets' => [
-    'wcf-scroll-video-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/scrollVideoFrame.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-horizontal-scroll-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/horizontalScrollAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-cube-scroll-reveal-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cubeScrollRevealAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-image-reveal-animation' => [
-      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageRevealAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-image-hover-reveal-animation' => [
-      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageHoverRevealAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-cursor-hover-reveal-animation' => [
-      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cursorHoverRevealAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-cursor-hover-move-animation' => [
-      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cursorHoverMoveAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-image-stretch-animation' => [
-      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageStretchAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-image-scale-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageScaleAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-text-split-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSplitAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-text-rotate-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textRotateAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-text-scale-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textScaleAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-text-invert-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textInvertAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-text-spin-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSpinAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-popup-media-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/popupMediaAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-mk-container-fade-fa' => [
+    // ############## CONTAINER ############## //
+    'wcf-mk-container-fade-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/containerFadeAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
       'version' => MOTIONKIT_VERSION,
     ],
-    'wcf-header-sticky-animation' => [
+
+    // ############## CURSOR ############## //
+    'wcf-mk-cursor-cm-pa' => [
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cursorHoverMoveAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-cursor-cr-pa' => [
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cursorHoverRevealAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+
+    // ############## IMAGE ############## //
+    'wcf-mk-image-hr-pa' => [
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageHoverRevealAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-image-rev-pa' => [
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageRevealAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-image-scale-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageScaleAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-image-stretch-pa' => [
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageStretchAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+
+    // ############## POPUP ############## //
+    'wcf-mk-popup-media-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/popupMediaAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+
+    // ############## SCROLL ############## //
+    'wcf-mk-scroll-cr-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cubeScrollRevealAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-scroll-hor-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/horizontalScrollAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-scroll-vf-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/scrollVideoFrame.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+
+    // ############## STICKY ############## //
+    'wcf-mk-sticky-hs-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/headerStickyAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+
+    // ############## TEXT ############## //
+    'wcf-mk-text-invert-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textInvertAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-text-rotate-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textRotateAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-text-scale-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textScaleAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-text-spin-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSpinAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-text-split-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSplitAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
       'version' => MOTIONKIT_VERSION,
     ],
@@ -103,46 +116,46 @@ return [
       'deps' => [],
       'version' => MOTIONKIT_VERSION,
     ],
-    'wcf-general-sir-free-animation' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpeceInRightAnim.js',
+    'wcf-mk-gen-sir-fa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpaceInRightAnim.js',
       'deps' => [],
       'version' => MOTIONKIT_VERSION,
     ],
-    'wcf-general-swap-free-animation' => [
+    'wcf-mk-gen-swap-fa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSwapAnim.js',
       'deps' => [],
       'version' => MOTIONKIT_VERSION,
     ],
-    'wcf-general-tid-free-animation' => [
+    'wcf-mk-gen-tin-fa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalTwisterInDownAnim.js',
       'deps' => [],
       'version' => MOTIONKIT_VERSION,
     ],
 
     // ############## IMAGE ############## //
-    'wcf-image-swash-in-free-animation' => [
+    'wcf-mk-img-si-fa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/imageSwashInAnim.js',
       'deps' => [],
       'version' => MOTIONKIT_VERSION,
     ],
-    'wcf-image-vanish-in-free-animation' => [
+    'wcf-mk-img-vi-fa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/imageVanishInAnim.js',
       'deps' => [],
       'version' => MOTIONKIT_VERSION,
     ],
 
     // ############## TEXT ############## //
-    'wcf-text-clip-reveal-free-animation' => [
+    'wcf-mk-txt-cr-fa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipRevealAnim.js',
       'deps' => [],
       'version' => MOTIONKIT_VERSION,
     ],
-    'wcf-text-clip-slide-up-free-animation' => [
+    'wcf-mk-txt-csu-fa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipSlideUpAnim.js',
       'deps' => [],
       'version' => MOTIONKIT_VERSION,
     ],
-    'wcf-text-clip-slide-right-free-animation' => [
+    'wcf-mk-txt-csr-fa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipSlideRightAnim.js',
       'deps' => [],
       'version' => MOTIONKIT_VERSION,

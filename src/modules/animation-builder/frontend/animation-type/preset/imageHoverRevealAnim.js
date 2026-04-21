@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-image-hr-fa";
+const PRESET_KEY = "wcf-mk-image-hr-pa";
 
 export function imageHoverRevealAnim() {
   // id -> array of per-item teardown fns

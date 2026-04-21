@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-scroll-cr-fa";
+const PRESET_KEY = "wcf-mk-scroll-cr-pa";
 
 export function cubeScrollRevealAnim() {
   // id -> { timelines, scrollTriggers, cleanups }
@@ -193,12 +193,24 @@ export function cubeScrollRevealAnim() {
         overflow: hidden;
       }
       ${itemClass} .aab_wc-face img { width: 100%; height: 100%; object-fit: cover; }
-      ${itemClass} .aab_wc-front  { transform: translateZ(${cubeMinWidthNum / 2}px); }
-      ${itemClass} .aab_wc-back   { transform: rotateY(180deg) translateZ(${cubeMinWidthNum / 2}px); }
-      ${itemClass} .aab_wc-right  { transform: rotateY(90deg)  translateZ(${cubeMinWidthNum / 2}px); }
-      ${itemClass} .aab_wc-left   { transform: rotateY(-90deg) translateZ(${cubeMinWidthNum / 2}px); }
-      ${itemClass} .aab_wc-top    { transform: rotateX(90deg)  translateZ(${cubeMinWidthNum / 2}px); }
-      ${itemClass} .aab_wc-bottom { transform: rotateX(-90deg) translateZ(${cubeMinWidthNum / 2}px); }
+      ${itemClass} .aab_wc-front  { transform: translateZ(${
+        cubeMinWidthNum / 2
+      }px); }
+      ${itemClass} .aab_wc-back   { transform: rotateY(180deg) translateZ(${
+        cubeMinWidthNum / 2
+      }px); }
+      ${itemClass} .aab_wc-right  { transform: rotateY(90deg)  translateZ(${
+        cubeMinWidthNum / 2
+      }px); }
+      ${itemClass} .aab_wc-left   { transform: rotateY(-90deg) translateZ(${
+        cubeMinWidthNum / 2
+      }px); }
+      ${itemClass} .aab_wc-top    { transform: rotateX(90deg)  translateZ(${
+        cubeMinWidthNum / 2
+      }px); }
+      ${itemClass} .aab_wc-bottom { transform: rotateX(-90deg) translateZ(${
+        cubeMinWidthNum / 2
+      }px); }
       ${itemClass} .aab_wc-video-player {
         position: absolute;
         top: 0; left: 0;
@@ -270,9 +282,7 @@ export function cubeScrollRevealAnim() {
       top: topFace,
       bottom,
     };
-    const facesToHide = allFaces.filter(
-      (f) => f !== faceElements[expandFace],
-    );
+    const facesToHide = allFaces.filter((f) => f !== faceElements[expandFace]);
 
     // Measure scroll distance to the end section ─────────────────────
     let endElement = null;
@@ -402,9 +412,7 @@ export function cubeScrollRevealAnim() {
         }
       };
       controlBtn.addEventListener("click", onBtnClick);
-      cleanups.push(() =>
-        controlBtn.removeEventListener("click", onBtnClick),
-      );
+      cleanups.push(() => controlBtn.removeEventListener("click", onBtnClick));
     }
 
     // Teardown: wipe the rebuilt DOM + injected style element.

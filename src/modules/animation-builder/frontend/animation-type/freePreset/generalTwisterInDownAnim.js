@@ -1,6 +1,6 @@
 import { normalizeToCssVars } from "@/lib/FreeAnimation/normalizeToCssVars";
 
-const PRESET_KEY = "wcf-mk-gen-ti-fa";
+const PRESET_KEY = "wcf-mk-gen-tin-fa";
 const CLASS_LIST = [
   "wcf-free-ab-25",
   "wcf-free-ab-freeAnimGeneral",

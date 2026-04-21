@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-image-reveal-fa";
+const PRESET_KEY = "wcf-mk-image-rev-pa";
 
 export function imageRevealAnim() {
   // id -> { timelines: GSAPTimeline[] }

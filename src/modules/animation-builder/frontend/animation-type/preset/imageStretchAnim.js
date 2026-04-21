@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-image-stretch-fa";
+const PRESET_KEY = "wcf-mk-image-stretch-pa";
 
 export function imageStretchAnim() {
   // id -> { timelines: GSAPTimeline[] }

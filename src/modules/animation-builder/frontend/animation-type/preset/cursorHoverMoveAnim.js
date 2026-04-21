@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-cursor-cm-fa";
+const PRESET_KEY = "wcf-mk-cursor-cm-pa";
 
 export function cursorHoverMoveAnim() {
   // id -> array of per-item teardown fns

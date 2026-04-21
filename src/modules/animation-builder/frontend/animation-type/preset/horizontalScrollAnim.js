@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-scroll-horizontal-fa";
+const PRESET_KEY = "wcf-mk-scroll-hor-pa";
 
 export function horizontalScrollAnim() {
   // id -> { timelines: GSAPTimeline[] }
@@ -79,7 +79,9 @@ export function horizontalScrollAnim() {
       Array.isArray(itemsWidth) &&
       itemsWidth.length
     ) {
-      widthsPx = itemsWidth.slice(0, items.length).map((w) => convertToPixels(w));
+      widthsPx = itemsWidth
+        .slice(0, items.length)
+        .map((w) => convertToPixels(w));
     } else {
       const def = convertToPixels(itemWidth);
       widthsPx = new Array(items.length).fill(def);

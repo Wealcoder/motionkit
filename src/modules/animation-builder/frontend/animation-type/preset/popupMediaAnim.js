@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-popup-media-fa";
+const PRESET_KEY = "wcf-mk-popup-media-pa";
 const POPUP_STYLES_ID = "wcf-popup-media-styles";
 
 // Inject popup styles once per document, even if the module is re-imported.
@@ -261,9 +261,7 @@ export function popupMediaAnim() {
         if (playPromise !== undefined) {
           playPromise
             .then(() => playButton.classList.add("playing"))
-            .catch((err) =>
-              console.warn("[popupMedia] playback failed:", err),
-            );
+            .catch((err) => console.warn("[popupMedia] playback failed:", err));
         }
       } else {
         videoEl.pause();

@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-text-invert-fa";
+const PRESET_KEY = "wcf-mk-text-invert-pa";
 
 export function textInvertAnim() {
   // id -> { timelines: [], splits: [] }
@@ -41,13 +41,7 @@ export function textInvertAnim() {
       id,
       itemClass,
       trigger: { selector: triggerSelector } = {},
-      vars: {
-        start,
-        startCustom,
-        end,
-        endCustom,
-        markers,
-      } = {},
+      vars: { start, startCustom, end, endCustom, markers } = {},
     } = anim;
 
     let elements;

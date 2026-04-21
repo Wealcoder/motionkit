@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-text-split-fa";
+const PRESET_KEY = "wcf-mk-text-split-pa";
 
 export function textSplitAnim() {
   // id -> { tweens: [], splits: [], cleanups: [] }
@@ -9,12 +9,28 @@ export function textSplitAnim() {
   function teardown(id) {
     const inst = instances.get(id);
     if (!inst) return;
-    inst.tweens.forEach((t) => { try { t.kill(); } catch {} });
-    inst.splits.forEach((s) => { try { s.revert(); } catch {} });
-    inst.cleanups.forEach((fn) => { try { fn(); } catch {} });
+    inst.tweens.forEach((t) => {
+      try {
+        t.kill();
+      } catch {}
+    });
+    inst.splits.forEach((s) => {
+      try {
+        s.revert();
+      } catch {}
+    });
+    inst.cleanups.forEach((fn) => {
+      try {
+        fn();
+      } catch {}
+    });
     if (window.ScrollTrigger) {
       const st = window.ScrollTrigger.getById(id);
-      if (st) { try { st.kill(); } catch {} }
+      if (st) {
+        try {
+          st.kill();
+        } catch {}
+      }
     }
     instances.delete(id);
   }
@@ -69,7 +85,9 @@ export function textSplitAnim() {
 
     gsap.set(itemClass, { transition: "none" });
     if (triggerSelector) {
-      try { gsap.set(triggerSelector, { transition: "none" }); } catch {}
+      try {
+        gsap.set(triggerSelector, { transition: "none" });
+      } catch {}
     }
 
     let splitInstance;
@@ -115,26 +133,22 @@ export function textSplitAnim() {
 
     const runPlayWithScroll = () => {
       tweens.push(
-        gsap.fromTo(
-          target,
-          fromVars,
-          {
-            x: 0,
-            y: 0,
-            autoAlpha: 1,
-            stagger,
-            duration: 1,
-            ease: "none",
-            scrollTrigger: {
-              id,
-              trigger: triggerSelector || itemClass,
-              start: start === "custom" ? startCustom : start || "top bottom",
-              end: end === "custom" ? endCustom : end || "bottom top",
-              scrub: 1,
-              markers: previewMarkers,
-            },
+        gsap.fromTo(target, fromVars, {
+          x: 0,
+          y: 0,
+          autoAlpha: 1,
+          stagger,
+          duration: 1,
+          ease: "none",
+          scrollTrigger: {
+            id,
+            trigger: triggerSelector || itemClass,
+            start: start === "custom" ? startCustom : start || "top bottom",
+            end: end === "custom" ? endCustom : end || "bottom top",
+            scrub: 1,
+            markers: previewMarkers,
           },
-        ),
+        }),
       );
     };
 
@@ -225,12 +239,23 @@ export function textSplitAnim() {
     };
 
     switch (triggerType) {
-      case "on_scroll":       runScroll(); break;
-      case "play_with_scroll": runPlayWithScroll(); break;
-      case "page_load":       runPageLoad(); break;
-      case "hover":           attachHover(); break;
-      case "click":           attachClick(); break;
-      default: break;
+      case "on_scroll":
+        runScroll();
+        break;
+      case "play_with_scroll":
+        runPlayWithScroll();
+        break;
+      case "page_load":
+        runPageLoad();
+        break;
+      case "hover":
+        attachHover();
+        break;
+      case "click":
+        attachClick();
+        break;
+      default:
+        break;
     }
 
     instances.set(id, { tweens, splits, cleanups });
