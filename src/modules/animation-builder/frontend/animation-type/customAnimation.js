@@ -81,7 +81,7 @@ document.addEventListener('aae-animation-event', (e) => {
     }
   });
 });
-console.log('hhhhh');
+console.log('hhhhh customAnimation.js loaded');
 // ─── Reset / cleanup on device breakpoint switch ─────────────────
 
 document.addEventListener('aae-reset-animation', () => {
