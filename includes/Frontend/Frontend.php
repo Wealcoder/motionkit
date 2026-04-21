@@ -418,10 +418,10 @@ final class Frontend
     $this->maybe_init_scroll_smoother();
 
     // Determine which presets are active in the config
-    $is_custom = false;
-    $is_free = false;
-    $active_presets = $this->get_active_presets($page_configs, $is_custom, $is_free);
-
+    $is_custom = false;   
+    $active_presets = $this->get_active_presets($page_configs, $is_custom);
+  
+   
     // Build deps — allow Pro to add gsap/ScrollTrigger via filter
     $deps = apply_filters('motionkit_core_lib_deps', []);
     $deps = array_values(array_filter($deps, function ($dep) {
@@ -440,12 +440,13 @@ final class Frontend
     wp_enqueue_script('motionkit-frontend');
 
     // Conditionally enqueue free preset scripts
-    if ($is_free || $this->is_editor_preview()) {
-      $this->enqueue_free_presets($active_presets);
+    if (isset($active_presets['free']) && !empty($active_presets['free'])) {
+      $this->enqueue_free_presets($active_presets['free']);
     }
 
-    // Enqueue premium preset scripts
-    $this->enqueue_presets($active_presets, $deps);
+    if (isset($active_presets['premium']) && !empty($active_presets['premium'])) {
+      $this->enqueue_presets($active_presets['premium'], $deps);
+    }   
 
     // Enqueue smart animation engine when custom animations are present
     if ($is_custom) {
@@ -518,13 +519,7 @@ final class Frontend
 
     if (!is_array($config) || empty($config['freePresets'])) {
       return;
-    }
-
-    $active_elements = $this->get_active_element_keys('wcf_anim_builder_free_animation_settings');
-
-    if (empty($active_elements)) {
-      return;
-    }
+    }   
 
     // Enqueue free animation CSS
     wp_enqueue_style(
@@ -535,60 +530,28 @@ final class Frontend
     );
 
     // Enqueue each active free preset script
-    foreach ($active_elements as $key) {
-      if (isset($config['freePresets'][$key]) && in_array($key, $active_presets, true)) {
+    
+    if ($active_presets && is_array($active_presets)) {
+      
+      foreach ($active_presets as $key) {
+
+        if (!isset($config['freePresets'][$key])) {
+          continue;
+        }
+      
         $element = $config['freePresets'][$key];
+
         wp_enqueue_script(
           $key,
           $element['src'],
           $element['deps'] ?? [],
-          $element['version'] ?? MOTIONKIT_VERSION,
+          $element['version'],
           true
         );
+
       }
     }
-  }
-
-  /**
-   * Enqueue ALL free presets (editor preview mode)
-   *
-   * Loads every free preset from the config — no active_elements
-   * or page config filtering. The SaaS editor needs all presets available.
-   *
-   * @return void
-   */
-  private function enqueue_all_free_presets(): void
-  {
-    $config_path = MOTIONKIT_PLUGIN_DIR . 'includes/Common/configs/animation-builder-assets.php';
-
-    if (!file_exists($config_path)) {
-      return;
-    }
-
-    $config = include $config_path;
-
-    if (!is_array($config) || empty($config['freePresets'])) {
-      return;
-    }
-
-    // Enqueue free animation CSS
-    wp_enqueue_style(
-      'wcf-animation-builder-free-anim',
-      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/freeAnim.css',
-      [],
-      MOTIONKIT_VERSION
-    );
-
-    // Enqueue every free preset script
-    foreach ($config['freePresets'] as $key => $element) {
-      wp_enqueue_script(
-        $key,
-        $element['src'],
-        $element['deps'] ?? [],
-        $element['version'] ?? MOTIONKIT_VERSION,
-        true
-      );
-    }
+    
   }
 
   /**
@@ -608,24 +571,20 @@ final class Frontend
 
     $config = include $config_path;
 
-    if (!is_array($config) || empty($config['presets'])) {
+    if (!is_array($config) || empty($config['premiumPresets'])) {
       return;
     }
 
-
-    $active_elements = $this->get_active_element_keys('aae_anim_builder_settings');
+    
 
     foreach ($active_presets as $key) {
-      if (!isset($config['presets'][$key])) {
+
+      if (!isset($config['premiumPresets'][$key])) {
         continue;
       }
 
-      // If element settings exist, respect the active toggle
-      if (!empty($active_elements) && !in_array($key, $active_elements, true)) {
-        continue;
-      }
-
-      $element = $config['presets'][$key];
+      $element = $config['premiumPresets'][$key];
+   
       wp_enqueue_script(
         $key,
         $element['src'],
@@ -634,55 +593,7 @@ final class Frontend
         true
       );
     }
-  }
-
-  /**
-   * Enqueue ALL premium presets (editor preview mode)
-   *
-   * @param array $deps Script dependencies (gsap, ScrollTrigger, etc.)
-   * @return void
-   */
-  private function enqueue_all_presets(array $deps = []): void
-  {
-    $config_path = MOTIONKIT_PLUGIN_DIR . 'includes/Common/configs/animation-builder-assets.php';
-
-    if (!file_exists($config_path)) {
-      return;
-    }
-
-    $config = include $config_path;
-
-    if (!is_array($config) || empty($config['presets'])) {
-      return;
-    }
-
-    foreach ($config['presets'] as $key => $element) {
-      wp_enqueue_script(
-        $key,
-        $element['src'],
-        $element['deps'] ?? $deps,
-        $element['version'] ?? MOTIONKIT_VERSION,
-        true
-      );
-    }
-  }
-
-  /**
-   * Merge multiple device-keyed animation maps into one.
-   * Each source: [ deviceKey => Section[] ]. Arrays concatenate per key.
-   */
-  private function merge_device_configs(array ...$sources): array
-  {
-    $merged = [];
-    foreach ($sources as $src) {
-      if (!is_array($src)) continue;
-      foreach ($src as $deviceKey => $sections) {
-        if (!is_array($sections)) continue;
-        $merged[$deviceKey] = array_merge($merged[$deviceKey] ?? [], $sections);
-      }
-    }
-    return $merged;
-  }
+  } 
 
   /**
    * Load and sanitize device breakpoint config
@@ -726,24 +637,25 @@ final class Frontend
    * @param bool  &$is_free   Set to true if free animations found
    * @return array Unique array of active preset handles
    */
-  private function get_active_presets(array $data, bool &$is_custom, bool &$is_free): array
+  private function get_active_presets(array $data, bool &$is_custom): array
   {
-    $presets = [];
+    $premium_preset = [];
+    $free_preset = [];
 
-    $iterator = function (array $array) use (&$iterator, &$presets, &$is_custom, &$is_free): void {
+    $iterator = function (array $array) use (&$iterator, &$is_custom, &$premium_preset, &$free_preset): void {
       foreach ($array as $value) {
         if (!is_array($value)) {
           continue;
         }
 
         // Check for enabled animation entries
-        if (isset($value['type'], $value['enable']) && (int) $value['enable'] === 1) {
-          if ($value['type'] === 'preset' && isset($value['preset'])) {
-            $presets[] = $value['preset'];
-          } elseif ($value['type'] === 'free_animation' && isset($value['preset'])) {
-            $presets[] = $value['preset'];
-            $is_free = true;
-          } elseif ($value['type'] === 'custom') {
+        if (isset($value['group'], $value['isPublished']) && (int) $value['isPublished'] === 1) {
+          if ($value['group'] === 'premium_preset_animation' && isset($value['presetKey'])) {
+            $premium_preset[] = $value['presetKey'];
+          } elseif ($value['group'] === 'free_preset_animation' && isset($value['presetKey'])) {
+            $free_preset[] = $value['presetKey'];
+           
+          } elseif ($value['group'] === 'custom_animation') {
             $is_custom = true;
           }
         }
@@ -755,45 +667,7 @@ final class Frontend
 
     $iterator($data);
 
-    return array_values(array_unique($presets));
-  }
-
-  /**
-   * Get keys of active free animation elements from WP option
-   *
-   * Reads a JSON-encoded option containing element activation state.
-   *
-   * @param string $option_name WP option name
-   * @return array Active element keys
-   */
-  private function get_active_element_keys(string $option_name): array
-  {
-    $raw = get_option($option_name);
-
-    if (!is_string($raw) || $raw === '') {
-      return [];
-    }
-
-    $data = json_decode($raw, true);
-
-    if (json_last_error() !== JSON_ERROR_NONE || !is_array($data) || !isset($data['elements'])) {
-      return [];
-    }
-
-    $active_keys = [];
-
-    foreach ($data['elements'] as $group) {
-      if (!isset($group['elements']) || !is_array($group['elements'])) {
-        continue;
-      }
-      foreach ($group['elements'] as $key => $element) {
-        if (!empty($element['is_active'])) {
-          $active_keys[] = $key;
-        }
-      }
-    }
-
-    return $active_keys;
+    return ['premium' => array_unique($premium_preset), 'free' => array_unique($free_preset)];
   }
 
   // ─── AJAX Handlers ───────────────────────────────────────────────

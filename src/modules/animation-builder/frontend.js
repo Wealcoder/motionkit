@@ -10,46 +10,7 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
   var platform =
     document.querySelector('meta[name="motionkit-platform"]')?.content ||
     "html";
-
-  var DEVICE_SENSITIVE_SETTINGS = [
-    "scrollSmother",
-    "preloader",
-    "pageTransition",
-  ];
-
-  function flattenSettingsForDevice(all_settings, deviceKey) {
-    var out = Object.assign({}, all_settings || {});
-    for (var i = 0; i < DEVICE_SENSITIVE_SETTINGS.length; i++) {
-      var key = DEVICE_SENSITIVE_SETTINGS[i];
-      var node = out[key];
-      if (node && typeof node === "object" && node[deviceKey]) {
-        out[key] = Object.assign({}, node, node[deviceKey]);
-      }
-    }
-    return out;
-  }
-
-  function groupByPreset(animations) {
-    var groups = {};
-    for (var i = 0; i < (animations || []).length; i++) {
-      var section = animations[i];
-      if (!section || !section.enable) continue;
-      var bucket = section.type === "custom" ? "custom" : section.preset;
-      if (!bucket) continue;
-      (groups[bucket] = groups[bucket] || []).push(section);
-    }
-    return groups;
-  }
-
-  function matchMediaOnce(mediaQuery, callback) {
-    try {
-      var mq = window.matchMedia(mediaQuery);
-      if (mq && mq.matches) callback();
-    } catch (e) {
-      /* invalid media query */
-    }
-  }
-
+  
   // Return the deviceConfig entry whose mediaQuery currently matches.
   // Falls back to the first device or a synthetic 'desktop' entry so
   // callers always get *something* to work with.
@@ -265,6 +226,7 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 
   window.addEventListener("load", () => {
     const source = loadFullPreviewData() || window.wcfanimb || {};
+    
     resolveAndDispatch(source.all_animations, source.all_settings);
   });
 })();

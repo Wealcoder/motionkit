@@ -8,7 +8,7 @@ defined('ABSPATH') || die();
 
 
 return [
-  'presets' => [
+  'premiumPresets' => [
     'wcf-scroll-video-animation' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/scrollVideoFrame.js',
       'deps' => ['gsap', 'ScrollTrigger'],
@@ -84,7 +84,7 @@ return [
       'deps' => ['gsap', 'ScrollTrigger'],
       'version' => MOTIONKIT_VERSION,
     ],
-    'wcf-container-fade-animation' => [
+    'wcf-mk-container-fade-fa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/containerFadeAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
       'version' => MOTIONKIT_VERSION,
@@ -98,7 +98,7 @@ return [
   // ############## FREE ANIMATIONS ##############
   "freePresets" => [
     // ############## GENERAL ############## //
-    'wcf-ab-gen-sil-fa' => [
+    'wcf-mk-gen-sil-fa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpaceInLeftAnim.js',
       'deps' => [],
       'version' => MOTIONKIT_VERSION,
