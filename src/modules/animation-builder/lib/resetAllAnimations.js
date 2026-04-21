@@ -28,6 +28,7 @@ function killGsap(nodes) {
   const { gsap, ScrollTrigger } = window;
   ScrollTrigger?.getAll?.().forEach((st) => st.kill());
   gsap?.globalTimeline?.getChildren?.().forEach((t) => t.kill());
+  console.log("global timeline", gsap?.globalTimeline);
   if (gsap?.set && nodes.length) {
     gsap.set(nodes, { clearProps: "all" });
   }
@@ -41,6 +42,11 @@ function runGlobalReset() {
     node.removeAttribute("data-wcf-anim-id");
   });
   window.WCFFreeAnimBuilder?.killOnScrollObserver?.();
+  // Preset-specific cleanups (e.g. customEngine) listen for this event and
+  // run AFTER the global nuke. Using a DOM event instead of a shared callback
+  // registry keeps this file editor-only — production bundles don't static-
+  // import it, so listeners in other bundles just sit dormant in prod.
+  document.dispatchEvent(new CustomEvent("motionkit:reset-done"));
 }
 
 // Two channels so presets don't need to forward:
@@ -50,3 +56,5 @@ window.addEventListener("message", (e) => {
   if (e.data?.type === "aae-reset-animation") runGlobalReset();
 });
 document.addEventListener("aae-reset-animation", runGlobalReset);
+
+console.log("testing reset file load");

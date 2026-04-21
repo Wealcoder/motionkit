@@ -1,16 +1,14 @@
-import { Hooks } from "../smart-engine/core/infra.js";
-import { Engine } from "../smart-engine/core/engine.js";
+import { handleCustomAnimation, isCustomAnimation } from "./customEngine/index.js";
+import { registerAllExtensions } from "./customEngine/extensions/index.js";
 
-if (typeof ScrollTrigger !== "undefined") {
+if (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const engine = new Engine({ hooks: new Hooks() });
+registerAllExtensions();
 
-// Editor sends `aae-reset-animation` before pushing a new config so each Play
-// starts from a clean slate. destroyAll() reverts every GSAP context, kills
-// ScrollTriggers/Timelines, and removes trigger DOM listeners — preventing
-// the leak that would otherwise stack on every replay.
-document.addEventListener("aae-reset-animation", () => {
-  engine.destroyAll();
+document.addEventListener("aae-animation-event", (e) => {
+  const anim = e?.detail;
+  if (!isCustomAnimation(anim)) return;
+  handleCustomAnimation(anim);
 });
