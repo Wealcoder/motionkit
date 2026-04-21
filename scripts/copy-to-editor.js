@@ -48,7 +48,7 @@ const FILES = [
   'frontend/customAnimation.js',
   'frontend/editor-reset.js',
   'frontend/freePresets/generalSpaceInLeftAnim.js',
-  'frontend/freePresets/generalSpeceInRightAnim.js',
+  'frontend/freePresets/generalSpaceInRightAnim.js',
   'frontend/freePresets/generalSwapAnim.js',
   'frontend/freePresets/generalTwisterInDownAnim.js',
   'frontend/freePresets/imageSwashInAnim.js',

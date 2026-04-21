@@ -7,7 +7,7 @@ const CLASS_LIST = [
   "wcf-free-ab-spaceInRight",
 ];
 
-export function generalSpeceInRightAnim() {
+export function generalSpaceInRightAnim() {
   function handler(e) {
     const anim = e?.detail;
     if (!anim || anim.presetKey !== PRESET_KEY) return;
@@ -41,4 +41,4 @@ export function generalSpeceInRightAnim() {
   document.addEventListener("aae-animation-event", handler);
 }
 
-generalSpeceInRightAnim();
+generalSpaceInRightAnim();

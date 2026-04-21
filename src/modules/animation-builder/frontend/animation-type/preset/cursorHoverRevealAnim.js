@@ -1,6 +1,6 @@
 import { VOID_ELEMENTS } from "../../../config/VoidElement";
 
-const PRESET_KEY = "wcf-mk-cursor-cr-fa";
+const PRESET_KEY = "wcf-mk-cursor-cr-pa";
 
 export function cursorHoverRevealAnim() {
   // id -> array of per-item teardown fns
@@ -181,7 +181,9 @@ export function cursorHoverRevealAnim() {
     const hasBorderWidth = borderWidth != null && borderWidth !== "";
     const borderStyle =
       borderType && borderType !== "none" && hasBorderWidth
-        ? `border: ${toCssLength(borderWidth)} ${borderType} ${borderColor || "#000000"};`
+        ? `border: ${toCssLength(borderWidth)} ${borderType} ${
+            borderColor || "#000000"
+          };`
         : "";
 
     const cursorConfig = {

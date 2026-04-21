@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-image-scale-fa";
+const PRESET_KEY = "wcf-mk-image-scale-pa";
 
 export function imageScaleAnim() {
   // id -> { timelines: GSAPTimeline[] }

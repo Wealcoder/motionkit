@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-text-scale-fa";
+const PRESET_KEY = "wcf-mk-text-scale-pa";
 
 export function textScaleAnim() {
   // id -> { tweens: [], splits: [], cleanups: [] }
@@ -9,12 +9,28 @@ export function textScaleAnim() {
   function teardown(id) {
     const inst = instances.get(id);
     if (!inst) return;
-    inst.tweens.forEach((t) => { try { t.kill(); } catch {} });
-    inst.splits.forEach((s) => { try { s.revert(); } catch {} });
-    inst.cleanups.forEach((fn) => { try { fn(); } catch {} });
+    inst.tweens.forEach((t) => {
+      try {
+        t.kill();
+      } catch {}
+    });
+    inst.splits.forEach((s) => {
+      try {
+        s.revert();
+      } catch {}
+    });
+    inst.cleanups.forEach((fn) => {
+      try {
+        fn();
+      } catch {}
+    });
     if (window.ScrollTrigger) {
       const st = window.ScrollTrigger.getById(id);
-      if (st) { try { st.kill(); } catch {} }
+      if (st) {
+        try {
+          st.kill();
+        } catch {}
+      }
     }
     instances.delete(id);
   }
@@ -68,7 +84,9 @@ export function textScaleAnim() {
 
     gsap.set(itemClass, { transition: "none" });
     if (triggerSelector) {
-      try { gsap.set(triggerSelector, { transition: "none" }); } catch {}
+      try {
+        gsap.set(triggerSelector, { transition: "none" });
+      } catch {}
     }
 
     let splitInstance;
@@ -222,12 +240,23 @@ export function textScaleAnim() {
     };
 
     switch (triggerType) {
-      case "on_scroll":       runScroll(); break;
-      case "play_with_scroll": runPlayWithScroll(); break;
-      case "page_load":       runPageLoad(); break;
-      case "hover":           attachHover(); break;
-      case "click":           attachClick(); break;
-      default: break;
+      case "on_scroll":
+        runScroll();
+        break;
+      case "play_with_scroll":
+        runPlayWithScroll();
+        break;
+      case "page_load":
+        runPageLoad();
+        break;
+      case "hover":
+        attachHover();
+        break;
+      case "click":
+        attachClick();
+        break;
+      default:
+        break;
     }
 
     instances.set(id, { tweens, splits, cleanups });

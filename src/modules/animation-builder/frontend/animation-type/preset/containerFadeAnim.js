@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-container-fade-fa";
+const PRESET_KEY = "wcf-mk-container-fade-pa";
 
 // Register ScrollTrigger once so `scrollTrigger: {...}` on from/to/fromTo works.
 if (typeof window !== "undefined" && window.gsap && window.ScrollTrigger) {
