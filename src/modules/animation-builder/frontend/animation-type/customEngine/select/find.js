@@ -14,7 +14,7 @@ export function findRoutedScrollTriggers(anim, deviceKey) {
     if (!isScrollTriggerActive(st)) continue;
     const cfg = pickDeviceConfig(st.devices, deviceKey);
     if (!cfg) continue;
-    const tl = findTimelineById(anim, cfg.animation);
+    const tl = findTimelineById(anim, cfg.timeline);
     if (!tl) continue;
     out.push({ st, cfg, tl });
   }
