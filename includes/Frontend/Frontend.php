@@ -344,6 +344,11 @@ final class Frontend
       true
     );
 
+    // ScrollSmoother in editor-iframe mode is owned entirely by the editor
+    // (see src/lib/gsap/scrollSmoother.js). The WP inline script short-circuits
+    // on ?action=motionkit-editor anyway, so we skip hooking it here to avoid
+    // printing dead code.
+
     // Load device breakpoints
     $devices = $this->get_sanitized_devices();
 
@@ -429,13 +434,7 @@ final class Frontend
       return;
     }
     
-    $page_configs = $this->page_type->getConfig();
-    // Early return only if NO page configs AND NO global animations exist.
-    $global_animation_exists = !empty(get_option('motionkit_global_animations', []));
-
-    if ((empty($page_configs) || !is_array($page_configs)) && !$global_animation_exists) {
-      return;
-    }
+    $page_configs = $this->page_type->getConfig();  
 
     if (!is_array($page_configs)) {
       $page_configs = [];
@@ -500,10 +499,21 @@ final class Frontend
       is_array($page_animation) ? $page_animation : []
     );
 
+    // Page settings live under mkit_pg_settings_<type> — separate from animations.
+    $settings_config = $page_type_config;
+    if (!empty($settings_config['option']) && is_string($settings_config['option'])) {
+      $settings_config['option'] = preg_replace(
+        '/^mkit_pg_animation_/',
+        'mkit_pg_settings_',
+        $settings_config['option']
+      );
+    }
+    $page_settings = $this->page_type->getConfig($settings_config);
+
     // Merge global settings with current page settings on specific keys.
     // Page-level values override global when present.
     $global_settings_arr = is_array($global_settings) ? $global_settings : (array) $global_settings;
-    $page_settings_arr   = is_array($page_configs) ? $page_configs : [];
+    $page_settings_arr   = is_array($page_settings) ? $page_settings : [];
 
     // Default settings baseline — always present so the frontend runtime has
     // sane initial state (device breakpoints, etc.) even when the editor
@@ -513,6 +523,14 @@ final class Frontend
     ];
 
     $merged_settings = array_merge($default_settings, $global_settings_arr);
+
+    // Flatten scrollSmother.allPage -> scrollSmother so the frontend runtime
+    // reads a single shape (global baseline, used only if current page has none).
+    if (!empty($merged_settings['scrollSmother']['allPage']) && is_array($merged_settings['scrollSmother']['allPage'])) {
+      $merged_settings['scrollSmother'] = $merged_settings['scrollSmother']['allPage'];
+    }
+
+    // Current page settings fully replace the global baseline for these keys.
     foreach (['pageTransition', 'scrollSmother', 'preloader'] as $key) {
       if (!empty($page_settings_arr[$key]) && is_array($page_settings_arr[$key])) {
         $merged_settings[$key] = $page_settings_arr[$key];

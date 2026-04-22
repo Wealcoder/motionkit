@@ -13,71 +13,153 @@ if (!defined('ABSPATH')) {
  * Prints an inline script in wp_footer that:
  *  1. Injects #smooth-wrapper / #smooth-content around the existing body
  *     children (only if they don't already exist — safe against other plugins).
- *  2. Boots GSAP's ScrollSmoother plugin.
+ *  2. Exposes window.motionkitRebootSmoother() — a settings-driven boot/kill
+ *     function that reads wcfanimb.all_settings.scrollSmother and creates,
+ *     updates, or kills the ScrollSmoother instance.
+ *
+ * This runner targets the live WP frontend. Full-preview tabs skip it via the
+ * mk_full_preview PHP guard; the editor iframe is driven by the editor's own
+ * applyScrollSmoother module (src/lib/gsap/scrollSmoother.js) and never hooks
+ * run_scroll_smoother in editor-preview mode.
  *
  * @package WcfAnimationBuilder
  * @since 1.0.0
  */
 final class ScrollSmoother
 {
-  /**
-   * Print the inline script that injects the wrapper and boots ScrollSmoother.
-   *
-   * @return void
-   */
   public function run_scroll_smoother(): void
   {
+    // Skip the full-preview tab — the editor opens the WP site with its own
+    // in-memory state and drives animation/smoother behavior directly.
+    if (isset($_GET['mk_full_preview']) && $_GET['mk_full_preview'] === '1') {
+      return;
+    }
     ?>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-       
-        // ── 1. Inject wrapper if not already present ──────────────────
-        let smootherWrapper = document.getElementById("smooth-wrapper");
-        
-        if (!smootherWrapper) {
-          smootherWrapper = document.createElement("div");
-          smootherWrapper.id = "smooth-wrapper";
+      (function () {
+        function ensureWrapper() {
+          var wrapper = document.getElementById('smooth-wrapper');
+          if (wrapper) return wrapper;
 
-          const smootherContent = document.createElement("div");
-          smootherContent.id = "smooth-content";
+          wrapper = document.createElement('div');
+          wrapper.id = 'smooth-wrapper';
 
-          // Move all existing body children into #smooth-content
+          var content = document.createElement('div');
+          content.id = 'smooth-content';
+
           while (document.body.firstChild) {
-            smootherContent.appendChild(document.body.firstChild);
+            content.appendChild(document.body.firstChild);
           }
 
-          smootherWrapper.appendChild(smootherContent);
-          document.body.appendChild(smootherWrapper);
+          wrapper.appendChild(content);
+          document.body.appendChild(wrapper);
+
+          // Sentinel for pin-end detection used elsewhere in the suite.
+          var sentinel = document.createElement('div');
+          sentinel.className = 'wcf-ab-pin-end-selector-26';
+          sentinel.hidden = true;
+          wrapper.appendChild(sentinel);
+
+          return wrapper;
         }
 
-        // ── 2. Add sentinel for pin-end detection ─────────────────────
-        const sentinel = document.createElement("div");
-        sentinel.className = "wcf-ab-pin-end-selector-26";
-        sentinel.hidden = true;
-        smootherWrapper.appendChild(sentinel);
+        // Resolve the current device key from deviceConfig using viewWidth
+        // as descending thresholds against window.innerWidth. Handles both
+        // shapes: flat array OR editor-object ({ desktop: {...}, laptop: {...},
+        // tab_land: {...}, tab: {...}, mobile: {...} }).
+        function resolveDeviceKey(deviceConfig) {
+          var list;
+          if (Array.isArray(deviceConfig)) {
+            list = deviceConfig;
+          } else if (deviceConfig && typeof deviceConfig === 'object') {
+            var order = ['desktop', 'laptop', 'tab_land', 'tab', 'mobile'];
+            list = [];
+            for (var o = 0; o < order.length; o++) {
+              var entry = deviceConfig[order[o]];
+              if (entry) list.push(entry);
+            }
+          } else {
+            return 'desktop';
+          }
 
-        // ── 3. Boot ScrollSmoother ────────────────────────────────────
-        if (typeof window.gsap === "undefined") {
-          console.warn("[MotionKit] GSAP is not loaded — ScrollSmoother skipped.");
-          return;
+          var w = window.innerWidth || 0;
+          var sorted = list
+            .map(function (d) { return { key: d.key, w: parseInt(d.viewWidth, 10) || 0 }; })
+            .sort(function (a, b) { return b.w - a.w; });
+          for (var j = 0; j < sorted.length; j++) {
+            if (w >= sorted[j].w) return sorted[j].key;
+          }
+          return 'mobile';
         }
 
-        if (typeof window.ScrollSmoother === "undefined") {
-          console.warn("[MotionKit] ScrollSmoother is not loaded — ScrollSmoother skipped.");
-          return;
+        function resolveSmootherValue() {
+          var all = (window.wcfanimb && window.wcfanimb.all_settings) || {};
+          var gs = (window.wcfanimb && window.wcfanimb.global_settings) || {};
+
+          // Master kill: globalSettings.scrollSmother.allPage.enable is the
+          // authoritative off switch. When false, smoother is dead everywhere
+          // regardless of per-page overrides.
+          var allPage = gs.scrollSmother && gs.scrollSmother.allPage;
+          if (allPage && allPage.enable === false) return null;
+
+          var cfg = all.scrollSmother || null;
+          if (!cfg || cfg.enable === false) return null;
+
+          var devices = all.deviceConfig || (window.wcfanimb && window.wcfanimb.device_config) || [];
+          var currentKey = resolveDeviceKey(devices);
+          
+          // scrollSmother has 4 buckets (desktop/laptop/tablet/mobile), deviceConfig has
+          // 5 keys (adds tab_land and tab). Read the bucket directly — when the resolved
+          // key is tab_land/tab and cfg has no matching entry, fall through to 'tablet'.
+          var device = cfg[currentKey];
+          
+          if (!device && (currentKey === 'tab_land' || currentKey === 'tab')) {
+            device = cfg.tablet;
+          }
+            
+          if (!device || device.enable === false) return null;
+
+          // Slider is 0-10 (see scrollSmother.js config). Map to GSAP smooth
+          // seconds via /5 so the useful range 0-2s stays reachable without
+          // an extra UI knob.
+          var raw = Number(device.value);
+          if (!isFinite(raw)) raw = 1;
+          return Math.max(0, Math.min(2, raw / 5));
         }
 
-        gsap.registerPlugin(ScrollSmoother);
-        const existing = ScrollSmoother.get();
-        const motionkit_smoother = existing || ScrollSmoother.create({
-          smooth: 1.35,
-          effects: true,
-          smoothTouch: 0.1,
-          normalizeScroll: false,
-          ignoreMobileResize: false,
-        });
+        window.motionkitRebootSmoother = function () {
+          if (typeof window.gsap === 'undefined' || typeof window.ScrollSmoother === 'undefined') {
+            return;
+          }
 
-      });
+          gsap.registerPlugin(ScrollSmoother);
+          var existing = ScrollSmoother.get();
+          var smooth = resolveSmootherValue();
+
+          if (smooth === null) {
+            if (existing) existing.kill();
+            return;
+          }
+
+          ensureWrapper();
+
+          if (existing) {
+            existing.smooth(smooth);
+            return;
+          }
+
+          ScrollSmoother.create({
+            smooth: smooth,
+            effects: false           
+          });
+        };
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', window.motionkitRebootSmoother);
+        } else {
+          window.motionkitRebootSmoother();
+        }
+      })();
     </script>
     <?php
   }

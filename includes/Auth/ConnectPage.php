@@ -638,7 +638,9 @@ final class ConnectPage
   // ─── Tools Tab ───────────────────────────────────────────────
 
   private const TOOLS_OPTION_PREFIX = 'mkit_pg_animation_';
+  private const TOOLS_SETTINGS_PREFIX = 'mkit_pg_settings_';
   private const TOOLS_GLOBAL_SETTINGS_OPTION = 'motionkit_global_settings';
+  private const TOOLS_GLOBAL_ANIMATIONS_OPTION = 'motionkit_global_animations';
 
   public function handle_tools_actions(): void
   {
@@ -712,9 +714,12 @@ final class ConnectPage
       }
     }
 
-    // Also clear global settings on the very first batch.
+    // First batch: clear global keys + sweep any orphan settings rows that
+    // have no matching animation record (so nothing is left behind).
     if ($offset === 0) {
       delete_option(self::TOOLS_GLOBAL_SETTINGS_OPTION);
+      delete_option(self::TOOLS_GLOBAL_ANIMATIONS_OPTION);
+      $this->delete_all_settings_records();
     }
 
     $processed = $offset + count($slice);
@@ -731,6 +736,27 @@ final class ConnectPage
 
   private function delete_animation_record(string $store_type, string $option, int $id = 0): bool
   {
+    $deleted = $this->delete_keyed_record($store_type, $option, $id);
+
+    // Cascade: when we remove mkit_pg_animation_<type>, also remove the
+    // matching mkit_pg_settings_<type> on the same store/id. Settings are
+    // orphaned once the animation row is gone — no UI points at them.
+    if (strpos($option, self::TOOLS_OPTION_PREFIX) === 0) {
+      $settings_key = preg_replace(
+        '/^' . preg_quote(self::TOOLS_OPTION_PREFIX, '/') . '/',
+        self::TOOLS_SETTINGS_PREFIX,
+        $option
+      );
+      if ($settings_key !== null && $settings_key !== $option) {
+        $this->delete_keyed_record($store_type, $settings_key, $id);
+      }
+    }
+
+    return $deleted;
+  }
+
+  private function delete_keyed_record(string $store_type, string $option, int $id = 0): bool
+  {
     switch ($store_type) {
       case 'post_meta':
         return (bool) delete_post_meta($id, $option);
@@ -739,6 +765,44 @@ final class ConnectPage
       case 'option':
       default:
         return (bool) delete_option($option);
+    }
+  }
+
+  // Wipe every mkit_pg_settings_* row across post_meta/term_meta/options.
+  // Used by bulk delete to catch orphans whose animation row was already gone.
+  private function delete_all_settings_records(): void
+  {
+    global $wpdb;
+    $like = $wpdb->esc_like(self::TOOLS_SETTINGS_PREFIX) . '%';
+
+    $post_rows = $wpdb->get_results(
+      $wpdb->prepare(
+        "SELECT post_id AS id, meta_key AS `key` FROM {$wpdb->postmeta} WHERE meta_key LIKE %s",
+        $like
+      )
+    );
+    foreach ($post_rows as $r) {
+      delete_post_meta((int) $r->id, $r->key);
+    }
+
+    $term_rows = $wpdb->get_results(
+      $wpdb->prepare(
+        "SELECT term_id AS id, meta_key AS `key` FROM {$wpdb->termmeta} WHERE meta_key LIKE %s",
+        $like
+      )
+    );
+    foreach ($term_rows as $r) {
+      delete_term_meta((int) $r->id, $r->key);
+    }
+
+    $opt_rows = $wpdb->get_results(
+      $wpdb->prepare(
+        "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+        $like
+      )
+    );
+    foreach ($opt_rows as $r) {
+      delete_option($r->option_name);
     }
   }
 
@@ -956,6 +1020,7 @@ final class ConnectPage
       const strings = {
         noResults: <?php echo wp_json_encode(__('No animation data found.', 'motionkit')); ?>,
         edit:      <?php echo wp_json_encode(__('Edit', 'motionkit')); ?>,
+        preview:   <?php echo wp_json_encode(__('Preview', 'motionkit')); ?>,
         del:       <?php echo wp_json_encode(__('Delete', 'motionkit')); ?>,
         confirm:   <?php echo wp_json_encode(__('Delete this animation data?', 'motionkit')); ?>,
         prev:      <?php echo wp_json_encode(__('Prev', 'motionkit')); ?>,
@@ -975,12 +1040,13 @@ final class ConnectPage
         } else {
           tbody.innerHTML = data.rows.map(r=>{
             const edit = r.edit_url ? '<a href="'+esc(r.edit_url)+'" target="_blank" class="mk-btn mk-btn--primary mk-btn--sm">'+esc(strings.edit)+'</a>' : '';
+            const preview = r.permalink ? '<a href="'+esc(r.permalink)+'" target="_blank" rel="noopener" class="mk-btn mk-btn--outline mk-btn--sm">'+esc(strings.preview)+'</a>' : '';
             const del  = '<button type="button" class="mk-btn mk-btn--outline mk-btn--danger mk-btn--sm mk-del-row" data-store="'+esc(r.store_type)+'" data-option="'+esc(r.option)+'" data-id="'+esc(r.id)+'">'+esc(strings.del)+'</button>';
             return '<tr>'+
               '<td><strong>'+esc(r.title)+'</strong><br><small style="color:#6b7280;">'+esc(r.option)+'</small></td>'+
               '<td><span class="mk-tools-type">'+esc(r.type_label)+'</span></td>'+
               '<td>'+esc(r.modified || '—')+'</td>'+
-              '<td><div class="mk-tools-actions">'+edit+del+'</div></td>'+
+              '<td><div class="mk-tools-actions">'+edit+preview+del+'</div></td>'+
             '</tr>';
           }).join('');
         }
