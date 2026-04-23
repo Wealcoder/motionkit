@@ -86,6 +86,7 @@ const ENDPOINT_TO_ACTION = {
   "global-animation": "save_global_animation",
   "current-page-settings": "save_current_page_settings",
   "current-page-animation": "save_current_page_animation",
+  "page-transition-exported-code": "save_page_transition_code",
 };
 
 /**
@@ -196,6 +197,7 @@ function receivePageConfig() {
   window.addEventListener(
     "message",
     (event) => {
+      const headers = getAuthHeaders();
       // Receive global + current page settings from the editor
       if (event.data?.type === "motionkit-settings") {
         const {
@@ -206,8 +208,6 @@ function receivePageConfig() {
         } = event.data.data || {};
         // Editor-assigned id so ack postMessages can match the toast.
         const saveId = event.data.saveId || null;
-
-        const headers = getAuthHeaders();
 
         if (globalSettings) {
           saveViaRest(
@@ -324,6 +324,18 @@ function receivePageConfig() {
             );
           });
       }
+
+      if (event.data?.type === "motionkit-page-transition-code") {
+        const { presetKey, presetLabel, code } = event.data.data || {};
+        saveViaRest(
+          "page-transition-exported-code",
+          { code, presetKey, presetLabel },
+          headers,
+          () => {},
+          presetKey,
+        );
+      }
+
 
       // Respond to data requests from the SaaS editor
       if (

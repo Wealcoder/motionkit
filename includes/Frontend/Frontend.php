@@ -79,6 +79,7 @@ final class Frontend
     // Frontend script enqueue — only on actual page loads (not admin/AJAX)
     if (!is_admin()) {
       add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_scripts'], 60);
+      add_action('wp_footer', [$this, 'print_page_transition_code'], 99);
     }
 
     // AJAX handlers — must register in admin context (admin-ajax.php)
@@ -272,6 +273,39 @@ final class Frontend
     }
 
     add_action('wp_footer', [$this->smoother, 'run_scroll_smoother']);
+  }
+
+  /**
+   * Print the saved page-transition code in wp_footer.
+   *
+   * The editor persists the exported snippet to option `motionkit-page-transition-code`
+   * via the /save REST dispatcher. The snippet is a self-contained IIFE that boots
+   * GSAP-driven page transitions — it assumes gsap is available on window.
+   *
+   * Skipped in the editor preview + full-preview contexts so the editor runtime
+   * (which injects its own preview scripts) doesn't double-execute it.
+   *
+   * @return void
+   */
+  public function print_page_transition_code(): void
+  {
+    if ($this->is_editor_preview() || $this->is_full_preview()) {
+      return;
+    }
+
+    $stored = get_option('motionkit-page-transition-code');
+    if (!is_array($stored) || empty($stored['code']) || !is_string($stored['code'])) {
+      return;
+    }
+
+    $label = isset($stored['presetLabel']) ? (string) $stored['presetLabel'] : '';
+    $key   = isset($stored['presetKey']) ? (string) $stored['presetKey'] : '';
+    $tag   = trim($label . ($key ? " ({$key})" : '')) ?: 'custom';
+
+    echo "\n<!-- MotionKit Page Transition: " . esc_html($tag) . " -->\n";
+    echo '<script id="motionkit-page-transition-code">' . "\n";
+    echo $stored['code'] . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput -- curated JS snippet from authenticated editor.
+    echo "</script>\n";
   }
 
   /**
