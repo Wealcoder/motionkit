@@ -99,8 +99,8 @@ final class Frontend
    */
   public function register_gsap_libs(array $deps): array
   {
-    $cdn = 'https://cdn.jsdelivr.net/npm/gsap@3.14/dist/';
-    $ver = '3.14.0';
+    $cdn = 'https://cdn.jsdelivr.net/npm/gsap@3.15/dist/';
+    $ver = '3.15.0';
 
     $libs = [
       // Core
@@ -167,7 +167,7 @@ final class Frontend
    */
   private function is_editor_preview(): bool
   {
-    
+
     if (!isset($_GET['action']) || sanitize_text_field(wp_unslash($_GET['action'])) !== 'motionkit-editor') {
       return false;
     }
@@ -395,7 +395,7 @@ final class Frontend
       }
     }
 
-   
+
     $mk_token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
 
     // Shared localized data for both frontend runner and editor bridge
@@ -429,12 +429,12 @@ final class Frontend
    */
   private function enqueue_page_scripts(): void
   {
-   
+
     if ($this->is_editor_preview()) {
       return;
     }
-    
-    $page_configs = $this->page_type->getConfig();  
+
+    $page_configs = $this->page_type->getConfig();
 
     if (!is_array($page_configs)) {
       $page_configs = [];
@@ -444,10 +444,10 @@ final class Frontend
     $this->maybe_init_scroll_smoother();
 
     // Determine which presets are active in the config
-    $is_custom = false;   
+    $is_custom = false;
     $active_presets = $this->get_active_presets($page_configs, $is_custom);
-  
-   
+
+
     // Build deps — allow Pro to add gsap/ScrollTrigger via filter
     $deps = apply_filters('motionkit_core_lib_deps', []);
     $deps = array_values(array_filter($deps, function ($dep) {
@@ -472,14 +472,14 @@ final class Frontend
 
     if (isset($active_presets['premium']) && !empty($active_presets['premium'])) {
       $this->enqueue_presets($active_presets['premium'], $deps);
-    }   
+    }
 
     // Enqueue smart animation engine when custom animations are present
     if ($is_custom) {
       wp_enqueue_script(
         'motionkit-custom-animation',
         MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/customAnimation.js',
-        ['motionkit-frontend'],
+        ['motionkit-frontend', 'DrawSVGPlugin'],
         MOTIONKIT_VERSION,
         true
       );
@@ -564,7 +564,7 @@ final class Frontend
 
     if (!is_array($config) || empty($config['freePresets'])) {
       return;
-    }   
+    }
 
     // Enqueue free animation CSS
     wp_enqueue_style(
@@ -575,15 +575,15 @@ final class Frontend
     );
 
     // Enqueue each active free preset script
-    
+
     if ($active_presets && is_array($active_presets)) {
-      
+
       foreach ($active_presets as $key) {
 
         if (!isset($config['freePresets'][$key])) {
           continue;
         }
-      
+
         $element = $config['freePresets'][$key];
 
         wp_enqueue_script(
@@ -593,10 +593,8 @@ final class Frontend
           $element['version'],
           true
         );
-
       }
     }
-    
   }
 
   /**
@@ -620,7 +618,7 @@ final class Frontend
       return;
     }
 
-    
+
 
     foreach ($active_presets as $key) {
 
@@ -629,7 +627,7 @@ final class Frontend
       }
 
       $element = $config['premiumPresets'][$key];
-   
+
       wp_enqueue_script(
         $key,
         $element['src'],
@@ -638,7 +636,7 @@ final class Frontend
         true
       );
     }
-  } 
+  }
 
   /**
    * Load and sanitize device breakpoint config
@@ -699,7 +697,6 @@ final class Frontend
             $premium_preset[] = $value['presetKey'];
           } elseif ($value['group'] === 'free_preset_animation' && isset($value['presetKey'])) {
             $free_preset[] = $value['presetKey'];
-           
           } elseif ($value['group'] === 'custom_animation') {
             $is_custom = true;
           }
