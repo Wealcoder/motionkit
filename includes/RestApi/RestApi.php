@@ -348,6 +348,7 @@ final class RestApi
       'save_global_animation',
       'save_current_page_settings',
       'save_current_page_animation',
+      'save_page_transition_code',
       'delete_global_settings',
       'delete_current_page_settings',
       'get_settings',
@@ -380,6 +381,27 @@ final class RestApi
           $payload['animationConfigs'] ?? []
         );
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_settings_saved']], 200);
+
+      case 'save_page_transition_code':
+        // Persist the exported page-transition code so Frontend.php can
+        // inject it on wp_footer. We keep code + preset metadata so the
+        // admin can see which preset the current snippet came from.
+        $code         = isset($payload['code']) && is_string($payload['code']) ? $payload['code'] : '';
+        $preset_key   = isset($payload['presetKey']) ? sanitize_text_field((string) $payload['presetKey']) : '';
+        $preset_label = isset($payload['presetLabel']) ? sanitize_text_field((string) $payload['presetLabel']) : '';
+
+        if ($code === '') {
+          delete_option('motionkit-page-transition-code');
+          return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_transition_cleared']], 200);
+        }
+
+        update_option('motionkit-page-transition-code', [
+          'code'        => $code,
+          'presetKey'   => $preset_key,
+          'presetLabel' => $preset_label,
+          'updated_at'  => time(),
+        ], false);
+        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_transition_saved']], 200);
 
       case 'delete_global_settings':
         delete_option('motionkit_global_settings');

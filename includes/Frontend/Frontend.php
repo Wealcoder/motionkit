@@ -79,6 +79,7 @@ final class Frontend
     // Frontend script enqueue — only on actual page loads (not admin/AJAX)
     if (!is_admin()) {
       add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_scripts'], 60);
+      add_action('wp_footer', [$this, 'print_page_transition_code'], 99);
     }
 
     // AJAX handlers — must register in admin context (admin-ajax.php)
@@ -99,8 +100,8 @@ final class Frontend
    */
   public function register_gsap_libs(array $deps): array
   {
-    $cdn = 'https://cdn.jsdelivr.net/npm/gsap@3.14/dist/';
-    $ver = '3.14.0';
+    $cdn = 'https://cdn.jsdelivr.net/npm/gsap@3.15/dist/';
+    $ver = '3.15.0';
 
     $libs = [
       // Core
@@ -167,7 +168,7 @@ final class Frontend
    */
   private function is_editor_preview(): bool
   {
-    
+
     if (!isset($_GET['action']) || sanitize_text_field(wp_unslash($_GET['action'])) !== 'motionkit-editor') {
       return false;
     }
@@ -275,6 +276,39 @@ final class Frontend
   }
 
   /**
+   * Print the saved page-transition code in wp_footer.
+   *
+   * The editor persists the exported snippet to option `motionkit-page-transition-code`
+   * via the /save REST dispatcher. The snippet is a self-contained IIFE that boots
+   * GSAP-driven page transitions — it assumes gsap is available on window.
+   *
+   * Skipped in the editor preview + full-preview contexts so the editor runtime
+   * (which injects its own preview scripts) doesn't double-execute it.
+   *
+   * @return void
+   */
+  public function print_page_transition_code(): void
+  {
+    if ($this->is_editor_preview() || $this->is_full_preview()) {
+      return;
+    }
+
+    $stored = get_option('motionkit-page-transition-code');
+    if (!is_array($stored) || empty($stored['code']) || !is_string($stored['code'])) {
+      return;
+    }
+
+    $label = isset($stored['presetLabel']) ? (string) $stored['presetLabel'] : '';
+    $key   = isset($stored['presetKey']) ? (string) $stored['presetKey'] : '';
+    $tag   = trim($label . ($key ? " ({$key})" : '')) ?: 'custom';
+
+    echo "\n<!-- MotionKit Page Transition: " . esc_html($tag) . " -->\n";
+    echo '<script id="motionkit-page-transition-code">' . "\n";
+    echo $stored['code'] . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput -- curated JS snippet from authenticated editor.
+    echo "</script>\n";
+  }
+
+  /**
    * Conditionally enqueue frontend animation scripts
    *
    * Two modes:
@@ -344,6 +378,11 @@ final class Frontend
       true
     );
 
+    // ScrollSmoother in editor-iframe mode is owned entirely by the editor
+    // (see src/lib/gsap/scrollSmoother.js). The WP inline script short-circuits
+    // on ?action=motionkit-editor anyway, so we skip hooking it here to avoid
+    // printing dead code.
+
     // Load device breakpoints
     $devices = $this->get_sanitized_devices();
 
@@ -390,7 +429,7 @@ final class Frontend
       }
     }
 
-   
+
     $mk_token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
 
     // Shared localized data for both frontend runner and editor bridge
@@ -424,18 +463,12 @@ final class Frontend
    */
   private function enqueue_page_scripts(): void
   {
-   
+
     if ($this->is_editor_preview()) {
       return;
     }
-    
-    $page_configs = $this->page_type->getConfig();
-    // Early return only if NO page configs AND NO global animations exist.
-    $global_animation_exists = !empty(get_option('motionkit_global_animations', []));
 
-    if ((empty($page_configs) || !is_array($page_configs)) && !$global_animation_exists) {
-      return;
-    }
+    $page_configs = $this->page_type->getConfig();
 
     if (!is_array($page_configs)) {
       $page_configs = [];
@@ -445,10 +478,10 @@ final class Frontend
     $this->maybe_init_scroll_smoother();
 
     // Determine which presets are active in the config
-    $is_custom = false;   
+    $is_custom = false;
     $active_presets = $this->get_active_presets($page_configs, $is_custom);
-  
-   
+
+
     // Build deps — allow Pro to add gsap/ScrollTrigger via filter
     $deps = apply_filters('motionkit_core_lib_deps', []);
     $deps = array_values(array_filter($deps, function ($dep) {
@@ -473,14 +506,14 @@ final class Frontend
 
     if (isset($active_presets['premium']) && !empty($active_presets['premium'])) {
       $this->enqueue_presets($active_presets['premium'], $deps);
-    }   
+    }
 
     // Enqueue smart animation engine when custom animations are present
     if ($is_custom) {
       wp_enqueue_script(
         'motionkit-custom-animation',
         MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/customAnimation.js',
-        ['motionkit-frontend'],
+        ['motionkit-frontend', 'DrawSVGPlugin'],
         MOTIONKIT_VERSION,
         true
       );
@@ -500,10 +533,21 @@ final class Frontend
       is_array($page_animation) ? $page_animation : []
     );
 
+    // Page settings live under mkit_pg_settings_<type> — separate from animations.
+    $settings_config = $page_type_config;
+    if (!empty($settings_config['option']) && is_string($settings_config['option'])) {
+      $settings_config['option'] = preg_replace(
+        '/^mkit_pg_animation_/',
+        'mkit_pg_settings_',
+        $settings_config['option']
+      );
+    }
+    $page_settings = $this->page_type->getConfig($settings_config);
+
     // Merge global settings with current page settings on specific keys.
     // Page-level values override global when present.
     $global_settings_arr = is_array($global_settings) ? $global_settings : (array) $global_settings;
-    $page_settings_arr   = is_array($page_configs) ? $page_configs : [];
+    $page_settings_arr   = is_array($page_settings) ? $page_settings : [];
 
     // Default settings baseline — always present so the frontend runtime has
     // sane initial state (device breakpoints, etc.) even when the editor
@@ -513,6 +557,14 @@ final class Frontend
     ];
 
     $merged_settings = array_merge($default_settings, $global_settings_arr);
+
+    // Flatten scrollSmother.allPage -> scrollSmother so the frontend runtime
+    // reads a single shape (global baseline, used only if current page has none).
+    if (!empty($merged_settings['scrollSmother']['allPage']) && is_array($merged_settings['scrollSmother']['allPage'])) {
+      $merged_settings['scrollSmother'] = $merged_settings['scrollSmother']['allPage'];
+    }
+
+    // Current page settings fully replace the global baseline for these keys.
     foreach (['pageTransition', 'scrollSmother', 'preloader'] as $key) {
       if (!empty($page_settings_arr[$key]) && is_array($page_settings_arr[$key])) {
         $merged_settings[$key] = $page_settings_arr[$key];
@@ -546,7 +598,7 @@ final class Frontend
 
     if (!is_array($config) || empty($config['freePresets'])) {
       return;
-    }   
+    }
 
     // Enqueue free animation CSS
     wp_enqueue_style(
@@ -557,15 +609,15 @@ final class Frontend
     );
 
     // Enqueue each active free preset script
-    
+
     if ($active_presets && is_array($active_presets)) {
-      
+
       foreach ($active_presets as $key) {
 
         if (!isset($config['freePresets'][$key])) {
           continue;
         }
-      
+
         $element = $config['freePresets'][$key];
 
         wp_enqueue_script(
@@ -575,10 +627,8 @@ final class Frontend
           $element['version'],
           true
         );
-
       }
     }
-    
   }
 
   /**
@@ -602,7 +652,7 @@ final class Frontend
       return;
     }
 
-    
+
 
     foreach ($active_presets as $key) {
 
@@ -611,7 +661,7 @@ final class Frontend
       }
 
       $element = $config['premiumPresets'][$key];
-   
+
       wp_enqueue_script(
         $key,
         $element['src'],
@@ -620,7 +670,7 @@ final class Frontend
         true
       );
     }
-  } 
+  }
 
   /**
    * Load and sanitize device breakpoint config
@@ -681,7 +731,6 @@ final class Frontend
             $premium_preset[] = $value['presetKey'];
           } elseif ($value['group'] === 'free_preset_animation' && isset($value['presetKey'])) {
             $free_preset[] = $value['presetKey'];
-           
           } elseif ($value['group'] === 'custom_animation') {
             $is_custom = true;
           }

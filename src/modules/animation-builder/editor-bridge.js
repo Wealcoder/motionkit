@@ -26,7 +26,6 @@ const ALLOWED_ORIGINS = [
   "*",
 ];
 
-
 /**
  * Validate that a message event comes from an allowed editor origin.
  */
@@ -87,13 +86,16 @@ const ENDPOINT_TO_ACTION = {
   "global-animation": "save_global_animation",
   "current-page-settings": "save_current_page_settings",
   "current-page-animation": "save_current_page_animation",
+  "page-transition-exported-code": "save_page_transition_code",
 };
 
 /**
  * No-op retained for call-site compatibility — we no longer use custom
  * auth headers (they'd trigger a CORS preflight).
  */
-function getAuthHeaders() { return {}; }
+function getAuthHeaders() {
+  return {};
+}
 
 /**
  * POST to /motionkit/v1/save as a CORS "simple request":
@@ -123,7 +125,9 @@ function saveViaRest(endpoint, body, _headers, onSuccess, saveId) {
         },
         parentOrigin || "*",
       );
-    } catch (e) { /* postMessage failed */ }
+    } catch (e) {
+      /* postMessage failed */
+    }
   };
 
   fetch(restUrl("save"), {
@@ -184,7 +188,6 @@ function buildResponsePayload(overrides = {}) {
 
 let parentOrigin = null;
 
-// Animation playback (`wcf-animation-config`, device resolution, dispatch of
 // `aae-animation-event`) lives in inject-bridge.js so HTML/static/Shopify and
 // WordPress all share one path. This bridge owns WP-specific concerns only:
 // REST save, page search, data hydration, ready signal.
@@ -194,9 +197,7 @@ function receivePageConfig() {
   window.addEventListener(
     "message",
     (event) => {
-      // wcf-animation-config and wcf-animation-config-reset are handled by
-      // inject-bridge.js (single source of truth across all platforms).
-
+      const headers = getAuthHeaders();
       // Receive global + current page settings from the editor
       if (event.data?.type === "motionkit-settings") {
         const {
@@ -207,8 +208,6 @@ function receivePageConfig() {
         } = event.data.data || {};
         // Editor-assigned id so ack postMessages can match the toast.
         const saveId = event.data.saveId || null;
-
-        const headers = getAuthHeaders();
 
         if (globalSettings) {
           saveViaRest(
@@ -325,6 +324,18 @@ function receivePageConfig() {
             );
           });
       }
+
+      if (event.data?.type === "motionkit-page-transition-code") {
+        const { presetKey, presetLabel, code } = event.data.data || {};
+        saveViaRest(
+          "page-transition-exported-code",
+          { code, presetKey, presetLabel },
+          headers,
+          () => {},
+          presetKey,
+        );
+      }
+
 
       // Respond to data requests from the SaaS editor
       if (
