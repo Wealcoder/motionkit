@@ -79,7 +79,8 @@ final class Frontend
     // Frontend script enqueue — only on actual page loads (not admin/AJAX)
     if (!is_admin()) {
       add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_scripts'], 60);
-      add_action('wp_footer', [$this, 'print_page_transition_code'], 99);
+      add_action('wp_head', [$this, 'print_gsap_preload'], 1);
+      add_action('wp_head', [$this, 'print_page_transition_code'], 99);
     }
 
     // AJAX handlers — must register in admin context (admin-ajax.php)
@@ -100,53 +101,71 @@ final class Frontend
    */
   public function register_gsap_libs(array $deps): array
   {
-    $cdn = 'https://cdn.jsdelivr.net/npm/gsap@3.15/dist/';
-    $ver = '3.15.0';
-
+    // Handle list + dependency graph. URLs come from the DB (per wp.org
+    // guidelines, the plugin doesn't ship hardcoded CDN URLs); this array
+    // only defines which handles exist and how they depend on each other.
     $libs = [
-      // Core
-      'gsap'                => ['file' => 'gsap.min.js',                'deps' => []],
-
-      // Scroll
-      'ScrollTrigger'       => ['file' => 'ScrollTrigger.min.js',       'deps' => ['gsap']],
-      'ScrollSmoother'      => ['file' => 'ScrollSmoother.min.js',      'deps' => ['gsap', 'ScrollTrigger']],
-      'ScrollToPlugin'      => ['file' => 'ScrollToPlugin.min.js',      'deps' => ['gsap']],
-      'Observer'            => ['file' => 'Observer.min.js',             'deps' => ['gsap']],
-
-      // Text
-      'SplitText'           => ['file' => 'SplitText.min.js',           'deps' => ['gsap']],
-      'TextPlugin'          => ['file' => 'TextPlugin.min.js',          'deps' => ['gsap']],
-      'ScrambleTextPlugin'  => ['file' => 'ScrambleTextPlugin.min.js',  'deps' => ['gsap']],
-
-      // SVG / Path
-      'DrawSVGPlugin'       => ['file' => 'DrawSVGPlugin.min.js',       'deps' => ['gsap']],
-      'MorphSVGPlugin'      => ['file' => 'MorphSVGPlugin.min.js',      'deps' => ['gsap']],
-      'MotionPathPlugin'    => ['file' => 'MotionPathPlugin.min.js',    'deps' => ['gsap']],
-      'MotionPathHelper'    => ['file' => 'MotionPathHelper.min.js',    'deps' => ['gsap', 'MotionPathPlugin']],
-
-      // UI
-      'Flip'                => ['file' => 'Flip.min.js',                'deps' => ['gsap']],
-      'Draggable'           => ['file' => 'Draggable.min.js',           'deps' => ['gsap']],
-      'InertiaPlugin'       => ['file' => 'InertiaPlugin.min.js',       'deps' => ['gsap']],
-
-      // Physics
-      'Physics2DPlugin'     => ['file' => 'Physics2DPlugin.min.js',     'deps' => ['gsap']],
-      'PhysicsPropsPlugin'  => ['file' => 'PhysicsPropsPlugin.min.js',  'deps' => ['gsap']],
-
-      // Eases
-      'CustomEase'          => ['file' => 'CustomEase.min.js',          'deps' => ['gsap']],
-      'EasePack'            => ['file' => 'EasePack.min.js',            'deps' => ['gsap']],
-      'CustomBounce'        => ['file' => 'CustomBounce.min.js',        'deps' => ['gsap', 'CustomEase']],
-      'CustomWiggle'        => ['file' => 'CustomWiggle.min.js',        'deps' => ['gsap', 'CustomEase']],
-
-      // Other
-      'PixiPlugin'          => ['file' => 'PixiPlugin.min.js',          'deps' => ['gsap']],
-      'EaselPlugin'         => ['file' => 'EaselPlugin.min.js',         'deps' => ['gsap']],
-      'GSDevTools'          => ['file' => 'GSDevTools.min.js',          'deps' => ['gsap']],
+      'gsap'               => ['deps' => []],
+      'ScrollTrigger'      => ['deps' => ['gsap']],
+      'ScrollSmoother'     => ['deps' => ['gsap', 'ScrollTrigger']],
+      'ScrollToPlugin'     => ['deps' => ['gsap']],
+      'Observer'           => ['deps' => ['gsap']],
+      'SplitText'          => ['deps' => ['gsap']],
+      'TextPlugin'         => ['deps' => ['gsap']],
+      'ScrambleTextPlugin' => ['deps' => ['gsap']],
+      'DrawSVGPlugin'      => ['deps' => ['gsap']],
+      'MorphSVGPlugin'     => ['deps' => ['gsap']],
+      'MotionPathPlugin'   => ['deps' => ['gsap']],
+      'MotionPathHelper'   => ['deps' => ['gsap', 'MotionPathPlugin']],
+      'Flip'               => ['deps' => ['gsap']],
+      'Draggable'          => ['deps' => ['gsap']],
+      'InertiaPlugin'      => ['deps' => ['gsap']],
+      'Physics2DPlugin'    => ['deps' => ['gsap']],
+      'PhysicsPropsPlugin' => ['deps' => ['gsap']],
     ];
 
+    // Per-handle URL map lives in motionkit_global_settings.gsapPlugin.cdns
+    // (edited from the editor's GSAP Plugin tab). Stored values may arrive as
+    // an associative array or stdClass depending on how the option was saved
+    // — normalize to an associative array.
+    $global = get_option('motionkit_global_settings', []);
+    $cdns   = [];
+    if (is_object($global) && isset($global->gsapPlugin)) {
+      $gsap_plugin = $global->gsapPlugin;
+      if (is_object($gsap_plugin) && isset($gsap_plugin->cdns)) {
+        $cdns = (array) $gsap_plugin->cdns;
+      } elseif (is_array($gsap_plugin) && isset($gsap_plugin['cdns'])) {
+        $cdns = (array) $gsap_plugin['cdns'];
+      }
+    } elseif (is_array($global) && isset($global['gsapPlugin']['cdns'])) {
+      $cdns = (array) $global['gsapPlugin']['cdns'];
+    }
+
+    // gsap core loads in <head> for the page-transition inline snippet. It keeps an
+    // empty deps array so presets and the snippet can list it as a dep without
+    // causing circular conflicts. All other libs (ScrollTrigger, ScrollSmoother, etc.)
+    // load in the footer — the page-transition snippet only needs window.gsap.
     foreach ($libs as $handle => $lib) {
-      wp_register_script($handle, $cdn . $lib['file'], $lib['deps'], $ver, true);
+      $url = isset($cdns[$handle]) && is_string($cdns[$handle]) ? trim($cdns[$handle]) : '';
+
+      // No URL configured → skip. Admin must set it from the editor's
+      // GSAP Plugin → "GSAP Library URLs" section.
+      if ($url === '') {
+        continue;
+      }
+
+      if (wp_http_validate_url($url) === false) {
+        error_log("MotionKit: invalid GSAP CDN URL for handle '{$handle}', skipping registration.");
+        continue;
+      }
+
+      // Admin-supplied URLs are expected to be already versioned, so pass
+      // null to wp_register_script to avoid double-stamping ?ver=.
+      if ($handle === 'gsap') {
+        wp_register_script($handle, $url, [], null, false);
+        continue;
+      }
+      wp_register_script($handle, $url, $lib['deps'], null, true);
     }
 
     $core_deps = ['gsap', 'ScrollSmoother'];
@@ -285,27 +304,79 @@ final class Frontend
    * Skipped in the editor preview + full-preview contexts so the editor runtime
    * (which injects its own preview scripts) doesn't double-execute it.
    *
+   * @since 1.1.0
    * @return void
    */
+  public function print_gsap_preload(): void
+  {
+    if ( $this->is_editor_preview() || $this->is_full_preview() ) {
+      return;
+    }
+
+    // Only preload when a page-transition snippet is actually stored — otherwise
+    // gsap may not be needed in the head at all on this page.
+    $stored = get_option( 'motionkit-page-transition-code' );
+    if ( ! is_array( $stored ) || empty( $stored['code'] ) || ! is_string( $stored['code'] ) ) {
+      return;
+    }
+
+    $cdn  = 'https://cdn.jsdelivr.net/npm/gsap@3.15/dist/';
+    $ver  = '3.15.0';
+    $href = esc_url( $cdn . 'gsap.min.js?ver=' . $ver );
+
+    // dns-prefetch + preconnect cut TLS/DNS round-trips before the preload fires.
+    // crossorigin on the preload must match the eventual <script> request (anonymous)
+    // so the browser reuses the preloaded response instead of fetching twice.
+    echo "<link rel='dns-prefetch' href='https://cdn.jsdelivr.net'>\n";
+    echo "<link rel='preconnect' href='https://cdn.jsdelivr.net' crossorigin>\n";
+    echo "<link rel='preload' as='script' href='{$href}' crossorigin>\n";
+  }
+
   public function print_page_transition_code(): void
   {
-    if ($this->is_editor_preview() || $this->is_full_preview()) {
+    if ( $this->is_editor_preview() || $this->is_full_preview() ) {
       return;
     }
 
-    $stored = get_option('motionkit-page-transition-code');
-    if (!is_array($stored) || empty($stored['code']) || !is_string($stored['code'])) {
+    $stored = get_option( 'motionkit-page-transition-code' );
+    if ( ! is_array( $stored ) || empty( $stored['code'] ) || ! is_string( $stored['code'] ) ) {
       return;
     }
 
-    $label = isset($stored['presetLabel']) ? (string) $stored['presetLabel'] : '';
-    $key   = isset($stored['presetKey']) ? (string) $stored['presetKey'] : '';
-    $tag   = trim($label . ($key ? " ({$key})" : '')) ?: 'custom';
+    /**
+     * Filters the page-transition JS snippet before it is printed.
+     *
+     * @since 1.1.0
+     *
+     * @param string $code  The raw JS snippet as authored in the editor.
+     * @param array  $meta  Stored metadata (presetKey, presetLabel, updated_at).
+     */
+    $code = (string) apply_filters(
+      'motionkit/page_transition/code',
+      $stored['code'],
+      $stored
+    );
 
-    echo "\n<!-- MotionKit Page Transition: " . esc_html($tag) . " -->\n";
-    echo '<script id="motionkit-page-transition-code">' . "\n";
-    echo $stored['code'] . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput -- curated JS snippet from authenticated editor.
-    echo "</script>\n";
+    if ( '' === trim( $code ) ) {
+      return;
+    }
+
+    $label = isset( $stored['presetLabel'] ) ? (string) $stored['presetLabel'] : '';
+    $key   = isset( $stored['presetKey'] ) ? (string) $stored['presetKey'] : '';
+    $tag   = trim( $label . ( '' !== $key ? " ({$key})" : '' ) );
+    if ( '' === $tag ) {
+      $tag = 'custom';
+    }
+
+    printf(
+      "\n<!-- MotionKit Page Transition: %s -->\n",
+      esc_html( $tag )
+    );
+
+    wp_print_inline_script_tag(
+      $code,
+      array( 'id' => 'motionkit-page-transition-code' )
+    );
   }
 
   /**
