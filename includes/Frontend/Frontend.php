@@ -285,27 +285,54 @@ final class Frontend
    * Skipped in the editor preview + full-preview contexts so the editor runtime
    * (which injects its own preview scripts) doesn't double-execute it.
    *
+   * @since 1.1.0
    * @return void
    */
   public function print_page_transition_code(): void
   {
-    if ($this->is_editor_preview() || $this->is_full_preview()) {
+    if ( $this->is_editor_preview() || $this->is_full_preview() ) {
       return;
     }
 
-    $stored = get_option('motionkit-page-transition-code');
-    if (!is_array($stored) || empty($stored['code']) || !is_string($stored['code'])) {
+    $stored = get_option( 'motionkit-page-transition-code' );
+    if ( ! is_array( $stored ) || empty( $stored['code'] ) || ! is_string( $stored['code'] ) ) {
       return;
     }
 
-    $label = isset($stored['presetLabel']) ? (string) $stored['presetLabel'] : '';
-    $key   = isset($stored['presetKey']) ? (string) $stored['presetKey'] : '';
-    $tag   = trim($label . ($key ? " ({$key})" : '')) ?: 'custom';
+    /**
+     * Filters the page-transition JS snippet before it is printed.
+     *
+     * @since 1.1.0
+     *
+     * @param string $code  The raw JS snippet as authored in the editor.
+     * @param array  $meta  Stored metadata (presetKey, presetLabel, updated_at).
+     */
+    $code = (string) apply_filters(
+      'motionkit/page_transition/code',
+      $stored['code'],
+      $stored
+    );
 
-    echo "\n<!-- MotionKit Page Transition: " . esc_html($tag) . " -->\n";
-    echo '<script id="motionkit-page-transition-code">' . "\n";
-    echo $stored['code'] . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput -- curated JS snippet from authenticated editor.
-    echo "</script>\n";
+    if ( '' === trim( $code ) ) {
+      return;
+    }
+
+    $label = isset( $stored['presetLabel'] ) ? (string) $stored['presetLabel'] : '';
+    $key   = isset( $stored['presetKey'] ) ? (string) $stored['presetKey'] : '';
+    $tag   = trim( $label . ( '' !== $key ? " ({$key})" : '' ) );
+    if ( '' === $tag ) {
+      $tag = 'custom';
+    }
+
+    printf(
+      "\n<!-- MotionKit Page Transition: %s -->\n",
+      esc_html( $tag )
+    );
+
+    wp_print_inline_script_tag(
+      $code,
+      array( 'id' => 'motionkit-page-transition-code' )
+    );
   }
 
   /**
