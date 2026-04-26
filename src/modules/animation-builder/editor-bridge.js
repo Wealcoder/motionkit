@@ -331,7 +331,7 @@ function receivePageConfig() {
           "page-transition-exported-code",
           { code, presetKey, presetLabel },
           headers,
-          () => {},
+          () => { },
           presetKey,
         );
       }

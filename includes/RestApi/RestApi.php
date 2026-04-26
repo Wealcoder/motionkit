@@ -389,6 +389,7 @@ final class RestApi
         $code         = isset($payload['code']) && is_string($payload['code']) ? $payload['code'] : '';
         $preset_key   = isset($payload['presetKey']) ? sanitize_text_field((string) $payload['presetKey']) : '';
         $preset_label = isset($payload['presetLabel']) ? sanitize_text_field((string) $payload['presetLabel']) : '';
+                
 
         if ($code === '') {
           delete_option('motionkit-page-transition-code');

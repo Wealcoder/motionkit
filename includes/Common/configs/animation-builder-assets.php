@@ -84,27 +84,27 @@ return [
     // ############## TEXT ############## //
     'wcf-mk-text-invert-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textInvertAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
+      'deps' => ['gsap', 'ScrollTrigger','SplitText'],
       'version' => MOTIONKIT_VERSION,
     ],
     'wcf-mk-text-rotate-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textRotateAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
+      'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
       'version' => MOTIONKIT_VERSION,
     ],
     'wcf-mk-text-scale-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textScaleAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
+      'deps' => ['gsap', 'ScrollTrigger','SplitText'],
       'version' => MOTIONKIT_VERSION,
     ],
     'wcf-mk-text-spin-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSpinAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
+      'deps' => ['gsap', 'ScrollTrigger','SplitText'],
       'version' => MOTIONKIT_VERSION,
     ],
     'wcf-mk-text-split-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSplitAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
+      'deps' => ['gsap', 'ScrollTrigger','SplitText'],
       'version' => MOTIONKIT_VERSION,
     ],
   ],

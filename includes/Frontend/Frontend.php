@@ -129,6 +129,9 @@ final class Frontend
     // an associative array or stdClass depending on how the option was saved
     // — normalize to an associative array.
     $global = get_option('motionkit_global_settings', []);
+    if(!isset($global['gsapPlugin']['cdns'])) {
+      return [];
+    }
     $cdns   = [];
     if (is_object($global) && isset($global->gsapPlugin)) {
       $gsap_plugin = $global->gsapPlugin;
@@ -169,7 +172,7 @@ final class Frontend
     }
 
     $core_deps = ['gsap', 'ScrollSmoother'];
-
+    
     return array_merge($deps, $core_deps);
   }
 
@@ -316,6 +319,7 @@ final class Frontend
     // Only preload when a page-transition snippet is actually stored — otherwise
     // gsap may not be needed in the head at all on this page.
     $stored = get_option( 'motionkit-page-transition-code' );
+   
     if ( ! is_array( $stored ) || empty( $stored['code'] ) || ! is_string( $stored['code'] ) ) {
       return;
     }
@@ -554,11 +558,11 @@ final class Frontend
 
 
     // Build deps — allow Pro to add gsap/ScrollTrigger via filter
-    $deps = apply_filters('motionkit_core_lib_deps', []);
-    $deps = array_values(array_filter($deps, function ($dep) {
-      return $dep !== 'wp-element';
-    }));
+    $deps = apply_filters('motionkit_core_lib_deps', []); 
 
+    if(empty($deps)) {    
+      return;
+    }
     // Enqueue main frontend runner
     wp_register_script(
       'motionkit-frontend',
@@ -581,10 +585,11 @@ final class Frontend
 
     // Enqueue smart animation engine when custom animations are present
     if ($is_custom) {
+     
       wp_enqueue_script(
         'motionkit-custom-animation',
         MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/customAnimation.js',
-        ['motionkit-frontend', 'DrawSVGPlugin'],
+        ['motionkit-frontend', 'DrawSVGPlugin' , 'SplitText', 'TextPlugin', 'ScrambleTextPlugin', 'MorphSVGPlugin', 'MotionPathPlugin', 'MotionPathHelper'],
         MOTIONKIT_VERSION,
         true
       );
@@ -619,7 +624,8 @@ final class Frontend
     // Page-level values override global when present.
     $global_settings_arr = is_array($global_settings) ? $global_settings : (array) $global_settings;
     $page_settings_arr   = is_array($page_settings) ? $page_settings : [];
-
+     
+    
     // Default settings baseline — always present so the frontend runtime has
     // sane initial state (device breakpoints, etc.) even when the editor
     // never saved anything. User-saved settings overlay on top.
@@ -642,6 +648,14 @@ final class Frontend
       }
     }
 
+    if (isset($merged_settings['pageTransition'])) {
+      unset($merged_settings['pageTransition']);      
+    }
+
+    if(isset($merged_settings['gsapPlugin']['cdns'])) {
+        unset($merged_settings['gsapPlugin']['cdns']);
+    }
+    
     wp_localize_script('motionkit-frontend', 'wcfanimb', [
       'all_animations' => $merged_animation,
       'all_settings'   => $merged_settings
@@ -802,7 +816,7 @@ final class Frontend
             $premium_preset[] = $value['presetKey'];
           } elseif ($value['group'] === 'free_preset_animation' && isset($value['presetKey'])) {
             $free_preset[] = $value['presetKey'];
-          } elseif ($value['group'] === 'custom_animation') {
+          } elseif ($value['group'] === 'custom_animation') {       
             $is_custom = true;
           }
         }
