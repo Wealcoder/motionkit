@@ -23,7 +23,7 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
     "physics2D",
     "physicsProps",
     "scrambleText",
-    'flip', // Although Flip doesn't have a dedicated tween var, we detect it via the presence of `flip` in the vars bag since that's how users invoke it in custom animations.
+    "flip", // Although Flip doesn't have a dedicated tween var, we detect it via the presence of `flip` in the vars bag since that's how users invoke it in custom animations.
   ]);
 
   // Skip GSAP/ScrollTrigger runtime back-references so we don't walk into the
@@ -169,26 +169,38 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
     return { animations: animations, activePlugins: activePlugins };
   }
 
-  function resolveAndDispatch(all_animations, all_settings) {
+  function resolveAndDispatch(
+    all_animations,
+    all_settings,
+    isCreatingAnimation,
+  ) {
     var devices = Object.values(
       (all_settings && all_settings.deviceConfig) || {},
     );
 
-    console.log("Resolve And Dispatch", { all_animations });
+    console.log("Resolve And Dispatch", {
+      all_animations,
+      isCreatingAnimation,
+    });
 
     var currentDevice = detectCurrentDevice(devices);
     var built = buildAnimationsForDevice(all_animations, currentDevice.key);
     // Broadcast active plugins BEFORE per-animation dispatch — consumers may
     // need to load plugin scripts before the tweens run, and once GSAP runs
     // it mutates step.vars by adding `parent`, `scrollTrigger`, and DOM
-    // back-refs which would pollute a post-dispatch scan.
-    document.dispatchEvent(
-      new CustomEvent("mk-animation-active-plugins", {
-        detail: built.activePlugins,
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
+    // back-refs which would pollute a post-dispatch scan. Only fired when the
+    // editor is actively creating animations (Play preview); production +
+    // Full Preview rely on WP-enqueued plugin scripts so this event would be
+    // redundant noise there.
+    if (isCreatingAnimation) {
+      document.dispatchEvent(
+        new CustomEvent("mk-animation-active-plugins", {
+          detail: built.activePlugins,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    }
 
     // Deep-clone each anim before dispatch — GSAP mutates the vars object you
     // pass to it (adds `duration`, `ease`, `parent`, etc.). Without this, those
@@ -254,16 +266,12 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
       var payload = event.data.data || {};
       var all_animations = payload.all_animations || [];
       var all_settings = payload.all_settings || {};
+      var isCreatingAnimation = !!payload.isCreatingAnimation;
       window.wcfanimb = Object.assign({}, window.wcfanimb || {}, {
         all_animations: all_animations,
         all_settings: all_settings,
       });
-      pendingConfig = { all_animations: all_animations, all_settings: all_settings };
-      if (!rebuildScheduled) {
-        rebuildScheduled = true;
-        requestAnimationFrame(flushPendingConfig);
-      }
-      return;
+      resolveAndDispatch(all_animations, all_settings, isCreatingAnimation);
     }
 
     // Reset animations
@@ -301,6 +309,6 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 
   window.addEventListener("load", () => {
     const source = loadFullPreviewData() || window.wcfanimb || {};
-    resolveAndDispatch(source.all_animations, source.all_settings);
+    resolveAndDispatch(source.all_animations, source.all_settings, false);
   });
 })();
