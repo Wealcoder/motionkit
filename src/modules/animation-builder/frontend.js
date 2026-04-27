@@ -176,6 +176,33 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
     );
   }
 
+  // Coalesce bursts of `wcf-animation-config` from the editor (slider drags
+  // can fire ~50/sec). We hold the latest payload and process it once per
+  // animation frame — older ones are superseded and dropped, since only the
+  // final state is observable. Without this, every intermediate config
+  // triggers a full GSAP rebuild and ScrollTrigger refresh.
+  var pendingConfig = null;
+  var rebuildScheduled = false;
+
+  function flushPendingConfig() {
+    rebuildScheduled = false;
+    if (!pendingConfig) return;
+    var cfg = pendingConfig;
+    pendingConfig = null;
+    // Fire a global reset BEFORE rebuilding so stale timelines, ScrollTriggers,
+    // and inline GSAP styles from the previous config are torn down. Without
+    // this, animations that change type (preset↔custom) at the same id leak
+    // their old context.
+    document.dispatchEvent(
+      new CustomEvent("aae-reset-animation", {
+        detail: "",
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    resolveAndDispatch(cfg.all_animations, cfg.all_settings);
+  }
+
   // Listen for messages from the editor
   window.addEventListener("message", function (event) {
     if (!parentOrigin) parentOrigin = event.origin;
@@ -188,7 +215,12 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
         all_animations: all_animations,
         all_settings: all_settings,
       });
-      resolveAndDispatch(all_animations, all_settings);
+      pendingConfig = { all_animations: all_animations, all_settings: all_settings };
+      if (!rebuildScheduled) {
+        rebuildScheduled = true;
+        requestAnimationFrame(flushPendingConfig);
+      }
+      return;
     }
 
     // Reset animations

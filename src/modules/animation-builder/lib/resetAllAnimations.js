@@ -26,9 +26,14 @@ function clearFreeAnimationNode(node) {
 
 function killGsap(nodes) {
   const { gsap, ScrollTrigger } = window;
-  ScrollTrigger?.getAll?.().forEach((st) => st.kill());
+  // killAll() also clears ScrollTrigger's internal scroll listener pool
+  // and pinSpacer DOM — manual `.getAll().forEach(kill)` leaves that state.
+  if (typeof ScrollTrigger?.killAll === "function") {
+    ScrollTrigger.killAll();
+  } else {
+    ScrollTrigger?.getAll?.().forEach((st) => st.kill());
+  }
   gsap?.globalTimeline?.getChildren?.().forEach((t) => t.kill());
-  console.log("global timeline", gsap?.globalTimeline);
   if (gsap?.set && nodes.length) {
     gsap.set(nodes, { clearProps: "all" });
   }
