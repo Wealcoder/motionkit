@@ -63,10 +63,38 @@ function buildPageloadAnim(anim) {
   return { contexts: [ctx], listeners: [] };
 }
 
+// trigger.selector is authoritative when set; otherwise the click/hover target
+// falls back to the union of step itemClass selectors so a button driving its
+// own scrollTo (no separate trigger element) just works.
+function collectInteractionTargets(anim) {
+  const sel = anim.trigger?.selector;
+  if (sel) return querySelectorAllCached(sel);
+  const seen = new Set();
+  const out = [];
+  (anim.timelines || []).forEach((tlCfg) => {
+    (tlCfg.animations || []).forEach((step) => {
+      if (!step?.itemClass) return;
+      querySelectorAllCached(step.itemClass).forEach((el) => {
+        if (seen.has(el)) return;
+        seen.add(el);
+        out.push(el);
+      });
+    });
+  });
+  return out;
+}
+
+function timelineHasScrollTo(anim) {
+  return (anim.timelines || []).some((tlCfg) =>
+    (tlCfg.animations || []).some((step) => {
+      const v = step?.vars || {};
+      return !!(v.to?.scrollTo || v.from?.scrollTo || v.set?.scrollTo);
+    }),
+  );
+}
+
 function buildInteractionAnim(anim, eventType) {
-  const selector = anim.trigger?.selector;
-  if (!selector) return null;
-  const triggers = querySelectorAllCached(selector);
+  const triggers = collectInteractionTargets(anim);
   if (!triggers.length) return null;
 
   const tls = [];
@@ -77,10 +105,15 @@ function buildInteractionAnim(anim, eventType) {
     });
   });
 
+  const preventAnchorNav = timelineHasScrollTo(anim);
+
   const listeners = [];
   triggers.forEach((el) => {
     if (eventType === "click") {
-      const onClick = () => tls.forEach((t) => t.restart());
+      const onClick = (ev) => {
+        if (preventAnchorNav && el.tagName === "A") ev.preventDefault();
+        tls.forEach((t) => t.restart());
+      };
       el.addEventListener("click", onClick);
       listeners.push(() => el.removeEventListener("click", onClick));
     } else if (eventType === "hover") {
