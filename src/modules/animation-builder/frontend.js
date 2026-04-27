@@ -11,7 +11,7 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
     document.querySelector('meta[name="motionkit-platform"]')?.content ||
     "html";
 
-  // GSAP plugin keys we can detect by property presence on a tween `vars`
+  //  GSAP plugin keys we can detect by property presence on a tween `vars`
   // object. Mirrors the keys in editor globalSettings.gsapPlugin (minus `flip`,
   // which isn't expressed as a tween var in custom animations today).
   var GSAP_PLUGIN_VAR_KEYS = new Set([
@@ -23,6 +23,7 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
     "physics2D",
     "physicsProps",
     "scrambleText",
+    'flip', // Although Flip doesn't have a dedicated tween var, we detect it via the presence of `flip` in the vars bag since that's how users invoke it in custom animations.
   ]);
 
   // Skip GSAP/ScrollTrigger runtime back-references so we don't walk into the

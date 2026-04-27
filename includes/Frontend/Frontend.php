@@ -105,23 +105,17 @@ final class Frontend
     // guidelines, the plugin doesn't ship hardcoded CDN URLs); this array
     // only defines which handles exist and how they depend on each other.
     $libs = [
-      'gsap'               => ['deps' => []],
-      'ScrollTrigger'      => ['deps' => ['gsap']],
-      'ScrollSmoother'     => ['deps' => ['gsap', 'ScrollTrigger']],
-      'ScrollToPlugin'     => ['deps' => ['gsap']],
-      'Observer'           => ['deps' => ['gsap']],
-      'SplitText'          => ['deps' => ['gsap']],
-      'TextPlugin'         => ['deps' => ['gsap']],
-      'ScrambleTextPlugin' => ['deps' => ['gsap']],
-      'DrawSVGPlugin'      => ['deps' => ['gsap']],
-      'MorphSVGPlugin'     => ['deps' => ['gsap']],
-      'MotionPathPlugin'   => ['deps' => ['gsap']],
-      'MotionPathHelper'   => ['deps' => ['gsap', 'MotionPathPlugin']],
-      'Flip'               => ['deps' => ['gsap']],
-      'Draggable'          => ['deps' => ['gsap']],
-      'InertiaPlugin'      => ['deps' => ['gsap']],
-      'Physics2DPlugin'    => ['deps' => ['gsap']],
-      'PhysicsPropsPlugin' => ['deps' => ['gsap']],
+      'gsap'           => ['deps' => []],
+      'scrollTrigger'  => ['deps' => ['gsap']],
+      'scrollSmoother' => ['deps' => ['gsap', 'scrollTrigger']],
+      'scrollTo'       => ['deps' => ['gsap']],
+      'splitText'      => ['deps' => ['gsap']],
+      'drawSVG'        => ['deps' => ['gsap']],
+      'morphSVG'       => ['deps' => ['gsap']],
+      'motionPath'     => ['deps' => ['gsap']],
+      'flip'           => ['deps' => ['gsap']],
+      'physics2D'      => ['deps' => ['gsap']],
+      
     ];
 
     // Per-handle URL map lives in motionkit_global_settings.gsapPlugin.cdns
@@ -171,7 +165,7 @@ final class Frontend
       wp_register_script($handle, $url, $lib['deps'], null, true);
     }
 
-    $core_deps = ['gsap', 'ScrollSmoother'];
+    $core_deps = ['gsap', 'scrollSmoother'];
     
     return array_merge($deps, $core_deps);
   }
@@ -561,17 +555,7 @@ final class Frontend
 
     if(empty($deps)) {    
       return;
-    }
-    // Enqueue main frontend runner
-    wp_register_script(
-      'motionkit-frontend',
-      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend.js',
-      $deps,
-      MOTIONKIT_VERSION,
-      true
-    );
-
-    wp_enqueue_script('motionkit-frontend');
+    }  
 
     // Conditionally enqueue free preset scripts
     if (isset($active_presets['free']) && !empty($active_presets['free'])) {
@@ -580,19 +564,7 @@ final class Frontend
 
     if (isset($active_presets['premium']) && !empty($active_presets['premium'])) {
       $this->enqueue_presets($active_presets['premium'], $deps);
-    }
-
-    // Enqueue smart animation engine when custom animations are present
-    if ($is_custom) {
-     
-      wp_enqueue_script(
-        'motionkit-custom-animation',
-        MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/customAnimation.js',
-        ['motionkit-frontend', 'DrawSVGPlugin' , 'SplitText', 'TextPlugin', 'ScrambleTextPlugin', 'MorphSVGPlugin', 'MotionPathPlugin', 'MotionPathHelper'],
-        MOTIONKIT_VERSION,
-        true
-      );
-    }
+    }  
 
     // Global settings + global animations (saved by editor to wp_options)
     $global_settings  = get_option('motionkit_global_settings', json_decode('{}'));
@@ -610,6 +582,7 @@ final class Frontend
 
     // Page settings live under mkit_pg_settings_<type> — separate from animations.
     $settings_config = $page_type_config;
+    
     if (!empty($settings_config['option']) && is_string($settings_config['option'])) {
       $settings_config['option'] = preg_replace(
         '/^mkit_pg_animation_/',
@@ -618,7 +591,13 @@ final class Frontend
       );
     }
     $page_settings = $this->page_type->getConfig($settings_config);
-
+    if(isset($page_settings['activePlugins']) && is_array($page_settings['activePlugins'])) {
+      $active_deps = array_keys($page_settings['activePlugins']);
+      
+      $deps = array_merge($deps, $active_deps);    
+      
+    }
+    
     // Merge global settings with current page settings on specific keys.
     // Page-level values override global when present.
     $global_settings_arr = is_array($global_settings) ? $global_settings : (array) $global_settings;
@@ -634,6 +613,27 @@ final class Frontend
 
     $merged_settings = array_merge($default_settings, $global_settings_arr);
 
+    // Enqueue main frontend runner
+    wp_register_script(
+      'motionkit-frontend',
+      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend.js',
+      $deps,
+      MOTIONKIT_VERSION,
+      true
+    );
+
+    wp_enqueue_script('motionkit-frontend');
+    // Enqueue smart animation engine when custom animations are present
+    if ($is_custom) {
+     
+      wp_enqueue_script(
+        'motionkit-custom-animation',
+        MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/customAnimation.js',
+        ['motionkit-frontend'],
+        MOTIONKIT_VERSION,
+        true
+      );
+    }
     // Flatten scrollSmother.allPage -> scrollSmother so the frontend runtime
     // reads a single shape (global baseline, used only if current page has none).
     if (!empty($merged_settings['scrollSmother']['allPage']) && is_array($merged_settings['scrollSmother']['allPage'])) {
