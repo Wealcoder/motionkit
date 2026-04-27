@@ -194,10 +194,10 @@ let parentOrigin = null;
 
 function receivePageConfig() {
   parentOrigin = getParentOrigin();
+  const headers = getAuthHeaders();
   window.addEventListener(
     "message",
     (event) => {
-      const headers = getAuthHeaders();
       // Receive global + current page settings from the editor
       if (event.data?.type === "motionkit-settings") {
         const {
@@ -336,7 +336,6 @@ function receivePageConfig() {
         );
       }
 
-
       // Respond to data requests from the SaaS editor
       if (
         event.data?.type === "motionkit-request" &&
@@ -350,7 +349,24 @@ function receivePageConfig() {
     },
     false,
   );
+  window.addEventListener("mk-animation-active-plugins", (event) => {
+    const currentPage = wcfanimb.currentPageSettings;
+    const activePlugins = event.detail;
+    const modifed = { ...currentPage, activePlugins };
 
+    saveViaRest(
+      "current-page-settings",
+      {
+        pageTypeConfigs: wcfanimb.pageTypeConfigs,
+        animationConfigs: modifed,
+      },
+      headers,
+      () => {
+        wcfanimb.currentPageSettings = modifed;
+      },
+      null,
+    );
+  });
   // Notify parent (SaaS editor) that the iframe is ready
   setTimeout(() => {
     window.parent.postMessage(

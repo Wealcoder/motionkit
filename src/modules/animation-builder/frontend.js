@@ -10,7 +10,50 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
   var platform =
     document.querySelector('meta[name="motionkit-platform"]')?.content ||
     "html";
-  
+
+  // GSAP plugin keys we can detect by property presence on a tween `vars`
+  // object. Mirrors the keys in editor globalSettings.gsapPlugin (minus `flip`,
+  // which isn't expressed as a tween var in custom animations today).
+  var GSAP_PLUGIN_VAR_KEYS = new Set([
+    "scrollTo",
+    "motionPath",
+    "drawSVG",
+    "morphSVG",
+    "splitText",
+    "physics2D",
+    "physicsProps",
+    "scrambleText",
+  ]);
+
+  // Skip GSAP/ScrollTrigger runtime back-references so we don't walk into the
+  // tween's `parent`, the ScrollTrigger instance, or the DOM scroller — which
+  // is how a native `window.scrollTo` was previously matching this scan.
+  var GSAP_INTERNAL_KEYS = new Set([
+    "parent",
+    "scrollTrigger",
+    "scroller",
+    "targets",
+    "callbackScope",
+    "onComplete",
+    "onStart",
+    "onUpdate",
+    "onRepeat",
+    "onReverseComplete",
+  ]);
+
+  var deepClone =
+    typeof structuredClone === "function"
+      ? structuredClone
+      : function (v) {
+          return JSON.parse(JSON.stringify(v));
+        };
+
+  function isPlainObject(v) {
+    if (!v || typeof v !== "object") return false;
+    var proto = Object.getPrototypeOf(v);
+    return proto === Object.prototype || proto === null;
+  }
+
   // Return the deviceConfig entry whose mediaQuery currently matches.
   // Falls back to the first device or a synthetic 'desktop' entry so
   // callers always get *something* to work with.
@@ -42,25 +85,6 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
     return out;
   }
 
-  // Build a per-device animation object. Handles BOTH shapes:
-  //
-  //  Preset / free animation (animation-level devices):
-  //    { id, preset, devices: { desktop: {animationDelay,...}, laptop: {...}, ... } }
-  //
-  //  Custom animation (timeline-level + step-level devices):
-  //    { id, group: "custom_animation", timelines: [
-  //        { id, devices: {desktop: {repeat, paused}, ...},
-  //          animations: [
-  //            { id, method, devices: {desktop: {...}, laptop: {...}} },
-  //            ...
-  //          ]
-  //        }, ... ] }
-  //
-  // In both cases, after flattening, the devices bag is removed at every
-  // level and per-device overrides for deviceKey are promoted onto each node.
-  // True if animation's responsive[deviceKey] flag is NOT explicitly false.
-  // Missing responsive object or missing key defaults to enabled (backwards-
-  // compatible with older payloads that don't set it).
   function isResponsiveEnabled(node, deviceKey) {
     if (!node || typeof node !== "object") return true;
     var r = node.responsive;
@@ -75,44 +99,73 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
     return node.isPublished !== false;
   }
 
+  // Single recursive pass: detects plugin usage and recurses into nested
+  // method bags (vars.from / vars.to / vars.fromTo) in the same key loop.
+  // Depth cap protects against pathological / cyclic input.
+  function collectPlugins(node, found, depth) {
+    if (!isPlainObject(node) || depth > 4) return;
+    var keys = Object.keys(node);
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      if (GSAP_INTERNAL_KEYS.has(k)) continue;
+      var v = node[k];
+      // Plugin values are strings/numbers/plain config objects — never
+      // functions or DOM nodes (those are GSAP-injected references).
+      if (
+        GSAP_PLUGIN_VAR_KEYS.has(k) &&
+        v &&
+        typeof v !== "function" &&
+        !(v instanceof Element)
+      ) {
+        found[k] = true;
+      }
+      if (isPlainObject(v)) collectPlugins(v, found, depth + 1);
+    }
+  }
+
+  // Walk all_animations once: filter by published/responsive, flatten the
+  // per-device vars bag, and collect active GSAP plugins inline. Returns
+  // { animations, activePlugins } so callers don't re-walk the tree.
   function buildAnimationsForDevice(all_animations, deviceKey) {
-    return (
-      (all_animations || [])
-        // Drop unpublished/disabled animations and ones off for this device.
-        .filter(function (a) {
-          return isActive(a) && isResponsiveEnabled(a, deviceKey);
-        })
-        .map(function (a) {
-          if (!a || typeof a !== "object") return a;
+    var activePlugins = {};
+    var animations = (all_animations || [])
+      .filter(function (a) {
+        return isActive(a) && isResponsiveEnabled(a, deviceKey);
+      })
+      .map(function (a) {
+        if (!a || typeof a !== "object") return a;
 
-          // Custom animation branch — recurse into timelines + inner animations.
-          if (Array.isArray(a.timelines)) {
-            var outCustom = Object.assign({}, a);
-            outCustom.timelines = a.timelines.map(function (tl) {
-              if (!tl || typeof tl !== "object") return tl;
-              var flatTl = flattenDeviceBag(tl, deviceKey);
-              if (Array.isArray(tl.animations)) {
-                // Filter inner steps by responsive flag + active flag.
-                flatTl.animations = tl.animations
-                  .filter(function (step) {
-                    return (
-                      isActive(step) && isResponsiveEnabled(step, deviceKey)
-                    );
-                  })
-                  .map(function (step) {
-                    return flattenDeviceBag(step, deviceKey);
-                  });
-              }
-              return flatTl;
-            });
-            delete outCustom.devices;
-            return outCustom;
-          }
+        // Custom animation branch — recurse into timelines + inner animations.
+        if (Array.isArray(a.timelines)) {
+          var outCustom = Object.assign({}, a);
+          outCustom.timelines = a.timelines.map(function (tl) {
+            if (!tl || typeof tl !== "object") return tl;
+            var flatTl = flattenDeviceBag(tl, deviceKey);
+            collectPlugins(flatTl.vars, activePlugins, 0);
+            if (Array.isArray(tl.animations)) {
+              flatTl.animations = tl.animations
+                .filter(function (step) {
+                  return isActive(step) && isResponsiveEnabled(step, deviceKey);
+                })
+                .map(function (step) {
+                  var flatStep = flattenDeviceBag(step, deviceKey);
+                  collectPlugins(flatStep.vars, activePlugins, 0);
+                  return flatStep;
+                });
+            }
+            return flatTl;
+          });
+          delete outCustom.devices;
+          return outCustom;
+        }
 
-          // Preset / free animation — flatten the root devices bag.
-          return flattenDeviceBag(a, deviceKey);
-        })
-    );
+        // Preset / free animation — flatten the root devices bag.
+        var flat = flattenDeviceBag(a, deviceKey);
+        collectPlugins(flat.vars, activePlugins, 0);
+        return flat;
+      });
+
+    return { animations: animations, activePlugins: activePlugins };
   }
 
   function resolveAndDispatch(all_animations, all_settings) {
@@ -120,45 +173,34 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
       (all_settings && all_settings.deviceConfig) || {},
     );
 
+    console.log("Resolve And Dispatch", { all_animations });
+
     var currentDevice = detectCurrentDevice(devices);
-    var animationsForDevice = buildAnimationsForDevice(
-      all_animations,
-      currentDevice.key,
+    var built = buildAnimationsForDevice(all_animations, currentDevice.key);
+    // Broadcast active plugins BEFORE per-animation dispatch — consumers may
+    // need to load plugin scripts before the tweens run, and once GSAP runs
+    // it mutates step.vars by adding `parent`, `scrollTrigger`, and DOM
+    // back-refs which would pollute a post-dispatch scan.
+    document.dispatchEvent(
+      new CustomEvent("mk-animation-active-plugins", {
+        detail: built.activePlugins,
+        bubbles: true,
+        cancelable: true,
+      }),
     );
 
-    console.log("resolveAndDispatch", { animationsForDevice });
-
-    // loop animationsForDevice and log each one's id and preset/type
-    animationsForDevice.forEach(function (anim) {
+    // Deep-clone each anim before dispatch — GSAP mutates the vars object you
+    // pass to it (adds `duration`, `ease`, `parent`, etc.). Without this, those
+    // GSAP-injected props leak back into wcfanimb.all_animations.
+    for (var i = 0; i < built.animations.length; i++) {
       document.dispatchEvent(
         new CustomEvent("aae-animation-event", {
-          detail: anim,
+          detail: deepClone(built.animations[i]),
           bubbles: true,
           cancelable: true,
         }),
       );
-    });
-
-    // GSAP-driven path (preset, custom)
-    // if (window.gsap && devices.length) {
-    //   activeMatchMedia = window.gsap.matchMedia();
-    //   devices.forEach(function (device) {
-    //     if (!device || !device.mediaQuery) return;
-    //     activeMatchMedia.add(device.mediaQuery, function () {
-    //       var settings = flattenSettingsForDevice(all_settings, device.key);
-    //       var grouped = groupByPreset(all_animations);
-    //       document.dispatchEvent(new CustomEvent('aae-animation-event', {
-    //         detail: Object.assign({}, grouped, {
-    //           animations: (all_animations || []).filter(function (a) { return a && a.enable; }),
-    //           settings: settings,
-    //           device: device.key,
-    //         }),
-    //         bubbles: true,
-    //         cancelable: true,
-    //       }));
-    //     });
-    //   });
-    // }
+    }
   }
 
   // Notify parent that bridge is ready
@@ -258,7 +300,6 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 
   window.addEventListener("load", () => {
     const source = loadFullPreviewData() || window.wcfanimb || {};
-    
     resolveAndDispatch(source.all_animations, source.all_settings);
   });
 })();

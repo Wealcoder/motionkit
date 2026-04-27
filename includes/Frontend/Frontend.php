@@ -312,21 +312,20 @@ final class Frontend
    */
   public function print_gsap_preload(): void
   {
-    if ( $this->is_editor_preview() || $this->is_full_preview() ) {
+    if ($this->is_editor_preview() || $this->is_full_preview()) {
       return;
     }
 
     // Only preload when a page-transition snippet is actually stored — otherwise
     // gsap may not be needed in the head at all on this page.
-    $stored = get_option( 'motionkit-page-transition-code' );
-   
-    if ( ! is_array( $stored ) || empty( $stored['code'] ) || ! is_string( $stored['code'] ) ) {
+    $stored = get_option('motionkit-page-transition-code');
+    if (! is_array($stored) || empty($stored['code']) || ! is_string($stored['code'])) {
       return;
     }
 
     $cdn  = 'https://cdn.jsdelivr.net/npm/gsap@3.15/dist/';
     $ver  = '3.15.0';
-    $href = esc_url( $cdn . 'gsap.min.js?ver=' . $ver );
+    $href = esc_url($cdn . 'gsap.min.js?ver=' . $ver);
 
     // dns-prefetch + preconnect cut TLS/DNS round-trips before the preload fires.
     // crossorigin on the preload must match the eventual <script> request (anonymous)
@@ -338,12 +337,12 @@ final class Frontend
 
   public function print_page_transition_code(): void
   {
-    if ( $this->is_editor_preview() || $this->is_full_preview() ) {
+    if ($this->is_editor_preview() || $this->is_full_preview()) {
       return;
     }
 
-    $stored = get_option( 'motionkit-page-transition-code' );
-    if ( ! is_array( $stored ) || empty( $stored['code'] ) || ! is_string( $stored['code'] ) ) {
+    $stored = get_option('motionkit-page-transition-code');
+    if (! is_array($stored) || empty($stored['code']) || ! is_string($stored['code'])) {
       return;
     }
 
@@ -361,25 +360,25 @@ final class Frontend
       $stored
     );
 
-    if ( '' === trim( $code ) ) {
+    if ('' === trim($code)) {
       return;
     }
 
-    $label = isset( $stored['presetLabel'] ) ? (string) $stored['presetLabel'] : '';
-    $key   = isset( $stored['presetKey'] ) ? (string) $stored['presetKey'] : '';
-    $tag   = trim( $label . ( '' !== $key ? " ({$key})" : '' ) );
-    if ( '' === $tag ) {
+    $label = isset($stored['presetLabel']) ? (string) $stored['presetLabel'] : '';
+    $key   = isset($stored['presetKey']) ? (string) $stored['presetKey'] : '';
+    $tag   = trim($label . ('' !== $key ? " ({$key})" : ''));
+    if ('' === $tag) {
       $tag = 'custom';
     }
 
     printf(
       "\n<!-- MotionKit Page Transition: %s -->\n",
-      esc_html( $tag )
+      esc_html($tag)
     );
 
     wp_print_inline_script_tag(
       $code,
-      array( 'id' => 'motionkit-page-transition-code' )
+      array('id' => 'motionkit-page-transition-code')
     );
   }
 
