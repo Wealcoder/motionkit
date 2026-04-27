@@ -380,6 +380,7 @@ final class RestApi
           $this->settings_config($payload['pageTypeConfigs'] ?? []),
           $payload['animationConfigs'] ?? []
         );
+
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_settings_saved']], 200);
 
       case 'save_page_transition_code':
