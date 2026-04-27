@@ -10,7 +10,7 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
   var platform =
     document.querySelector('meta[name="motionkit-platform"]')?.content ||
     "html";
-  
+
   // Return the deviceConfig entry whose mediaQuery currently matches.
   // Falls back to the first device or a synthetic 'desktop' entry so
   // callers always get *something* to work with.
@@ -42,25 +42,6 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
     return out;
   }
 
-  // Build a per-device animation object. Handles BOTH shapes:
-  //
-  //  Preset / free animation (animation-level devices):
-  //    { id, preset, devices: { desktop: {animationDelay,...}, laptop: {...}, ... } }
-  //
-  //  Custom animation (timeline-level + step-level devices):
-  //    { id, group: "custom_animation", timelines: [
-  //        { id, devices: {desktop: {repeat, paused}, ...},
-  //          animations: [
-  //            { id, method, devices: {desktop: {...}, laptop: {...}} },
-  //            ...
-  //          ]
-  //        }, ... ] }
-  //
-  // In both cases, after flattening, the devices bag is removed at every
-  // level and per-device overrides for deviceKey are promoted onto each node.
-  // True if animation's responsive[deviceKey] flag is NOT explicitly false.
-  // Missing responsive object or missing key defaults to enabled (backwards-
-  // compatible with older payloads that don't set it).
   function isResponsiveEnabled(node, deviceKey) {
     if (!node || typeof node !== "object") return true;
     var r = node.responsive;
@@ -139,26 +120,13 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
       );
     });
 
-    // GSAP-driven path (preset, custom)
-    // if (window.gsap && devices.length) {
-    //   activeMatchMedia = window.gsap.matchMedia();
-    //   devices.forEach(function (device) {
-    //     if (!device || !device.mediaQuery) return;
-    //     activeMatchMedia.add(device.mediaQuery, function () {
-    //       var settings = flattenSettingsForDevice(all_settings, device.key);
-    //       var grouped = groupByPreset(all_animations);
-    //       document.dispatchEvent(new CustomEvent('aae-animation-event', {
-    //         detail: Object.assign({}, grouped, {
-    //           animations: (all_animations || []).filter(function (a) { return a && a.enable; }),
-    //           settings: settings,
-    //           device: device.key,
-    //         }),
-    //         bubbles: true,
-    //         cancelable: true,
-    //       }));
-    //     });
-    //   });
-    // }
+    document.dispatchEvent(
+      new CustomEvent("motionKit-animation-active-plugins", {
+        detail: { motionPath: true, drawSVG: true },
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
   }
 
   // Notify parent that bridge is ready
@@ -226,7 +194,6 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 
   window.addEventListener("load", () => {
     const source = loadFullPreviewData() || window.wcfanimb || {};
-    
     resolveAndDispatch(source.all_animations, source.all_settings);
   });
 })();

@@ -198,6 +198,7 @@ function receivePageConfig() {
     "message",
     (event) => {
       const headers = getAuthHeaders();
+
       // Receive global + current page settings from the editor
       if (event.data?.type === "motionkit-settings") {
         const {
@@ -336,7 +337,6 @@ function receivePageConfig() {
         );
       }
 
-
       // Respond to data requests from the SaaS editor
       if (
         event.data?.type === "motionkit-request" &&
@@ -350,7 +350,9 @@ function receivePageConfig() {
     },
     false,
   );
-
+  window.addEventListener("motionKit-animation-active-plugins", (event) => {
+    console.log({ event, currentPage: wcfanimb.currentPageSettings, wcfanimb });
+  });
   // Notify parent (SaaS editor) that the iframe is ready
   setTimeout(() => {
     window.parent.postMessage(
