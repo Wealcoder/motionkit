@@ -590,12 +590,51 @@ final class Frontend
         $settings_config['option']
       );
     }
+
     $page_settings = $this->page_type->getConfig($settings_config);
-    if(isset($page_settings['activePlugins']) && is_array($page_settings['activePlugins'])) {
-      $active_deps = array_keys($page_settings['activePlugins']);
-      
-      $deps = array_merge($deps, $active_deps);    
-      
+   // Scan the merged animation tree only inside a 3-hour window after the
+    // last page-settings save. Outside that window we trust the persisted
+    // `activePlugins` and skip the walk to keep the frontend cheap. The
+    // option is written by RestApi::dispatch_simple on every save.
+    $settings_updated_at = get_option('motionkit_page_settings_updated_at', false);
+    // 3 hours in seconds — inline literal to avoid analyzer noise on HOUR_IN_SECONDS.
+    if ($settings_updated_at !== false && (time() - (int) $settings_updated_at) <= 10800) {
+      // Cache the scan result keyed by the save timestamp — any save bumps
+      // the timestamp, which auto-invalidates this entry without manual flush.
+      // Free per-request; with an external object cache (Redis/Memcached) it
+      // skips the walk on every subsequent page load too.
+      $page_key  = isset($page_type_config['option']) && is_string($page_type_config['option'])
+        ? $page_type_config['option']
+        : 'global';
+      $cache_key = 'mkit_active_plugins_' . md5($page_key . '|' . $settings_updated_at);
+      $animation_plugins = wp_cache_get($cache_key, 'motionkit');
+
+      if ($animation_plugins === false) {
+        // Substring pre-check — for pages that use only fade/slide/preset
+        // animations (the common case), encoding to JSON once and running
+        // 9 strpos calls is much cheaper than recursing the whole tree.
+        $haystack = wp_json_encode($merged_animation);
+        $has_any  = false;
+        if (is_string($haystack) && $haystack !== '') {
+          static $plugin_needles = [
+            '"scrollTo"', '"motionPath"', '"drawSVG"', '"morphSVG"',
+            '"splitText"', '"physics2D"', '"physicsProps"', '"scrambleText"', '"flip"',
+          ];
+          foreach ($plugin_needles as $needle) {
+            if (strpos($haystack, $needle) !== false) {
+              $has_any = true;
+              break;
+            }
+          }
+        }
+
+        $animation_plugins = $has_any ? $this->get_active_plugins($merged_animation) : [];
+        wp_cache_set($cache_key, $animation_plugins, 'motionkit', 3600);
+      }
+
+      if (!empty($animation_plugins)) {
+        $deps = array_merge($deps, array_keys($animation_plugins));
+      }
     }
     
     // Merge global settings with current page settings on specific keys.
@@ -798,6 +837,79 @@ final class Frontend
    * @param bool  &$is_free   Set to true if free animations found
    * @return array Unique array of active preset handles
    */
+  /**
+   * Detect GSAP plugins referenced inside an animation payload.
+   *
+   * Mirrors GSAP_PLUGIN_VAR_KEYS / collectPlugins in
+   * src/modules/animation-builder/frontend.js — walks the merged animation
+   * tree (presets + custom timelines + per-device vars bags) and returns a
+   * map of plugin keys whose vars appear anywhere in the payload.
+   *
+   * @param array $animations Merged animation list (global + page).
+   * @return array<string,bool> e.g. ['scrollTo' => true, 'morphSVG' => true]
+   */
+  private function get_active_plugins(array $animations): array
+  {
+    static $plugin_keys = [
+      'scrollTo'      => true,
+      'motionPath'    => true,
+      'drawSVG'       => true,
+      'morphSVG'      => true,
+      'splitText'     => true,
+      'physics2D'     => true,
+      'physicsProps'  => true,
+      'scrambleText'  => true,
+      // Flip has no dedicated tween var; detected by presence of `flip` key.
+      'flip'          => true,
+    ];
+
+    // Skip GSAP/ScrollTrigger runtime back-references and lifecycle callbacks
+    // so we don't walk into a tween's `parent`, the ScrollTrigger instance,
+    // or the DOM scroller — and don't false-match `onComplete: scrollTo(...)`.
+    static $internal_keys = [
+      'parent'            => true,
+      'scrollTrigger'     => true,
+      'scroller'          => true,
+      'targets'           => true,
+      'callbackScope'     => true,
+      'onComplete'        => true,
+      'onStart'           => true,
+      'onUpdate'          => true,
+      'onRepeat'          => true,
+      'onReverseComplete' => true,
+    ];
+
+    // Depth cap is generous because PHP receives the raw saved tree (root list →
+    // animation → timelines → [i] → animations → [j] → devices → <key> → from →
+    // <plugin>), unlike the JS path which scans the post-flatten `vars` bag.
+    $found      = [];
+    $target_len = count($plugin_keys);
+    $walk = function ($node, int $depth) use (&$walk, &$found, $plugin_keys, $internal_keys, $target_len): void {
+      // Short-circuit once every plugin key has been seen — further walking
+      // can't change the result and on a heavy tree this saves a lot.
+      if (!is_array($node) || $depth > 12 || count($found) >= $target_len) {
+        return;
+      }
+      foreach ($node as $k => $v) {
+        if (is_string($k) && isset($internal_keys[$k])) {
+          continue;
+        }
+        if (is_string($k) && isset($plugin_keys[$k]) && $v !== null) {
+          $found[$k] = true;
+          if (count($found) >= $target_len) {
+            return;
+          }
+        }
+        if (is_array($v)) {
+          $walk($v, $depth + 1);
+        }
+      }
+    };
+
+    $walk($animations, 0);
+    return $found;
+  }
+
   private function get_active_presets(array $data, bool &$is_custom): array
   {
     $premium_preset = [];

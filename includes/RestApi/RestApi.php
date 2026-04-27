@@ -273,32 +273,7 @@ final class RestApi
       ),
       ['status' => 400]
     );
-  }
-
-  private function parse_json_param($value): array
-  {
-    if (is_array($value)) {
-      return $value;
-    }
-    if (is_string($value)) {
-      $decoded = json_decode($value, true);
-      return is_array($decoded) ? $decoded : [];
-    }
-    return [];
-  }
-
-  // ─── Endpoint Handlers ──────────────────────────────────────────
-
-  /**
-   * Simple-request dispatcher.
-   *
-   * The request's Content-Type is text/plain, so WP's REST server does NOT
-   * JSON-decode the body. We read php://input manually. Auth is the
-   * mk_token (JWT) inside the body, not an Authorization header — that
-   * header would trigger a CORS preflight we're trying to avoid.
-   *
-   * Body shape: { token: "<jwt>", action: "<name>", payload: {...} }
-   */
+  } 
   /**
    * Derive the page-settings config from the page-animation config by
    * swapping the option key prefix. Animations use mkit_pg_animation_*,
@@ -380,6 +355,8 @@ final class RestApi
           $this->settings_config($payload['pageTypeConfigs'] ?? []),
           $payload['animationConfigs'] ?? []
         );
+
+        update_option('motionkit_page_settings_updated_at', time(), false); 
 
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_settings_saved']], 200);
 
