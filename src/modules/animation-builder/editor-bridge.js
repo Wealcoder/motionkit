@@ -331,7 +331,7 @@ function receivePageConfig() {
           "page-transition-exported-code",
           { code, presetKey, presetLabel },
           headers,
-          () => { },
+          () => {},
           presetKey,
         );
       }
@@ -349,24 +349,6 @@ function receivePageConfig() {
     },
     false,
   );
-  window.addEventListener("mk-animation-active-plugins", (event) => {
-    const currentPage = wcfanimb.currentPageSettings;
-    const activePlugins = event.detail;
-    const modifed = { ...currentPage, activePlugins };
-
-    saveViaRest(
-      "current-page-settings",
-      {
-        pageTypeConfigs: wcfanimb.pageTypeConfigs,
-        animationConfigs: modifed,
-      },
-      headers,
-      () => {
-        wcfanimb.currentPageSettings = modifed;
-      },
-      null,
-    );
-  });
   // Notify parent (SaaS editor) that the iframe is ready
   setTimeout(() => {
     window.parent.postMessage(

@@ -61,5 +61,3 @@ window.addEventListener("message", (e) => {
   if (e.data?.type === "aae-reset-animation") runGlobalReset();
 });
 document.addEventListener("aae-reset-animation", runGlobalReset);
-
-console.log("testing reset file load");

@@ -58,5 +58,3 @@ document.addEventListener("motionkit:reset-done", () => {
   clearActive();
   clearSelectorCache();
 });
-
-console.log("testing cleanup");

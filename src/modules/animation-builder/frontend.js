@@ -100,35 +100,10 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
     return node.isPublished !== false;
   }
 
-  // Single recursive pass: detects plugin usage and recurses into nested
-  // method bags (vars.from / vars.to / vars.fromTo) in the same key loop.
-  // Depth cap protects against pathological / cyclic input.
-  function collectPlugins(node, found, depth) {
-    if (!isPlainObject(node) || depth > 4) return;
-    var keys = Object.keys(node);
-    for (var i = 0; i < keys.length; i++) {
-      var k = keys[i];
-      if (GSAP_INTERNAL_KEYS.has(k)) continue;
-      var v = node[k];
-      // Plugin values are strings/numbers/plain config objects — never
-      // functions or DOM nodes (those are GSAP-injected references).
-      if (
-        GSAP_PLUGIN_VAR_KEYS.has(k) &&
-        v &&
-        typeof v !== "function" &&
-        !(v instanceof Element)
-      ) {
-        found[k] = true;
-      }
-      if (isPlainObject(v)) collectPlugins(v, found, depth + 1);
-    }
-  }
-
   // Walk all_animations once: filter by published/responsive, flatten the
   // per-device vars bag, and collect active GSAP plugins inline. Returns
   // { animations, activePlugins } so callers don't re-walk the tree.
   function buildAnimationsForDevice(all_animations, deviceKey) {
-    var activePlugins = {};
     var animations = (all_animations || [])
       .filter(function (a) {
         return isActive(a) && isResponsiveEnabled(a, deviceKey);
@@ -142,7 +117,6 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
           outCustom.timelines = a.timelines.map(function (tl) {
             if (!tl || typeof tl !== "object") return tl;
             var flatTl = flattenDeviceBag(tl, deviceKey);
-            collectPlugins(flatTl.vars, activePlugins, 0);
             if (Array.isArray(tl.animations)) {
               flatTl.animations = tl.animations
                 .filter(function (step) {
@@ -150,7 +124,6 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
                 })
                 .map(function (step) {
                   var flatStep = flattenDeviceBag(step, deviceKey);
-                  collectPlugins(flatStep.vars, activePlugins, 0);
                   return flatStep;
                 });
             }
@@ -162,45 +135,19 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 
         // Preset / free animation — flatten the root devices bag.
         var flat = flattenDeviceBag(a, deviceKey);
-        collectPlugins(flat.vars, activePlugins, 0);
         return flat;
       });
 
-    return { animations: animations, activePlugins: activePlugins };
+    return { animations: animations };
   }
 
-  function resolveAndDispatch(
-    all_animations,
-    all_settings,
-    isCreatingAnimation,
-  ) {
+  function resolveAndDispatch(all_animations, all_settings) {
     var devices = Object.values(
       (all_settings && all_settings.deviceConfig) || {},
     );
 
-    console.log("Resolve And Dispatch", {
-      all_animations,
-      isCreatingAnimation,
-    });
-
     var currentDevice = detectCurrentDevice(devices);
     var built = buildAnimationsForDevice(all_animations, currentDevice.key);
-    // Broadcast active plugins BEFORE per-animation dispatch — consumers may
-    // need to load plugin scripts before the tweens run, and once GSAP runs
-    // it mutates step.vars by adding `parent`, `scrollTrigger`, and DOM
-    // back-refs which would pollute a post-dispatch scan. Only fired when the
-    // editor is actively creating animations (Play preview); production +
-    // Full Preview rely on WP-enqueued plugin scripts so this event would be
-    // redundant noise there.
-    if (isCreatingAnimation) {
-      document.dispatchEvent(
-        new CustomEvent("mk-animation-active-plugins", {
-          detail: built.activePlugins,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-    }
 
     // Deep-clone each anim before dispatch — GSAP mutates the vars object you
     // pass to it (adds `duration`, `ease`, `parent`, etc.). Without this, those
@@ -266,12 +213,11 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
       var payload = event.data.data || {};
       var all_animations = payload.all_animations || [];
       var all_settings = payload.all_settings || {};
-      var isCreatingAnimation = !!payload.isCreatingAnimation;
       window.wcfanimb = Object.assign({}, window.wcfanimb || {}, {
         all_animations: all_animations,
         all_settings: all_settings,
       });
-      resolveAndDispatch(all_animations, all_settings, isCreatingAnimation);
+      resolveAndDispatch(all_animations, all_settings);
     }
 
     // Reset animations
@@ -309,6 +255,6 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
 
   window.addEventListener("load", () => {
     const source = loadFullPreviewData() || window.wcfanimb || {};
-    resolveAndDispatch(source.all_animations, source.all_settings, false);
+    resolveAndDispatch(source.all_animations, source.all_settings);
   });
 })();
