@@ -335,10 +335,12 @@ final class RestApi
     switch ($action) {
       case 'save_global_settings':
         update_option('motionkit_global_settings', $payload['animationConfigs'] ?? []);
+        update_option('motionkit_page_settings_updated_at', time(), true);
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_settings_saved']], 200);
 
       case 'save_global_animation':
         update_option('motionkit_global_animations', $payload['animationConfigs'] ?? []);
+         update_option('motionkit_page_settings_updated_at', time(), true);
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_animation_saved']], 200);
 
       case 'save_current_page_animation':
@@ -347,6 +349,7 @@ final class RestApi
           $payload['pageTypeConfigs'] ?? [],
           $payload['animationConfigs'] ?? []
         );
+        update_option('motionkit_page_settings_updated_at', time(), true);
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_animation_saved']], 200);
 
       case 'save_current_page_settings':
@@ -393,6 +396,7 @@ final class RestApi
         // Delete BOTH the settings key and the animation key so the page is fully cleared.
         $this->page_type->deleteConfig($this->settings_config($payload['pageTypeConfigs'] ?? []));
         $this->page_type->deleteConfig($payload['pageTypeConfigs'] ?? []);
+        update_option('motionkit_page_settings_updated_at', time(), true);
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_config_deleted']], 200);
 
       case 'get_settings':

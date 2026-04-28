@@ -690,12 +690,15 @@ final class Frontend
     // `activePlugins` and skip the walk to keep the frontend cheap. The
     // option is written by RestApi::dispatch_simple on every save.
     $settings_updated_at = get_option('motionkit_page_settings_updated_at', false);
+  
     // 3 hours in seconds — inline literal to avoid analyzer noise on HOUR_IN_SECONDS.
     if ($settings_updated_at !== false && (time() - (int) $settings_updated_at) <= 10800) {
       // Cache the scan result keyed by the save timestamp — any save bumps
       // the timestamp, which auto-invalidates this entry without manual flush.
       // Free per-request; with an external object cache (Redis/Memcached) it
       // skips the walk on every subsequent page load too.
+  
+     
       $page_key  = isset($page_type_config['option']) && is_string($page_type_config['option'])
         ? $page_type_config['option']
         : 'global';
@@ -710,8 +713,8 @@ final class Frontend
         $has_any  = false;
         if (is_string($haystack) && $haystack !== '') {
           static $plugin_needles = [
-            '"scrollTo"', '"motionPath"', '"drawSVG"', '"morphSVG"',
-            '"splitText"', '"physics2D"', '"physicsProps"', '"scrambleText"', '"flip"',
+            'scrollTo', 'motionPath', 'drawSVG', 'morphSVG',
+            'splitText', 'physics2D', 'physicsProps', 'scrambleText', 'flip',
           ];
           foreach ($plugin_needles as $needle) {
             if (strpos($haystack, $needle) !== false) {
@@ -720,7 +723,7 @@ final class Frontend
             }
           }
         }
-
+       
         $animation_plugins = $has_any ? $this->get_active_plugins($merged_animation) : [];
         wp_cache_set($cache_key, $animation_plugins, 'motionkit', 3600);
       }
