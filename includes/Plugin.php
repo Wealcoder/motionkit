@@ -35,7 +35,7 @@ final class Plugin
     /**
      * Plugin version
      */
-    public const VERSION = '1.1.0';
+    public const VERSION = '1.1.7';
 
     /**
      * Plugin name
@@ -163,9 +163,44 @@ final class Plugin
     {
         add_action('plugins_loaded', [$this, 'init'], 10);
         add_action('init', [$this, 'load_textdomain'], 10);
-        
+        // One-shot autoload migration — flips legacy option rows that were
+        // saved with autoload=no but are read on every frontend request, so
+        // they join the alloptions cache instead of triggering a SELECT per
+        // page load. Sentinel-guarded to run exactly once per install.
+        add_action('admin_init', [$this, 'maybe_fix_autoload_flags'], 5);
+
         register_activation_hook($this->plugin_file, [$this, 'activate']);
         register_deactivation_hook($this->plugin_file, [$this, 'deactivate']);
+    }
+
+    /**
+     * Flip autoload=yes on hot-path options that were originally written with
+     * autoload=no. WP only honors the flag on first-create, so existing rows
+     * stay autoload=no forever unless we update wp_options.autoload directly.
+     *
+     * Cheap: one indexed UPDATE against wp_options, gated by a sentinel.
+     *
+     * @return void
+     */
+    public function maybe_fix_autoload_flags(): void
+    {
+        if (get_option('motionkit_autoload_fixed_v1') === '1') {
+            return;
+        }
+
+        global $wpdb;
+        $hot_options = ['motionkit_page_settings_updated_at'];
+        $placeholders = implode(',', array_fill(0, count($hot_options), '%s'));
+        // Single UPDATE rather than per-option get/delete/add cycles.
+        $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$wpdb->options} SET autoload = 'yes'
+                 WHERE option_name IN ({$placeholders}) AND autoload != 'yes'",
+                ...$hot_options
+            )
+        );
+        wp_cache_delete('alloptions', 'options');
+        update_option('motionkit_autoload_fixed_v1', '1', true);
     }
 
     /**

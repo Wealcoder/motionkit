@@ -50,6 +50,85 @@ final class Frontend
   private ScrollSmoother $smoother;
 
   /**
+   * Per-request memo for the page-transition option.
+   *
+   * Sentinel state: `false` = not yet read; `null` = read, no snippet;
+   * `array{code:string, ...}` = read, has snippet. Three call sites read
+   * this option per page load (head-force gate, head preload, footer inline
+   * snippet). WP already caches the option value itself, but the memo skips
+   * the `option_*` filter chain and shape validation on the 2nd/3rd hit.
+   *
+   * @var array|null|false
+   */
+  private $page_transition_cache = false;
+
+  /**
+   * Per-request memo for `motionkit_global_settings`.
+   *
+   * Read by both `register_gsap_libs` (CDN URL map) and `enqueue_page_scripts`
+   * (settings merge). Sentinel `false` = not yet read.
+   *
+   * @var array|object|false
+   */
+  private $global_settings_cache = false;
+
+  /**
+   * Per-request memo for `motionkit_global_animations`.
+   *
+   * @var array|false
+   */
+  private $global_animations_cache = false;
+
+  /**
+   * Read + validate the page-transition snippet, memoized per request.
+   *
+   * @return array|null Validated stored payload, or null when no usable
+   *                    snippet is configured.
+   */
+  private function get_page_transition()
+  {
+    if ($this->page_transition_cache !== false) {
+      return $this->page_transition_cache;
+    }
+
+    $stored = get_option('motionkit-page-transition-code');
+    if (!is_array($stored) || empty($stored['code']) || !is_string($stored['code'])) {
+      return $this->page_transition_cache = null;
+    }
+
+    return $this->page_transition_cache = $stored;
+  }
+
+  /**
+   * Read motionkit_global_settings, memoized per request.
+   *
+   * Returns the raw value (array or object) — callers normalize as needed.
+   *
+   * @return array|object
+   */
+  private function get_global_settings()
+  {
+    if ($this->global_settings_cache !== false) {
+      return $this->global_settings_cache;
+    }
+    return $this->global_settings_cache = get_option('motionkit_global_settings', []);
+  }
+
+  /**
+   * Read motionkit_global_animations, memoized per request.
+   *
+   * @return array
+   */
+  private function get_global_animations(): array
+  {
+    if ($this->global_animations_cache !== false) {
+      return $this->global_animations_cache;
+    }
+    $raw = get_option('motionkit_global_animations', []);
+    return $this->global_animations_cache = is_array($raw) ? $raw : [];
+  }
+
+  /**
    * Initialize frontend functionality
    *
    * @return void
@@ -122,8 +201,8 @@ final class Frontend
     // (edited from the editor's GSAP Plugin tab). Stored values may arrive as
     // an associative array or stdClass depending on how the option was saved
     // — normalize to an associative array.
-    $global = get_option('motionkit_global_settings', []);
-    if(!isset($global['gsapPlugin']['cdns'])) {
+    $global = $this->get_global_settings();
+    if (!isset($global['gsapPlugin']['cdns']) && !(is_object($global) && isset($global->gsapPlugin))) {
       return [];
     }
     $cdns   = [];
@@ -151,8 +230,7 @@ final class Frontend
         continue;
       }
 
-      if (wp_http_validate_url($url) === false) {
-        error_log("MotionKit: invalid GSAP CDN URL for handle '{$handle}', skipping registration.");
+      if (wp_http_validate_url($url) === false) {       
         continue;
       }
 
@@ -160,6 +238,17 @@ final class Frontend
       // null to wp_register_script to avoid double-stamping ?ver=.
       if ($handle === 'gsap') {
         wp_register_script($handle, $url, [], null, false);
+
+        // Force gsap into <head> only when a page-transition snippet is
+        // stored — that snippet runs from wp_head priority 99 and assumes
+        // `window.gsap` is already defined. Without this, `motionkit-frontend`
+        // (footer) listing gsap as a dep makes WP propagate the footer group
+        // up the dep chain and gsap drops to the footer too, breaking the
+        // inline snippet. On pages without a transition we skip the enqueue
+        // and let gsap load in the footer with everything else.
+        if ($this->get_page_transition() !== null) {
+          wp_enqueue_script($handle);
+        }
         continue;
       }
       wp_register_script($handle, $url, $lib['deps'], null, true);
@@ -312,8 +401,7 @@ final class Frontend
 
     // Only preload when a page-transition snippet is actually stored — otherwise
     // gsap may not be needed in the head at all on this page.
-    $stored = get_option('motionkit-page-transition-code');
-    if (! is_array($stored) || empty($stored['code']) || ! is_string($stored['code'])) {
+    if ($this->get_page_transition() === null) {
       return;
     }
 
@@ -335,8 +423,8 @@ final class Frontend
       return;
     }
 
-    $stored = get_option('motionkit-page-transition-code');
-    if (! is_array($stored) || empty($stored['code']) || ! is_string($stored['code'])) {
+    $stored = $this->get_page_transition();
+    if ($stored === null) {
       return;
     }
 
@@ -469,8 +557,10 @@ final class Frontend
     $page_configs = $this->page_type->getConfig($settings_config);
 
     // Global settings + global animations (wp_options).
-    $global_settings  = get_option('motionkit_global_settings', json_decode('{}'));
-    $global_animation = get_option('motionkit_global_animations', []);
+    // Read through memos so we don't re-fetch options that register_gsap_libs
+    // already pulled earlier in this same request.
+    $global_settings  = $this->get_global_settings();
+    $global_animation = $this->get_global_animations();
 
     // Page-level animation list — original key (mkit_pg_animation_<type>).
     $page_animation = $this->page_type->getConfig($page_type_config);
@@ -566,9 +656,12 @@ final class Frontend
       $this->enqueue_presets($active_presets['premium'], $deps);
     }  
 
-    // Global settings + global animations (saved by editor to wp_options)
-    $global_settings  = get_option('motionkit_global_settings', json_decode('{}'));
-    $global_animation = get_option('motionkit_global_animations', []);
+    // Global settings + global animations (saved by editor to wp_options).
+    // Read through memos so the same option isn't re-fetched on subsequent
+    // hooks (register_gsap_libs already pulled global_settings earlier in
+    // this same request).
+    $global_settings  = $this->get_global_settings();
+    $global_animation = $this->get_global_animations();
 
     // Page-level animation bucket (separate from currentPageSettings)
     $page_type_config = $this->page_type->getCurrentPageType();

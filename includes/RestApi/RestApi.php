@@ -356,7 +356,10 @@ final class RestApi
           $payload['animationConfigs'] ?? []
         );
 
-        update_option('motionkit_page_settings_updated_at', time(), false); 
+        // autoload=true is intentional — Frontend.php reads this on every page
+        // load to gate the active-plugin scan. Joining the alloptions cache
+        // avoids a per-request SELECT against wp_options.
+        update_option('motionkit_page_settings_updated_at', time(), true);
 
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_settings_saved']], 200);
 
