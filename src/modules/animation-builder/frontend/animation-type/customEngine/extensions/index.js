@@ -1,12 +1,12 @@
 import { registerStandardMethods } from "./standard.js";
 import { registerSplitTextMethod } from "./splitText.js";
 import { registerDrawSVGMethod } from "./drawSVG.js";
-import { registerScrollToPlugin } from "./scrollTo.js";
+import { registerScrollToMethod } from "./scrollTo.js";
+import { registerFlipMethod } from "./flip.js";
 
 // Add future plugin registrations here. Each returns true if registered.
 // Scaffolds to fill when editor wires them into step.method:
 //   registerMotionPathMethod   (window.MotionPathPlugin)
-//   registerFlipMethod         (window.Flip)
 //   registerScrambleTextMethod (window.ScrambleTextPlugin)
 //   registerMorphSVGMethod     (window.MorphSVGPlugin)
 //   registerPhysics2DMethod    (window.Physics2DPlugin)
@@ -14,7 +14,8 @@ import { registerScrollToPlugin } from "./scrollTo.js";
 const EXTENSION_REGISTRARS = [
   registerSplitTextMethod,
   registerDrawSVGMethod,
-  registerScrollToPlugin,
+  registerScrollToMethod,
+  registerFlipMethod,
 ];
 
 let done = false;

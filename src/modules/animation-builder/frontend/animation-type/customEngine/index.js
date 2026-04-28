@@ -87,6 +87,7 @@ function collectInteractionTargets(anim) {
 function timelineHasScrollTo(anim) {
   return (anim.timelines || []).some((tlCfg) =>
     (tlCfg.animations || []).some((step) => {
+      if (step?.method === "scrollTo") return true;
       const v = step?.vars || {};
       return !!(v.to?.scrollTo || v.from?.scrollTo || v.set?.scrollTo);
     }),

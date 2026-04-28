@@ -26,6 +26,9 @@ export function normalizeStepVars(step) {
     }
     case "call":
       return v.call || v;
+    case "scrollTo":
+      const vars = v[step.method] || v;
+      return vars && Object.keys(vars).length ? vars : { autoKill: true };
     default: {
       const vars = v[step.method] || v;
       return vars && Object.keys(vars).length ? vars : null;

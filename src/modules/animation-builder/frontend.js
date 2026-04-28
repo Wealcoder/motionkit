@@ -142,6 +142,8 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
   }
 
   function resolveAndDispatch(all_animations, all_settings) {
+    console.log("resolveAndDispatch", { all_animations, all_settings });
+
     var devices = Object.values(
       (all_settings && all_settings.deviceConfig) || {},
     );
