@@ -77,11 +77,12 @@ export function imageRevealAnim() {
       itemEl.setAttribute("data-wcf-anim-id", id);
 
       gsap.set(containerEl, {
-        autoAlpha: 1,
+        autoAlpha: 0,
         overflow: "hidden",
         transition: "none",
       });
       gsap.set(itemEl, {
+        autoAlpha: 0,
         overflow: "hidden",
         objectFit: "cover",
       });
@@ -125,11 +126,21 @@ export function imageRevealAnim() {
           break;
       }
 
+      // Reveal opacity explicitly via fromTo so the target is 1 (not the
+      // current value, which `gsap.set` just pinned to 0 above). Runs in
+      // parallel with the slide-in tweens.
+      tl.fromTo(
+        [containerEl, itemEl],
+        { autoAlpha: 0 },
+        { autoAlpha: 1, ease, duration: baseDuration },
+        0,
+      );
+
       // Container + image reveal run in parallel (`"<"` = align to the
       // previous tween's start). Replaces the negative-delay trick
       // (`delay: -1.5 - duration`) from the old runtime.
-      tl.from(containerEl, contentAnim);
-      tl.from(itemEl, imageAnim, "<");
+      tl.from(containerEl, contentAnim, 0);
+      tl.from(itemEl, imageAnim, 0);
 
       timelines.push(tl);
     });
