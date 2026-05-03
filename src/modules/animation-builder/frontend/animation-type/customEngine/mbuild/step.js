@@ -1,6 +1,7 @@
 import { getMethod } from "../registry.js";
 import { isStepActive } from "../select/filter.js";
 import { normalizeStepVars } from "../select/merge.js";
+import { extractOverlap } from "../select/overlap.js";
 
 export function applyStep(tl, step) {
   if (!isStepActive(step)) return;
@@ -9,8 +10,9 @@ export function applyStep(tl, step) {
     console.warn(`[customEngine] Unknown step method: "${step.method}"`);
     return;
   }
-  const vars = normalizeStepVars(step);
+  const rawVars = normalizeStepVars(step);
   // call can have side-effectful semantics even with empty vars — let through.
-  if (vars == null && step.method !== "call") return;
-  handler(tl, step, vars);
+  if (rawVars == null && step.method !== "call") return;
+  const { vars, overlap } = extractOverlap(step, rawVars);
+  handler(tl, step, vars, overlap);
 }

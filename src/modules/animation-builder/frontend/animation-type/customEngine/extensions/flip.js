@@ -12,7 +12,7 @@ export function registerFlipMethod() {
     /* noop */
   }
 
-  registerMethod("flip", (tl, step, vars) => {
+  registerMethod("flip", (tl, step, vars, overlap) => {
     if (!step.itemClass || !vars) return;
     const selector = vars.targets || step.itemClass;
     const toggleClass = vars.toggleClass;
@@ -44,7 +44,7 @@ export function registerFlipMethod() {
 
     console.log({ flipVars, state });
 
-    tl.add(Flip.from(state, flipVars));
+    tl.add(Flip.from(state, flipVars), overlap);
   });
 
   return true;

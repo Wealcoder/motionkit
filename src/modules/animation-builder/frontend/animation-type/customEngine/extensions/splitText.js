@@ -49,7 +49,7 @@ export function registerSplitTextMethod() {
     /* noop */
   }
 
-  registerMethod("splitText", (tl, step, vars) => {
+  registerMethod("splitText", (tl, step, vars, overlap) => {
     if (!step.itemClass || !vars) return;
 
     const splitConfig = vars.splitText || {};
@@ -63,7 +63,7 @@ export function registerSplitTextMethod() {
     const tweenVars = { ...vars };
     delete tweenVars.splitText;
 
-    tl.from(targets, tweenVars);
+    tl.from(targets, tweenVars, overlap);
   });
 
   return true;

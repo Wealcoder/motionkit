@@ -17,7 +17,7 @@ export function registerScrollToMethod() {
     /* noop */
   }
 
-  registerMethod("scrollTo", (tl, _step, vars) => {
+  registerMethod("scrollTo", (tl, _step, vars, overlap) => {
     if (!vars) return;
     const { offsetX = 0, offsetY = 0, autoKill = false, ...rest } = vars;
     const updatedVars = {
@@ -25,7 +25,7 @@ export function registerScrollToMethod() {
       rest,
     };
     console.log({ updatedVars });
-    tl.to(window, updatedVars);
+    tl.to(window, updatedVars, overlap);
   });
 
   return true;
