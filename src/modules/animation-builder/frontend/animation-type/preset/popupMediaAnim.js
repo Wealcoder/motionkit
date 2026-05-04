@@ -1,154 +1,187 @@
 const PRESET_KEY = "wcf-mk-popup-media-pa";
-const POPUP_STYLES_ID = "wcf-popup-media-styles";
+const POPUP_TAG = "motionkit-popup-media";
 
-// Inject popup styles once per document, even if the module is re-imported.
-if (
-  typeof document !== "undefined" &&
-  !document.getElementById(POPUP_STYLES_ID)
-) {
-  const style = document.createElement("style");
-  style.id = POPUP_STYLES_ID;
-  style.textContent = `
-    body.popup-open {
-      overflow: hidden;
-      height: 100%;
-      position: fixed;
-      width: 100%;
+// All popup styles live inside the shadow root so theme/page CSS on the
+// customer site cannot reach in and override them (e.g. a generic
+// `button:hover { background: red }` was painting a red box behind the close
+// icon on production). `:host { display: contents }` keeps the host element
+// layout-transparent so the inner overlay still positions fixed against the
+// viewport — visual behavior is identical to the previous global-stylesheet
+// version.
+const POPUP_STYLES = `
+  :host {
+    display: contents;
+  }
+  .motionkit-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    overflow-y: auto;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .motionkit-popup-content {
+    background-color: transparent;
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    width: 50vw;
+    margin: 20px auto;
+  }
+  @media (max-width: 768px) {
+    .motionkit-popup-content { width: 90vw; }
+  }
+  .motionkit-popup-close {
+    position: absolute;
+    top: -25px;
+    right: 0px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    z-index: 1001;
+  }
+  .motionkit-popup-close:hover,
+  .motionkit-popup-close:focus,
+  .motionkit-popup-close:active {
+    background-color: transparent;
+    outline: none;
+    box-shadow: none;
+  }
+  .motionkit-popup-close::before,
+  .motionkit-popup-close::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #ffffff;
+    transition: background-color 0.3s ease;
+  }
+  .motionkit-popup-close::before { transform: rotate(45deg); }
+  .motionkit-popup-close::after  { transform: rotate(-45deg); }
+  .motionkit-popup-close:hover::before,
+  .motionkit-popup-close:hover::after { background-color: #ff0000; }
+  .motionkit-popup-media {
+    max-width: 100%;
+    max-height: 80vh;
+    display: block;
+    width: 100%;
+  }
+  .motionkit-popup-video-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+  }
+  .motionkit-popup-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    object-fit: cover;
+    cursor: pointer;
+  }
+  .motionkit-youtube-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  .motionkit-popup-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+    border: none;
+    padding: 0;
+  }
+  .motionkit-popup-play-btn:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  .motionkit-popup-play-btn::after {
+    content: '';
+    border-style: solid;
+    border-width: 15px 0 15px 26px;
+    border-color: transparent transparent transparent #ffffff;
+    margin-left: 5px;
+  }
+  .motionkit-popup-play-btn.motionkit-playing::after {
+    content: '';
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(to right, #fff 30%, transparent 30%, transparent 70%, #fff 70%);
+    border: none;
+    margin-left: 0;
+  }
+  .motionkit-popup-video-wrapper {
+    position: relative;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .motionkit-youtube-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+  }
+`;
+
+if (typeof window !== "undefined" && !customElements.get(POPUP_TAG)) {
+  class MotionkitPopupMedia extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" });
     }
-    .popup-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      overflow-y: auto;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-    .popup-content {
-      background-color: transparent;
-      position: relative;
-      max-width: 90%;
-      max-height: 90%;
-      width: 50vw;
-      margin: 20px auto;
-    }
-    @media (max-width: 768px) {
-      .popup-content { width: 90vw; }
-    }
-    .popup-close {
-      position: absolute;
-      top: -25px;
-      right: 0px;
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      z-index: 1001;
-    }
-    .popup-close::before,
-    .popup-close::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background-color: #ffffff;
-      transition: background-color 0.3s ease;
-    }
-    .popup-close::before { transform: rotate(45deg); }
-    .popup-close::after  { transform: rotate(-45deg); }
-    .popup-close:hover::before,
-    .popup-close:hover::after { background-color: #ff0000; }
-    .popup-media {
-      max-width: 100%;
-      max-height: 80vh;
-      display: block;
-      width: 100%;
-    }
-    .popup-video-container {
-      position: relative;
-      width: 100%;
-      height: 0;
-      padding-bottom: 56.25%;
-    }
-    .popup-video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      object-fit: cover;
-      cursor: pointer;
-    }
-    .youtube-video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    .popup-play-btn {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 80px;
-      height: 80px;
-      background-color: rgba(0, 0, 0, 0.7);
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: all 0.3s ease;
-      z-index: 10;
-      border: none;
-    }
-    .popup-play-btn:hover {
-      background-color: rgba(0, 0, 0, 0.9);
-      transform: translate(-50%, -50%) scale(1.1);
-    }
-    .popup-play-btn::after {
-      content: '';
-      border-style: solid;
-      border-width: 15px 0 15px 26px;
-      border-color: transparent transparent transparent #ffffff;
-      margin-left: 5px;
-    }
-    .popup-play-btn.playing::after {
-      content: '';
-      width: 30px;
-      height: 30px;
-      background: linear-gradient(to right, #fff 30%, transparent 30%, transparent 70%, #fff 70%);
-      border: none;
-      margin-left: 0;
-    }
-    .popup-video-wrapper {
-      position: relative;
-      width: 100%;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .youtube-container {
-      position: relative;
-      width: 100%;
-      height: 0;
-      padding-bottom: 56.25%;
-    }
-  `;
-  document.head.appendChild(style);
+  }
+  customElements.define(POPUP_TAG, MotionkitPopupMedia);
+}
+
+function lockBodyScroll(savedScroll) {
+  const s = document.body.style;
+  s.overflow = "hidden";
+  s.height = "100%";
+  s.position = "fixed";
+  s.width = "100%";
+  s.top = `-${savedScroll}px`;
+}
+
+function unlockBodyScroll() {
+  const s = document.body.style;
+  s.overflow = "";
+  s.height = "";
+  s.position = "";
+  s.width = "";
+  s.top = "";
 }
 
 export function popupMediaAnim() {
@@ -240,11 +273,11 @@ export function popupMediaAnim() {
 
   function buildVideoElement(mediaUrl) {
     const wrapper = document.createElement("div");
-    wrapper.className = "popup-video-wrapper";
+    wrapper.className = "motionkit-popup-video-wrapper";
     const container = document.createElement("div");
-    container.className = "popup-video-container";
+    container.className = "motionkit-popup-video-container";
     const videoEl = document.createElement("video");
-    videoEl.className = "popup-video";
+    videoEl.className = "motionkit-popup-video";
     videoEl.preload = "metadata";
     const source = document.createElement("source");
     source.src = mediaUrl;
@@ -252,7 +285,7 @@ export function popupMediaAnim() {
     videoEl.appendChild(source);
 
     const playButton = document.createElement("button");
-    playButton.className = "popup-play-btn";
+    playButton.className = "motionkit-popup-play-btn";
     playButton.type = "button";
 
     const togglePlay = () => {
@@ -260,12 +293,12 @@ export function popupMediaAnim() {
         const playPromise = videoEl.play();
         if (playPromise !== undefined) {
           playPromise
-            .then(() => playButton.classList.add("playing"))
+            .then(() => playButton.classList.add("motionkit-playing"))
             .catch((err) => console.warn("[popupMedia] playback failed:", err));
         }
       } else {
         videoEl.pause();
-        playButton.classList.remove("playing");
+        playButton.classList.remove("motionkit-playing");
       }
     };
 
@@ -275,15 +308,15 @@ export function popupMediaAnim() {
       togglePlay();
     });
     videoEl.addEventListener("play", () => {
-      playButton.classList.add("playing");
+      playButton.classList.add("motionkit-playing");
       playButton.style.display = "none";
     });
     videoEl.addEventListener("pause", () => {
-      playButton.classList.remove("playing");
+      playButton.classList.remove("motionkit-playing");
       playButton.style.display = "flex";
     });
     videoEl.addEventListener("ended", () => {
-      playButton.classList.remove("playing");
+      playButton.classList.remove("motionkit-playing");
       playButton.style.display = "flex";
       videoEl.currentTime = 0;
     });
@@ -300,19 +333,19 @@ export function popupMediaAnim() {
         const img = document.createElement("img");
         img.src = mediaUrl;
         img.alt = "Popup Image";
-        img.className = "popup-media";
+        img.className = "motionkit-popup-media";
         return img;
       }
       case "youtube": {
         const container = document.createElement("div");
-        container.className = "youtube-container";
+        container.className = "motionkit-youtube-container";
         const videoId = getYouTubeId(mediaUrl);
         if (!videoId) {
           console.warn("[popupMedia] invalid YouTube URL:", mediaUrl);
           return null;
         }
         const iframe = document.createElement("iframe");
-        iframe.className = "youtube-video";
+        iframe.className = "motionkit-youtube-video";
         iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
         iframe.allowFullscreen = true;
         iframe.allow =
@@ -328,24 +361,24 @@ export function popupMediaAnim() {
     }
   }
 
-  function closePopup(overlay, instant = false) {
-    if (!overlay || !overlay.parentNode) return;
+  function closePopup(host, instant = false) {
+    if (!host || !host.parentNode) return;
 
-    const savedScroll = parseInt(overlay.dataset.scrollPosition || "0", 10);
+    const root = host.shadowRoot;
+    const savedScroll = parseInt(host.dataset.scrollPosition || "0", 10);
 
-    overlay.querySelector("video")?.pause();
-    const iframe = overlay.querySelector("iframe");
+    root?.querySelector("video")?.pause();
+    const iframe = root?.querySelector("iframe");
     if (iframe && iframe.parentNode) iframe.parentNode.removeChild(iframe);
 
-    document.body.classList.remove("popup-open");
-    document.body.style.top = "";
+    unlockBodyScroll();
     window.scrollTo(0, savedScroll);
 
     document.removeEventListener("touchmove", preventScroll);
     document.removeEventListener("wheel", preventScroll);
 
-    const tl = overlay._wcfTimeline;
-    const removeNow = () => overlay.parentNode?.removeChild(overlay);
+    const tl = host._wcfTimeline;
+    const removeNow = () => host.parentNode?.removeChild(host);
 
     if (tl && !instant) {
       tl.reverse().then(removeNow);
@@ -360,22 +393,31 @@ export function popupMediaAnim() {
 
     // Only one popup at a time — close any existing instantly.
     document
-      .querySelectorAll(".popup-overlay")
+      .querySelectorAll(POPUP_TAG)
       .forEach((existing) => closePopup(existing, true));
 
     const savedScroll = window.pageYOffset;
 
+    const host = document.createElement(POPUP_TAG);
+    host.classList.add("wcfanimb-skip-selector-full");
+    host.dataset.popupId = popupId;
+    host.dataset.scrollPosition = String(savedScroll);
+
+    const root = host.shadowRoot;
+    const styleEl = document.createElement("style");
+    styleEl.textContent = POPUP_STYLES;
+    root.appendChild(styleEl);
+
     const overlay = document.createElement("div");
-    overlay.className = "popup-overlay wcfanimb-skip-selector-full";
-    overlay.dataset.popupId = popupId;
-    overlay.dataset.scrollPosition = String(savedScroll);
+    overlay.className = "motionkit-popup-overlay";
 
     const content = document.createElement("div");
-    content.className = "popup-content wcfanimb-skip-selector-full";
+    content.className = "motionkit-popup-content";
 
     const closeBtn = document.createElement("button");
-    closeBtn.className = "popup-close";
+    closeBtn.className = "motionkit-popup-close";
     closeBtn.type = "button";
+    closeBtn.setAttribute("aria-label", "Close");
 
     const mediaEl = buildMediaElement(mediaType, mediaUrl);
     if (!mediaEl) return;
@@ -383,24 +425,27 @@ export function popupMediaAnim() {
     content.appendChild(mediaEl);
     content.appendChild(closeBtn);
     overlay.appendChild(content);
-    document.body.appendChild(overlay);
+    root.appendChild(overlay);
+    document.body.appendChild(host);
 
     // Lock scroll (done AFTER appending so image/video sizing isn't affected).
-    document.body.classList.add("popup-open");
-    document.body.style.top = `-${savedScroll}px`;
+    lockBodyScroll(savedScroll);
     document.addEventListener("touchmove", preventScroll, { passive: false });
     document.addEventListener("wheel", preventScroll, { passive: false });
 
     const { from, to } = getAnimationProperties(animateFrom);
-    overlay._wcfTimeline = gsap
+    host._wcfTimeline = gsap
       .timeline()
       .set(overlay, { visibility: "visible" })
       .to(overlay, { opacity: 1, duration: 0.3 })
       .fromTo(content, from, to, "-=0.2");
 
     overlay.addEventListener("click", (e) => {
-      if (e.target === overlay || e.target.classList.contains("popup-close")) {
-        closePopup(overlay);
+      if (
+        e.target === overlay ||
+        e.target.classList.contains("motionkit-popup-close")
+      ) {
+        closePopup(host);
       }
     });
   }
@@ -423,10 +468,9 @@ export function popupMediaAnim() {
     for (const id of [...instances.keys()]) teardown(id);
     // Defensive: close any open popup + reset body scroll lock.
     document
-      .querySelectorAll(".popup-overlay")
-      .forEach((overlay) => closePopup(overlay, true));
-    document.body.classList.remove("popup-open");
-    document.body.style.top = "";
+      .querySelectorAll(POPUP_TAG)
+      .forEach((host) => closePopup(host, true));
+    unlockBodyScroll();
     document.removeEventListener("touchmove", preventScroll);
     document.removeEventListener("wheel", preventScroll);
   }
