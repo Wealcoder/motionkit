@@ -24,7 +24,6 @@ export function registerScrollToMethod() {
       scrollTo: { offsetX, offsetY, autoKill, y: _step.itemClass },
       rest,
     };
-    console.log({ updatedVars });
     tl.to(window, updatedVars, overlap);
   });
 

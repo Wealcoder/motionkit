@@ -50,12 +50,6 @@ export function applyStep(tl, step, stepIndex) {
   // call can have side-effectful semantics even with empty vars — let through.
   if (rawVars == null && step.method !== "call") return;
   const { vars, overlap } = extractOverlap(step, rawVars);
-
-  if (step.method === "fromTo") {
-    stampFromToMetadata(vars, tl, step, stepIndex);
-  } else {
-    stampMetadata(vars, tl, step, stepIndex);
-  }
-
-  handler(tl, step, vars, overlap);
+  const newVars = { ...vars, id: step?.id };
+  handler(tl, step, newVars, overlap);
 }

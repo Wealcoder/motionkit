@@ -147,21 +147,25 @@ export function textSpinAnim() {
         transformPerspective: 600,
       });
 
-      // After two rAFs the chars are laid out — mirror clone char positions
-      // onto original char positions before animating.
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          const wrapperRect = wrapper.getBoundingClientRect();
-          originalSplit.chars.forEach((char, i) => {
-            const cloneChar = cloneSplit.chars[i];
-            if (!char || !cloneChar) return;
-            char.style.display = "inline-block";
-            char.style.position = "relative";
-            char.style.backfaceVisibility = "hidden";
-            const charRect = char.getBoundingClientRect();
-            const left = Math.round(charRect.left - wrapperRect.left);
-            const top = Math.round(charRect.top - wrapperRect.top);
-            cloneChar.style.cssText = `
+      // Mirror clone char positions onto the original chars. Gated on
+      // `document.fonts.ready` because measuring before the real font has
+      // loaded bakes fallback-font coordinates into the clone, which then
+      // visibly desync once the real font kicks in (showed up as ghosted /
+      // overlapping text on play-with-scroll). Also re-runs on
+      // ScrollTrigger.refresh so resize / late-loading content can't desync
+      // it later.
+      const measureAndPositionClone = () => {
+        const wrapperRect = wrapper.getBoundingClientRect();
+        originalSplit.chars.forEach((char, i) => {
+          const cloneChar = cloneSplit.chars[i];
+          if (!char || !cloneChar) return;
+          char.style.display = "inline-block";
+          char.style.position = "relative";
+          char.style.backfaceVisibility = "hidden";
+          const charRect = char.getBoundingClientRect();
+          const left = Math.round(charRect.left - wrapperRect.left);
+          const top = Math.round(charRect.top - wrapperRect.top);
+          cloneChar.style.cssText = `
             position: absolute;
             left: ${left}px;
             top: ${top}px;
@@ -172,12 +176,26 @@ export function textSpinAnim() {
             backface-visibility: hidden;
             color: ${window.getComputedStyle(char).color};
           `;
-            if (char.textContent.trim() === "") cloneChar.innerHTML = "&nbsp;";
-            const h = Math.max(1, Math.round(charRect.height || 20));
-            gsap.set([char, cloneChar], {
-              transformOrigin: `50% 50% -${Math.round(h / 2)}px`,
-            });
+          if (char.textContent.trim() === "") cloneChar.innerHTML = "&nbsp;";
+          const h = Math.max(1, Math.round(charRect.height || 20));
+          gsap.set([char, cloneChar], {
+            transformOrigin: `50% 50% -${Math.round(h / 2)}px`,
           });
+        });
+      };
+
+      const fontsReady = document.fonts?.ready ?? Promise.resolve();
+      fontsReady.then(() =>
+        requestAnimationFrame(() => {
+          measureAndPositionClone();
+
+          if (window.ScrollTrigger) {
+            const onRefresh = () => measureAndPositionClone();
+            window.ScrollTrigger.addEventListener("refresh", onRefresh);
+            cleanups.push(() =>
+              window.ScrollTrigger.removeEventListener("refresh", onRefresh),
+            );
+          }
 
           const half = duration / 2;
           const staggerOpts = { each: stagger, from: "start" };
@@ -208,8 +226,19 @@ export function textSpinAnim() {
           };
 
           const buildScrubForward = (tl) => {
-            gsap.set(originalSplit.chars, { rotationX: 0, opacity: 1 });
-            gsap.set(cloneSplit.chars, { rotationX: -90, opacity: 0 });
+            // Sequential flip (original out 0→0.5, clone in 0.5→1) — running
+            // both halves at time 0 caused all chars to be 50% rotated and
+            // 50% opaque mid-scrub, producing a messy overlap.
+            gsap.set(originalSplit.chars, {
+              rotationX: 0,
+              opacity: 1,
+              force3D: true,
+            });
+            gsap.set(cloneSplit.chars, {
+              rotationX: -90,
+              opacity: 0,
+              force3D: true,
+            });
             tl.to(
               originalSplit.chars,
               {
@@ -217,7 +246,7 @@ export function textSpinAnim() {
                 opacity: 0,
                 stagger: staggerOpts,
                 ease: "none",
-                duration: 1,
+                duration: 0.5,
               },
               0,
             );
@@ -228,9 +257,9 @@ export function textSpinAnim() {
                 opacity: 1,
                 stagger: staggerOpts,
                 ease: "none",
-                duration: 1,
+                duration: 0.5,
               },
-              0,
+              0.5,
             );
           };
 
@@ -260,7 +289,7 @@ export function textSpinAnim() {
               trigger: triggerSelector || wrapper,
               start: start === "custom" ? startCustom : start || "top bottom",
               end: end === "custom" ? endCustom : end || "bottom top",
-              scrub: true,
+              scrub: 1,
               markers: previewMarkers,
             };
             tl.scrollTrigger = window.ScrollTrigger?.create({

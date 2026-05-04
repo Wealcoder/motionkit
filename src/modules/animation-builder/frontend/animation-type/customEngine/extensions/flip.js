@@ -24,8 +24,6 @@ export function registerFlipMethod() {
     delete flipVars.targets;
     delete flipVars.toggleClass;
 
-    console.log({ flipVars, tl });
-
     // Flip needs DOM-state diff: capture → mutate → animate, all at exec time.
     // The Flip.from tween runs independently of `tl` — subsequent timeline
     // steps don't wait for it (matches splitText/drawSVG behavior).
@@ -41,8 +39,6 @@ export function registerFlipMethod() {
     if (toggleClass) {
       elements.forEach((el) => el.classList.toggle(toggleClass));
     }
-
-    console.log({ flipVars, state });
 
     tl.add(Flip.from(state, flipVars), overlap);
   });
