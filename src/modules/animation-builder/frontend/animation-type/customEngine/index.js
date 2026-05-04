@@ -4,6 +4,10 @@ import { findRoutedScrollTriggers } from "./select/find.js";
 import { querySelectorAllCached, requestRefresh } from "./scheduler.js";
 import { setActive, getActive } from "./registry.js";
 import { teardown, tagElement } from "./cleanup.js";
+import {
+  registerTimeline,
+  isEditorPreviewMode,
+} from "./customRegistry.js";
 
 export function isCustomAnimation(anim) {
   return (
@@ -40,6 +44,12 @@ function tagAllTargets(anim) {
   });
 }
 
+// In editor preview mode, custom anims build paused so DevTools owns playback.
+// Public site builds remain auto-play (extraConfig undefined).
+function pageloadExtraConfig() {
+  return isEditorPreviewMode() ? { paused: true } : undefined;
+}
+
 function buildScrollAnim(anim) {
   const deviceKey = detectDeviceKey();
   const routed = findRoutedScrollTriggers(anim, deviceKey);
@@ -49,7 +59,15 @@ function buildScrollAnim(anim) {
     routed.forEach(({ cfg, tl }) => {
       const fallbackTrigger = tl.animations?.[0]?.itemClass;
       const scrollCfg = buildScrollTriggerConfig(cfg, fallbackTrigger);
-      buildTimeline(tl, { scrollTrigger: scrollCfg });
+      const built = buildTimeline(tl, { scrollTrigger: scrollCfg }, {
+        animationId: anim.id,
+        animationTitle: anim.title,
+      });
+      // ScrollTrigger anims are scroll-driven; DevTools cannot scrub them
+      // by time, so we don't register them. They still render in GSAP.
+      if (built) {
+        // intentional no-op for registry
+      }
     });
   });
 
@@ -58,7 +76,15 @@ function buildScrollAnim(anim) {
 
 function buildPageloadAnim(anim) {
   const ctx = gsap.context(() => {
-    (anim.timelines || []).forEach((tlCfg) => buildTimeline(tlCfg));
+    (anim.timelines || []).forEach((tlCfg) => {
+      const tl = buildTimeline(tlCfg, pageloadExtraConfig(), {
+        animationId: anim.id,
+        animationTitle: anim.title,
+      });
+      if (isEditorPreviewMode() && tl) {
+        registerTimeline(anim.id, tl);
+      }
+    });
   });
   return { contexts: [ctx], listeners: [] };
 }
@@ -102,7 +128,14 @@ function buildInteractionAnim(anim, eventType) {
   const ctx = gsap.context(() => {
     (anim.timelines || []).forEach((tlCfg) => {
       // paused override — event drives playback regardless of tlCfg.vars.paused
-      tls.push(buildTimeline(tlCfg, { paused: true }));
+      const tl = buildTimeline(tlCfg, { paused: true }, {
+        animationId: anim.id,
+        animationTitle: anim.title,
+      });
+      tls.push(tl);
+      if (isEditorPreviewMode() && tl) {
+        registerTimeline(anim.id, tl);
+      }
     });
   });
 

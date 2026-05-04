@@ -5,6 +5,7 @@ import {
   clearActive,
 } from "./registry.js";
 import { clearSelectorCache } from "./scheduler.js";
+import { unregisterAnimation, clearAll as clearCustomRegistry } from "./customRegistry.js";
 
 // Tag so resetAllAnimations.js sweeps us on global reset.
 export function tagElement(el, id) {
@@ -33,11 +34,13 @@ export function teardown(id) {
   if (!handle) return;
   runCleanups(handle);
   deleteActive(id);
+  unregisterAnimation(id);
 }
 
 export function teardownAll() {
   allActiveIds().forEach((id) => runCleanups(getActive(id)));
   clearActive();
+  clearCustomRegistry();
   clearSelectorCache();
 }
 
@@ -56,5 +59,6 @@ document.addEventListener("motionkit:reset-done", () => {
     });
   });
   clearActive();
+  clearCustomRegistry();
   clearSelectorCache();
 });
