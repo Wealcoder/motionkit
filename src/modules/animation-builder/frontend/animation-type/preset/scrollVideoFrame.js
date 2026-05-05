@@ -45,7 +45,12 @@ export function scrollVideoFrame() {
     if (!anim.containerClass || !anim.itemClass) return;
 
     const { id, containerClass, itemClass, vars = {} } = anim;
-    const { containerHeight } = vars;
+    // vars.containerHeight: CSS height for the pinned container (use vh units
+    // for viewport-relative scroll lengths, e.g. '200vh').
+    // vars.scrub: optional numeric smoothing (seconds) for scrub; set to e.g.
+    // 0.3 for a smoother catch-up. If omitted, defaults to `true` immediate
+    // scrub mapping.
+    const { containerHeight, scrub: scrubCfg } = vars;
     if (!containerHeight) return;
 
     let containerEl;
@@ -83,37 +88,114 @@ export function scrollVideoFrame() {
     });
     gsap.set(video, { maxHeight: "100vh" });
 
+    // Avoid changing the container's display (can affect surrounding layout).
+    // Instead center the video itself and constrain sizing so it doesn't shift
+    // when the container is pinned.
+    try {
+      gsap.set(video, {
+        display: "block",
+        marginLeft: "auto",
+        marginRight: "auto",
+        width: "100%",
+        maxWidth: "100%",
+        maxHeight: "100vh",
+        objectFit: "cover",
+      });
+    } catch (err) {
+      console.warn("[scrollVideoFrame] centering set failed:", err);
+    }
+
     const src = video.currentSrc || video.src;
     video.removeAttribute("controls");
+
+    // Choose a pin target: prefer the video's immediate wrapper so we don't
+    // pin the full page-level container (which can change layout). Fall
+    // back to the container if no wrapper exists.
+    const pinTarget = (video && video.parentElement) || containerEl;
+
+    // Determine scrub value: allow numeric smoothing via vars.scrub, else
+    // default to `true` (immediate tie to scroll position).
+    const scrubValue = typeof scrubCfg === "number" ? scrubCfg : true;
 
     const tl = gsap.timeline({
       defaults: { duration: 1 },
       scrollTrigger: {
         trigger: containerEl,
-        pin: true,
+        pin: pinTarget,
         start: "top top",
         end: "bottom bottom",
-        scrub: true,
-        pinSpacing: false,
+        scrub: scrubValue,
+        // Keep pin spacing so the document flow isn't collapsed when pinned.
+        pinSpacing: true,
       },
     });
+
+    // When ScrollTrigger pins an element it wraps it in a .gsap-pin-spacer
+    // which can affect layout for wide/full-width blocks. Center that
+    // spacer so the pinned content stays visually centered without
+    // modifying the original container's display property.
+    try {
+      // Defer a tick so ScrollTrigger creates the spacer element first.
+      requestAnimationFrame(() => {
+        const spacer = pinTarget && pinTarget.parentElement;
+        if (
+          spacer &&
+          spacer.classList &&
+          spacer.classList.contains("gsap-pin-spacer")
+        ) {
+          try {
+            // Limit spacer width to the original container width so full-width
+            // blocks remain constrained while centered.
+            const cw = containerEl.getBoundingClientRect().width || null;
+            gsap.set(spacer, {
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginLeft: "auto",
+              marginRight: "auto",
+              maxWidth: cw ? `${Math.round(cw)}px` : "100%",
+            });
+          } catch (err) {
+            console.warn(
+              "[scrollVideoFrame] failed to center pin-spacer:",
+              err,
+            );
+          }
+        }
+      });
+    } catch (err) {
+      console.warn(
+        "[scrollVideoFrame] pin-spacer center scheduling failed:",
+        err,
+      );
+    }
 
     once(document.documentElement, "touchstart", () => {
       video.play();
       video.pause();
     });
 
-    once(video, "loadedmetadata", () => {
+    function attachTimelineOnMetadata() {
       tl.to(video, {
         currentTime: video.duration,
         ease: "none",
       });
-    });
+    }
+
+    // If metadata already loaded (e.g., cached), attach immediately.
+    if (video.readyState >= 1) {
+      attachTimelineOnMetadata();
+    } else {
+      once(video, "loadedmetadata", attachTimelineOnMetadata);
+    }
 
     // Cross-browser scrubbable video trick: re-fetch as blob so Safari/iOS
     // can seek frames independently.
+    // Skip in editor mode (proxy-snapshot) to avoid CORS issues
+    const isEditorMode =
+      window.wcfanimb?.mk_token || window.location.hostname === "localhost";
     const timer = setTimeout(() => {
-      if (!window.fetch) return;
+      if (!window.fetch || isEditorMode) return;
       fetch(src)
         .then((response) => response.blob())
         .then((blob) => {

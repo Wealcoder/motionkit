@@ -166,7 +166,21 @@ if (typeof window !== "undefined" && !customElements.get(POPUP_TAG)) {
   customElements.define(POPUP_TAG, MotionkitPopupMedia);
 }
 
+function getActiveSmoother() {
+  return window.ScrollSmoother?.get?.() || null;
+}
+
+// When ScrollSmoother is active, native scroll is already disabled by the
+// smoother itself, so the only thing we need to do is pause it. Touching
+// body styles in that case clobbers smoother's own inline styles and the
+// smoother gets stuck after we "unlock". The non-smoother branch is the
+// classic position:fixed body-lock for browsers without smoother.
 function lockBodyScroll(savedScroll) {
+  const smoother = getActiveSmoother();
+  if (smoother) {
+    smoother.paused(true);
+    return;
+  }
   const s = document.body.style;
   s.overflow = "hidden";
   s.height = "100%";
@@ -176,6 +190,11 @@ function lockBodyScroll(savedScroll) {
 }
 
 function unlockBodyScroll() {
+  const smoother = getActiveSmoother();
+  if (smoother) {
+    smoother.paused(false);
+    return;
+  }
   const s = document.body.style;
   s.overflow = "";
   s.height = "";
@@ -372,16 +391,37 @@ export function popupMediaAnim() {
     if (iframe && iframe.parentNode) iframe.parentNode.removeChild(iframe);
 
     unlockBodyScroll();
-    window.scrollTo(0, savedScroll);
+    // ScrollSmoother manages its own scroll position; calling scrollTo would
+    // fight it. Only restore scroll for the native body-lock path.
+    if (!getActiveSmoother()) {
+      window.scrollTo(0, savedScroll);
+    }
 
     document.removeEventListener("touchmove", preventScroll);
     document.removeEventListener("wheel", preventScroll);
 
+    // Disable pointer events on the overlay immediately so scroll/clicks
+    // pass through to the page even during the half-second fade-out.
+    const overlayEl = root?.querySelector(".motionkit-popup-overlay");
+    if (overlayEl) overlayEl.style.pointerEvents = "none";
+
     const tl = host._wcfTimeline;
-    const removeNow = () => host.parentNode?.removeChild(host);
+    let removed = false;
+    const removeNow = () => {
+      if (removed) return;
+      removed = true;
+      host.parentNode?.removeChild(host);
+    };
 
     if (tl && !instant) {
-      tl.reverse().then(removeNow);
+      // GSAP's `.then()` only fires on FORWARD completion (progress 1), not
+      // when reverse reaches progress 0 — so a `tl.reverse().then(removeNow)`
+      // never fires and leaves the overlay in the DOM, blocking page
+      // scroll. Use onReverseComplete instead, plus a safety timeout in
+      // case the timeline gets killed/interrupted.
+      tl.eventCallback("onReverseComplete", removeNow);
+      tl.reverse();
+      setTimeout(removeNow, 1500);
     } else {
       if (tl) tl.kill();
       removeNow();

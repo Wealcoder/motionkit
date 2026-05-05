@@ -1,7 +1,12 @@
 const PRESET_KEY = "wcf-mk-sticky-hs-pa";
 
 export function headerStickyAnim() {
-  // id -> { timelines, cleanups, wrapper, item, clone }
+  // id -> { timelines, cleanups, item, clone }
+  // The original `item` is never moved, wrapped, or pinned. Only the
+  // `clone` is inserted (as a sibling of the original, or in <body> when a
+  // transformed ancestor would break `position: fixed`). This keeps WP FSE
+  // layout selectors like `.is-layout-constrained > .alignwide` intact and
+  // avoids ScrollTrigger's pin-spacer entirely.
   const instances = new Map();
 
   function convertToPixels(value) {
@@ -18,11 +23,26 @@ export function headerStickyAnim() {
     return px;
   }
 
-  function isScrollSmootherActive() {
-    return (
-      typeof window.ScrollSmoother !== "undefined" &&
-      !!window.ScrollSmoother.get?.()
-    );
+  // `position: fixed` is viewport-relative ONLY when no ancestor has
+  // transform / filter / perspective set. ScrollSmoother (and some themes)
+  // transform a content wrapper — in that case the clone must live in
+  // <body> instead, otherwise it'd be positioned relative to the
+  // transformed ancestor and drift on scroll.
+  function hasTransformedAncestor(el) {
+    let p = el.parentElement;
+    while (p && p !== document.body && p !== document.documentElement) {
+      const cs = window.getComputedStyle(p);
+      if (
+        cs.transform !== "none" ||
+        cs.filter !== "none" ||
+        cs.perspective !== "none" ||
+        (cs.willChange && /transform|filter|perspective/.test(cs.willChange))
+      ) {
+        return true;
+      }
+      p = p.parentElement;
+    }
+    return false;
   }
 
   function teardown(id) {
@@ -44,10 +64,11 @@ export function headerStickyAnim() {
         console.warn("[headerSticky] timeline teardown error:", err);
       }
     });
-    // Restore original item back to where the wrapper lived.
-    if (inst.wrapper && inst.item && inst.wrapper.parentNode) {
-      inst.wrapper.parentNode.insertBefore(inst.item, inst.wrapper);
-      inst.wrapper.parentNode.removeChild(inst.wrapper);
+    if (inst.clone?.parentNode) {
+      inst.clone.parentNode.removeChild(inst.clone);
+    }
+    if (inst.item) {
+      gsap.set(inst.item, { clearProps: "opacity" });
     }
     instances.delete(id);
   }
@@ -91,73 +112,94 @@ export function headerStickyAnim() {
 
     teardown(id);
 
-    const defaultTop = 0;
     const calculatedPosition = convertToPixels(startPosition);
-    const calculateItemPosition = isScrollSmootherActive()
-      ? calculatedPosition
-      : 0;
     const endClass =
       endClassRaw && endClassRaw !== ""
         ? endClassRaw
         : ".wcf-ab-pin-end-selector-26";
 
-    // Clone the item — the clone is what GSAP animates.
     const itemClone = item.cloneNode(true);
     if (styleClass && typeof styleClass === "string") {
       itemClone.classList.add(styleClass.replace(/^[.#]/, ""));
     }
 
-    const wrapper = document.createElement("div");
-    wrapper.style.position = "relative";
-    wrapper.style.width = "100%";
-    wrapper.style.zIndex = zIndex;
-
-    item.parentNode.insertBefore(wrapper, item);
-    wrapper.appendChild(item);
-    wrapper.appendChild(itemClone);
-
     item.setAttribute("data-wcf-anim-id", id);
     itemClone.setAttribute("data-wcf-anim-id", id);
-    wrapper.setAttribute("data-wcf-anim-id", id);
+
+    // Sibling placement keeps theme ancestor selectors (e.g.
+    // `header .wp-block-site-title { … }`) matching the clone. If a
+    // transformed ancestor exists (ScrollSmoother / 3d-transform themes),
+    // fall back to <body> so `position: fixed` stays viewport-relative.
+    const useBodyFallback = hasTransformedAncestor(item);
+    if (useBodyFallback) {
+      document.body.appendChild(itemClone);
+    } else {
+      item.parentNode.insertBefore(itemClone, item.nextSibling);
+    }
 
     gsap.set(itemClone, {
-      position: "absolute",
-      width: "100%",
+      position: "fixed",
       top: 0,
-      left: 0,
-      right: 0,
       zIndex,
       opacity: 0,
-      y: defaultTop,
-      transition: "none",
+      y: -20,
+      pointerEvents: "none",
       willChange: "transform, opacity",
     });
+
+    // Mirror the original's actual rendered bounding box (left + width) so
+    // the clone matches alignwide / has-global-padding sizing instead of
+    // spanning the full viewport. Re-measure on resize and ScrollTrigger
+    // refresh so layout changes don't desync it.
+    const syncCloneBounds = () => {
+      const rect = item.getBoundingClientRect();
+      itemClone.style.left = `${rect.left}px`;
+      itemClone.style.width = `${rect.width}px`;
+      itemClone.style.right = "auto";
+    };
+    syncCloneBounds();
 
     const cleanups = [];
     const timelines = [];
 
+    const onResize = () => syncCloneBounds();
+    window.addEventListener("resize", onResize);
+    cleanups.push(() => window.removeEventListener("resize", onResize));
+
+    if (window.ScrollTrigger) {
+      const onSTRefresh = () => syncCloneBounds();
+      window.ScrollTrigger.addEventListener("refresh", onSTRefresh);
+      cleanups.push(() =>
+        window.ScrollTrigger.removeEventListener("refresh", onSTRefresh),
+      );
+    }
+
     const showClone = () => {
       gsap.killTweensOf(itemClone);
+      gsap.set(itemClone, { pointerEvents: "auto" });
       gsap.to(itemClone, {
-        y: calculateItemPosition,
+        y: calculatedPosition,
         opacity: 1,
         duration,
         ease,
         overwrite: true,
       });
-      gsap.to(item, { opacity: 0 });
+      gsap.to(item, { opacity: 0, duration: duration ?? 0.3 });
     };
 
     const hideClone = () => {
       gsap.killTweensOf(itemClone);
       gsap.to(itemClone, {
-        y: defaultTop,
+        y: -20,
         opacity: 0,
         duration,
         ease,
         overwrite: true,
+        onComplete: () => {
+          itemClone.style.pointerEvents = "none";
+        },
       });
-      gsap.to(item, { opacity: 1 });
+      gsap.to(item, { opacity: 1, duration: duration ?? 0.3 });
     };
 
     if (upScroll) {
@@ -169,12 +211,10 @@ export function headerStickyAnim() {
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: wrapper,
+          trigger: item,
           endTrigger: endClass,
-          pin: wrapper,
           start: `top+=${calculatedPosition} top`,
           end: "bottom bottom-=600",
-          pinSpacing: false,
           invalidateOnRefresh: true,
           onEnter: () => {
             state.isInRange = true;
@@ -215,17 +255,12 @@ export function headerStickyAnim() {
       window.addEventListener("scroll", onScroll, { passive: true });
       cleanups.push(() => window.removeEventListener("scroll", onScroll));
     } else {
-      let lastScrollY = window.scrollY;
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: wrapper,
+          trigger: item,
           endTrigger: endClass,
-          pin: wrapper,
-          pinType: "transform",
-          anticipatePin: 1,
           start: `top+=${calculatedPosition} top`,
           end: "bottom bottom-=600",
-          pinSpacing: false,
           invalidateOnRefresh: true,
           onEnter: showClone,
           onLeave: hideClone,
@@ -234,17 +269,9 @@ export function headerStickyAnim() {
         },
       });
       timelines.push(tl);
-
-      const onScroll = () => {
-        const diff = window.scrollY - lastScrollY;
-        if (diff > 5) gsap.to(itemClone, { y: calculateItemPosition });
-        lastScrollY = window.scrollY;
-      };
-      window.addEventListener("scroll", onScroll, { passive: true });
-      cleanups.push(() => window.removeEventListener("scroll", onScroll));
     }
 
-    instances.set(id, { timelines, cleanups, wrapper, item, clone: itemClone });
+    instances.set(id, { timelines, cleanups, item, clone: itemClone });
   }
 
   document.addEventListener("aae-animation-event", handler);
