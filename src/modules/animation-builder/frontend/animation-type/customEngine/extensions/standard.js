@@ -8,7 +8,7 @@ const scrollToTarget = (vars) => (vars && vars.scrollTo ? window : null);
 export function registerStandardMethods() {
   registerMethod("from", (tl, step, vars, overlap) => {
     const target = scrollToTarget(vars) || step.itemClass;
-    
+  
     if (target) tl.from(target, vars, overlap);
   });
 

@@ -20,9 +20,8 @@ export function buildTimeline(tlCfg, extraConfig, animContext = {}) {
     },
   };
   const tl = gsap.timeline(tlVars);
-  const steps = tlCfg?.animations || [];
-  for (let i = 0; i < steps.length; i++) {
-    applyStep(tl, steps[i], i);
+  for (const step of tlCfg?.animations || []) {
+    applyStep(tl, step);
   }
   return tl;
 }

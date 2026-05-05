@@ -55,16 +55,15 @@ if (typeof window !== "undefined") {
   };
 }
 
-// Detect editor preview mode at runtime. Editor preview is signaled by either
-// the `?action=motionkit-editor` query param (set by the editor when loading
-// the iframe) or `wcfanimb.editorMode` (set by PHP for explicit cases).
+// "Editor preview mode" specifically means: a live DevTools instance is
+// taking control of custom-animation playback. We use ONLY the
+// `__mkitDevToolsLoaded` flag — set by the WC element's connectedCallback,
+// cleared by disconnectedCallback. Other signals (URL params, iframe
+// detection) are unreliable here because the editor's proxy-snapshot path
+// always matches them, so anims would build paused even when DevTools is
+// closed — leaving the editor's "Preview" play button with nothing to
+// animate.
 export function isEditorPreviewMode() {
-  try {
-    if (typeof window === "undefined") return false;
-    if (window.wcfanimb?.editorMode === true) return true;
-    const params = new URLSearchParams(window.location.search);
-    return params.get("action") === "motionkit-editor";
-  } catch (e) {
-    return false;
-  }
+  if (typeof window === "undefined") return false;
+  return window.__mkitDevToolsLoaded === true;
 }

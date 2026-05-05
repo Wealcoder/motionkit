@@ -75,14 +75,30 @@ function buildScrollAnim(anim) {
 }
 
 function buildPageloadAnim(anim) {
+  const editorMode = isEditorPreviewMode();
+  console.log("[mkit-engine] buildPageloadAnim", {
+    animId: anim.id,
+    editorMode,
+    devToolsLoaded:
+      typeof window !== "undefined" ? !!window.__mkitDevToolsLoaded : "no-window",
+    timelineCount: (anim.timelines || []).length,
+  });
   const ctx = gsap.context(() => {
     (anim.timelines || []).forEach((tlCfg) => {
-      const tl = buildTimeline(tlCfg, pageloadExtraConfig(), {
+      const extra = editorMode ? { paused: true } : pageloadExtraConfig();
+      const tl = buildTimeline(tlCfg, extra, {
         animationId: anim.id,
         animationTitle: anim.title,
       });
-      if (isEditorPreviewMode() && tl) {
+      console.log("[mkit-engine] built timeline", {
+        tlId: tlCfg.id,
+        paused: tl?.paused?.(),
+        duration: tl?.totalDuration?.(),
+        children: tl?.getChildren?.(false, true, true)?.length,
+      });
+      if (editorMode && tl) {
         registerTimeline(anim.id, tl);
+        console.log("[mkit-engine] registered tl", tlCfg.id, "for anim", anim.id);
       }
     });
   });
