@@ -105,13 +105,25 @@ export function horizontalScrollAnim() {
         trigger: containerEl,
         pin: true,
         start: "top top",
-        end: "bottom bottom",
-        scrub: true,
-        pinSpacing: false,
+        // Pin range = totalScrollPx (1:1 horizontal travel to vertical
+        // scroll). Decoupling from `bottom bottom` means the animation
+        // gets a sensible scroll length regardless of `containerHeight`.
+        end: () => "+=" + totalScrollPx,
+        // Smooth catch-up over 1 second instead of jumping with every
+        // wheel-tick. Drop to 0.5 if it feels laggy, or back to `true` for
+        // instant 1:1 mapping.
+        scrub: 1,
+        pinSpacing: true,
+        invalidateOnRefresh: true,
       },
     });
 
-    tl.to(items, { x: () => -totalScrollPx, ease: "none" });
+    tl.to(items, {
+      xPercent: -70,
+      x: () => -totalScrollPx,
+      ease: "none",
+      force3D: true,
+    });
 
     instances.set(id, { timelines: [tl] });
   }

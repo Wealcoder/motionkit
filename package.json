@@ -72,7 +72,7 @@
     "style-fix": "stylelint --syntax scss **/*.scss --fix",
     "js-fix": "eslint . --fix",
     "i18n": "wp i18n make-pot .",
-    "build": "wp-scripts build && zsh -c 'source ~/.config/zsh/functions/fileOperation.zsh && copyWordPressConnectorFile'",
+    "build": "wp-scripts build && node scripts/copy-to-editor.js",
     "build:wp": "wp-scripts build",
     "start": "wp-scripts start"
   },
