@@ -179,7 +179,7 @@ export function cubeScrollRevealAnim() {
     const style = document.createElement("style");
     style.textContent = `
       ${itemClass} { margin: 0; padding: 0; box-sizing: border-box; }
-      ${itemClass} .aab_wc-scroll-container { position: relative; z-index: 9999999999; }
+      ${itemClass} .aab_wc-scroll-container { position: relative; z-index: 100; }
       ${itemClass} .aab_wc-scene {
         width: 100%;
         display: flex;
