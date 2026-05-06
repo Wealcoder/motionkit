@@ -22,3 +22,14 @@ document.addEventListener("aae-animation-event", (e) => {
   rememberConfig(anim);
   handleCustomAnimation(anim);
 });
+
+// Clear the stash on a global reset so deleted animations don't linger
+// in window.__mkitAnims after the editor pushes a fresh config without
+// them. The reset event fires before the editor re-pushes wcf-animation-
+// config, so the next round of aae-animation-event re-stashes only the
+// current set.
+document.addEventListener("aae-reset-animation", () => {
+  if (typeof window !== "undefined" && window.__mkitAnims) {
+    try { window.__mkitAnims.clear(); } catch (_) { /* ignore */ }
+  }
+});
