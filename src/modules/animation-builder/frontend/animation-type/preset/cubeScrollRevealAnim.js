@@ -42,6 +42,7 @@ export function cubeScrollRevealAnim() {
     if (anim.isPublished === false) return;
     if (!anim.itemClass || !anim.endSectionClass) return;
 
+
     const {
       id,
       itemClass,
@@ -114,9 +115,27 @@ export function cubeScrollRevealAnim() {
       bottom: bottomMedia,
     };
 
+    // Editor sends face media in two possible shapes:
+    //   • plain string URL (data: URL or normal URL) — most common path
+    //   • object with `{ type, url }` — older / explicit shape
+    // Normalize both so the rest of the function can use a single contract.
+    const normalizeMedia = (media) => {
+      if (!media) return null;
+      if (typeof media === "string") {
+        const isVideo =
+          /^data:video\//i.test(media) ||
+          /\.(mp4|webm|mov|m4v|ogv)(\?|#|$)/i.test(media);
+        return { url: media, type: isVideo ? "video" : "image" };
+      }
+      if (typeof media === "object" && media.url) {
+        return { url: media.url, type: media.type || "image" };
+      }
+      return null;
+    };
+
     const getFaceContent = (faceName) => {
-      const media = mediaMap[faceName];
-      if (!media || !media.url) return "";
+      const media = normalizeMedia(mediaMap[faceName]);
+      if (!media) return "";
       if (media.type === "video") {
         return `
           <div class="aab_wc-video-player">
@@ -126,10 +145,7 @@ export function cubeScrollRevealAnim() {
           </div>
         `;
       }
-      if (media.type === "image") {
-        return `<img src="${media.url}" alt="${faceName}" />`;
-      }
-      return "";
+      return `<img src="${media.url}" alt="${faceName}" />`;
     };
 
     const faces = [
@@ -256,9 +272,8 @@ export function cubeScrollRevealAnim() {
     const bottom = container.querySelector(".aab_wc-bottom");
     const face = container.querySelectorAll(".aab_wc-face");
 
-    const expandingFaceMedia = mediaMap[expandFace];
-    const hasExpandingVideo =
-      expandingFaceMedia?.type === "video" && expandingFaceMedia?.url;
+    const expandingFaceMedia = normalizeMedia(mediaMap[expandFace]);
+    const hasExpandingVideo = expandingFaceMedia?.type === "video";
     const video = hasExpandingVideo
       ? container.querySelector(`.aab_wc-video[data-face="${expandFace}"]`)
       : null;
@@ -284,7 +299,9 @@ export function cubeScrollRevealAnim() {
     };
     const facesToHide = allFaces.filter((f) => f !== faceElements[expandFace]);
 
-    // Measure scroll distance to the end section ─────────────────────
+    // Resolve end section once. Distance is recomputed per refresh so
+    // late-loading fonts/images or iframe resizes don't leave us with a
+    // stale pin range.
     let endElement = null;
     try {
       endElement = document.querySelector(endSectionClass);
@@ -295,39 +312,62 @@ export function cubeScrollRevealAnim() {
       );
     }
 
-    let endDistance = window.innerHeight * 1.5;
-    if (endElement) {
+    const computeEndDistance = () => {
+      if (!endElement) return window.innerHeight * 1.5;
       const containerRect = scrollContainer.getBoundingClientRect();
       const endRect = endElement.getBoundingClientRect();
       const containerTop = containerRect.top + window.scrollY;
       const endTop = endRect.top + window.scrollY;
-      endDistance = endTop - containerTop;
-    }
+      return Math.max(window.innerHeight, endTop - containerTop);
+    };
 
-    // Main scroll-scrubbed cube timeline ─────────────────────────────
+    // Default `cubeAnimStart` to "center center" so the cube is vertically
+    // centered in the viewport during the pin, instead of sticking to the
+    // top edge. Editor's form value (when sent) overrides this default.
+    const startStr =
+      cubeAnimStart === "custom"
+        ? cubeAnimCStart
+        : cubeAnimStart || "center center";
+
+    // Main scroll-scrubbed cube timeline. `end` as a function +
+    // `invalidateOnRefresh` ensures positions are recomputed on every
+    // refresh (resize, font load, image load, etc.).
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: scrollContainer,
-        start: cubeAnimStart === "custom" ? cubeAnimCStart : cubeAnimStart,
-        end: "+=" + endDistance,
+        start: startStr,
+        end: () => "+=" + computeEndDistance(),
         scrub: 1,
         pin: true,
         pinSpacing: false,
+        invalidateOnRefresh: true,
       },
     });
 
-    tl.to(animContainerEl, { scale: scaleNum, duration: 0.8 }, 0);
-    tl.to(scene, { x: positionNum }, 0);
+    // Number of extra full Y-rotations during the spin phase. Cube tumbles
+    // through this many revolutions and *then* lands on the chosen expand
+    // face at the end. Higher = more spinning, less time on each face.
+    const EXTRA_REVOLUTIONS = 1;
+
+    tl.to(animContainerEl, { scale: scaleNum, duration: 0.6 }, 0);
+    tl.to(scene, { x: positionNum, duration: 0.6 }, 0);
+
+    // Spin phase — long-running rotation that keeps the cube tumbling for
+    // most of the pin range (0 → 1.8 of a 2.3s timeline ≈ 78% of scroll),
+    // landing on the target face at the end of the spin.
     tl.to(
       cubeEl,
       {
-        rotationY: targetRotation.rotationY,
+        rotationY: targetRotation.rotationY + EXTRA_REVOLUTIONS * 360,
         rotationX: targetRotation.rotationX,
         rotate: 0,
-        duration: 1.3,
+        duration: 1.8,
+        ease: "none",
       },
       0,
     );
+
+    // Expansion phase — runs in the last ~22% of the pin range (1.8 → 2.3).
     tl.to(
       animContainerEl,
       {
@@ -336,10 +376,12 @@ export function cubeScrollRevealAnim() {
         scale: 1,
         duration: 0.5,
       },
-      1.5,
+      1.8,
     );
-    tl.to(face, { scale: 0.9, duration: 0.8 }, 1.5);
-    tl.to(facesToHide, { opacity: 0, duration: 0.5 }, 1.5);
+    tl.to(face, { scale: 0.9, duration: 0.5 }, 1.8);
+    // Other faces fade out together with the expansion so the spin reads as
+    // one continuous motion until the very end.
+    tl.to(facesToHide, { opacity: 0, duration: 0.4 }, 1.85);
 
     const scrollTriggers = [];
     const cleanups = [];
@@ -365,8 +407,9 @@ export function cubeScrollRevealAnim() {
 
       const videoTrigger = window.ScrollTrigger.create({
         trigger: scrollContainer,
-        start: cubeAnimStart === "custom" ? cubeAnimCStart : cubeAnimStart,
-        end: "+=" + endDistance,
+        start: startStr,
+        end: () => "+=" + computeEndDistance(),
+        invalidateOnRefresh: true,
         onEnter: () => {
           if (tl.progress() >= 0.7 && video) {
             video
@@ -420,6 +463,30 @@ export function cubeScrollRevealAnim() {
       container.classList.remove("wcfanimb-skip-selector-full");
       container.innerHTML = "";
     });
+
+    // Refresh ScrollTrigger so it picks up the freshly-built cube DOM.
+    // Re-refresh on font load (web-fonts often arrive after init) and on
+    // each cube-face image load — both can shift `endElement`'s position
+    // and stale-out the pin range.
+    if (window.ScrollTrigger) {
+      window.ScrollTrigger.refresh();
+
+      document.fonts?.ready
+        ?.then(() => window.ScrollTrigger.refresh())
+        .catch(() => {});
+
+      const imgs = scrollContainer.querySelectorAll("img");
+      imgs.forEach((img) => {
+        if (img.complete) return;
+        const onLoad = () => window.ScrollTrigger.refresh();
+        img.addEventListener("load", onLoad, { once: true });
+        img.addEventListener("error", onLoad, { once: true });
+        cleanups.push(() => {
+          img.removeEventListener("load", onLoad);
+          img.removeEventListener("error", onLoad);
+        });
+      });
+    }
 
     instances.set(id, {
       timelines: [tl],
