@@ -90,15 +90,16 @@ export function horizontalScrollAnim() {
     const totalWidth = widthsPx.reduce((sum, w) => sum + w, 0);
     const totalScrollPx = totalWidth - containerEl.offsetWidth;
 
-    gsap.set(containerEl, {
-      width: totalScrollPx,
-      height: containerHeight,
-      transition: "none",
-    });
-
+    gsap.set(containerEl, { height: containerHeight, transition: "none" });
     items.forEach((el, i) =>
       gsap.set(el, { width: widthsPx[i], flexShrink: 0 }),
     );
+
+    // Items fit (or only one item) — no horizontal scroll needed.
+    if (totalScrollPx <= 0) {
+      instances.set(id, { timelines: [] });
+      return;
+    }
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -119,7 +120,6 @@ export function horizontalScrollAnim() {
     });
 
     tl.to(items, {
-      xPercent: -70,
       x: () => -totalScrollPx,
       ease: "none",
       force3D: true,
