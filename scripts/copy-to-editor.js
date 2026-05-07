@@ -42,10 +42,15 @@ const DEST_CANDIDATES = [
   process.env.MOTIONKIT_EDITOR_PATH && path.resolve(process.env.MOTIONKIT_EDITOR_PATH, 'server/static/animation-scripts'),
 ].filter(Boolean);
 
+// FILES is a list of paths relative to SRC. Each entry is either:
+//   - a string  → src and dest paths are identical
+//   - [src, dest] → copy src to a different dest filename
+// The customAnimation editor variant is renamed at copy time so the
+// motionkit-editor inject-bridge can keep loading customAnimation.js.
 const FILES = [
   'frontend.js',
   'freeAnim.js',
-  'frontend/customAnimation.js',
+  ['frontend/customAnimation.editor.js', 'frontend/customAnimation.js'],
   'frontend/editor-reset.js',
   'frontend/freePresets/generalSpaceInLeftAnim.js',
   'frontend/freePresets/generalSpaceInRightAnim.js',
@@ -94,9 +99,10 @@ function copyToEditor({ quiet = false } = {}) {
   let copied = 0;
   let skipped = 0;
 
-  for (const file of FILES) {
-    const src = path.join(SRC, file);
-    const out = path.join(dest, file);
+  for (const entry of FILES) {
+    const [srcRel, destRel] = Array.isArray(entry) ? entry : [entry, entry];
+    const src = path.join(SRC, srcRel);
+    const out = path.join(dest, destRel);
 
     if (!fs.existsSync(src)) {
       skipped++;

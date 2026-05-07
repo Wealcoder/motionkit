@@ -9,6 +9,8 @@ import {
   isEditorPreviewMode,
 } from "./customRegistry.js";
 
+/* global __MKIT_DEVTOOLS__ */
+
 export function isCustomAnimation(anim) {
   return (
     anim != null &&
@@ -126,6 +128,8 @@ function buildInteractionAnim(anim, eventType) {
   const triggers = collectInteractionTargets(anim);
   if (!triggers.length) return null;
 
+  const editorMode = isEditorPreviewMode();
+
   const tls = [];
   const ctx = gsap.context(() => {
     (anim.timelines || []).forEach((tlCfg) => {
@@ -135,11 +139,21 @@ function buildInteractionAnim(anim, eventType) {
         animationTitle: anim.title,
       });
       tls.push(tl);
-      if (isEditorPreviewMode() && tl) {
+      if (editorMode && tl) {
         registerTimeline(anim.id, tl);
       }
     });
   });
+
+  // In editor preview mode, DevTools owns playback for click/hover anims —
+  // attaching live listeners here would let user interaction call play()/
+  // reverse()/restart() on a child timeline that is already nested inside
+  // DevTools' master. With smoothChildTiming the child ticking against a
+  // paused master pushes master.time() forward, which makes the playhead
+  // ruler drift right indefinitely. Skip listeners and let DevTools drive.
+  if (editorMode) {
+    return { contexts: [ctx], listeners: [] };
+  }
 
   const preventAnchorNav = timelineHasScrollTo(anim);
 

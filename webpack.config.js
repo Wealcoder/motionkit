@@ -3,6 +3,7 @@ const defaultConfig = require("@wordpress/scripts/config/webpack.config");
 const { getWebpackEntryPoints } = require("@wordpress/scripts/utils/config");
 const glob = require("glob");
 const path = require("path");
+const webpack = require("webpack");
 
 // helper to build entries from a folder
 function getPresetEntries({ folder, outPrefix }) {
@@ -15,12 +16,34 @@ function getPresetEntries({ folder, outPrefix }) {
   }, {});
 }
 
-module.exports = {
-  ...defaultConfig,
-  externals: {
-    react: "React",
-    "react-dom": "ReactDOM",
+const sharedResolve = {
+  extensions: [".js", ".jsx"],
+  modules: [path.resolve(__dirname, "/src"), "node_modules"],
+  alias: {
+    "@": path.resolve(__dirname, "src/modules/animation-builder/"),
   },
+};
+
+const sharedModule = {
+  ...defaultConfig.module,
+  rules: [
+    ...defaultConfig.module.rules,
+    // Additional rules can be added here
+  ],
+};
+
+const sharedExternals = {
+  react: "React",
+  "react-dom": "ReactDOM",
+};
+
+// Main bundle config — all entries except the editor variant. Builds with
+// __MKIT_DEVTOOLS__ = false so customAnimation.js (and the customRegistry
+// module it pulls in) gets its DevTools branches dead-code-eliminated.
+const mainConfig = {
+  ...defaultConfig,
+  name: "main",
+  externals: sharedExternals,
   entry: () => {
     return {
       ...getWebpackEntryPoints(),
@@ -33,40 +56,60 @@ module.exports = {
       "modules/animation-builder/freeAnim": "./src/css/freeAnim.css",
       admin: "./src/css/admin.css",
       "admin-tools": "./src/css/admin-tools.css",
-      // auto-generated free preset entries (frontend)
       ...getPresetEntries({
         folder:
           "./src/modules/animation-builder/frontend/animation-type/freePreset",
         outPrefix: "modules/animation-builder/frontend/freePresets/",
       }),
-      // auto-generated premium preset entries (frontend)
       ...getPresetEntries({
         folder:
           "./src/modules/animation-builder/frontend/animation-type/preset",
         outPrefix: "modules/animation-builder/frontend/presets/",
       }),
-      // smart engine — custom animation entry point
+      // Slim production build — DevTools registry stripped
       "modules/animation-builder/frontend/customAnimation":
         "./src/modules/animation-builder/frontend/animation-type/customAnimation.js",
-      // free animation engine entry point
       "modules/animation-builder/frontend/freeAnimationEngine":
         "./src/modules/animation-builder/frontend/animation-type/freeAnimationEngine.js",
     };
   },
   output: {
-    path: path.resolve(__dirname, "assets/build"), // Custom output directory
-    filename: "[name].js", // Output bundle filename
-    // publicPath: "/assets/", // Public URL of the output directory when referenced in a browser
+    path: path.resolve(__dirname, "assets/build"),
+    filename: "[name].js",
   },
-  module: {
-    ...defaultConfig.module,
-    rules: [
-      ...defaultConfig.module.rules,
-      // Additional rules can be added here
-    ],
-  },
+  module: sharedModule,
   plugins: [
     ...defaultConfig.plugins,
+    new webpack.DefinePlugin({
+      __MKIT_DEVTOOLS__: JSON.stringify(false),
+    }),
+  ],
+  resolve: sharedResolve,
+};
+
+// Editor-preview build — same customAnimation source, but with
+// __MKIT_DEVTOOLS__ = true so the registry module activates. Output goes
+// next to the slim file as customAnimation.editor.js. The copy-to-editor
+// script picks up this file and the inject-bridge serves it from the
+// motionkit-editor static dir during proxy-snapshot iframe loads.
+const editorConfig = {
+  ...defaultConfig,
+  name: "editor",
+  dependencies: ["main"],
+  externals: sharedExternals,
+  entry: {
+    "modules/animation-builder/frontend/customAnimation.editor":
+      "./src/modules/animation-builder/frontend/animation-type/customAnimation.js",
+  },
+  output: {
+    path: path.resolve(__dirname, "assets/build"),
+    filename: "[name].js",
+  },
+  module: sharedModule,
+  plugins: [
+    new webpack.DefinePlugin({
+      __MKIT_DEVTOOLS__: JSON.stringify(true),
+    }),
     {
       apply(compiler) {
         compiler.hooks.afterEmit.tapAsync(
@@ -83,11 +126,7 @@ module.exports = {
       },
     },
   ],
-  resolve: {
-    extensions: [".js", ".jsx"],
-    modules: [path.resolve(__dirname, "/src"), "node_modules"],
-    alias: {
-      "@": path.resolve(__dirname, "src/modules/animation-builder/"),
-    },
-  },
+  resolve: sharedResolve,
 };
+
+module.exports = [mainConfig, editorConfig];
