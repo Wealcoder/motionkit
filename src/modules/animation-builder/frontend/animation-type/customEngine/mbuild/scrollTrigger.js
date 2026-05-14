@@ -56,6 +56,8 @@ function parsePinSpacing(v) {
 // popover. Each parser returns undefined to skip emission.
 const OPTIONAL_PROPS = [
   ["pinSpacing", parsePinSpacing],
+  ["pinType", parseString],
+  ["pinReparent", parseBool],
   ["toggleClass", parseString],
   ["markers", parseBool],
   ["once", parseBool],
