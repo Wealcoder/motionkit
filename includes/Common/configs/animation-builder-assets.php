@@ -73,6 +73,11 @@ return [
       'deps' => ['gsap', 'scrollTrigger'],
       'version' => MOTIONKIT_VERSION,
     ],
+    'wcf-mk-scroll-parallax-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/scrollParallax.js',
+      'deps' => ['gsap', 'scrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
 
     // ############## STICKY ############## //
     'wcf-mk-sticky-hs-pa' => [

@@ -56,32 +56,20 @@ export function scrollParallax() {
     if (anim.isPublished === false) return;
 
     // ── Guard: require selectors ──
-    if (!anim.containerClass || !anim.itemClass) return;
+    if (!anim.itemClass) return;
 
     const { id, containerClass, itemClass, vars = {} } = anim;
 
+    const speed = vars.dataSpeed !== undefined ? vars.dataSpeed : (vars.speed !== undefined ? vars.speed : 0.5);
+    const scrubCfg = vars.dataLag !== undefined ? vars.dataLag : vars.scrub;
+
     const {
-      speed = 0.5,
       direction = "vertical",
-      scrub: scrubCfg,
       start = "top bottom",
       end = "bottom top",
       offset = 0,
       willChange = true,
     } = vars;
-
-    // ── Resolve container element ──
-    let containerEl;
-    try {
-      containerEl = document.querySelector(containerClass);
-    } catch (err) {
-      console.warn(
-        `[scrollParallax] invalid containerClass "${containerClass}":`,
-        err.message
-      );
-      return;
-    }
-    if (!containerEl) return;
 
     // ── Resolve target element ──
     let targetEl;
@@ -95,6 +83,23 @@ export function scrollParallax() {
       return;
     }
     if (!targetEl) return;
+
+    // ── Resolve container element ──
+    let containerEl;
+    if (containerClass) {
+      try {
+        containerEl = document.querySelector(containerClass);
+      } catch (err) {
+        console.warn(
+          `[scrollParallax] invalid containerClass "${containerClass}":`,
+          err.message
+        );
+      }
+    }
+    if (!containerEl) {
+      containerEl = targetEl.parentElement;
+    }
+    if (!containerEl) return;
 
     // ── Teardown any existing instance for this ID before re-creating ──
     teardown(id);
@@ -173,4 +178,4 @@ export function scrollParallax() {
   };
 }
 
-//scrollParallax();
+scrollParallax();

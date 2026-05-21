@@ -73,6 +73,7 @@ const FILES = [
   'frontend/presets/imageStretchAnim.js',
   'frontend/presets/popupMediaAnim.js',
   'frontend/presets/scrollVideoFrame.js',
+  'frontend/presets/scrollParallax.js',
   'frontend/presets/textInvertAnim.js',
   'frontend/presets/textRotateAnim.js',
   'frontend/presets/textScaleAnim.js',
