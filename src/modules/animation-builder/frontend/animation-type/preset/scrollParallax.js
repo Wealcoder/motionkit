@@ -1,172 +1,158 @@
 const PRESET_KEY = "wcf-mk-scroll-parallax-pa";
 
 export function scrollParallax() {
-  // id -> { timelines: GSAPTimeline[], cleanups: Array<() => void> }
   const instances = new Map();
-  /**
-   * Clamp a number between min and max.
-   */
+
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
   }
 
-  /**
-   * Kill and revert all timelines + run cleanups for a given animation ID.
-   */
   function teardown(id) {
     const inst = instances.get(id);
     if (!inst) return;
-
     inst.timelines.forEach((tl) => {
-      try {
-        tl.revert();
-        tl.kill();
-      } catch (err) {
+      try { tl.revert(); tl.kill(); } catch (err) {
         console.warn("[scrollParallax] timeline teardown error:", err);
       }
     });
-
     inst.cleanups.forEach((fn) => {
-      try {
-        fn();
-      } catch (err) {
+      try { fn(); } catch (err) {
         console.warn("[scrollParallax] cleanup error:", err);
       }
     });
-
     instances.delete(id);
   }
 
-  /**
-   * Tear down every active parallax instance (used on reset event).
-   */
   function teardownAll() {
     for (const id of [...instances.keys()]) teardown(id);
   }
 
-  // ─── Main Handler ────────────────────────────────────────────────────────────
+  // ─── Detect current device from viewport width ────────────────────────────
 
-  function handler(e) {
-    const anim = e?.detail;
+  function getCurrentDevice() {
+    const w = window.innerWidth;
+    if (w >= 1200) return "desktop";
+    if (w >= 992)  return "laptop";
+    if (w >= 768)  return "tab_land";
+    if (w >= 576)  return "tab";
+    return "mobile";
+  }
 
-    // ── Guard: only handle our preset key ──
-    if (!anim || anim.presetKey !== PRESET_KEY) return;
+  // ─── Build timeline for a single parallax item ───────────────────────────────
 
-    // ── Guard: skip unpublished (editor preview) ──
-    if (anim.isPublished === false) return;
+  function buildItemTimeline(itemConfig, containerEl) {
+    const { itemClass, devices = {} } = itemConfig;
 
-    // ── Guard: require selectors ──
-    if (!anim.itemClass) return;
+    if (!itemClass) {
+      console.warn("[scrollParallax] item missing itemClass, skipping.");
+      return null;
+    }
 
-    const { id, containerClass, itemClass, vars = {} } = anim;
+    // Read values from the correct device bucket
+    const device      = getCurrentDevice();
+    const bucket      = devices[device] ?? devices.desktop ?? {};
+    const dataSpeed   = bucket.dataSpeed ?? 0.5;
+    const dataLag     = bucket.dataLag   ?? 0;
 
-    const speed = vars.dataSpeed !== undefined ? vars.dataSpeed : (vars.speed !== undefined ? vars.speed : 0.5);
-    const scrubCfg = vars.dataLag !== undefined ? vars.dataLag : vars.scrub;
-
-    const {
-      direction = "vertical",
-      start = "top bottom",
-      end = "bottom top",
-      offset = 0,
-      willChange = true,
-    } = vars;
-
-    // ── Resolve target element ──
+    // Resolve target element
     let targetEl;
     try {
       targetEl = document.querySelector(itemClass);
     } catch (err) {
-      console.warn(
-        `[scrollParallax] invalid itemClass "${itemClass}":`,
-        err.message
-      );
-      return;
+      console.warn(`[scrollParallax] invalid itemClass "${itemClass}":`, err.message);
+      return null;
     }
-    if (!targetEl) return;
-
-    // ── Resolve container element ──
-    let containerEl;
-    if (containerClass) {
-      try {
-        containerEl = document.querySelector(containerClass);
-      } catch (err) {
-        console.warn(
-          `[scrollParallax] invalid containerClass "${containerClass}":`,
-          err.message
-        );
-      }
-    }
-    if (!containerEl) {
-      containerEl = targetEl.parentElement;
-    }
-    if (!containerEl) return;
-
-    // ── Teardown any existing instance for this ID before re-creating ──
-    teardown(id);
-
-    // ── Tag elements with animation ID for debugging ──
-    containerEl.setAttribute("data-wcf-anim-id", id);
-    targetEl.setAttribute("data-wcf-anim-id", id);
-
-    // ── Performance hint: GPU compositing layer ──
-    if (willChange) {
-      targetEl.style.willChange = "transform";
+    if (!targetEl) {
+      console.warn(`[scrollParallax] element not found for "${itemClass}", skipping.`);
+      return null;
     }
 
-    // ── Calculate parallax travel distance ──
-    // The element's height is used as the base travel unit.
-    // speed < 1 → less travel than container height  (feels far/background)
-    // speed > 1 → more travel than container height  (feels close/foreground)
-    // We clamp speed to a safe range to prevent runaway values.
-    const safeSpeed = clamp(Number(speed), 0.1, 3.0);
+    targetEl.style.willChange = "transform";
 
-    // Travel = how many px the element shifts over the full scroll range.
-    // Formula: (1 - speed) * containerHeight
-    //   speed 0.5 on a 600px container → (1 - 0.5) * 600 = 300px upward shift
-    //   speed 1.5 on a 600px container → (1 - 1.5) * 600 = -300px (downward shift)
-    const containerHeight = containerEl.offsetHeight || 0;
-    const containerWidth = containerEl.offsetWidth || 0;
+    // Calculate travel distance
+    const safeSpeed  = clamp(Number(dataSpeed), 0.1, 3.0);
+    const travel     = -((1 - safeSpeed) * (containerEl.offsetHeight || 0));
+    const scrubValue = dataLag > 0 ? dataLag : true;
 
-    const isVertical = direction !== "horizontal";
-    const baseDimension = isVertical ? containerHeight : containerWidth;
-    const travel = (1 - safeSpeed) * baseDimension + Number(offset);
-
-    // ── Build GSAP fromTo values based on direction ──
-    const fromVars = isVertical
-      ? { yPercent: 0, y: 0 }
-      : { xPercent: 0, x: 0 };
-
-    const toVars = isVertical
-      ? { y: travel, ease: "none" }
-      : { x: travel, ease: "none" };
-
-    // ── Scrub value: numeric = smoothed, true = instant ──
-    const scrubValue = typeof scrubCfg === "number" ? scrubCfg : true;
-
-    // ── Build the ScrollTrigger timeline ──
     const tl = gsap.timeline({
       defaults: { duration: 1 },
       scrollTrigger: {
-        trigger: containerEl,     // watches the container for scroll position
-        start,                    // e.g. "top bottom"
-        end,                      // e.g. "bottom top"
-        scrub: scrubValue,        // ties animation progress directly to scroll
-        invalidateOnRefresh: true, // recalculates on window resize
+        trigger: containerEl,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: scrubValue,
+        invalidateOnRefresh: true,
       },
     });
 
-    tl.fromTo(targetEl, fromVars, toVars);
+    tl.fromTo(targetEl, { y: 0 }, { y: travel, ease: "none" });
 
-    // ── Cleanups: remove will-change on teardown to free GPU memory ──
-    const cleanups = [
-      () => {
-        if (willChange) {
-          targetEl.style.willChange = "";
+    const cleanup = () => { targetEl.style.willChange = ""; };
+
+    return { timeline: tl, cleanup };
+  }
+
+  // ─── Main Handler ─────────────────────────────────────────────────────────────
+
+  function handler(e) {
+    const anim = e?.detail;
+
+    if (!anim || anim.presetKey !== PRESET_KEY) return;
+    if (anim.isPublished === false) return;
+
+    const { id, containerClass } = anim;
+
+    // parallaxItems lives at root of anim, not inside vars
+    const parallaxItems = Array.isArray(anim.parallaxItems) && anim.parallaxItems.length > 0
+      ? anim.parallaxItems
+      : [];
+
+    if (parallaxItems.length === 0) {
+      console.warn("[scrollParallax] no parallaxItems found, skipping.");
+      return;
+    }
+
+    teardown(id);
+
+    const timelines = [];
+    const cleanups  = [];
+
+    parallaxItems.forEach((itemConfig) => {
+      // Resolve container — use containerClass if given, else item's parent
+      let containerEl = null;
+
+      if (containerClass) {
+        try {
+          containerEl = document.querySelector(containerClass);
+        } catch (err) {
+          console.warn(`[scrollParallax] invalid containerClass "${containerClass}":`, err.message);
         }
-      },
-    ];
+      }
 
-    instances.set(id, { timelines: [tl], cleanups });
+      if (!containerEl) {
+        try {
+          const el = document.querySelector(itemConfig.itemClass);
+          containerEl = el?.parentElement || null;
+        } catch (_) {}
+      }
+
+      if (!containerEl) {
+        console.warn("[scrollParallax] no container found for item, skipping.");
+        return;
+      }
+
+      containerEl.setAttribute("data-wcf-anim-id", id);
+
+      const result = buildItemTimeline(itemConfig, containerEl);
+      if (!result) return;
+
+      timelines.push(result.timeline);
+      cleanups.push(result.cleanup);
+    });
+
+    if (timelines.length === 0) return;
+
+    instances.set(id, { timelines, cleanups });
   }
 
   document.addEventListener("aae-animation-event", handler);
