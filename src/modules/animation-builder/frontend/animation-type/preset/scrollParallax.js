@@ -27,8 +27,6 @@ export function scrollParallax() {
     for (const id of [...instances.keys()]) teardown(id);
   }
 
-  // ─── Detect current device from viewport width ────────────────────────────
-
   function getCurrentDevice() {
     const w = window.innerWidth;
     if (w >= 1200) return "desktop";
@@ -38,62 +36,6 @@ export function scrollParallax() {
     return "mobile";
   }
 
-  // ─── Build timeline for a single parallax item ───────────────────────────────
-
-  function buildItemTimeline(itemConfig, containerEl) {
-    const { itemClass, devices = {} } = itemConfig;
-
-    if (!itemClass) {
-      console.warn("[scrollParallax] item missing itemClass, skipping.");
-      return null;
-    }
-
-    // Read values from the correct device bucket
-    const device      = getCurrentDevice();
-    const bucket      = devices[device] ?? devices.desktop ?? {};
-    const dataSpeed   = bucket.dataSpeed ?? 0.5;
-    const dataLag     = bucket.dataLag   ?? 0;
-
-    // Resolve target element
-    let targetEl;
-    try {
-      targetEl = document.querySelector(itemClass);
-    } catch (err) {
-      console.warn(`[scrollParallax] invalid itemClass "${itemClass}":`, err.message);
-      return null;
-    }
-    if (!targetEl) {
-      console.warn(`[scrollParallax] element not found for "${itemClass}", skipping.`);
-      return null;
-    }
-
-    targetEl.style.willChange = "transform";
-
-    // Calculate travel distance
-    const safeSpeed  = clamp(Number(dataSpeed), 0.1, 3.0);
-    const travel     = -((1 - safeSpeed) * (containerEl.offsetHeight || 0));
-    const scrubValue = dataLag > 0 ? dataLag : true;
-
-    const tl = gsap.timeline({
-      defaults: { duration: 1 },
-      scrollTrigger: {
-        trigger: containerEl,
-        start: "top bottom",
-        end: "bottom top",
-        scrub: scrubValue,
-        invalidateOnRefresh: true,
-      },
-    });
-
-    tl.fromTo(targetEl, { y: 0 }, { y: travel, ease: "none" });
-
-    const cleanup = () => { targetEl.style.willChange = ""; };
-
-    return { timeline: tl, cleanup };
-  }
-
-  // ─── Main Handler ─────────────────────────────────────────────────────────────
-
   function handler(e) {
     const anim = e?.detail;
 
@@ -102,7 +44,6 @@ export function scrollParallax() {
 
     const { id, containerClass } = anim;
 
-    // parallaxItems lives at root of anim, not inside vars
     const parallaxItems = Array.isArray(anim.parallaxItems) && anim.parallaxItems.length > 0
       ? anim.parallaxItems
       : [];
@@ -114,40 +55,68 @@ export function scrollParallax() {
 
     teardown(id);
 
+    const device    = getCurrentDevice();
     const timelines = [];
     const cleanups  = [];
 
     parallaxItems.forEach((itemConfig) => {
-      // Resolve container — use containerClass if given, else item's parent
-      let containerEl = null;
+      const { itemClass, devices = {} } = itemConfig;
+      if (!itemClass) return;
 
-      if (containerClass) {
-        try {
-          containerEl = document.querySelector(containerClass);
-        } catch (err) {
-          console.warn(`[scrollParallax] invalid containerClass "${containerClass}":`, err.message);
-        }
+      // ── Resolve target element ──
+      let targetEl;
+      try {
+        targetEl = document.querySelector(itemClass);
+      } catch (err) {
+        console.warn(`[scrollParallax] invalid itemClass "${itemClass}":`, err.message);
+        return;
       }
-
-      if (!containerEl) {
-        try {
-          const el = document.querySelector(itemConfig.itemClass);
-          containerEl = el?.parentElement || null;
-        } catch (_) {}
-      }
-
-      if (!containerEl) {
-        console.warn("[scrollParallax] no container found for item, skipping.");
+      if (!targetEl) {
+        console.warn(`[scrollParallax] element not found for "${itemClass}", skipping.`);
         return;
       }
 
-      containerEl.setAttribute("data-wcf-anim-id", id);
+      // ── Resolve trigger element ──
+      let triggerEl = null;
+      if (containerClass) {
+        try { triggerEl = document.querySelector(containerClass); } catch (_) {}
+      }
+      if (!triggerEl) triggerEl = targetEl.parentElement || targetEl;
 
-      const result = buildItemTimeline(itemConfig, containerEl);
-      if (!result) return;
+      triggerEl.setAttribute("data-wcf-anim-id", id);
 
-      timelines.push(result.timeline);
-      cleanups.push(result.cleanup);
+      // ── Device values ──
+      const bucket     = devices[device] ?? devices.desktop ?? {};
+      const dataSpeed  = clamp(Number(bucket.dataSpeed ?? 1), 0, 3.0);
+      const dataLag    = bucket.dataLag ?? 0;
+      const scrubValue = dataLag > 0 ? dataLag : true;
+
+      targetEl.style.willChange = "transform";
+      cleanups.push(() => { targetEl.style.willChange = ""; });
+
+      // ── GSAP data-speed parallax ──
+      // Exactly how GSAP ScrollSmoother applies data-speed:
+      // yPercent: -100 * (1 - speed)
+      //   speed 0.5 → yPercent: -50  → moves UP at half scroll speed
+      //   speed 1.0 → yPercent:   0  → no movement (normal scroll)
+      //   speed 1.5 → yPercent:  50  → moves DOWN faster than scroll
+      const tl = gsap.timeline({
+        defaults: { duration: 1 },
+        scrollTrigger: {
+          trigger: triggerEl,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: scrubValue,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      tl.fromTo(targetEl,
+        { yPercent: 100 * (1 - dataSpeed) },
+        { yPercent: -100 * (1 - dataSpeed), ease: "none" }
+      );
+
+      timelines.push(tl);
     });
 
     if (timelines.length === 0) return;
