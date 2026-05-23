@@ -198,19 +198,6 @@ function receivePageConfig() {
   window.addEventListener(
     "message",
     (event) => {
-      // TODO: make single function for both motion kit editor and connector
-      if (event.data?.type === "mk-st-reset") {
-        const Smoother = window?.ScrollSmoother;
-        if (!Smoother) return;
-        try {
-          const existing = Smoother.get();
-          if (existing) existing.kill();
-          window.ScrollTrigger?.refresh();
-        } catch {
-          /* already torn down */
-        }
-        window.ScrollTrigger.refresh();
-      }
       if (event.data?.type === "motionkit-settings") {
         // Receive global + current page settings from the editor
         const {
