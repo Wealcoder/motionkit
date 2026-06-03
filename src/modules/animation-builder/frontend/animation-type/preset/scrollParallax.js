@@ -31,7 +31,6 @@ export function scrollParallax() {
 
   function handler(e) {
     const anim = e?.detail;
-
     if (!anim || anim.presetKey !== PRESET_KEY) return;
     if (anim.isPublished === false) return;
 
@@ -48,13 +47,28 @@ export function scrollParallax() {
     }
 
     // ── Get ScrollSmoother instance ──
-    const smoother = ScrollSmoother.get();
-    if (!smoother) {
-      console.warn("[scrollParallax] ScrollSmoother is not initialized.");
-      return;
-    }
-    console.log({ parallaxItems, smoother });
+    let smoother = ScrollSmoother.get();
 
+    // if scroll smoother not found initializing new scroll smoother with currentPageSettings (global settings) value. (Note:This is also applied for motionkit editor preview)
+    if (!smoother) {
+      const currentPreviewDevice = getCurrentDevice();
+      const scrollSmootherSettings =
+        wcfanimb.currentPageSettings?.scrollSmother || {};
+
+      const isSmmotherEnabled = scrollSmootherSettings?.enable || false;
+      const smootherValue =
+        scrollSmootherSettings?.[currentPreviewDevice]?.value || 1;
+
+      if (!isSmmotherEnabled) {
+        console.warn(
+          "[scrollParallax] ScrollSmoother not found and smoothing is disabled in page settings. Parallax effects may not work as intended.",
+        );
+        return;
+      }
+      smoother = ScrollSmoother.create({
+        smooth: smootherValue,
+      });
+    }
     teardown(id);
 
     const device = getCurrentDevice();
