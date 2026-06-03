@@ -214,6 +214,16 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
         }),
       );
     }
+
+    // Saving global settings for html platform (necessary for scroll paralax preset)
+    if (event.data.type === "motionkit-settings") {
+      const { globalSettings = {}, currentPageSettings = {} } =
+        event.data.data || {};
+      window.wcfanimb = Object.assign({}, window.wcfanimb || {}, {
+        currentPageSettings,
+        globalSettings,
+      });
+    }
   });
 
   // Send ready after a short delay to let parent set up listener
