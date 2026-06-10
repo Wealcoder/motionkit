@@ -58,11 +58,6 @@ const mainConfig = {
       "admin-tools": "./src/css/admin-tools.css",
       ...getPresetEntries({
         folder:
-          "./src/modules/animation-builder/frontend/animation-type/freePreset",
-        outPrefix: "modules/animation-builder/frontend/freePresets/",
-      }),
-      ...getPresetEntries({
-        folder:
           "./src/modules/animation-builder/frontend/animation-type/preset",
         outPrefix: "modules/animation-builder/frontend/presets/",
       }),

@@ -113,58 +113,5 @@ return [
       'version' => MOTIONKIT_VERSION,
     ],
   ],
-  // ############## FREE ANIMATIONS ##############
-  "freePresets" => [
-    // ############## GENERAL ############## //
-    'wcf-mk-gen-sil-fa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpaceInLeftAnim.js',
-      'deps' => [],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-mk-gen-sir-fa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSpaceInRightAnim.js',
-      'deps' => [],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-mk-gen-swap-fa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalSwapAnim.js',
-      'deps' => [],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-mk-gen-tin-fa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/generalTwisterInDownAnim.js',
-      'deps' => [],
-      'version' => MOTIONKIT_VERSION,
-    ],
-
-    // ############## IMAGE ############## //
-    'wcf-mk-img-si-fa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/imageSwashInAnim.js',
-      'deps' => [],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-mk-img-vi-fa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/imageVanishInAnim.js',
-      'deps' => [],
-      'version' => MOTIONKIT_VERSION,
-    ],
-
-    // ############## TEXT ############## //
-    'wcf-mk-txt-cr-fa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipRevealAnim.js',
-      'deps' => [],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-mk-txt-csu-fa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipSlideUpAnim.js',
-      'deps' => [],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'wcf-mk-txt-csr-fa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/freePresets/textClipSlideRightAnim.js',
-      'deps' => [],
-      'version' => MOTIONKIT_VERSION,
-    ],
-  ]
 
 ];
