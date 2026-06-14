@@ -194,7 +194,7 @@ final class Frontend
       'motionPath'     => ['deps' => ['gsap']],
       'flip'           => ['deps' => ['gsap']],
       'physics2D'      => ['deps' => ['gsap']],
-      
+
     ];
 
     // Per-handle URL map lives in motionkit_global_settings.gsapPlugin.cdns
@@ -230,7 +230,7 @@ final class Frontend
         continue;
       }
 
-      if (wp_http_validate_url($url) === false) {       
+      if (wp_http_validate_url($url) === false) {
         continue;
       }
 
@@ -255,7 +255,7 @@ final class Frontend
     }
 
     $core_deps = ['gsap', 'scrollSmoother'];
-    
+
     return array_merge($deps, $core_deps);
   }
 
@@ -637,15 +637,17 @@ final class Frontend
 
     // Determine which presets are active in the config
     $is_custom = false;
+    $global_settings  = $this->get_global_settings();
+    $global_animation = $this->get_global_animations();
+    $page_configs = array_merge($page_configs, $global_animation);
     $active_presets = $this->get_active_presets($page_configs, $is_custom);
 
-
     // Build deps — allow Pro to add gsap/ScrollTrigger via filter
-    $deps = apply_filters('motionkit_core_lib_deps', []); 
+    $deps = apply_filters('motionkit_core_lib_deps', []);
 
-    if(empty($deps)) {    
+    if (empty($deps)) {
       return;
-    }  
+    }
 
     // Conditionally enqueue free preset scripts
     if (isset($active_presets['free']) && !empty($active_presets['free'])) {
@@ -654,14 +656,13 @@ final class Frontend
 
     if (isset($active_presets['premium']) && !empty($active_presets['premium'])) {
       $this->enqueue_presets($active_presets['premium'], $deps);
-    }  
+    }
 
     // Global settings + global animations (saved by editor to wp_options).
     // Read through memos so the same option isn't re-fetched on subsequent
     // hooks (register_gsap_libs already pulled global_settings earlier in
     // this same request).
-    $global_settings  = $this->get_global_settings();
-    $global_animation = $this->get_global_animations();
+
 
     // Page-level animation bucket (separate from currentPageSettings)
     $page_type_config = $this->page_type->getCurrentPageType();
@@ -675,7 +676,7 @@ final class Frontend
 
     // Page settings live under mkit_pg_settings_<type> — separate from animations.
     $settings_config = $page_type_config;
-    
+
     if (!empty($settings_config['option']) && is_string($settings_config['option'])) {
       $settings_config['option'] = preg_replace(
         '/^mkit_pg_animation_/',
@@ -685,20 +686,20 @@ final class Frontend
     }
 
     $page_settings = $this->page_type->getConfig($settings_config);
-   // Scan the merged animation tree only inside a 3-hour window after the
+    // Scan the merged animation tree only inside a 3-hour window after the
     // last page-settings save. Outside that window we trust the persisted
     // `activePlugins` and skip the walk to keep the frontend cheap. The
     // option is written by RestApi::dispatch_simple on every save.
     $settings_updated_at = get_option('motionkit_page_settings_updated_at', false);
-  
+
     // 3 hours in seconds — inline literal to avoid analyzer noise on HOUR_IN_SECONDS.
     if ($settings_updated_at !== false && (time() - (int) $settings_updated_at) <= 10800) {
       // Cache the scan result keyed by the save timestamp — any save bumps
       // the timestamp, which auto-invalidates this entry without manual flush.
       // Free per-request; with an external object cache (Redis/Memcached) it
       // skips the walk on every subsequent page load too.
-  
-     
+
+
       $page_key  = isset($page_type_config['option']) && is_string($page_type_config['option'])
         ? $page_type_config['option']
         : 'global';
@@ -713,8 +714,15 @@ final class Frontend
         $has_any  = false;
         if (is_string($haystack) && $haystack !== '') {
           static $plugin_needles = [
-            'scrollTo', 'motionPath', 'drawSVG', 'morphSVG',
-            'splitText', 'physics2D', 'physicsProps', 'scrambleText', 'flip',
+            'scrollTo',
+            'motionPath',
+            'drawSVG',
+            'morphSVG',
+            'splitText',
+            'physics2D',
+            'physicsProps',
+            'scrambleText',
+            'flip',
           ];
           foreach ($plugin_needles as $needle) {
             if (strpos($haystack, $needle) !== false) {
@@ -723,7 +731,7 @@ final class Frontend
             }
           }
         }
-       
+
         $animation_plugins = $has_any ? $this->get_active_plugins($merged_animation) : [];
         wp_cache_set($cache_key, $animation_plugins, 'motionkit', 3600);
       }
@@ -732,13 +740,13 @@ final class Frontend
         $deps = array_merge($deps, array_keys($animation_plugins));
       }
     }
-    
+
     // Merge global settings with current page settings on specific keys.
     // Page-level values override global when present.
     $global_settings_arr = is_array($global_settings) ? $global_settings : (array) $global_settings;
     $page_settings_arr   = is_array($page_settings) ? $page_settings : [];
-     
-    
+
+
     // Default settings baseline — always present so the frontend runtime has
     // sane initial state (device breakpoints, etc.) even when the editor
     // never saved anything. User-saved settings overlay on top.
@@ -759,8 +767,9 @@ final class Frontend
 
     wp_enqueue_script('motionkit-frontend');
     // Enqueue smart animation engine when custom animations are present
+
     if ($is_custom) {
-     
+
       wp_enqueue_script(
         'motionkit-custom-animation',
         MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/customAnimation.js',
@@ -783,13 +792,13 @@ final class Frontend
     }
 
     if (isset($merged_settings['pageTransition'])) {
-      unset($merged_settings['pageTransition']);      
+      unset($merged_settings['pageTransition']);
     }
 
-    if(isset($merged_settings['gsapPlugin']['cdns'])) {
-        unset($merged_settings['gsapPlugin']['cdns']);
+    if (isset($merged_settings['gsapPlugin']['cdns'])) {
+      unset($merged_settings['gsapPlugin']['cdns']);
     }
-    
+
     wp_localize_script('motionkit-frontend', 'wcfanimb', [
       'all_animations' => $merged_animation,
       'all_settings'   => $merged_settings
@@ -1016,14 +1025,13 @@ final class Frontend
         if (!is_array($value)) {
           continue;
         }
-
         // Check for enabled animation entries
         if (isset($value['group'], $value['isPublished']) && (int) $value['isPublished'] === 1) {
           if ($value['group'] === 'premium_preset_animation' && isset($value['presetKey'])) {
             $premium_preset[] = $value['presetKey'];
           } elseif ($value['group'] === 'free_preset_animation' && isset($value['presetKey'])) {
             $free_preset[] = $value['presetKey'];
-          } elseif ($value['group'] === 'custom_animation') {       
+          } elseif ($value['group'] === 'custom_animation') {
             $is_custom = true;
           }
         }
