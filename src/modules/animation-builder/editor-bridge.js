@@ -87,6 +87,7 @@ const ENDPOINT_TO_ACTION = {
   "current-page-settings": "save_current_page_settings",
   "current-page-animation": "save_current_page_animation",
   "page-transition-exported-code": "save_page_transition_code",
+  "animation-folders": "save_page_transition_code",
 };
 
 /**

@@ -1,6 +1,7 @@
 import { buildTimeline } from "./mbuild/timeline.js";
+import { buildStepTweens } from "./mbuild/tween.js";
 import { buildScrollTriggerConfig } from "./mbuild/scrollTrigger.js";
-import { findRoutedScrollTriggers } from "./select/find.js";
+import { findRoutedScrollTriggers, findRoutedStepTriggers } from "./select/find.js";
 import { querySelectorAllCached, requestRefresh } from "./scheduler.js";
 import { setActive, getActive } from "./registry.js";
 import { teardown, tagElement } from "./cleanup.js";
@@ -52,8 +53,34 @@ function pageloadExtraConfig() {
   return isEditorPreviewMode() ? { paused: true } : undefined;
 }
 
+// isTimelineEnabled gates the build strategy. Absent (legacy animations) or
+// true → shared-timeline mode (current behavior): all steps share one timeline
+// and a single ScrollTrigger routes by timeline id. Explicit false → each step
+// builds as its own standalone tween and ScrollTriggers route by step id.
+function isTimelineEnabledFor(anim) {
+  return anim.isTimelineEnabled !== false;
+}
+
 function buildScrollAnim(anim) {
   const deviceKey = detectDeviceKey();
+
+  if (!isTimelineEnabledFor(anim)) {
+    const routedSteps = findRoutedStepTriggers(anim, deviceKey);
+    if (!routedSteps.length) return null;
+    const stepCtx = gsap.context(() => {
+      routedSteps.forEach(({ cfg, step }) => {
+        const scrollCfg = buildScrollTriggerConfig(cfg, step.itemClass);
+        // Scroll-driven tweens can't be scrubbed by time, so — like
+        // timeline-mode scroll anims — they aren't registered with DevTools.
+        buildStepTweens(step, { scrollTrigger: scrollCfg }, {
+          animationId: anim.id,
+          animationTitle: anim.title,
+        });
+      });
+    });
+    return { contexts: [stepCtx], listeners: [] };
+  }
+
   const routed = findRoutedScrollTriggers(anim, deviceKey);
   if (!routed.length) return null;
 
@@ -78,16 +105,31 @@ function buildScrollAnim(anim) {
 
 function buildPageloadAnim(anim) {
   const editorMode = isEditorPreviewMode();
+  const timelineEnabled = isTimelineEnabledFor(anim);
   const ctx = gsap.context(() => {
     (anim.timelines || []).forEach((tlCfg) => {
       const extra = editorMode ? { paused: true } : pageloadExtraConfig();
-      const tl = buildTimeline(tlCfg, extra, {
-        animationId: anim.id,
-        animationTitle: anim.title,
-      });
-      if (editorMode && tl) {
-        registerTimeline(anim.id, tl);
+
+      if (timelineEnabled) {
+        const tl = buildTimeline(tlCfg, extra, {
+          animationId: anim.id,
+          animationTitle: anim.title,
+        });
+        if (editorMode && tl) {
+          registerTimeline(anim.id, tl);
+        }
+        return;
       }
+
+      (tlCfg.animations || []).forEach((step) => {
+        const tweens = buildStepTweens(step, extra, {
+          animationId: anim.id,
+          animationTitle: anim.title,
+        });
+        if (editorMode) {
+          tweens.forEach((t) => registerTimeline(anim.id, t));
+        }
+      });
     });
   });
   return { contexts: [ctx], listeners: [] };
@@ -129,19 +171,35 @@ function buildInteractionAnim(anim, eventType) {
   if (!triggers.length) return null;
 
   const editorMode = isEditorPreviewMode();
+  const timelineEnabled = isTimelineEnabledFor(anim);
 
-  const tls = [];
+  // Both modes yield an array of paused GSAP animations (timelines or tweens);
+  // the listeners below drive them identically via play/reverse/restart.
+  const anims = [];
   const ctx = gsap.context(() => {
     (anim.timelines || []).forEach((tlCfg) => {
       // paused override — event drives playback regardless of tlCfg.vars.paused
-      const tl = buildTimeline(tlCfg, { paused: true }, {
-        animationId: anim.id,
-        animationTitle: anim.title,
-      });
-      tls.push(tl);
-      if (editorMode && tl) {
-        registerTimeline(anim.id, tl);
+      if (timelineEnabled) {
+        const tl = buildTimeline(tlCfg, { paused: true }, {
+          animationId: anim.id,
+          animationTitle: anim.title,
+        });
+        if (tl) {
+          anims.push(tl);
+          if (editorMode) registerTimeline(anim.id, tl);
+        }
+        return;
       }
+
+      (tlCfg.animations || []).forEach((step) => {
+        buildStepTweens(step, { paused: true }, {
+          animationId: anim.id,
+          animationTitle: anim.title,
+        }).forEach((t) => {
+          anims.push(t);
+          if (editorMode) registerTimeline(anim.id, t);
+        });
+      });
     });
   });
 
@@ -156,19 +214,32 @@ function buildInteractionAnim(anim, eventType) {
   }
 
   const preventAnchorNav = timelineHasScrollTo(anim);
+  const listeners = attachInteractionListeners(
+    triggers,
+    eventType,
+    anims,
+    preventAnchorNav,
+  );
 
+  return { contexts: [ctx], listeners };
+}
+
+// Wire click / hover DOM listeners to drive a set of paused GSAP animations.
+// Returns teardown thunks. Works for both timelines and raw tweens since both
+// expose restart()/play()/reverse().
+function attachInteractionListeners(triggers, eventType, anims, preventAnchorNav) {
   const listeners = [];
   triggers.forEach((el) => {
     if (eventType === "click") {
       const onClick = (ev) => {
         if (preventAnchorNav && el.tagName === "A") ev.preventDefault();
-        tls.forEach((t) => t.restart());
+        anims.forEach((t) => t.restart());
       };
       el.addEventListener("click", onClick);
       listeners.push(() => el.removeEventListener("click", onClick));
     } else if (eventType === "hover") {
-      const onEnter = () => tls.forEach((t) => t.play());
-      const onLeave = () => tls.forEach((t) => t.reverse());
+      const onEnter = () => anims.forEach((t) => t.play());
+      const onLeave = () => anims.forEach((t) => t.reverse());
       el.addEventListener("mouseenter", onEnter);
       el.addEventListener("mouseleave", onLeave);
       listeners.push(() => {
@@ -177,8 +248,7 @@ function buildInteractionAnim(anim, eventType) {
       });
     }
   });
-
-  return { contexts: [ctx], listeners };
+  return listeners;
 }
 
 function buildHandle(anim) {
