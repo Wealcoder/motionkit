@@ -36,6 +36,8 @@ const path = require('path');
 const SRC = path.resolve(__dirname, '../assets/build/modules/animation-builder');
 
 const DEST_CANDIDATES = [
+  '/home/wealcoder/Projects/motionkit-editor/server/static/animation-scripts',
+  path.resolve(__dirname, '../../motionkit-editor/server/static/animation-scripts'),
   path.resolve('D:/motionkit AI development/motionkit-editor/server/static/animation-scripts'),
   path.resolve(__dirname, '../../../../../../../../motionkit AI development/motionkit-editor/server/static/animation-scripts'),
   path.resolve(__dirname, '../../../motionkit-editor/server/static/animation-scripts'),
