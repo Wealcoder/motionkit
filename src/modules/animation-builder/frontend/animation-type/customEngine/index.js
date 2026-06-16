@@ -66,12 +66,10 @@ function buildScrollAnim(anim) {
 
   if (!isTimelineEnabledFor(anim)) {
     const routedSteps = findRoutedStepTriggers(anim, deviceKey);
-    console.log("I AM HERE", { anim, deviceKey, routedSteps });
     if (!routedSteps.length) return null;
     const stepCtx = gsap.context(() => {
       routedSteps.forEach(({ cfg, step }) => {
         const scrollCfg = buildScrollTriggerConfig(cfg, step.itemClass);
-        console.log("hit", { scrollCfg });
         // Scroll-driven tweens can't be scrubbed by time, so — like
         // timeline-mode scroll anims — they aren't registered with DevTools.
         buildStepTweens(
