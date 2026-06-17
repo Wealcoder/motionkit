@@ -17,7 +17,8 @@ export function isCustomAnimation(anim) {
     anim != null &&
     typeof anim === "object" &&
     anim.group === "custom_animation" &&
-    Array.isArray(anim.timelines)
+    anim.timeline != null &&
+    typeof anim.timeline === "object"
   );
 }
 
@@ -37,13 +38,11 @@ function detectDeviceKey() {
 // Tag every animated element so the global reset sweep clears inline styles
 // on device-switch without us tracking DOM refs individually.
 function tagAllTargets(anim) {
-  (anim.timelines || []).forEach((tlCfg) => {
-    (tlCfg.animations || []).forEach((step) => {
-      if (!step?.itemClass) return;
-      querySelectorAllCached(step.itemClass).forEach((el) =>
-        tagElement(el, anim.id),
-      );
-    });
+  (anim.timeline?.animations || []).forEach((step) => {
+    if (!step?.itemClass) return;
+    querySelectorAllCached(step.itemClass).forEach((el) =>
+      tagElement(el, anim.id),
+    );
   });
 }
 
@@ -114,30 +113,30 @@ function buildScrollAnim(anim) {
 function buildPageloadAnim(anim) {
   const editorMode = isEditorPreviewMode();
   const timelineEnabled = isTimelineEnabledFor(anim);
+  const tlCfg = anim.timeline;
   const ctx = gsap.context(() => {
-    (anim.timelines || []).forEach((tlCfg) => {
-      const extra = editorMode ? { paused: true } : pageloadExtraConfig();
+    if (!tlCfg) return;
+    const extra = editorMode ? { paused: true } : pageloadExtraConfig();
 
-      if (timelineEnabled) {
-        const tl = buildTimeline(tlCfg, extra, {
-          animationId: anim.id,
-          animationTitle: anim.title,
-        });
-        if (editorMode && tl) {
-          registerTimeline(anim.id, tl);
-        }
-        return;
-      }
-
-      (tlCfg.animations || []).forEach((step) => {
-        const tweens = buildStepTweens(step, extra, {
-          animationId: anim.id,
-          animationTitle: anim.title,
-        });
-        if (editorMode) {
-          tweens.forEach((t) => registerTimeline(anim.id, t));
-        }
+    if (timelineEnabled) {
+      const tl = buildTimeline(tlCfg, extra, {
+        animationId: anim.id,
+        animationTitle: anim.title,
       });
+      if (editorMode && tl) {
+        registerTimeline(anim.id, tl);
+      }
+      return;
+    }
+
+    (tlCfg.animations || []).forEach((step) => {
+      const tweens = buildStepTweens(step, extra, {
+        animationId: anim.id,
+        animationTitle: anim.title,
+      });
+      if (editorMode) {
+        tweens.forEach((t) => registerTimeline(anim.id, t));
+      }
     });
   });
   return { contexts: [ctx], listeners: [] };
@@ -151,27 +150,23 @@ function collectInteractionTargets(anim) {
   if (sel) return querySelectorAllCached(sel);
   const seen = new Set();
   const out = [];
-  (anim.timelines || []).forEach((tlCfg) => {
-    (tlCfg.animations || []).forEach((step) => {
-      if (!step?.itemClass) return;
-      querySelectorAllCached(step.itemClass).forEach((el) => {
-        if (seen.has(el)) return;
-        seen.add(el);
-        out.push(el);
-      });
+  (anim.timeline?.animations || []).forEach((step) => {
+    if (!step?.itemClass) return;
+    querySelectorAllCached(step.itemClass).forEach((el) => {
+      if (seen.has(el)) return;
+      seen.add(el);
+      out.push(el);
     });
   });
   return out;
 }
 
 function timelineHasScrollTo(anim) {
-  return (anim.timelines || []).some((tlCfg) =>
-    (tlCfg.animations || []).some((step) => {
-      if (step?.method === "scrollTo") return true;
-      const v = step?.vars || {};
-      return !!(v.to?.scrollTo || v.from?.scrollTo || v.set?.scrollTo);
-    }),
-  );
+  return (anim.timeline?.animations || []).some((step) => {
+    if (step?.method === "scrollTo") return true;
+    const v = step?.vars || {};
+    return !!(v.to?.scrollTo || v.from?.scrollTo || v.set?.scrollTo);
+  });
 }
 
 function buildInteractionAnim(anim, eventType) {
@@ -183,26 +178,25 @@ function buildInteractionAnim(anim, eventType) {
 
   // Both modes yield an array of paused GSAP animations (timelines or tweens);
   // the listeners below drive them identically via play/reverse/restart.
+  const tlCfg = anim.timeline;
   const anims = [];
   const ctx = gsap.context(() => {
-    (anim.timelines || []).forEach((tlCfg) => {
-      // paused override — event drives playback regardless of tlCfg.vars.paused
-      if (timelineEnabled) {
-        const tl = buildTimeline(
-          tlCfg,
-          { paused: true },
-          {
-            animationId: anim.id,
-            animationTitle: anim.title,
-          },
-        );
-        if (tl) {
-          anims.push(tl);
-          if (editorMode) registerTimeline(anim.id, tl);
-        }
-        return;
+    if (!tlCfg) return;
+    // paused override — event drives playback regardless of tlCfg.vars.paused
+    if (timelineEnabled) {
+      const tl = buildTimeline(
+        tlCfg,
+        { paused: true },
+        {
+          animationId: anim.id,
+          animationTitle: anim.title,
+        },
+      );
+      if (tl) {
+        anims.push(tl);
+        if (editorMode) registerTimeline(anim.id, tl);
       }
-
+    } else {
       (tlCfg.animations || []).forEach((step) => {
         buildStepTweens(
           step,
@@ -216,7 +210,7 @@ function buildInteractionAnim(anim, eventType) {
           if (editorMode) registerTimeline(anim.id, t);
         });
       });
-    });
+    }
   });
 
   // In editor preview mode, DevTools owns playback for click/hover anims —

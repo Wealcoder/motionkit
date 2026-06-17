@@ -3,18 +3,17 @@ import { isScrollTriggerActive, isStepActive } from "./filter.js";
 
 export function findTimelineById(anim, id) {
   if (!id) return null;
-  return (anim?.timelines || []).find((t) => t.id === id) || null;
+  const tl = anim?.timeline;
+  return tl && tl.id === id ? tl : null;
 }
 
-// Walk every timeline's animations to find a step by id. Used in no-timeline
+// Walk the timeline's animations to find a step by id. Used in no-timeline
 // mode (anim.isTimelineEnabled === false), where a ScrollTrigger's `timeline`
 // field routes to a step id rather than a timeline id.
 export function findStepById(anim, id) {
   if (!id) return null;
-  for (const tl of anim?.timelines || []) {
-    for (const step of tl.animations || []) {
-      if (step.id === id) return step;
-    }
+  for (const step of anim?.timeline?.animations || []) {
+    if (step.id === id) return step;
   }
   return null;
 }

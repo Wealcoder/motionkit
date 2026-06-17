@@ -80,24 +80,24 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
       .map(function (a) {
         if (!a || typeof a !== "object") return a;
 
-        // Custom animation branch — recurse into timelines + inner animations.
-        if (Array.isArray(a.timelines)) {
+        // Custom animation branch — flatten the single timeline + its inner animations.
+        if (
+          a.group === "custom_animation" &&
+          a.timeline &&
+          typeof a.timeline === "object"
+        ) {
           var outCustom = Object.assign({}, a);
-          outCustom.timelines = a.timelines.map(function (tl) {
-            if (!tl || typeof tl !== "object") return tl;
-            var flatTl = flattenDeviceBag(tl, deviceKey);
-            if (Array.isArray(tl.animations)) {
-              flatTl.animations = tl.animations
-                .filter(function (step) {
-                  return isActive(step) && isResponsiveEnabled(step, deviceKey);
-                })
-                .map(function (step) {
-                  var flatStep = flattenDeviceBag(step, deviceKey);
-                  return flatStep;
-                });
-            }
-            return flatTl;
-          });
+          var flatTl = flattenDeviceBag(a.timeline, deviceKey);
+          if (Array.isArray(a.timeline.animations)) {
+            flatTl.animations = a.timeline.animations
+              .filter(function (step) {
+                return isActive(step) && isResponsiveEnabled(step, deviceKey);
+              })
+              .map(function (step) {
+                return flattenDeviceBag(step, deviceKey);
+              });
+          }
+          outCustom.timeline = flatTl;
           delete outCustom.devices;
           return outCustom;
         }
