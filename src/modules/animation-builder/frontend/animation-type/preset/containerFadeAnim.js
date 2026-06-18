@@ -147,6 +147,7 @@ export function containerFadeAnimation() {
   }
 
   function handleHoverAnimation({ id, config, itemClass, triggerClass }) {
+    console.log({ config });
     if (!triggerClass) {
       console.error("Container Fade Animation: Trigger class not found!");
       return;
@@ -162,15 +163,6 @@ export function containerFadeAnimation() {
     });
 
     const enterVars = { ...config, x: 0, y: 0, autoAlpha: 1, force3D: true };
-    const leaveVars = {
-      x: config.x,
-      y: config.y,
-      autoAlpha: 0,
-      duration: config.duration * 0.6,
-      stagger: config.stagger * 0.5,
-      ease: config.ease,
-      force3D: true,
-    };
 
     triggers.forEach((original, index) => {
       const uniqueId = `${id}_hover_${index}`;
@@ -181,18 +173,18 @@ export function containerFadeAnimation() {
       el.addEventListener("mouseenter", () => {
         killTween(uniqueId);
         setWillChange(itemClass);
+        gsap.set(itemClass, {
+          x: config.x,
+          y: config.y,
+          autoAlpha: 0,
+          force3D: true,
+        });
         activeTweens.set(uniqueId, gsap.to(itemClass, enterVars));
       });
 
       el.addEventListener("mouseleave", () => {
         killTween(uniqueId);
-        activeTweens.set(
-          uniqueId,
-          gsap.to(itemClass, {
-            ...leaveVars,
-            onComplete: () => clearWillChange(itemClass),
-          }),
-        );
+        activeTweens.set(uniqueId);
       });
     });
   }
