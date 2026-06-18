@@ -42,6 +42,14 @@ export function findRoutedStepTriggers(anim, deviceKey) {
     if (!isScrollTriggerActive(st)) continue;
     const cfg = pickDeviceConfig(st.devices, deviceKey);
     if (!cfg) continue;
+    // `all` routes this single scroll trigger to every active step, so one trigger drives all of the animation's effects.
+    if (cfg.animation === "all") {
+      for (const step of anim?.timeline?.animations || []) {
+        if (!isStepActive(step)) continue;
+        out.push({ st, cfg, step });
+      }
+      continue;
+    }
     const step = findStepById(anim, cfg.animation);
     if (!step || !isStepActive(step)) continue;
     out.push({ st, cfg, step });
