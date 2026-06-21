@@ -1,14 +1,14 @@
 import { buildTimeline } from "./mbuild/timeline.js";
 import { buildStepTweens } from "./mbuild/tween.js";
 import { buildScrollTriggerConfig } from "./mbuild/scrollTrigger.js";
-import { findRoutedScrollTriggers, findRoutedStepTriggers } from "./select/find.js";
+import {
+  findRoutedScrollTriggers,
+  findRoutedStepTriggers,
+} from "./select/find.js";
 import { querySelectorAllCached, requestRefresh } from "./scheduler.js";
 import { setActive, getActive } from "./registry.js";
 import { teardown, tagElement } from "./cleanup.js";
-import {
-  registerTimeline,
-  isEditorPreviewMode,
-} from "./customRegistry.js";
+import { registerTimeline, isEditorPreviewMode } from "./customRegistry.js";
 
 /* global __MKIT_DEVTOOLS__ */
 
@@ -17,7 +17,8 @@ export function isCustomAnimation(anim) {
     anim != null &&
     typeof anim === "object" &&
     anim.group === "custom_animation" &&
-    Array.isArray(anim.timelines)
+    anim.timeline != null &&
+    typeof anim.timeline === "object"
   );
 }
 
@@ -37,13 +38,11 @@ function detectDeviceKey() {
 // Tag every animated element so the global reset sweep clears inline styles
 // on device-switch without us tracking DOM refs individually.
 function tagAllTargets(anim) {
-  (anim.timelines || []).forEach((tlCfg) => {
-    (tlCfg.animations || []).forEach((step) => {
-      if (!step?.itemClass) return;
-      querySelectorAllCached(step.itemClass).forEach((el) =>
-        tagElement(el, anim.id),
-      );
-    });
+  (anim.timeline?.animations || []).forEach((step) => {
+    if (!step?.itemClass) return;
+    querySelectorAllCached(step.itemClass).forEach((el) =>
+      tagElement(el, anim.id),
+    );
   });
 }
 
@@ -72,10 +71,14 @@ function buildScrollAnim(anim) {
         const scrollCfg = buildScrollTriggerConfig(cfg, step.itemClass);
         // Scroll-driven tweens can't be scrubbed by time, so — like
         // timeline-mode scroll anims — they aren't registered with DevTools.
-        buildStepTweens(step, { scrollTrigger: scrollCfg }, {
-          animationId: anim.id,
-          animationTitle: anim.title,
-        });
+        buildStepTweens(
+          step,
+          { scrollTrigger: scrollCfg },
+          {
+            animationId: anim.id,
+            animationTitle: anim.title,
+          },
+        );
       });
     });
     return { contexts: [stepCtx], listeners: [] };
@@ -88,10 +91,14 @@ function buildScrollAnim(anim) {
     routed.forEach(({ cfg, tl }) => {
       const fallbackTrigger = tl.animations?.[0]?.itemClass;
       const scrollCfg = buildScrollTriggerConfig(cfg, fallbackTrigger);
-      const built = buildTimeline(tl, { scrollTrigger: scrollCfg }, {
-        animationId: anim.id,
-        animationTitle: anim.title,
-      });
+      const built = buildTimeline(
+        tl,
+        { scrollTrigger: scrollCfg },
+        {
+          animationId: anim.id,
+          animationTitle: anim.title,
+        },
+      );
       // ScrollTrigger anims are scroll-driven; DevTools cannot scrub them
       // by time, so we don't register them. They still render in GSAP.
       if (built) {
@@ -106,30 +113,30 @@ function buildScrollAnim(anim) {
 function buildPageloadAnim(anim) {
   const editorMode = isEditorPreviewMode();
   const timelineEnabled = isTimelineEnabledFor(anim);
+  const tlCfg = anim.timeline;
   const ctx = gsap.context(() => {
-    (anim.timelines || []).forEach((tlCfg) => {
-      const extra = editorMode ? { paused: true } : pageloadExtraConfig();
+    if (!tlCfg) return;
+    const extra = editorMode ? { paused: true } : pageloadExtraConfig();
 
-      if (timelineEnabled) {
-        const tl = buildTimeline(tlCfg, extra, {
-          animationId: anim.id,
-          animationTitle: anim.title,
-        });
-        if (editorMode && tl) {
-          registerTimeline(anim.id, tl);
-        }
-        return;
-      }
-
-      (tlCfg.animations || []).forEach((step) => {
-        const tweens = buildStepTweens(step, extra, {
-          animationId: anim.id,
-          animationTitle: anim.title,
-        });
-        if (editorMode) {
-          tweens.forEach((t) => registerTimeline(anim.id, t));
-        }
+    if (timelineEnabled) {
+      const tl = buildTimeline(tlCfg, extra, {
+        animationId: anim.id,
+        animationTitle: anim.title,
       });
+      if (editorMode && tl) {
+        registerTimeline(anim.id, tl);
+      }
+      return;
+    }
+
+    (tlCfg.animations || []).forEach((step) => {
+      const tweens = buildStepTweens(step, extra, {
+        animationId: anim.id,
+        animationTitle: anim.title,
+      });
+      if (editorMode) {
+        tweens.forEach((t) => registerTimeline(anim.id, t));
+      }
     });
   });
   return { contexts: [ctx], listeners: [] };
@@ -143,27 +150,23 @@ function collectInteractionTargets(anim) {
   if (sel) return querySelectorAllCached(sel);
   const seen = new Set();
   const out = [];
-  (anim.timelines || []).forEach((tlCfg) => {
-    (tlCfg.animations || []).forEach((step) => {
-      if (!step?.itemClass) return;
-      querySelectorAllCached(step.itemClass).forEach((el) => {
-        if (seen.has(el)) return;
-        seen.add(el);
-        out.push(el);
-      });
+  (anim.timeline?.animations || []).forEach((step) => {
+    if (!step?.itemClass) return;
+    querySelectorAllCached(step.itemClass).forEach((el) => {
+      if (seen.has(el)) return;
+      seen.add(el);
+      out.push(el);
     });
   });
   return out;
 }
 
 function timelineHasScrollTo(anim) {
-  return (anim.timelines || []).some((tlCfg) =>
-    (tlCfg.animations || []).some((step) => {
-      if (step?.method === "scrollTo") return true;
-      const v = step?.vars || {};
-      return !!(v.to?.scrollTo || v.from?.scrollTo || v.set?.scrollTo);
-    }),
-  );
+  return (anim.timeline?.animations || []).some((step) => {
+    if (step?.method === "scrollTo") return true;
+    const v = step?.vars || {};
+    return !!(v.to?.scrollTo || v.from?.scrollTo || v.set?.scrollTo);
+  });
 }
 
 function buildInteractionAnim(anim, eventType) {
@@ -175,32 +178,39 @@ function buildInteractionAnim(anim, eventType) {
 
   // Both modes yield an array of paused GSAP animations (timelines or tweens);
   // the listeners below drive them identically via play/reverse/restart.
+  const tlCfg = anim.timeline;
   const anims = [];
   const ctx = gsap.context(() => {
-    (anim.timelines || []).forEach((tlCfg) => {
-      // paused override — event drives playback regardless of tlCfg.vars.paused
-      if (timelineEnabled) {
-        const tl = buildTimeline(tlCfg, { paused: true }, {
+    if (!tlCfg) return;
+    // paused override — event drives playback regardless of tlCfg.vars.paused
+    if (timelineEnabled) {
+      const tl = buildTimeline(
+        tlCfg,
+        { paused: true },
+        {
           animationId: anim.id,
           animationTitle: anim.title,
-        });
-        if (tl) {
-          anims.push(tl);
-          if (editorMode) registerTimeline(anim.id, tl);
-        }
-        return;
+        },
+      );
+      if (tl) {
+        anims.push(tl);
+        if (editorMode) registerTimeline(anim.id, tl);
       }
-
+    } else {
       (tlCfg.animations || []).forEach((step) => {
-        buildStepTweens(step, { paused: true }, {
-          animationId: anim.id,
-          animationTitle: anim.title,
-        }).forEach((t) => {
+        buildStepTweens(
+          step,
+          { paused: true },
+          {
+            animationId: anim.id,
+            animationTitle: anim.title,
+          },
+        ).forEach((t) => {
           anims.push(t);
           if (editorMode) registerTimeline(anim.id, t);
         });
       });
-    });
+    }
   });
 
   // In editor preview mode, DevTools owns playback for click/hover anims —
@@ -227,7 +237,12 @@ function buildInteractionAnim(anim, eventType) {
 // Wire click / hover DOM listeners to drive a set of paused GSAP animations.
 // Returns teardown thunks. Works for both timelines and raw tweens since both
 // expose restart()/play()/reverse().
-function attachInteractionListeners(triggers, eventType, anims, preventAnchorNav) {
+function attachInteractionListeners(
+  triggers,
+  eventType,
+  anims,
+  preventAnchorNav,
+) {
   const listeners = [];
   triggers.forEach((el) => {
     if (eventType === "click") {
