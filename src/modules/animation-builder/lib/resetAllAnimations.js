@@ -25,20 +25,37 @@ function clearFreeAnimationNode(node) {
 }
 
 function killGsap(nodes) {
+  console.log("RESET FIRED");
   const { gsap, ScrollTrigger } = window;
-  // killAll() also clears ScrollTrigger's internal scroll listener pool
-  // and pinSpacer DOM — manual `.getAll().forEach(kill)` leaves that state.
-  if (typeof ScrollTrigger?.killAll === "function") {
-    ScrollTrigger.killAll();
-  } else {
-    ScrollTrigger?.getAll?.().forEach((st) => st.kill());
-  }
-  gsap?.globalTimeline?.getChildren?.().forEach((t) => t.kill());
+  const nodeSet = new Set(nodes);
+
+  // Scoped sweep: only kill triggers/tweens whose target is one of OUR
+  // animated elements (data-wcf-anim-id). ScrollSmoother's own internal
+  // trigger is attached to body/wrapper — never in nodeSet — so it's
+  // never touched. No kill, no recreate, no lerp interruption, ever,
+  // during a normal reset/Play cycle.
+  ScrollTrigger?.getAll?.().forEach((st) => {
+    const target = st.trigger || st.vars?.trigger;
+    if (target && nodeSet.has(target)) {
+      st.kill();
+    }
+  });
+
+  // getChildren(true, true, false) flattens nested timelines down to the
+  // actual tweens so .targets() resolves correctly.
+  gsap?.globalTimeline?.getChildren?.(true, true, false).forEach((t) => {
+    try {
+      const targets = t.targets ? t.targets() : [];
+      if (targets.some((el) => nodeSet.has(el))) t.kill();
+    } catch (_) {
+      /* tween without resolvable targets */
+    }
+  });
+
   if (gsap?.set && nodes.length) {
     gsap.set(nodes, { clearProps: "all" });
   }
 }
-
 function runGlobalReset() {
   const animatedNodes = [...document.querySelectorAll("[data-wcf-anim-id]")];
   killGsap(animatedNodes);

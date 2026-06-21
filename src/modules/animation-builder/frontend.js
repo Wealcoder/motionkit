@@ -181,17 +181,17 @@ WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
     if (!parentOrigin) parentOrigin = event.origin;
 
     // TODO: make single function for both motion kit editor and connector
-    if (event.data?.type === "mk-st-reset") {
-      const Smoother = window?.ScrollSmoother;
-      if (!Smoother) return;
-      try {
-        const existing = Smoother.get();
-        if (existing) existing.kill();
-        window.ScrollTrigger?.refresh();
-      } catch {
-        /* already torn down */
-      }
-    }
+    // if (event.data?.type === "mk-st-reset") {
+    //   const Smoother = window?.ScrollSmoother;
+    //   if (!Smoother) return;
+    //   try {
+    //     const existing = Smoother.get();
+    //     if (existing) existing.kill();
+    //     window.ScrollTrigger?.refresh();
+    //   } catch {
+    //     /* already torn down */
+    //   }
+    // }
 
     if (event.data?.type === "wcf-animation-config") {
       var payload = event.data.data || {};
