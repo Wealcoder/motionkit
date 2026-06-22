@@ -25,18 +25,24 @@ function clearFreeAnimationNode(node) {
 }
 
 function killGsap(nodes) {
-  console.log("RESET FIRED");
   const { gsap, ScrollTrigger } = window;
   const nodeSet = new Set(nodes);
 
-  // Scoped sweep: only kill triggers/tweens whose target is one of OUR
-  // animated elements (data-wcf-anim-id). ScrollSmoother's own internal
-  // trigger is attached to body/wrapper — never in nodeSet — so it's
-  // never touched. No kill, no recreate, no lerp interruption, ever,
-  // during a normal reset/Play cycle.
+  // Scoped sweep: only kill triggers whose trigger element OR whose driven
+  // animation targets one of OUR animated elements (data-wcf-anim-id). Matching
+  // the animation targets — not just the trigger element — catches animations
+  // that use a custom trigger selector (a section/container that never carries
+  // data-wcf-anim-id); without it those ScrollTriggers survive every reset and
+  // accumulate on each Play/Save. ScrollSmoother's own internal trigger is
+  // attached to body/wrapper and its animation targets the content wrapper —
+  // never in nodeSet — so it's never touched. No kill, no recreate, no lerp
+  // interruption, ever, during a normal reset/Play cycle.
   ScrollTrigger?.getAll?.().forEach((st) => {
     const target = st.trigger || st.vars?.trigger;
-    if (target && nodeSet.has(target)) {
+    const animTargets = st.animation?.targets ? st.animation.targets() : [];
+    const ownsTrigger = target && nodeSet.has(target);
+    const ownsAnimation = animTargets.some((el) => nodeSet.has(el));
+    if (ownsTrigger || ownsAnimation) {
       st.kill();
     }
   });
