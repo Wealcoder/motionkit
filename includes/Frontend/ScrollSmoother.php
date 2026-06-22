@@ -82,14 +82,16 @@ final class ScrollSmoother
             return 'desktop';
           }
 
-          var w = window.innerWidth || 0;
-          var sorted = list
-            .map(function (d) { return { key: d.key, w: parseInt(d.viewWidth, 10) || 0 }; })
-            .sort(function (a, b) { return b.w - a.w; });
-          for (var j = 0; j < sorted.length; j++) {
-            if (w >= sorted[j].w) return sorted[j].key;
+          // Match by the device's own mediaQuery — same detection the animation runner uses (frontend.js detectCurrentDevice) — so the smoother lands on the same device bucket the animations do. Do NOT threshold on viewWidth: that is a canvas size (desktop = 1920px), not a breakpoint, so a normal sub-1920 desktop window would wrongly resolve to laptop/tablet and read the wrong scrollSmother bucket.
+          for (var i = 0; i < list.length; i++) {
+            var d = list[i];
+            if (d && d.mediaQuery) {
+              try {
+                if (window.matchMedia(d.mediaQuery).matches) return d.key;
+              } catch (e) {}
+            }
           }
-          return 'mobile';
+          return (list[0] && list[0].key) || 'desktop';
         }
 
         function resolveSmootherValue() {
@@ -123,12 +125,10 @@ final class ScrollSmoother
             
           if (!device || device.enable === false) return null;
 
-          // Slider is 0-10 (see scrollSmother.js config). Map to GSAP smooth
-          // seconds via /5 so the useful range 0-2s stays reachable without
-          // an extra UI knob.
+          // Slider is 0-2 (see scrollSmother.js: min 0, max 2) and maps straight to GSAP smooth seconds — no /5. Must match the editor's resolveSmoothSeconds (src/lib/gsap/scrollSmoother.js) so the live site and editor preview feel identical.
           var raw = Number(device.value);
           if (!isFinite(raw)) raw = 1;
-          return Math.max(0, Math.min(2, raw / 5));
+          return Math.max(0, Math.min(2, raw));
         }
 
         window.motionkitRebootSmoother = function () {
