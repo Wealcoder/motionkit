@@ -128,7 +128,9 @@ final class ScrollSmoother
           // Slider is 0-2 (see scrollSmother.js: min 0, max 2) and maps straight to GSAP smooth seconds — no /5. Must match the editor's resolveSmoothSeconds (src/lib/gsap/scrollSmoother.js) so the live site and editor preview feel identical.
           var raw = Number(device.value);
           if (!isFinite(raw)) raw = 1;
-          return Math.max(0, Math.min(2, raw));
+          var smooth = Math.max(0, Math.min(2, raw));
+          // value 0 means no smoothing — return null so motionkitRebootSmoother kills/skips the smoother and native scrolling stays. A ScrollSmoother created with smooth:0 still hijacks the scroll container but applies zero lerp, which freezes scrolling.
+          return smooth > 0 ? smooth : null;
         }
 
         window.motionkitRebootSmoother = function () {
@@ -152,9 +154,12 @@ final class ScrollSmoother
             return;
           }
 
+          // normalizeScroll:true is required for ScrollSmoother to smooth on touch/mobile devices — without it the smoother is a no-op there (native touch scroll). Mirror the editor's create options (src/lib/gsap/scrollSmoother.js) so all devices behave identically.
           ScrollSmoother.create({
             smooth: smooth,
-            effects: false           
+            effects: false,
+            normalizeScroll: true,
+            ignoreMobileResize: false
           });
         };
 
