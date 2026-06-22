@@ -96,13 +96,17 @@ final class ScrollSmoother
           var all = (window.wcfanimb && window.wcfanimb.all_settings) || {};
           var gs = (window.wcfanimb && window.wcfanimb.global_settings) || {};
 
-          // Master kill: globalSettings.scrollSmother.allPage.enable is the
-          // authoritative off switch. When false, smoother is dead everywhere
-          // regardless of per-page overrides.
+          // Per-page override wins whole — when the page has an explicit enable
+          // flag it takes full precedence, even over an all-page OFF master switch,
+          // so a single page can re-enable smoother while it's globally disabled.
+          // Only apply the master kill when the page has no override. Mirrors
+          // resolveScrollSmoother.js so editor preview and live site agree.
           var allPage = gs.scrollSmother && gs.scrollSmother.allPage;
-          if (allPage && allPage.enable === false) return null;
-
           var cfg = all.scrollSmother || null;
+          var hasPageOverride = cfg && typeof cfg.enable !== 'undefined';
+
+          if (!hasPageOverride && allPage && allPage.enable === false) return null;
+
           if (!cfg || cfg.enable === false) return null;
 
           var devices = all.deviceConfig || (window.wcfanimb && window.wcfanimb.device_config) || [];
