@@ -13,6 +13,17 @@ export function scrollParallax() {
         console.warn("[scrollParallax] effect teardown error:", err);
       }
     });
+    inst.elements.forEach((el) => {
+      try {
+        el.removeAttribute("data-speed");
+        el.removeAttribute("data-lag");
+        if (window.gsap) {
+          window.gsap.set(el, { clearProps: "transform,will-change" });
+        }
+      } catch {
+        /* element may have been removed from DOM */
+      }
+    });
     instances.delete(id);
   }
 
@@ -73,6 +84,7 @@ export function scrollParallax() {
 
     const device = getCurrentDevice();
     const effects = [];
+    const elements = [];
 
     parallaxItems.forEach((itemConfig) => {
       const { itemClass, devices = {} } = itemConfig;
@@ -95,6 +107,8 @@ export function scrollParallax() {
         );
         return;
       }
+      targetEl.setAttribute("data-wcf-anim-id", id);
+      elements.push(targetEl);
 
       // ── Read device values ──
       const bucket = devices[device] ?? devices.desktop ?? {};
@@ -109,8 +123,17 @@ export function scrollParallax() {
 
     if (effects.length === 0) return;
 
-    instances.set(id, { effects });
+    instances.set(id, { effects, elements });
   }
+
+  window.addEventListener("message", (event) => {
+    if (event.data?.type !== "wcf-animation-config") return;
+    const incoming = event.data.data?.all_animations || [];
+    const activeIds = new Set(incoming.map((a) => a.id).filter(Boolean));
+    for (const id of [...instances.keys()]) {
+      if (!activeIds.has(id)) teardown(id);
+    }
+  });
 
   document.addEventListener("aae-animation-event", handler);
   document.addEventListener("aae-reset-animation", teardownAll);
