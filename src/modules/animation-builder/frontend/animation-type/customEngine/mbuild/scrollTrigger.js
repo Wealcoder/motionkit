@@ -1,5 +1,5 @@
 // "default" is an editor sentinel. Omit so ScrollTrigger picks its own default.
-function nonDefault(v) {
+export function nonDefault(v) {
   return v && v !== "default" ? v : undefined;
 }
 

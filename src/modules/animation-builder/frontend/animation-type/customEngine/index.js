@@ -1,6 +1,9 @@
 import { buildTimeline } from "./mbuild/timeline.js";
 import { buildStepTweens } from "./mbuild/tween.js";
-import { buildScrollTriggerConfig } from "./mbuild/scrollTrigger.js";
+import {
+  buildScrollTriggerConfig,
+  nonDefault,
+} from "./mbuild/scrollTrigger.js";
 import {
   findRoutedScrollTriggers,
   findRoutedStepTriggers,
@@ -68,9 +71,32 @@ function buildScrollAnim(anim) {
     if (!routedSteps.length) return null;
     const stepCtx = gsap.context(() => {
       routedSteps.forEach(({ cfg, step }) => {
-        const scrollCfg = buildScrollTriggerConfig(cfg, step.itemClass);
         // Scroll-driven tweens can't be scrubbed by time, so — like
         // timeline-mode scroll anims — they aren't registered with DevTools.
+        // When the user left the trigger as default it resolves to itemClass,
+        // and itemClass may match many elements. A single tween + one
+        // ScrollTrigger over the whole set fires the entire group the moment
+        // the FIRST element scrolls in. So with a default trigger we split the
+        // step per matched element — each gets its own tween + ScrollTrigger
+        // anchored to itself, so it animates when IT enters the viewport.
+        // An explicit trigger keeps the group behavior: one trigger element
+        // intentionally drives every matched element together.
+        if (!nonDefault(cfg.trigger)) {
+          querySelectorAllCached(step.itemClass).forEach((el) => {
+            const scrollCfg = buildScrollTriggerConfig(cfg, el);
+            buildStepTweens(
+              { ...step, itemClass: el },
+              { scrollTrigger: scrollCfg },
+              {
+                animationId: anim.id,
+                animationTitle: anim.title,
+              },
+            );
+          });
+          return;
+        }
+
+        const scrollCfg = buildScrollTriggerConfig(cfg, step.itemClass);
         buildStepTweens(
           step,
           { scrollTrigger: scrollCfg },
