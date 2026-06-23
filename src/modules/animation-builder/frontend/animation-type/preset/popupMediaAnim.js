@@ -367,6 +367,7 @@ export function popupMediaAnim() {
         iframe.className = "motionkit-youtube-video";
         iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
         iframe.allowFullscreen = true;
+        iframe.referrerPolicy = "strict-origin-when-cross-origin";
         iframe.allow =
           "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
         container.appendChild(iframe);
