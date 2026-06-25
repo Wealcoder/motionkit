@@ -1,5 +1,3 @@
-import { isPreviewMode } from "@/utils/isPreviewMode";
-
 // "default" is an editor sentinel. Omit so ScrollTrigger picks its own default.
 export function nonDefault(v) {
   return v && v !== "default" ? v : undefined;
@@ -108,9 +106,6 @@ export function buildScrollTriggerConfig(cfg, fallbackTrigger) {
     const v = parse(cfg[key]);
     if (v !== undefined) out[key] = v;
   }
-
-  // markers are dev-only debug guides: shown only in the editor preview iframe (action=motionkit-editor / mk_token), forced off in full preview and on the published site, regardless of editor cfg / device.
-  out.markers = isPreviewMode();
 
   return out;
 }
