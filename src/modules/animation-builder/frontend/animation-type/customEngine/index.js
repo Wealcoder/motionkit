@@ -12,6 +12,7 @@ import { querySelectorAllCached, requestRefresh } from "./scheduler.js";
 import { setActive, getActive } from "./registry.js";
 import { teardown, tagElement } from "./cleanup.js";
 import { registerTimeline, isEditorPreviewMode } from "./customRegistry.js";
+import { attachPlayLogger, withScrollLogger } from "./helper/logger.js";
 
 /* global __MKIT_DEVTOOLS__ */
 
@@ -94,7 +95,12 @@ function buildScrollAnim(anim) {
         // intentionally drives every matched element together.
         if (!nonDefault(cfg.trigger)) {
           querySelectorAllCached(step.itemClass).forEach((el) => {
-            const scrollCfg = buildScrollTriggerConfig(cfg, el);
+            const scrollCfg = withScrollLogger(buildScrollTriggerConfig(cfg, el), {
+              timelineId: null,
+              timelineData: null,
+              animationId: anim.id,
+              animationData: anim,
+            });
             buildStepTweens(
               { ...step, itemClass: el },
               { scrollTrigger: scrollCfg },
@@ -107,7 +113,15 @@ function buildScrollAnim(anim) {
           return;
         }
 
-        const scrollCfg = buildScrollTriggerConfig(cfg, step.itemClass);
+        const scrollCfg = withScrollLogger(
+          buildScrollTriggerConfig(cfg, step.itemClass),
+          {
+            timelineId: null,
+            timelineData: null,
+            animationId: anim.id,
+            animationData: anim,
+          },
+        );
         buildStepTweens(
           step,
           { scrollTrigger: scrollCfg },
@@ -127,7 +141,15 @@ function buildScrollAnim(anim) {
   const ctx = gsap.context(() => {
     routed.forEach(({ cfg, tl }) => {
       const fallbackTrigger = tl.animations?.[0]?.itemClass;
-      const scrollCfg = buildScrollTriggerConfig(cfg, fallbackTrigger);
+      const scrollCfg = withScrollLogger(
+        buildScrollTriggerConfig(cfg, fallbackTrigger),
+        {
+          timelineId: tl.id,
+          timelineData: tl,
+          animationId: anim.id,
+          animationData: anim,
+        },
+      );
       const built = buildTimeline(
         tl,
         { scrollTrigger: scrollCfg },
@@ -160,6 +182,12 @@ function buildPageloadAnim(anim) {
         animationId: anim.id,
         animationTitle: anim.title,
       });
+      attachPlayLogger(tl, {
+        timelineId: tlCfg.id,
+        timelineData: tlCfg,
+        animationId: anim.id,
+        animationData: anim,
+      });
       if (editorMode && tl) {
         registerTimeline(anim.id, tl);
       }
@@ -171,6 +199,14 @@ function buildPageloadAnim(anim) {
         animationId: anim.id,
         animationTitle: anim.title,
       });
+      tweens.forEach((t) =>
+        attachPlayLogger(t, {
+          timelineId: null,
+          timelineData: null,
+          animationId: anim.id,
+          animationData: anim,
+        }),
+      );
       if (editorMode) {
         tweens.forEach((t) => registerTimeline(anim.id, t));
       }
@@ -249,6 +285,15 @@ function buildInteractionAnim(anim, eventType) {
       });
     }
   });
+
+  anims.forEach((a) =>
+    attachPlayLogger(a, {
+      timelineId: timelineEnabled ? tlCfg.id : null,
+      timelineData: timelineEnabled ? tlCfg : null,
+      animationId: anim.id,
+      animationData: anim,
+    }),
+  );
 
   // In editor preview mode, DevTools owns playback for click/hover anims —
   // attaching live listeners here would let user interaction call play()/
