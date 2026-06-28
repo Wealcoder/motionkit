@@ -1,9 +1,5 @@
 "use strict";
 
-import FreeAnimationEventHelperClass from "./lib/FreeAnimation/previewEventHelper";
-window.WCFFreeAnimBuilder = null;
-WCFFreeAnimBuilder = new FreeAnimationEventHelperClass();
-
 (function () {
   var parentOrigin = null;
 

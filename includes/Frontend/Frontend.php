@@ -828,14 +828,6 @@ final class Frontend
       return;
     }
 
-    // Enqueue free animation CSS
-    wp_enqueue_style(
-      'wcf-animation-builder-free-anim',
-      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/freeAnim.css',
-      [],
-      MOTIONKIT_VERSION
-    );
-
     // Enqueue each active free preset script
 
     if ($active_presets && is_array($active_presets)) {

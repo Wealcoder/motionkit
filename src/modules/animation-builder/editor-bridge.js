@@ -9,8 +9,6 @@
  * and dispatches CustomEvents for preset scripts to consume.
  */
 
-// WCFFreeAnimBuilder is already initialized by frontend.js (loaded as dependency)
-
 /**
  * Allowed editor origins that can communicate with this bridge.
  * In production only editor.motionkit.io is allowed.

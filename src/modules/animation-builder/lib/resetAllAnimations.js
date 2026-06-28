@@ -69,7 +69,6 @@ function runGlobalReset() {
     clearFreeAnimationNode(node);
     node.removeAttribute("data-wcf-anim-id");
   });
-  window.WCFFreeAnimBuilder?.killOnScrollObserver?.();
   // Preset-specific cleanups (e.g. customEngine) listen for this event and
   // run AFTER the global nuke. Using a DOM event instead of a shared callback
   // registry keeps this file editor-only — production bundles don't static-

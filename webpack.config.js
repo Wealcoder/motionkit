@@ -53,7 +53,6 @@ const mainConfig = {
         "./src/modules/animation-builder/editor-bridge.js",
       "modules/animation-builder/frontend/editor-reset":
         "./src/modules/animation-builder/frontend/editor-reset.js",
-      "modules/animation-builder/freeAnim": "./src/css/freeAnim.css",
       admin: "./src/css/admin.css",
       "admin-tools": "./src/css/admin-tools.css",
       ...getPresetEntries({
@@ -64,8 +63,6 @@ const mainConfig = {
       // Slim production build — DevTools registry stripped
       "modules/animation-builder/frontend/customAnimation":
         "./src/modules/animation-builder/frontend/animation-type/customAnimation.js",
-      "modules/animation-builder/frontend/freeAnimationEngine":
-        "./src/modules/animation-builder/frontend/animation-type/freeAnimationEngine.js",
     };
   },
   output: {
