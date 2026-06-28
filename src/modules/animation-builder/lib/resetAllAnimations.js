@@ -68,6 +68,7 @@ function runGlobalReset() {
   animatedNodes.forEach((node) => {
     clearFreeAnimationNode(node);
     node.removeAttribute("data-wcf-anim-id");
+    node.removeAttribute("data-wcf-mk-step-id");
   });
   // Preset-specific cleanups (e.g. customEngine) listen for this event and
   // run AFTER the global nuke. Using a DOM event instead of a shared callback

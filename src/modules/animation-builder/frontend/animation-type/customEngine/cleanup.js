@@ -5,7 +5,10 @@ import {
   clearActive,
 } from "./registry.js";
 import { clearSelectorCache } from "./scheduler.js";
-import { unregisterAnimation, clearAll as clearCustomRegistry } from "./customRegistry.js";
+import {
+  unregisterAnimation,
+  clearAll as clearCustomRegistry,
+} from "./customRegistry.js";
 
 // Tag so resetAllAnimations.js sweeps us on global reset.
 export function tagElement(el, id) {
