@@ -1,28 +1,21 @@
 #!/usr/bin/env node
 
-/**
- * Copies compiled animation scripts from the WP plugin build output
- * to the MotionKit editor server's static directory.
- *
- * Two entry points:
- *   - CLI:      `node scripts/copy-to-editor.js`       (runs after `npm run build`)
- *   - Webpack:  require('./scripts/copy-to-editor').copyToEditor({ quiet: true })
- *              (fired from webpack afterEmit hook during `npm run start`)
- */
+// Copies compiled animation scripts from the WP connector build output into the MotionKit editor server's static dir.
+// Source (connector) and destination (editor) roots are read from .env so the same script runs on Windows and Linux.
+// Two entry points: CLI `node scripts/copy-to-editor.js` (after `npm run build`) and the webpack afterEmit hook (during `npm run start`) via require('./scripts/copy-to-editor').copyToEditor({ quiet: true }).
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-// Load .env from the plugin root so MOTIONKIT_EDITOR_PATH (and any other keys)
-// are available via process.env without a dotenv dependency.
+// Load .env from the connector root so MOTIONKIT_* keys are available via process.env without a dotenv dependency.
 (function loadDotEnv() {
-  const envFile = path.resolve(__dirname, '../.env');
+  const envFile = path.resolve(__dirname, "../.env");
   if (!fs.existsSync(envFile)) return;
-  const lines = fs.readFileSync(envFile, 'utf8').split(/\r?\n/);
+  const lines = fs.readFileSync(envFile, "utf8").split(/\r?\n/);
   for (const raw of lines) {
     const line = raw.trim();
-    if (!line || line.startsWith('#')) continue;
-    const eq = line.indexOf('=');
+    if (!line || line.startsWith("#")) continue;
+    const eq = line.indexOf("=");
     if (eq === -1) continue;
     const key = line.slice(0, eq).trim();
     let val = line.slice(eq + 1).trim();
@@ -33,102 +26,87 @@ const path = require('path');
   }
 })();
 
-const SRC = path.resolve(__dirname, '../assets/build/modules/animation-builder');
-
-const DEST_CANDIDATES = [
-  '/home/wealcoder/Projects/motionkit-editor/server/static/animation-scripts',
-  path.resolve(__dirname, '../../motionkit-editor/server/static/animation-scripts'),
-  path.resolve('D:/motionkit AI development/motionkit-editor/server/static/animation-scripts'),
-  path.resolve(__dirname, '../../../../../../../../motionkit AI development/motionkit-editor/server/static/animation-scripts'),
-  path.resolve(__dirname, '../../../motionkit-editor/server/static/animation-scripts'),
-  process.env.MOTIONKIT_EDITOR_PATH && path.resolve(process.env.MOTIONKIT_EDITOR_PATH, 'server/static/animation-scripts'),
-].filter(Boolean);
-
-// FILES is a list of paths relative to SRC. Each entry is either:
-//   - a string  → src and dest paths are identical
-//   - [src, dest] → copy src to a different dest filename
-// The customAnimation editor variant is renamed at copy time so the
-// motionkit-editor inject-bridge can keep loading customAnimation.js.
-const FILES = [
-  'frontend.js',
-  'freeAnim.js',
-  ['frontend/customAnimation.editor.js', 'frontend/customAnimation.js'],
-  'frontend/editor-reset.js',
-  'frontend/freePresets/generalSpaceInLeftAnim.js',
-  'frontend/freePresets/generalSpaceInRightAnim.js',
-  'frontend/freePresets/generalSwapAnim.js',
-  'frontend/freePresets/generalTwisterInDownAnim.js',
-  'frontend/freePresets/imageSwashInAnim.js',
-  'frontend/freePresets/imageVanishInAnim.js',
-  'frontend/freePresets/textClipRevealAnim.js',
-  'frontend/freePresets/textClipSlideRightAnim.js',
-  'frontend/freePresets/textClipSlideUpAnim.js',
-  'frontend/presets/containerFadeAnim.js',
-  'frontend/presets/cubeScrollRevealAnim.js',
-  'frontend/presets/cursorHoverMoveAnim.js',
-  'frontend/presets/cursorHoverRevealAnim.js',
-  'frontend/presets/headerStickyAnim.js',
-  'frontend/presets/horizontalScrollAnim.js',
-  'frontend/presets/imageHoverRevealAnim.js',
-  'frontend/presets/imageRevealAnim.js',
-  'frontend/presets/imageScaleAnim.js',
-  'frontend/presets/imageStretchAnim.js',
-  'frontend/presets/popupMediaAnim.js',
-  'frontend/presets/scrollVideoFrame.js',
-  'frontend/presets/scrollParallax.js',
-  'frontend/presets/textInvertAnim.js',
-  'frontend/presets/textRotateAnim.js',
-  'frontend/presets/textScaleAnim.js',
-  'frontend/presets/textSpinAnim.js',
-  'frontend/presets/textSplitAnim.js',
+// COPY_ITEMS — what gets synced from the connector build to the editor. Each entry is one of:
+//   'rel/path'            → a file OR a folder at the same relative path on both sides (folders copy recursively)
+//   ['fromRel', 'toRel']  → copy/rename to a different relative path on the destination (also works for folders)
+// Paths are relative to SRC_DIR (source) and DEST_DIR (destination).
+const COPY_ITEMS = [
+  "frontend.js",
+  "frontend/editor-reset.js",
+  // The editor inject-bridge loads customAnimation.js, so the DevTools-enabled .editor build is renamed on copy.
+  ["frontend/customAnimation.editor.js", "frontend/customAnimation.js"],
+  // Whole preset folder — one entry covers every built preset, no per-file list to maintain.
+  "frontend/presets",
 ];
 
-function resolveDest() {
-  return DEST_CANDIDATES.find((d) => {
-    try { return fs.existsSync(path.dirname(d)); } catch { return false; }
-  });
+// Connector root holds the build output; defaults to this repo when MOTIONKIT_CONNECTOR_PATH is unset.
+const CONNECTOR_DIR = process.env.MOTIONKIT_CONNECTOR_PATH
+  ? path.resolve(process.env.MOTIONKIT_CONNECTOR_PATH)
+  : path.resolve(__dirname, "..");
+
+// Editor root is required — no sensible default. Set MOTIONKIT_EDITOR_PATH in .env (use your OS-native absolute path).
+const EDITOR_DIR = process.env.MOTIONKIT_EDITOR_PATH
+  ? path.resolve(process.env.MOTIONKIT_EDITOR_PATH)
+  : null;
+
+// Relative locations of the build output (under the connector) and the editor's static dir (under the editor root).
+const SRC_SUBDIR = path.join("assets", "build", "modules", "animation-builder");
+const DEST_SUBDIR = path.join("server", "static", "animation-scripts");
+
+const SRC_DIR = path.join(CONNECTOR_DIR, SRC_SUBDIR);
+const DEST_DIR = EDITOR_DIR ? path.join(EDITOR_DIR, DEST_SUBDIR) : null;
+
+// Recursively copy a file or directory; returns the number of files written so callers can report a real count.
+// Only JS bundles are synced — the editor serves static JS and never reads the WordPress .asset.php sidecars.
+function copyPath(src, dest) {
+  const stat = fs.statSync(src);
+  if (stat.isDirectory()) {
+    fs.mkdirSync(dest, { recursive: true });
+    let count = 0;
+    for (const name of fs.readdirSync(src)) {
+      count += copyPath(path.join(src, name), path.join(dest, name));
+    }
+    return count;
+  }
+  if (!src.endsWith(".js")) return 0;
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(src, dest);
+  return 1;
 }
 
 function copyToEditor({ quiet = false } = {}) {
-  const dest = resolveDest();
-  if (!dest) {
-    if (!quiet) {
-      console.warn('[copy-to-editor] Editor server path not found. Set MOTIONKIT_EDITOR_PATH env var.');
-      console.warn('[copy-to-editor] Tried:', DEST_CANDIDATES);
-    }
+  const fail = (msg) => {
+    if (!quiet) console.warn(`[copy-to-editor] ${msg}`);
     return { copied: 0, skipped: 0, dest: null };
-  }
+  };
+
+  if (!EDITOR_DIR) return fail("Set MOTIONKIT_EDITOR_PATH in .env to the motionkit-editor root.");
+  if (!fs.existsSync(EDITOR_DIR)) return fail(`Editor root not found: ${EDITOR_DIR}`);
+  if (!fs.existsSync(SRC_DIR)) return fail(`Build output not found (run \`npm run build\`): ${SRC_DIR}`);
 
   let copied = 0;
   let skipped = 0;
 
-  for (const entry of FILES) {
-    const [srcRel, destRel] = Array.isArray(entry) ? entry : [entry, entry];
-    const src = path.join(SRC, srcRel);
-    const out = path.join(dest, destRel);
+  for (const item of COPY_ITEMS) {
+    const [fromRel, toRel] = Array.isArray(item) ? item : [item, item];
+    const src = path.join(SRC_DIR, fromRel);
+    const out = path.join(DEST_DIR, toRel);
 
     if (!fs.existsSync(src)) {
       skipped++;
       continue;
     }
-
-    const outDir = path.dirname(out);
-    if (!fs.existsSync(outDir)) {
-      fs.mkdirSync(outDir, { recursive: true });
-    }
-
-    fs.copyFileSync(src, out);
-    copied++;
+    copied += copyPath(src, out);
   }
 
   if (!quiet) {
-    console.log(`[copy-to-editor] Copied ${copied} files, skipped ${skipped} (not found in build).`);
-    console.log(`[copy-to-editor] Destination: ${dest}`);
+    console.log(`[copy-to-editor] Copied ${copied} file${copied === 1 ? "" : "s"}, skipped ${skipped} (not found in build).`);
+    console.log(`[copy-to-editor] Destination: ${DEST_DIR}`);
   } else if (copied > 0) {
-    console.log(`[copy-to-editor] Synced ${copied} file${copied === 1 ? '' : 's'} → editor.`);
+    console.log(`[copy-to-editor] Synced ${copied} file${copied === 1 ? "" : "s"} → editor.`);
   }
 
-  return { copied, skipped, dest };
+  return { copied, skipped, dest: DEST_DIR };
 }
 
 module.exports = { copyToEditor };
