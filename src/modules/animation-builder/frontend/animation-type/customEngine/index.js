@@ -20,7 +20,7 @@ export function isCustomAnimation(anim) {
   return (
     anim != null &&
     typeof anim === "object" &&
-    anim.group === "custom_animation" &&
+    (anim.group === "custom_animation" || anim.group === "cloud_trigger") &&
     anim.timeline != null &&
     typeof anim.timeline === "object"
   );
@@ -95,12 +95,15 @@ function buildScrollAnim(anim) {
         // intentionally drives every matched element together.
         if (!nonDefault(cfg.trigger)) {
           querySelectorAllCached(step.itemClass).forEach((el) => {
-            const scrollCfg = withScrollLogger(buildScrollTriggerConfig(cfg, el), {
-              timelineId: null,
-              timelineData: null,
-              animationId: anim.id,
-              animationData: anim,
-            });
+            const scrollCfg = withScrollLogger(
+              buildScrollTriggerConfig(cfg, el),
+              {
+                timelineId: null,
+                timelineData: null,
+                animationId: anim.id,
+                animationData: anim,
+              },
+            );
             buildStepTweens(
               { ...step, itemClass: el },
               { scrollTrigger: scrollCfg },

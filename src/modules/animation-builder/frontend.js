@@ -77,8 +77,10 @@
         if (!a || typeof a !== "object") return a;
 
         // Custom animation branch — flatten the single timeline + its inner animations.
+        // cloud_trigger shares the same timeline-of-steps shape as custom_animation,
+        // so it needs the same per-step device flatten (see customEngine isCustomAnimation).
         if (
-          a.group === "custom_animation" &&
+          (a.group === "custom_animation" || a.group === "cloud_trigger") &&
           a.timeline &&
           typeof a.timeline === "object"
         ) {
