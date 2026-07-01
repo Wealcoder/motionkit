@@ -86,6 +86,7 @@ const ENDPOINT_TO_ACTION = {
   "current-page-animation": "save_current_page_animation",
   "page-transition-exported-code": "save_page_transition_code",
   "animation-folders": "save_page_transition_code",
+  "favourite-cloud-animation": "save_favourite_cloud_animation",
 };
 
 /**
@@ -178,6 +179,8 @@ function buildResponsePayload(overrides = {}) {
       overrides.currentPageSettings ?? wcfanimb.currentPageSettings,
     globalAnimation: overrides.globalAnimation ?? wcfanimb.global_animation,
     pageAnimation: overrides.pageAnimation ?? wcfanimb.page_animation,
+    favouriteCloudAnimation:
+      overrides.favouriteCloudAnimation ?? wcfanimb.favourite_cloud_animation,
     deviceConfig: wcfanimb.device_config,
     base_domain: wcfanimb.base_domain,
     rest_url: wcfanimb.rest_url,
@@ -322,6 +325,23 @@ function receivePageConfig() {
               parentOrigin,
             );
           });
+      }
+
+      // Persist the user's favourited cloud-animation ids. A dedicated message
+      // (not part of motionkit-settings) so it stays a lightweight background
+      // write with no save-toast on the editor side.
+      if (event.data?.type === "motionkit-favourite-cloud-animation") {
+        const favourite = event.data.data?.favourite || [];
+        const saveId = event.data.saveId || null;
+        saveViaRest(
+          "favourite-cloud-animation",
+          { favourite },
+          headers,
+          () => {
+            wcfanimb.favourite_cloud_animation = favourite;
+          },
+          saveId,
+        );
       }
 
       if (event.data?.type === "motionkit-page-transition-code") {

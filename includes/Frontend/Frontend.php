@@ -610,6 +610,9 @@ final class Frontend
 
     $mk_token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
 
+    // Favourited cloud-animation ids — hydrated into the editor's cloud slice on load.
+    $favourite_cloud_animation = get_option('motionkit_favourite_cloud_animation', []);
+
     // Shared localized data for both frontend runner and editor bridge
     $localized_data = [
       'currentPageSettings'  => $page_configs ? $page_configs : json_decode('{}'),
@@ -623,6 +626,7 @@ final class Frontend
       'global_settings'   => $global_settings,
       'global_animation'  => is_array($global_animation) ? $global_animation : [],
       'page_animation'    => is_array($page_animation) ? $page_animation : [],
+      'favourite_cloud_animation' => is_array($favourite_cloud_animation) ? $favourite_cloud_animation : [],
       'platform'          => 'wordpress',
       'mk_token'          => $mk_token,
       'all_animations'    => $merged_animation,

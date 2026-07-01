@@ -324,6 +324,7 @@ final class RestApi
       'save_current_page_settings',
       'save_current_page_animation',
       'save_page_transition_code',
+      'save_favourite_cloud_animation',
       'delete_global_settings',
       'delete_current_page_settings',
       'get_settings',
@@ -388,6 +389,24 @@ final class RestApi
         ], false);
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_transition_saved']], 200);
 
+      case 'save_favourite_cloud_animation':
+        // Persist the user's favourited cloud-animation ids. Sanitize each
+        // entry to an int (cloud-row ids) and drop anything non-scalar so a
+        // malformed payload can't poison the option.
+        $favourite = [];
+        if (isset($payload['favourite']) && is_array($payload['favourite'])) {
+          foreach ($payload['favourite'] as $fav_id) {
+            if (is_numeric($fav_id)) {
+              $favourite[] = (int) $fav_id;
+            } elseif (is_string($fav_id) && $fav_id !== '') {
+              $favourite[] = sanitize_text_field($fav_id);
+            }
+          }
+          $favourite = array_values(array_unique($favourite));
+        }
+        update_option('motionkit_favourite_cloud_animation', $favourite);
+        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'favourite_cloud_animation_saved']], 200);
+
       case 'delete_global_settings':
         delete_option('motionkit_global_settings');
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_settings_deleted']], 200);
@@ -405,6 +424,7 @@ final class RestApi
           'data'    => [
             'globalSettings'  => get_option('motionkit_global_settings', []),
             'globalAnimation' => get_option('motionkit_global_animations', []),
+            'favouriteCloudAnimation' => get_option('motionkit_favourite_cloud_animation', []),
           ],
         ], 200);
     }
