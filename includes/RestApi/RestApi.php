@@ -19,10 +19,14 @@ if (!defined('ABSPATH')) {
 
 use WcfAnimationBuilder\Common\AnimationBuilderPageType;
 use WcfAnimationBuilder\Auth\JwtTokenManager;
-use WcfAnimationBuilder\Auth\OAuthHandler;
+use WcfAnimationBuilder\Support\EditorSessionTrait;
 
 final class RestApi
 {
+  // Shared editor-connector helpers: verify_server_session(),
+  // editor_allowed_origins(), settings_config().
+  use EditorSessionTrait;
+
   /**
    * REST namespace
    */
@@ -98,16 +102,6 @@ final class RestApi
   // ─── Permission ─────────────────────────────────────────────────
 
   /**
-   * Check if user has permission to access endpoints.
-   *
-   * Two auth paths:
-   * 1. WordPress nonce (X-WP-Nonce header) — logged-in user with manage_options
-   * 2. JWT bearer token (Authorization header) — editor session token
-   *
-   * @param \WP_REST_Request $request
-   * @return bool|\WP_Error
-   */
-  /**
    * Permission callback that also accepts ?token=<jwt> in the query string,
    * used by /pages so the editor can GET as a CORS simple request (no
    * Authorization header → no preflight).
@@ -126,6 +120,16 @@ final class RestApi
     return $this->check_permission($request);
   }
 
+  /**
+   * Check if user has permission to access endpoints.
+   *
+   * Two auth paths:
+   * 1. WordPress nonce (X-WP-Nonce header) — logged-in user with manage_options
+   * 2. JWT bearer token (Authorization header) — editor session token
+   *
+   * @param \WP_REST_Request $request
+   * @return bool|\WP_Error
+   */
   public function check_permission(?\WP_REST_Request $request = null)
   {
     // Public endpoints — authenticated only by JWT bearer token minted
@@ -172,42 +176,6 @@ final class RestApi
     );
   }
 
-  /**
-   * Verify a server-generated editor session token via the SaaS API.
-   * Cached in a transient for 5 minutes to avoid repeated HTTP calls.
-   *
-   * @param string $token The JWT string
-   * @return bool
-   */
-  private function verify_server_session(string $token): bool
-  {
-    $cache_key = 'mk_session_' . substr(md5($token), 0, 16);
-    $cached = get_transient($cache_key);
-
-    if ($cached !== false) {
-      return $cached === 'valid';
-    }
-
-    $verify_url = OAuthHandler::get_verify_session_url();
-
-    $response = wp_remote_post($verify_url, [
-      'timeout' => 10,
-      'headers' => ['Content-Type' => 'application/json'],
-      'body'    => wp_json_encode(['token' => $token]),
-    ]);
-
-    if (is_wp_error($response)) {
-      return false;
-    }
-
-    $body = json_decode(wp_remote_retrieve_body($response), true);
-    $valid = isset($body['valid']) && $body['valid'] === true;
-
-    set_transient($cache_key, $valid ? 'valid' : 'invalid', 300);
-
-    return $valid;
-  }
-
   // ─── CORS ──────────────────────────────────────────────────────
 
   /**
@@ -231,14 +199,7 @@ final class RestApi
 
     $origin = isset($_SERVER['HTTP_ORIGIN']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_ORIGIN'])) : '';
 
-    $allowed_origins = apply_filters('motionkit/editor/allowed_origins', [
-      'https://editor.motionkit.io',
-      'http://localhost:5173',
-      'http://127.0.0.1:5173',
-      'http://localhost:5174',
-      'http://127.0.0.1:5174',
-      'http://localhost:3000',
-    ]);
+    $allowed_origins = $this->editor_allowed_origins();
 
     if (!empty($origin) && in_array($origin, $allowed_origins, true)) {
       header('Access-Control-Allow-Origin: ' . $origin);
@@ -273,26 +234,6 @@ final class RestApi
       ),
       ['status' => 400]
     );
-  } 
-  /**
-   * Derive the page-settings config from the page-animation config by
-   * swapping the option key prefix. Animations use mkit_pg_animation_*,
-   * settings use mkit_pg_settings_* — same store_type and id.
-   *
-   * @param array $animation_config
-   * @return array
-   */
-  private function settings_config(array $animation_config): array
-  {
-    $cfg = $animation_config;
-    if (!empty($cfg['option']) && is_string($cfg['option'])) {
-      $cfg['option'] = preg_replace(
-        '/^mkit_pg_animation_/',
-        'mkit_pg_settings_',
-        $cfg['option']
-      );
-    }
-    return $cfg;
   }
 
   /**
@@ -365,7 +306,7 @@ final class RestApi
 
       case 'save_global_animation':
         update_option('motionkit_global_animations', $payload['animationConfigs'] ?? []);
-         update_option('motionkit_page_settings_updated_at', time(), true);
+        update_option('motionkit_page_settings_updated_at', time(), true);
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_animation_saved']], 200);
 
       case 'save_current_page_animation':
@@ -398,7 +339,6 @@ final class RestApi
         $code         = isset($payload['code']) && is_string($payload['code']) ? $payload['code'] : '';
         $preset_key   = isset($payload['presetKey']) ? sanitize_text_field((string) $payload['presetKey']) : '';
         $preset_label = isset($payload['presetLabel']) ? sanitize_text_field((string) $payload['presetLabel']) : '';
-                
 
         if ($code === '') {
           delete_option('motionkit-page-transition-code');

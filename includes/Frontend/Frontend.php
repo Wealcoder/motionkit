@@ -19,6 +19,7 @@ use WcfAnimationBuilder\Common\AnimationBuilderPageType;
 use WcfAnimationBuilder\Auth\JwtTokenManager;
 use WcfAnimationBuilder\Auth\OAuthHandler;
 use WcfAnimationBuilder\Factory\ComponentFactory;
+use WcfAnimationBuilder\Support\EditorSessionTrait;
 
 /**
  * Frontend Class
@@ -28,6 +29,10 @@ use WcfAnimationBuilder\Factory\ComponentFactory;
  */
 final class Frontend
 {
+  // Shared editor-connector helpers: verify_server_session(),
+  // editor_allowed_origins(), settings_config().
+  use EditorSessionTrait;
+
   /**
    * Asset loader instance
    *
@@ -319,47 +324,6 @@ final class Frontend
   }
 
   /**
-   * Verify a server-generated editor session token via the SaaS API.
-   *
-   * Calls POST /connect/verify-session to check JWT signature,
-   * expiry, and revocation status. Results are cached in a transient
-   * for 5 minutes to avoid repeated HTTP calls on iframe reloads.
-   *
-   * @param string $token The JWT string
-   * @return bool True if the session is valid
-   */
-  private function verify_server_session(string $token): bool
-  {
-    // Cache key based on token hash (avoid storing raw JWT in transient key)
-    $cache_key = 'mk_session_' . substr(md5($token), 0, 16);
-    $cached = get_transient($cache_key);
-
-    if ($cached !== false) {
-      return $cached === 'valid';
-    }
-
-    $verify_url = OAuthHandler::get_verify_session_url();
-
-    $response = wp_remote_post($verify_url, [
-      'timeout' => 10,
-      'headers' => ['Content-Type' => 'application/json'],
-      'body'    => wp_json_encode(['token' => $token]),
-    ]);
-
-    if (is_wp_error($response)) {
-      return false;
-    }
-
-    $body = json_decode(wp_remote_retrieve_body($response), true);
-    $valid = isset($body['valid']) && $body['valid'] === true;
-
-    // Cache result for 5 minutes
-    set_transient($cache_key, $valid ? 'valid' : 'invalid', 300);
-
-    return $valid;
-  }
-
-  /**
    * Remove X-Frame-Options for editor preview so the SaaS iframe can embed the page.
    *
    * @return void
@@ -371,15 +335,7 @@ final class Frontend
       return;
     }
 
-    $allowed_origins = apply_filters('motionkit/editor/allowed_origins', [
-      'https://editor.motionkit.io',
-      'http://localhost:5173',
-      'http://127.0.0.1:5173',
-      'http://localhost:5174',
-      'http://127.0.0.1:5174',
-      'http://localhost:3000',
-      '*'
-    ]);
+    $allowed_origins = $this->editor_allowed_origins(true);
 
     header_remove('X-Frame-Options');
     header('Content-Security-Policy: frame-ancestors ' . implode(' ', $allowed_origins));
@@ -533,7 +489,7 @@ final class Frontend
   /**
    * Editor preview mode — load all CSS/JS for the SaaS editor iframe
    *
-   * Enqueues frontend.js, all active free presets, and localizes with
+   * Enqueues frontend.js, all active presets, and localizes with
    * ajaxurl + nonce + pageTypeConfigs so the editor can save/delete via AJAX.
    *
    * @return void
@@ -566,14 +522,7 @@ final class Frontend
     $page_type_config = $this->page_type->getCurrentPageType();
 
     // Page settings live under mkit_pg_settings_<type> (separate key from animations).
-    $settings_config = $page_type_config;
-    if (!empty($settings_config['option']) && is_string($settings_config['option'])) {
-      $settings_config['option'] = preg_replace(
-        '/^mkit_pg_animation_/',
-        'mkit_pg_settings_',
-        $settings_config['option']
-      );
-    }
+    $settings_config = $this->settings_config($page_type_config);
     $page_configs = $this->page_type->getConfig($settings_config);
 
     // Global settings + global animations (wp_options).
@@ -684,11 +633,6 @@ final class Frontend
       return;
     }
 
-    // Conditionally enqueue free preset scripts
-    if (isset($active_presets['free']) && !empty($active_presets['free'])) {
-      $this->enqueue_free_presets($active_presets['free']);
-    }
-
     if (isset($active_presets['premium']) && !empty($active_presets['premium'])) {
       $this->enqueue_presets($active_presets['premium'], $deps);
     }
@@ -710,15 +654,7 @@ final class Frontend
     );
 
     // Page settings live under mkit_pg_settings_<type> — separate from animations.
-    $settings_config = $page_type_config;
-
-    if (!empty($settings_config['option']) && is_string($settings_config['option'])) {
-      $settings_config['option'] = preg_replace(
-        '/^mkit_pg_animation_/',
-        'mkit_pg_settings_',
-        $settings_config['option']
-      );
-    }
+    $settings_config = $this->settings_config($page_type_config);
 
     $page_settings = $this->page_type->getConfig($settings_config);
     // Scan the merged animation tree only inside a 3-hour window after the
@@ -844,49 +780,6 @@ final class Frontend
   }
 
   /**
-   * Enqueue active free preset scripts and CSS
-   *
-   * @param array $active_presets Active preset handles from page config
-   * @return void
-   */
-  private function enqueue_free_presets(array $active_presets): void
-  {
-    $config_path = MOTIONKIT_PLUGIN_DIR . 'includes/Common/configs/animation-builder-assets.php';
-
-    if (!file_exists($config_path)) {
-      return;
-    }
-
-    $config = include $config_path;
-
-    if (!is_array($config) || empty($config['freePresets'])) {
-      return;
-    }
-
-    // Enqueue each active free preset script
-
-    if ($active_presets && is_array($active_presets)) {
-
-      foreach ($active_presets as $key) {
-
-        if (!isset($config['freePresets'][$key])) {
-          continue;
-        }
-
-        $element = $config['freePresets'][$key];
-
-        wp_enqueue_script(
-          $key,
-          $element['src'],
-          $element['deps'] ?? [],
-          $element['version'],
-          true
-        );
-      }
-    }
-  }
-
-  /**
    * Enqueue active premium preset scripts
    *
    * @param array $active_presets Active preset handles from page config
@@ -958,17 +851,6 @@ final class Frontend
 
   // ─── Preset Resolution ───────────────────────────────────────────
 
-  /**
-   * Recursively find active preset handles from page animation config
-   *
-   * Walks the nested config structure to find all enabled preset entries.
-   * Sets $is_custom and $is_free flags by reference.
-   *
-   * @param array $data     Page animation config
-   * @param bool  &$is_custom Set to true if custom animations found
-   * @param bool  &$is_free   Set to true if free animations found
-   * @return array Unique array of active preset handles
-   */
   /**
    * Detect GSAP plugins referenced inside an animation payload.
    *
@@ -1042,23 +924,31 @@ final class Frontend
     return $found;
   }
 
+  /**
+   * Recursively find active preset handles from page animation config
+   *
+   * Walks the nested config structure to find all enabled preset entries.
+   * Sets $is_custom by reference when a custom or cloud animation is found.
+   *
+   * @param array $data      Page animation config
+   * @param bool  &$is_custom Set to true if custom/cloud animations found
+   * @return array Unique array of active preset handles
+   */
   private function get_active_presets(array $data, bool &$is_custom): array
   {
     $premium_preset = [];
-    $free_preset = [];
 
-    $iterator = function (array $array) use (&$iterator, &$is_custom, &$premium_preset, &$free_preset): void {
+    $iterator = function (array $array) use (&$iterator, &$is_custom, &$premium_preset): void {
       foreach ($array as $value) {
         if (!is_array($value)) {
           continue;
         }
         // Check for enabled animation entries
         if (isset($value['group'], $value['isPublished']) && (int) $value['isPublished'] === 1) {
-          if ($value['group'] === 'premium_preset_animation' && isset($value['presetKey'])) {
+          if ($value['group'] === 'most_popular' && isset($value['presetKey'])) {
             $premium_preset[] = $value['presetKey'];
-          } elseif ($value['group'] === 'free_preset_animation' && isset($value['presetKey'])) {
-            $free_preset[] = $value['presetKey'];
-          } elseif ($value['group'] === 'custom_animation') {
+          } elseif ($value['group'] === 'custom_animation' || $value['group'] === 'cloud_trigger') {
+            // customEngine runs both custom and cloud animations
             $is_custom = true;
           }
         }
@@ -1070,7 +960,7 @@ final class Frontend
 
     $iterator($data);
 
-    return ['premium' => array_unique($premium_preset), 'free' => array_unique($free_preset)];
+    return ['premium' => array_unique($premium_preset)];
   }
 
   // ─── AJAX Handlers ───────────────────────────────────────────────
