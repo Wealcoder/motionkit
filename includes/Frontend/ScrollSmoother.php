@@ -168,6 +168,15 @@ final class ScrollSmoother
         } else {
           window.motionkitRebootSmoother();
         }
+
+        // The device bucket is resolved from the live viewport (matchMedia), so resizing across a breakpoint or rotating a device must re-resolve and boot/kill the smoother. Without this, a visitor who loads at desktop width (or with desktop disabled) and then narrows to tablet/mobile keeps the desktop resolution and the other buckets never take effect. Debounced so a resize drag doesn't thrash create/kill.
+        var _mkSmootherResizeTimer;
+        function _mkRebootSmootherDebounced() {
+          clearTimeout(_mkSmootherResizeTimer);
+          _mkSmootherResizeTimer = setTimeout(window.motionkitRebootSmoother, 200);
+        }
+        window.addEventListener('resize', _mkRebootSmootherDebounced);
+        window.addEventListener('orientationchange', _mkRebootSmootherDebounced);
       })();
     </script>
     <?php
