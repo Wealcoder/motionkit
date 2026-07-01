@@ -178,19 +178,6 @@
   window.addEventListener("message", function (event) {
     if (!parentOrigin) parentOrigin = event.origin;
 
-    // TODO: make single function for both motion kit editor and connector
-    // if (event.data?.type === "mk-st-reset") {
-    //   const Smoother = window?.ScrollSmoother;
-    //   if (!Smoother) return;
-    //   try {
-    //     const existing = Smoother.get();
-    //     if (existing) existing.kill();
-    //     window.ScrollTrigger?.refresh();
-    //   } catch {
-    //     /* already torn down */
-    //   }
-    // }
-
     if (event.data?.type === "wcf-animation-config") {
       var payload = event.data.data || {};
       var all_animations = payload.all_animations || [];
@@ -199,7 +186,20 @@
         all_animations: all_animations,
         all_settings: all_settings,
       });
-      resolveAndDispatch(all_animations, all_settings);
+      // Route through the rAF-coalesced flush instead of dispatching directly.
+      // flushPendingConfig fires `aae-reset-animation` before rebuilding, which
+      // tears down animations that no longer exist in this config. Dispatching
+      // directly skipped that reset, so an animation deleted or renamed between
+      // configs was never re-received by the custom engine and its gsap context,
+      // ScrollTriggers, and interaction listeners leaked for the session.
+      pendingConfig = {
+        all_animations: all_animations,
+        all_settings: all_settings,
+      };
+      if (!rebuildScheduled) {
+        rebuildScheduled = true;
+        requestAnimationFrame(flushPendingConfig);
+      }
     }
 
     // Reset animations
