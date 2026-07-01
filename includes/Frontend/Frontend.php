@@ -613,6 +613,16 @@ final class Frontend
     // Favourited cloud-animation ids — hydrated into the editor's cloud slice on load.
     $favourite_cloud_animation = get_option('motionkit_favourite_cloud_animation', []);
 
+    // Animation folder definitions — hydrated into the editor's animation slice on load.
+    // Falls back to the legacy nested location (global_settings.animationFolders) so
+    // folders saved before the split still show up until the next folder save relocates them.
+    $animation_folders = get_option('motionkit_animation_folders', null);
+    if (!is_array($animation_folders)) {
+      $animation_folders = (is_array($global_settings) && isset($global_settings['animationFolders']) && is_array($global_settings['animationFolders']))
+        ? $global_settings['animationFolders']
+        : [];
+    }
+
     // Shared localized data for both frontend runner and editor bridge
     $localized_data = [
       'currentPageSettings'  => $page_configs ? $page_configs : json_decode('{}'),
@@ -627,6 +637,7 @@ final class Frontend
       'global_animation'  => is_array($global_animation) ? $global_animation : [],
       'page_animation'    => is_array($page_animation) ? $page_animation : [],
       'favourite_cloud_animation' => is_array($favourite_cloud_animation) ? $favourite_cloud_animation : [],
+      'animation_folders' => $animation_folders,
       'platform'          => 'wordpress',
       'mk_token'          => $mk_token,
       'all_animations'    => $merged_animation,

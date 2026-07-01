@@ -295,6 +295,29 @@ final class RestApi
     return $cfg;
   }
 
+  /**
+   * Read the animation folder definitions.
+   *
+   * Prefers the dedicated motionkit_animation_folders option. Falls back to the
+   * legacy location (animationFolders nested inside motionkit_global_settings)
+   * for sites saved before folders were split out, so existing folders survive
+   * the migration until the next folder save relocates them.
+   *
+   * @return array
+   */
+  private function get_animation_folders(): array
+  {
+    $folders = get_option('motionkit_animation_folders', null);
+    if (is_array($folders)) {
+      return $folders;
+    }
+    $global = get_option('motionkit_global_settings', []);
+    if (is_array($global) && isset($global['animationFolders']) && is_array($global['animationFolders'])) {
+      return $global['animationFolders'];
+    }
+    return [];
+  }
+
   public function dispatch_simple(\WP_REST_Request $request): \WP_REST_Response
   {
     $raw  = $request->get_body();
@@ -325,6 +348,7 @@ final class RestApi
       'save_current_page_animation',
       'save_page_transition_code',
       'save_favourite_cloud_animation',
+      'save_animation_folders',
       'delete_global_settings',
       'delete_current_page_settings',
       'get_settings',
@@ -407,6 +431,26 @@ final class RestApi
         update_option('motionkit_favourite_cloud_animation', $favourite);
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'favourite_cloud_animation_saved']], 200);
 
+      case 'save_animation_folders':
+        // Persist the animation folder definitions. Each folder is
+        // { folderId, title, pageType }; sanitize each field and drop
+        // malformed entries so a bad payload can't poison the option.
+        $folders = [];
+        if (isset($payload['animationFolders']) && is_array($payload['animationFolders'])) {
+          foreach ($payload['animationFolders'] as $folder) {
+            if (!is_array($folder)) continue;
+            $folder_id = isset($folder['folderId']) ? sanitize_text_field((string) $folder['folderId']) : '';
+            if ($folder_id === '') continue;
+            $folders[] = [
+              'folderId' => $folder_id,
+              'title'    => isset($folder['title']) ? sanitize_text_field((string) $folder['title']) : '',
+              'pageType' => isset($folder['pageType']) ? sanitize_text_field((string) $folder['pageType']) : '',
+            ];
+          }
+        }
+        update_option('motionkit_animation_folders', $folders);
+        return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'animation_folders_saved']], 200);
+
       case 'delete_global_settings':
         delete_option('motionkit_global_settings');
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_settings_deleted']], 200);
@@ -425,6 +469,7 @@ final class RestApi
             'globalSettings'  => get_option('motionkit_global_settings', []),
             'globalAnimation' => get_option('motionkit_global_animations', []),
             'favouriteCloudAnimation' => get_option('motionkit_favourite_cloud_animation', []),
+            'animationFolders' => $this->get_animation_folders(),
           ],
         ], 200);
     }

@@ -85,7 +85,7 @@ const ENDPOINT_TO_ACTION = {
   "current-page-settings": "save_current_page_settings",
   "current-page-animation": "save_current_page_animation",
   "page-transition-exported-code": "save_page_transition_code",
-  "animation-folders": "save_page_transition_code",
+  "animation-folders": "save_animation_folders",
   "favourite-cloud-animation": "save_favourite_cloud_animation",
 };
 
@@ -181,6 +181,8 @@ function buildResponsePayload(overrides = {}) {
     pageAnimation: overrides.pageAnimation ?? wcfanimb.page_animation,
     favouriteCloudAnimation:
       overrides.favouriteCloudAnimation ?? wcfanimb.favourite_cloud_animation,
+    animationFolders:
+      overrides.animationFolders ?? wcfanimb.animation_folders,
     deviceConfig: wcfanimb.device_config,
     base_domain: wcfanimb.base_domain,
     rest_url: wcfanimb.rest_url,
@@ -339,6 +341,23 @@ function receivePageConfig() {
           headers,
           () => {
             wcfanimb.favourite_cloud_animation = favourite;
+          },
+          saveId,
+        );
+      }
+
+      // Persist the animation folder definitions. A dedicated message (not part
+      // of motionkit-settings) so folders no longer ride inside the global
+      // settings blob.
+      if (event.data?.type === "motionkit-animation-folders") {
+        const animationFolders = event.data.data?.animationFolders || [];
+        const saveId = event.data.saveId || null;
+        saveViaRest(
+          "animation-folders",
+          { animationFolders },
+          headers,
+          () => {
+            wcfanimb.animation_folders = animationFolders;
           },
           saveId,
         );
