@@ -9,6 +9,7 @@ import {
   unregisterAnimation,
   clearAll as clearCustomRegistry,
 } from "./customRegistry.js";
+import { revertSplitsFor, clearSplitCache } from "./extensions/splitText.js";
 
 // Tag so resetAllAnimations.js sweeps us on global reset.
 export function tagElement(el, id) {
@@ -36,12 +37,16 @@ export function teardown(id) {
   const handle = getActive(id);
   if (!handle) return;
   runCleanups(handle);
+  // After the gsap context revert so tween inline styles are cleared first,
+  // then unwrap SplitText spans back to the original text node.
+  revertSplitsFor(id);
   deleteActive(id);
   unregisterAnimation(id);
 }
 
 export function teardownAll() {
   allActiveIds().forEach((id) => runCleanups(getActive(id)));
+  clearSplitCache();
   clearActive();
   clearCustomRegistry();
   clearSelectorCache();
@@ -61,6 +66,7 @@ document.addEventListener("motionkit:reset-done", () => {
       }
     });
   });
+  clearSplitCache();
   clearActive();
   clearCustomRegistry();
   clearSelectorCache();

@@ -1,16 +1,33 @@
 import { registerMethod } from "../registry.js";
 
-// One SplitText per unique selector + config signature — splitting the same
-// DOM twice creates duplicate spans.
-const splitCache = new Map();
+// SplitText instances tracked per animation id, then deduped by selector +
+// config signature within that animation — splitting the same DOM twice
+// creates duplicate spans. Keying by animation id lets teardown(id) revert
+// only that animation's splits, so a deleted animation restores its original
+// text nodes instead of leaving the DOM stuck as split characters.
+const splitsByAnim = new Map();
 
-function getSplit(selector, splitConfig) {
-  const key = `${selector}::${JSON.stringify(splitConfig)}`;
-  if (splitCache.has(key)) return splitCache.get(key);
+// Splits built before a timeline stamped its animation id (defensive) share
+// one bucket so a global clear can still revert them.
+const NO_ANIM = "__no_anim__";
+
+function sigKey(selector, splitConfig) {
+  return `${selector}::${JSON.stringify(splitConfig)}`;
+}
+
+function getSplit(animId, selector, splitConfig) {
+  const key = animId || NO_ANIM;
+  let bucket = splitsByAnim.get(key);
+  if (!bucket) {
+    bucket = new Map();
+    splitsByAnim.set(key, bucket);
+  }
+  const sig = sigKey(selector, splitConfig);
+  if (bucket.has(sig)) return bucket.get(sig);
   if (typeof SplitText === "undefined") return null;
   try {
     const s = SplitText.create(selector, splitConfig);
-    splitCache.set(key, s);
+    bucket.set(sig, s);
     return s;
   } catch (e) {
     console.warn("[customEngine] SplitText failed for", selector, e);
@@ -18,15 +35,32 @@ function getSplit(selector, splitConfig) {
   }
 }
 
-export function clearSplitCache() {
-  splitCache.forEach((s) => {
+function revertBucket(bucket) {
+  bucket.forEach((s) => {
     try {
       s.revert();
     } catch (e) {
       /* noop */
     }
   });
-  splitCache.clear();
+  bucket.clear();
+}
+
+// Restore the original DOM for one animation — unwraps the char/word/line
+// spans SplitText injected. Called by cleanup.teardown AFTER the gsap context
+// revert, so the tween's inline styles are cleared before the spans are
+// removed. Without this a deleted animation is left as split characters.
+export function revertSplitsFor(animId) {
+  const key = animId || NO_ANIM;
+  const bucket = splitsByAnim.get(key);
+  if (!bucket) return;
+  revertBucket(bucket);
+  splitsByAnim.delete(key);
+}
+
+export function clearSplitCache() {
+  splitsByAnim.forEach(revertBucket);
+  splitsByAnim.clear();
 }
 
 // Most granular wins: chars > words > lines.
@@ -52,8 +86,9 @@ export function registerSplitTextMethod() {
   registerMethod("splitText", (tl, step, vars, overlap) => {
     if (!step.itemClass || !vars) return;
 
+    const animId = tl?.vars?.data?.animationId || null;
     const splitConfig = vars.splitText || {};
-    const split = getSplit(step.itemClass, splitConfig);
+    const split = getSplit(animId, step.itemClass, splitConfig);
 
     if (!split) return;
 
