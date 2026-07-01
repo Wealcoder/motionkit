@@ -197,31 +197,51 @@ final class Frontend
 
     ];
 
-    // Per-handle URL map lives in motionkit_global_settings.gsapPlugin.cdns
-    // (edited from the editor's GSAP Plugin tab). Stored values may arrive as
-    // an associative array or stdClass depending on how the option was saved
-    // — normalize to an associative array.
+    // gsapPlugin lives in motionkit_global_settings (edited from the editor's
+    // GSAP Plugin tab). It holds per-plugin enable toggles (scrollTo, morphSVG,
+    // …) alongside a `cdns` URL map. Stored values may arrive as an associative
+    // array or stdClass depending on how the option was saved — normalize to an
+    // associative array.
     $global = $this->get_global_settings();
-    if (!isset($global['gsapPlugin']['cdns']) && !(is_object($global) && isset($global->gsapPlugin))) {
-      return [];
-    }
-    $cdns   = [];
+    $gsap_plugin = null;
     if (is_object($global) && isset($global->gsapPlugin)) {
       $gsap_plugin = $global->gsapPlugin;
-      if (is_object($gsap_plugin) && isset($gsap_plugin->cdns)) {
-        $cdns = (array) $gsap_plugin->cdns;
-      } elseif (is_array($gsap_plugin) && isset($gsap_plugin['cdns'])) {
-        $cdns = (array) $gsap_plugin['cdns'];
-      }
-    } elseif (is_array($global) && isset($global['gsapPlugin']['cdns'])) {
-      $cdns = (array) $global['gsapPlugin']['cdns'];
+    } elseif (is_array($global) && isset($global['gsapPlugin'])) {
+      $gsap_plugin = $global['gsapPlugin'];
     }
+    if ($gsap_plugin === null) {
+      return [];
+    }
+    $gsap_plugin = (array) $gsap_plugin;
+    $cdns = isset($gsap_plugin['cdns']) ? (array) $gsap_plugin['cdns'] : [];
+    if (empty($cdns)) {
+      return [];
+    }
+
+    // gsap core + ScrollTrigger + ScrollSmoother are the always-on baseline
+    // runtime and register regardless of toggles. Every other handle is an
+    // optional GSAP plugin gated by its boolean flag in gsapPlugin — register
+    // it only when the admin explicitly enabled it in the editor.
+    $always = [
+      'gsap'           => true,
+      'scrollTrigger'  => true,
+      'scrollSmoother' => true,
+    ];
 
     // gsap core loads in <head> for the page-transition inline snippet. It keeps an
     // empty deps array so presets and the snippet can list it as a dep without
     // causing circular conflicts. All other libs (ScrollTrigger, ScrollSmoother, etc.)
     // load in the footer — the page-transition snippet only needs window.gsap.
     foreach ($libs as $handle => $lib) {
+      // Optional plugin → skip unless its gsapPlugin toggle is enabled.
+      // filter_var handles both real booleans and "true"/"1" string forms.
+      if (!isset($always[$handle])) {
+        $enabled = isset($gsap_plugin[$handle]) && filter_var($gsap_plugin[$handle], FILTER_VALIDATE_BOOLEAN);
+        if (!$enabled) {
+          continue;
+        }
+      }
+
       $url = isset($cdns[$handle]) && is_string($cdns[$handle]) ? trim($cdns[$handle]) : '';
 
       // No URL configured → skip. Admin must set it from the editor's
