@@ -69,6 +69,7 @@ const OPTIONAL_PROPS = [
   ["invalidateOnRefresh", parseBool],
   ["refreshPriority", parseNumber],
   ["autoRefreshEvents", parseString],
+  ["markers", parseBool],
 ];
 
 // Build a GSAP-ready ScrollTrigger config object from the editor's per-device
