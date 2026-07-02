@@ -85,6 +85,30 @@ final class Frontend
   private $global_animations_cache = false;
 
   /**
+   * GSAP handles that actually registered this request.
+   *
+   * Populated by register_gsap_libs() — a handle lands here only when its
+   * gsapPlugin toggle is on AND it has a valid CDN URL (the always-on gsap /
+   * scrollTrigger / scrollSmoother baseline is included too). enqueue_page_scripts()
+   * reads this so it never declares a script dependency on an unregistered
+   * handle (which triggers WP_Scripts' "unregistered dependency" notice).
+   *
+   * @var array<string,bool>
+   */
+  private array $registered_gsap_handles = [];
+
+  /**
+   * Optional GSAP plugin handles requested by config but NOT registered —
+   * toggle disabled, or missing/invalid CDN URL.
+   *
+   * Used to (a) skip animations that need a plugin the admin turned off and
+   * (b) skip premium presets that depend on one, so the rest still run.
+   *
+   * @var array<string,bool>
+   */
+  private array $unavailable_gsap_handles = [];
+
+  /**
    * Read + validate the page-transition snippet, memoized per request.
    *
    * @return array|null Validated stored payload, or null when no usable
@@ -185,6 +209,10 @@ final class Frontend
    */
   public function register_gsap_libs(array $deps): array
   {
+    // Reset per-request state — the filter can run more than once per request.
+    $this->registered_gsap_handles = [];
+    $this->unavailable_gsap_handles = [];
+
     // Handle list + dependency graph. URLs come from the DB (per wp.org
     // guidelines, the plugin doesn't ship hardcoded CDN URLs); this array
     // only defines which handles exist and how they depend on each other.
@@ -238,11 +266,17 @@ final class Frontend
     // causing circular conflicts. All other libs (ScrollTrigger, ScrollSmoother, etc.)
     // load in the footer — the page-transition snippet only needs window.gsap.
     foreach ($libs as $handle => $lib) {
+      $is_optional = !isset($always[$handle]);
+
       // Optional plugin → skip unless its gsapPlugin toggle is enabled.
       // filter_var handles both real booleans and "true"/"1" string forms.
-      if (!isset($always[$handle])) {
+      if ($is_optional) {
         $enabled = isset($gsap_plugin[$handle]) && filter_var($gsap_plugin[$handle], FILTER_VALIDATE_BOOLEAN);
         if (!$enabled) {
+          // Admin turned this plugin off — record it so the enqueue pass drops
+          // animations/presets that need it instead of depending on a handle
+          // that will never register.
+          $this->unavailable_gsap_handles[$handle] = true;
           continue;
         }
       }
@@ -252,10 +286,16 @@ final class Frontend
       // No URL configured → skip. Admin must set it from the editor's
       // GSAP Plugin → "GSAP Library URLs" section.
       if ($url === '') {
+        if ($is_optional) {
+          $this->unavailable_gsap_handles[$handle] = true;
+        }
         continue;
       }
 
       if (wp_http_validate_url($url) === false) {
+        if ($is_optional) {
+          $this->unavailable_gsap_handles[$handle] = true;
+        }
         continue;
       }
 
@@ -263,6 +303,7 @@ final class Frontend
       // null to wp_register_script to avoid double-stamping ?ver=.
       if ($handle === 'gsap') {
         wp_register_script($handle, $url, [], null, false);
+        $this->registered_gsap_handles[$handle] = true;
 
         // Force gsap into <head> only when a page-transition snippet is
         // stored — that snippet runs from wp_head priority 99 and assumes
@@ -277,6 +318,7 @@ final class Frontend
         continue;
       }
       wp_register_script($handle, $url, $lib['deps'], null, true);
+      $this->registered_gsap_handles[$handle] = true;
     }
 
     $core_deps = ['gsap', 'scrollSmoother'];
@@ -657,14 +699,18 @@ final class Frontend
     $settings_config = $this->settings_config($page_type_config);
 
     $page_settings = $this->page_type->getConfig($settings_config);
-    // Scan the merged animation tree only inside a 3-hour window after the
-    // last page-settings save. Outside that window we trust the persisted
-    // `activePlugins` and skip the walk to keep the frontend cheap. The
-    // option is written by RestApi::dispatch_simple on every save.
+    // Scan the merged animation tree for the GSAP plugins it references. We
+    // do this inside a 3-hour window after the last page-settings save (to
+    // wire enabled plugin scripts into the deps) OR whenever an optional
+    // plugin is disabled (so we can drop the animations that need it). The
+    // timestamp option is written by RestApi::dispatch_simple on every save.
     $settings_updated_at = get_option('motionkit_page_settings_updated_at', false);
 
     // 3 hours in seconds — inline literal to avoid analyzer noise on HOUR_IN_SECONDS.
-    if ($settings_updated_at !== false && (time() - (int) $settings_updated_at) <= 10800) {
+    $within_window = ($settings_updated_at !== false && (time() - (int) $settings_updated_at) <= 10800);
+
+    $animation_plugins = [];
+    if ($within_window || !empty($this->unavailable_gsap_handles)) {
       // Cache the scan result keyed by the save timestamp — any save bumps
       // the timestamp, which auto-invalidates this entry without manual flush.
       // Free per-request; with an external object cache (Redis/Memcached) it
@@ -706,9 +752,24 @@ final class Frontend
         $animation_plugins = $has_any ? $this->get_active_plugins($merged_animation) : [];
         wp_cache_set($cache_key, $animation_plugins, 'motionkit', 3600);
       }
+    }
 
-      if (!empty($animation_plugins)) {
-        $deps = array_merge($deps, array_keys($animation_plugins));
+    if (!empty($animation_plugins)) {
+      // Only depend on plugin handles that register_gsap_libs actually
+      // registered. A plugin the admin disabled (or left without a valid CDN
+      // URL) has no handle — listing it here makes WP_Scripts warn about an
+      // "unregistered dependency" and skip loading motionkit-frontend.
+      $usable = array_intersect_key($animation_plugins, $this->registered_gsap_handles);
+      if (!empty($usable)) {
+        $deps = array_merge($deps, array_keys($usable));
+      }
+
+      // Any referenced plugin with no registered handle is unavailable — drop
+      // the animations that need it so the rest of the page still animates
+      // instead of the whole gsap.matchMedia batch throwing on a missing lib.
+      $missing = array_diff_key($animation_plugins, $this->registered_gsap_handles);
+      if (!empty($missing)) {
+        $merged_animation = $this->reject_animations_needing_plugins($merged_animation, $missing);
       }
     }
 
@@ -809,11 +870,23 @@ final class Frontend
       }
 
       $element = $config['premiumPresets'][$key];
+      $element_deps = $element['deps'] ?? $deps;
+
+      // Skip a preset whose GSAP plugin dependency is unavailable (toggle off
+      // or no CDN URL). Enqueuing it would declare an unregistered dependency,
+      // and the preset can't run without its plugin anyway.
+      if (
+        !empty($this->unavailable_gsap_handles)
+        && is_array($element_deps)
+        && array_intersect_key(array_flip($element_deps), $this->unavailable_gsap_handles)
+      ) {
+        continue;
+      }
 
       wp_enqueue_script(
         $key,
         $element['src'],
-        $element['deps'] ?? $deps,
+        $element_deps,
         $element['version'] ?? MOTIONKIT_VERSION,
         true
       );
@@ -925,6 +998,30 @@ final class Frontend
   }
 
   /**
+   * Drop top-level animations that reference any unavailable GSAP plugin.
+   *
+   * Used when a plugin an animation needs isn't available (toggle off or no
+   * CDN URL). Removing the whole animation entry keeps its missing-lib error
+   * from tearing down the rest of the gsap.matchMedia batch — every animation
+   * that doesn't touch an unavailable plugin still runs.
+   *
+   * @param array $animations Merged animation list (global + page).
+   * @param array $missing    Map of unavailable plugin keys (key => true).
+   * @return array Re-indexed list with offending animations removed.
+   */
+  private function reject_animations_needing_plugins(array $animations, array $missing): array
+  {
+    $kept = [];
+    foreach ($animations as $anim) {
+      if (is_array($anim) && !empty(array_intersect_key($this->get_active_plugins($anim), $missing))) {
+        continue;
+      }
+      $kept[] = $anim;
+    }
+    return $kept;
+  }
+
+  /**
    * Recursively find active preset handles from page animation config
    *
    * Walks the nested config structure to find all enabled preset entries.
@@ -945,7 +1042,7 @@ final class Frontend
         }
         // Check for enabled animation entries
         if (isset($value['group'], $value['isPublished']) && (int) $value['isPublished'] === 1) {
-          if ($value['group'] === 'most_popular' && isset($value['presetKey'])) {
+          if ($value['group'] === 'most_popular_animation' && isset($value['presetKey'])) {
             $premium_preset[] = $value['presetKey'];
           } elseif ($value['group'] === 'custom_animation' || $value['group'] === 'cloud_trigger') {
             // customEngine runs both custom and cloud animations
