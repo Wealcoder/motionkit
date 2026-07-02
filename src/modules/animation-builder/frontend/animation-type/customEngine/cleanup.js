@@ -13,7 +13,12 @@ import { revertSplitsFor, clearSplitCache } from "./extensions/splitText.js";
 
 // Tag so resetAllAnimations.js sweeps us on global reset.
 export function tagElement(el, id) {
-  if (el && el.setAttribute) el.setAttribute("data-wcf-anim-id", id);
+  if (!el || !el.setAttribute) return;
+  // Snapshot the author's inline styles once, before any tween writes to
+  // them. The global reset restores this — clearProps:"all" alone wipes the
+  // ENTIRE style attribute, including user-authored position/size/background.
+  if (el.__wcfOrigCss === undefined) el.__wcfOrigCss = el.style.cssText;
+  el.setAttribute("data-wcf-anim-id", id);
 }
 
 function runCleanups(handle) {

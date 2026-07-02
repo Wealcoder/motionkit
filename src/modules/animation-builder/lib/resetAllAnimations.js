@@ -59,7 +59,18 @@ function killGsap(nodes) {
   });
 
   if (gsap?.set && nodes.length) {
+    // clearProps:"all" wipes the element's ENTIRE inline style attribute —
+    // author-set styles (position/size/background) included, not just props
+    // GSAP wrote. It still has to run so GSAP's per-element transform cache
+    // (el._gsap) is flushed; afterwards restore the inline styles snapshotted
+    // at first tag time (customEngine cleanup.js::tagElement). Preset-tagged
+    // elements have no snapshot and keep the clear-only behavior.
     gsap.set(nodes, { clearProps: "all" });
+    nodes.forEach((node) => {
+      if (typeof node.__wcfOrigCss === "string") {
+        node.style.cssText = node.__wcfOrigCss;
+      }
+    });
   }
 }
 function runGlobalReset() {
