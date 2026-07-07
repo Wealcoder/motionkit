@@ -72,9 +72,31 @@ function resolveTargetKey(type) {
   return "chars";
 }
 
-// Editor emits vars as:
+// SplitText runs as a PROPERTY now: it rides inside a from/to bucket as
 //   { ...gsapVars, splitText: { type, mask, autoSplit, charsClass, ... } }
-// inner `splitText` → SplitText.create config; everything else → tl.from vars.
+// inner `splitText` → SplitText.create config; everything else → tween vars.
+// The bucket method (from/to) decides the tween direction on the split pieces.
+// Legacy saved animations use `method: "splitText"` and route here as "from".
+export function applySplitText(tl, step, vars, overlap, method = "from") {
+  if (!step.itemClass || !vars) return;
+  if (typeof SplitText === "undefined") return;
+
+  const animId = tl?.vars?.data?.animationId || null;
+  const splitConfig = vars.splitText || {};
+  const split = getSplit(animId, step.itemClass, splitConfig);
+
+  if (!split) return;
+
+  const targets = split[resolveTargetKey(splitConfig.type)];
+  if (!targets?.length) return;
+
+  const tweenVars = { ...vars };
+  delete tweenVars.splitText;
+
+  const fn = method === "to" ? "to" : "from";
+  tl[fn](targets, tweenVars, overlap);
+}
+
 export function registerSplitTextMethod() {
   if (typeof SplitText === "undefined") return false;
   try {
@@ -83,23 +105,12 @@ export function registerSplitTextMethod() {
     /* noop */
   }
 
-  registerMethod("splitText", (tl, step, vars, overlap) => {
-    if (!step.itemClass || !vars) return;
-
-    const animId = tl?.vars?.data?.animationId || null;
-    const splitConfig = vars.splitText || {};
-    const split = getSplit(animId, step.itemClass, splitConfig);
-
-    if (!split) return;
-
-    const targets = split[resolveTargetKey(splitConfig.type)];
-    if (!targets?.length) return;
-
-    const tweenVars = { ...vars };
-    delete tweenVars.splitText;
-
-    tl.from(targets, tweenVars, overlap);
-  });
+  // Legacy: keep the standalone method for animations saved before splitText
+  // became a property. New animations reach applySplitText via the standard
+  // from/to handler.
+  registerMethod("splitText", (tl, step, vars, overlap) =>
+    applySplitText(tl, step, vars, overlap, "from"),
+  );
 
   return true;
 }
