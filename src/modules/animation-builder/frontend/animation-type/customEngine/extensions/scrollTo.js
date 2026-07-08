@@ -1,14 +1,10 @@
-import { registerMethod } from "../registry.js";
-
 // ScrollToPlugin is loaded by the asset loader via the active-plugins broadcast;
 // we just need to hand it to gsap so `scrollTo` vars resolve at tween time.
 //
-// Editor emits vars as:
-//   { scrollTo: { y, x, offsetY, offsetX, autoKill }, duration, delay, ... }
-// where the inner `scrollTo` is ScrollToPlugin's config and the rest are
-// regular tween options. Window is always the target — ScrollToPlugin scrolls
-// the tween's target, and we want to scroll the page itself.
-
+// scrollTo has no standalone step method — the editor emits it as a PROPERTY on
+// a from/to bucket ({ scrollTo: { y, x, offsetY, offsetX, autoKill }, duration,
+// ... }) which standard.js targets at `window`. So there's nothing to register
+// beyond the plugin itself (mirrors drawSVG).
 export function registerScrollToMethod() {
   if (typeof ScrollToPlugin === "undefined") return false;
   try {
@@ -16,16 +12,6 @@ export function registerScrollToMethod() {
   } catch (e) {
     /* noop */
   }
-
-  registerMethod("scrollTo", (tl, _step, vars, overlap) => {
-    if (!vars) return;
-    const { offsetX = 0, offsetY = 0, autoKill = false, ...rest } = vars;
-    const updatedVars = {
-      scrollTo: { offsetX, offsetY, autoKill, y: _step.itemClass },
-      rest,
-    };
-    tl.to(window, updatedVars, overlap);
-  });
 
   return true;
 }

@@ -12,9 +12,10 @@ import { applyStep } from "./step.js";
 // has no meaning without a timeline, so the sink ignores its trailing arg.
 //
 // flip and call don't map cleanly onto a single scroll-driven tween: flip's
-// Flip.from tween is collected via add() but never receives extraVars, and
-// call becomes a zero-delay delayedCall. Both still play for page_load /
-// click / hover, but a ScrollTrigger passed to them is intentionally dropped.
+// Flip.from tween is collected via add() and call becomes a zero-delay
+// delayedCall. extraVars can't be merged into an already-built child, but
+// `paused` is applied post-hoc in add() so click/hover children stay paused
+// until the event drives them; a ScrollTrigger passed to them is still dropped.
 function createTweenSink(extraVars, dataCtx) {
   const withExtra = (vars) =>
     extraVars ? { ...(vars || {}), ...extraVars } : vars;
@@ -50,6 +51,10 @@ function createTweenSink(extraVars, dataCtx) {
       return t;
     },
     add(child) {
+      // Children (e.g. flip's Flip.from) are built already, so extraVars can't
+      // be merged in — but honor `paused` so they don't auto-play at load in
+      // click/hover / editor-preview mode. ScrollTrigger stays intentionally dropped.
+      if (extraVars?.paused) child?.paused?.(true);
       tweens.push(child);
       return child;
     },
