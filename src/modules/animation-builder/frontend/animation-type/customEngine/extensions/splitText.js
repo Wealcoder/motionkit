@@ -82,7 +82,11 @@ export function applySplitText(tl, step, vars, overlap, method = "from") {
   if (typeof SplitText === "undefined") return;
 
   const animId = tl?.vars?.data?.animationId || null;
-  const splitConfig = vars.splitText || {};
+  // `mask` is a UI placeholder select — "none" means no mask, but
+  // SplitText.create only accepts "lines"/"words"/"chars"; strip it so masking
+  // is truly disabled instead of passing an unrecognized value.
+  const splitConfig = { ...(vars.splitText || {}) };
+  if (splitConfig.mask === "none") delete splitConfig.mask;
   const split = getSplit(animId, step.itemClass, splitConfig);
 
   if (!split) return;
