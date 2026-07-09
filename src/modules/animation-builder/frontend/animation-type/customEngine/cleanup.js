@@ -10,6 +10,8 @@ import {
   clearAll as clearCustomRegistry,
 } from "./customRegistry.js";
 import { revertSplitsFor, clearSplitCache } from "./extensions/splitText.js";
+import { releaseAnim, clearOwnership } from "./ownership.js";
+import { forgetAnim, clearAnims } from "./helper/inspector.js";
 
 // Tag so resetAllAnimations.js sweeps us on global reset.
 export function tagElement(el, id) {
@@ -47,6 +49,8 @@ export function teardown(id) {
   revertSplitsFor(id);
   deleteActive(id);
   unregisterAnimation(id);
+  releaseAnim(id);
+  forgetAnim(id);
 }
 
 export function teardownAll() {
@@ -55,6 +59,8 @@ export function teardownAll() {
   clearActive();
   clearCustomRegistry();
   clearSelectorCache();
+  clearOwnership();
+  clearAnims();
 }
 
 // resetAllAnimations.js (editor-only bundle) fires `motionkit:reset-done`
@@ -75,4 +81,6 @@ document.addEventListener("motionkit:reset-done", () => {
   clearActive();
   clearCustomRegistry();
   clearSelectorCache();
+  clearOwnership();
+  clearAnims();
 });

@@ -11,8 +11,10 @@ import { registerTimeline, isEditorPreviewMode } from "../customRegistry.js";
 import { isTimelineEnabledFor } from "../helper/guards.js";
 import {
   collectInteractionTargets,
+  collectAnimatedElements,
   timelineHasScrollTo,
 } from "../helper/interactionTargets.js";
+import { claimTargets, setAnims } from "../ownership.js";
 
 // Adapt a flip step to the play/reverse/restart interface the interaction
 // listeners expect. Each call runs a FRESH capture → toggle → Flip.from via
@@ -39,12 +41,7 @@ export function buildInteractionAnim(anim, eventType) {
   // the listeners below drive them identically via play/reverse/restart.
   const tlCfg = anim.timeline;
 
-  // Flip can't be baked into a paused tween and replayed: each event needs a
-  // fresh getState → mutate → Flip.from against the CURRENT layout, or the
-  // class toggles at load, never reverses, and never re-diffs. On the public
-  // site we pull flip steps out of the built timeline and drive them live per
-  // event (makeLiveFlip). Editor preview keeps the build-time path so DevTools
-  // can own playback.
+  // Flip can't be baked into a paused tween and replayed: each event needs a fresh getState → mutate → Flip.from against the CURRENT layout, or the class toggles at load, never reverses, and never re-diffs. On the public site we pull flip steps out of the built timeline and drive them live per event (makeLiveFlip). Editor preview keeps the build-time path so DevTools can own playback.
   const liveFlipSteps =
     editorMode || !tlCfg
       ? []
@@ -67,8 +64,7 @@ export function buildInteractionAnim(anim, eventType) {
     if (!buildCfg) return;
     // paused override — event drives playback regardless of tlCfg.vars.paused
     if (timelineEnabled) {
-      // Skip building an empty timeline when every step was pulled out for
-      // live flip — otherwise buildTimeline yields an inert 0-child timeline.
+      // Skip building an empty timeline when every step was pulled out for live flip — otherwise buildTimeline yields an inert 0-child timeline.
       const hasSteps = (buildCfg.animations || []).length > 0;
       const tl = hasSteps
         ? buildTimeline(
@@ -125,12 +121,18 @@ export function buildInteractionAnim(anim, eventType) {
     return { contexts: [ctx], listeners: [] };
   }
 
+  // Element-exclusive playback: a single animated element (e.g. one heading) can be the target of several click/hover anims. Register this anim's built animations so that when another anim later claims the same element it can pause+rewind these, and collect the animated targets the listeners reset.
+  setAnims(anim.id, anims);
+  const animatedEls = collectAnimatedElements(anim);
+
   const preventAnchorNav = timelineHasScrollTo(anim);
   const listeners = attachInteractionListeners(
     triggers,
     eventType,
     anims,
     preventAnchorNav,
+    animatedEls,
+    anim.id,
   );
 
   return { contexts: [ctx], listeners };
@@ -139,23 +141,41 @@ export function buildInteractionAnim(anim, eventType) {
 // Wire click / hover DOM listeners to drive a set of paused GSAP animations.
 // Returns teardown thunks. Works for both timelines and raw tweens since both
 // expose restart()/play()/reverse().
+//
+// Before playing, claimTargets resets any of animatedEls currently owned by a
+// DIFFERENT animation back to the author's original styles (element-exclusive,
+// last-trigger-wins). It returns true when it actually displaced another owner
+// — only then do we invalidate() so from/fromTo tweens re-read the clean origin
+// instead of a value cached against the previous animation's leftover styles.
 function attachInteractionListeners(
   triggers,
   eventType,
   anims,
   preventAnchorNav,
+  animatedEls,
+  animId,
 ) {
   const listeners = [];
   triggers.forEach((el) => {
     if (eventType === "click") {
       const onClick = (ev) => {
         if (preventAnchorNav && el.tagName === "A") ev.preventDefault();
-        anims.forEach((t) => t.restart());
+        const switched = claimTargets(animatedEls, animId);
+        anims.forEach((t) => {
+          if (switched) t.invalidate?.();
+          t.restart();
+        });
       };
       el.addEventListener("click", onClick);
       listeners.push(() => el.removeEventListener("click", onClick));
     } else if (eventType === "hover") {
-      const onEnter = () => anims.forEach((t) => t.play());
+      const onEnter = () => {
+        const switched = claimTargets(animatedEls, animId);
+        anims.forEach((t) => {
+          if (switched) t.invalidate?.();
+          t.play();
+        });
+      };
       const onLeave = () => anims.forEach((t) => t.reverse());
       el.addEventListener("mouseenter", onEnter);
       el.addEventListener("mouseleave", onLeave);

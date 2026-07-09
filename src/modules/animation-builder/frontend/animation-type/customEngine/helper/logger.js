@@ -1,24 +1,62 @@
 import { isEditorPreviewMode } from "../customRegistry.js";
 
-// Live "Current Running" logger for custom-engine animations. Fires each time an animation actually begins running — a timeline/tween onStart, or a ScrollTrigger entering its active range — so the console reflects what is animating live rather than merely what got built. Logs the editor-side identity (timeline + animation) plus the resolved ScrollTrigger data so a running animation can be traced straight back to its config.
+/* global __MKIT_DEV_LOG__ */
 
-// Gate logging so it never spams a public customer site console: default to editor-preview-only, but `window.__mkitRunLog = true` force-enables it anywhere for debugging and `= false` silences it.
+// Build-time flag from webpack DefinePlugin, driven by the MOTIONKIT_DEV_LOG env var (see .env / .env.example). When true, the customEngine run/completion logs fire on ANY site — not just editor preview — so a dev build surfaces the full animation lifecycle in the browser console. The typeof guard keeps the module safe if the define is absent (e.g. running the source unbundled).
+const DEV_LOG =
+  typeof __MKIT_DEV_LOG__ !== "undefined" && __MKIT_DEV_LOG__ === true;
+
+// Live "MOTIONKIT GSAP ENGINE" logger for custom-engine animations. Fires each time an animation actually begins running — a timeline/tween onStart, or a ScrollTrigger entering its active range — so the console reflects what is animating live rather than merely what got built. Logs the editor-side identity (timeline + animation) plus the resolved ScrollTrigger data so a running animation can be traced straight back to its config.
+
+// Gate logging so it never spams a public customer site console: default to dev-build (MOTIONKIT_DEV_LOG) or editor-preview only, but `window.__mkitRunLog = true` force-enables it anywhere for debugging and `= false` silences it.
 function loggingEnabled() {
   if (typeof window !== "undefined" && window.__mkitRunLog != null) {
     return !!window.__mkitRunLog;
   }
-  return isEditorPreviewMode();
+  return DEV_LOG || isEditorPreviewMode();
+}
+
+// Gated general-purpose console log for customEngine internals (e.g. step-apply tracing). Routes ad-hoc debugging through the same env/editor gate so it never reaches a production console.
+export function debugLog(label, payload) {
+  if (!loggingEnabled()) return;
+  console.log(label, payload);
 }
 
 function emit(info) {
   if (!loggingEnabled()) return;
-  console.log("Current Running:", {
+  console.log("MOTIONKIT GSAP ENGINE =>", {
     "timeline id": info.timelineId ?? null,
     "timeline data": info.timelineData ?? null,
     "animation id": info.animationId ?? null,
     "animation data": info.animationData ?? null,
     "scroll trigger data": info.scrollTriggerData ?? null,
   });
+}
+
+// Per-tween completion log — companion to the onStart run log above. Fires when a tween finishes so the console shows the full lifecycle (start → complete) of each step's animation. `info` is the step's stamped `data` object, so it carries the same anim/timeline/step identity used everywhere else.
+function emitComplete(info) {
+  if (!loggingEnabled()) return;
+  console.log("MOTIONKIT GSAP ENGINE (COMPLETE) =>", {
+    "animation id": info?.animationId ?? null,
+    "animation title": info?.animationTitle ?? null,
+    "timeline id": info?.timelineId ?? null,
+    "step id": info?.stepId ?? null,
+    "step title": info?.stepTitle ?? null,
+    method: info?.method ?? null,
+  });
+}
+
+// Chain an onComplete logger onto a step's tween vars BEFORE the handler builds the tween, so every step's tween logs when it finishes. Any onComplete the editor config already set runs first, then ours. Returns vars UNCHANGED when logging is off, so production stamped vars stay callback-free (zero overhead). For fromTo the caller passes vars.to, since GSAP builds the tween from the `to` bucket.
+export function withCompletion(vars, info) {
+  if (!loggingEnabled() || !vars || typeof vars !== "object") return vars;
+  const prev = typeof vars.onComplete === "function" ? vars.onComplete : null;
+  return {
+    ...vars,
+    onComplete(...args) {
+      if (prev) prev.apply(this, args);
+      emitComplete(info);
+    },
+  };
 }
 
 // Chain an onStart logger onto a built GSAP timeline/tween without clobbering an existing onStart — the editor's own callback (if any) still runs, then ours. Used for page_load / click / hover where there is no ScrollTrigger, so scrollTriggerData is null.

@@ -2,6 +2,7 @@ import { getMethod } from "../registry.js";
 import { isStepActive } from "../select/filter.js";
 import { normalizeStepVars } from "../select/merge.js";
 import { extractOverlap } from "../select/overlap.js";
+import { withCompletion, debugLog } from "../helper/logger.js";
 
 // Stamp identity + inspection metadata onto vars BEFORE the handler builds
 // the tween. GSAP keeps vars.id and vars.data on the resulting tween object,
@@ -18,7 +19,7 @@ import { extractOverlap } from "../select/overlap.js";
 // copy of vars (and vars.to for fromTo).
 function buildStampedVars(tl, step, vars) {
   const data = {
-    ...(tl.vars?.data || {}),       // inherits animationId, timelineId, etc.
+    ...(tl.vars?.data || {}), // inherits animationId, timelineId, etc.
     stepId: step?.id || null,
     stepTitle: step?.title || null,
     itemClass: step?.itemClass || null,
@@ -29,19 +30,11 @@ function buildStampedVars(tl, step, vars) {
   if (step?.method === "fromTo" && vars?.to && typeof vars.to === "object") {
     return {
       ...vars,
-      to: {
-        ...vars.to,
-        id: step?.id,
-        data,
-      },
+      to: withCompletion({ ...vars.to, id: step?.id, data }, data),
     };
   }
 
-  return {
-    ...vars,
-    id: step?.id,
-    data,
-  };
+  return withCompletion({ ...vars, id: step?.id, data }, data);
 }
 
 export function applyStep(tl, step) {
@@ -56,6 +49,6 @@ export function applyStep(tl, step) {
   if (rawVars == null && step.method !== "call") return;
   const { vars, overlap } = extractOverlap(step, rawVars);
   const stamped = buildStampedVars(tl, step, vars);
-  
+
   handler(tl, step, stamped, overlap);
 }

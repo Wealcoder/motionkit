@@ -5,6 +5,33 @@ const glob = require("glob");
 const path = require("path");
 const webpack = require("webpack");
 
+// Load .env so MOTIONKIT_* build flags are available via process.env (mirrors
+// scripts/copy-to-editor.js; no dotenv dependency). Existing env wins.
+(function loadDotEnv() {
+  const fs = require("fs");
+  const envFile = path.resolve(__dirname, ".env");
+  if (!fs.existsSync(envFile)) return;
+  for (const raw of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    const eq = line.indexOf("=");
+    if (eq === -1) continue;
+    const key = line.slice(0, eq).trim();
+    let val = line.slice(eq + 1).trim();
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
+      val = val.slice(1, -1);
+    }
+    if (!(key in process.env)) process.env[key] = val;
+  }
+})();
+
+// Verbose customEngine console logging (per-tween start + completion, step-apply
+// tracing). Off unless MOTIONKIT_DEV_LOG=true so production bundles stay silent.
+const DEV_LOG = process.env.MOTIONKIT_DEV_LOG === "true";
+
 // helper to build entries from a folder
 function getPresetEntries({ folder, outPrefix }) {
   const files = glob.sync(`${folder}/*.js`);
@@ -74,6 +101,7 @@ const mainConfig = {
     ...defaultConfig.plugins,
     new webpack.DefinePlugin({
       __MKIT_DEVTOOLS__: JSON.stringify(false),
+      __MKIT_DEV_LOG__: JSON.stringify(DEV_LOG),
     }),
   ],
   resolve: sharedResolve,
@@ -101,6 +129,7 @@ const editorConfig = {
   plugins: [
     new webpack.DefinePlugin({
       __MKIT_DEVTOOLS__: JSON.stringify(true),
+      __MKIT_DEV_LOG__: JSON.stringify(DEV_LOG),
     }),
     {
       apply(compiler) {

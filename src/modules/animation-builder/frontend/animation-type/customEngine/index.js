@@ -3,6 +3,7 @@ import { setActive, getActive } from "./registry.js";
 import { teardown } from "./cleanup.js";
 import { isCustomAnimation } from "./helper/guards.js";
 import { tagAllTargets } from "./helper/tagTargets.js";
+import { rememberAnim } from "./helper/inspector.js";
 import { buildHandle } from "./handlers/index.js";
 
 // Public entry point for the custom engine. isCustomAnimation is re-exported
@@ -16,6 +17,7 @@ export function handleCustomAnimation(anim) {
   // Live-update safety — editor re-dispatches on every edit.
   if (getActive(anim.id)) teardown(anim.id);
 
+  rememberAnim(anim);
   tagAllTargets(anim);
 
   const handle = buildHandle(anim);
