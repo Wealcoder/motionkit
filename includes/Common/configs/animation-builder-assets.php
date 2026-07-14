@@ -92,6 +92,16 @@ return [
       'deps' => ['gsap', 'scrollTrigger','splitText'],
       'version' => MOTIONKIT_VERSION,
     ],
+    'wcf-mk-text-origami-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textOrigamiAnim.js',
+      'deps' => ['gsap', 'scrollTrigger','splitText'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-text-wave-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textWaveAnim.js',
+      'deps' => ['gsap', 'scrollTrigger','splitText'],
+      'version' => MOTIONKIT_VERSION,
+    ],
     'wcf-mk-text-rotate-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textRotateAnim.js',
       'deps' => ['gsap', 'scrollTrigger', 'splitText'],

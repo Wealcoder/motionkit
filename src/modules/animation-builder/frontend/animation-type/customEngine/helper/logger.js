@@ -38,7 +38,7 @@ function emit(info) {
 function emitComplete(info) {
   if (!loggingEnabled()) return;
   console.log("MOTIONKIT GSAP ENGINE (COMPLETE) =>", {
-    "Animation Title": info.animationData.title ?? null,
+    "Animation Title": info?.animationData?.title ?? null,
     "animation id": info?.animationId ?? null,
     "animation title": info?.animationTitle ?? null,
     "timeline id": info?.timelineId ?? null,
