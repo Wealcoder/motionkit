@@ -25,7 +25,7 @@ export function debugLog(label, payload) {
 function emit(info) {
   if (!loggingEnabled()) return;
   console.log("MOTIONKIT GSAP ENGINE =>", {
-    "Animation Title": info.animationData.title ?? null,
+    "Animation Title": info?.animationData?.title ?? null,
     "timeline id": info.timelineId ?? null,
     "timeline data": info.timelineData ?? null,
     "animation id": info.animationId ?? null,
