@@ -49,6 +49,5 @@ export function applyStep(tl, step) {
   if (rawVars == null && step.method !== "call") return;
   const { vars, overlap } = extractOverlap(step, rawVars);
   const stamped = buildStampedVars(tl, step, vars);
-
   handler(tl, step, stamped, overlap);
 }
