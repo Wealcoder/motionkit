@@ -27,6 +27,11 @@ return [
       'deps' => ['gsap', 'scrollTrigger'],
       'version' => MOTIONKIT_VERSION,
     ],
+    'wcf-mk-cursor-tilt-pa' => [
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cursorHoverTiltAnim.js',
+      'deps' => ['gsap', 'scrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
 
     // ############## IMAGE ############## //
     'wcf-mk-image-hr-pa' => [
