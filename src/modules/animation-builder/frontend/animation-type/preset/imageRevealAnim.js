@@ -1,7 +1,7 @@
 const PRESET_KEY = "wcf-mk-image-rev-pa";
 
 export function imageRevealAnim() {
-  // id -> { timelines: GSAPTimeline[] }
+  // id -> { timelines: GSAPTimeline[], elements: {containerEl, itemEl}[] }
   const instances = new Map();
 
   function teardown(id) {
@@ -15,6 +15,22 @@ export function imageRevealAnim() {
         tl.kill();
       } catch (err) {
         console.warn("[imageReveal] timeline teardown error:", err);
+      }
+    });
+    // The initial autoAlpha/overflow/objectFit are set via a bare gsap.set()
+    // outside the timeline (see below), so tl.revert() can't restore them —
+    // it just reverts to that already-hidden pre-tween snapshot, leaving the
+    // container/item stuck at opacity:0/visibility:hidden. Clear them here.
+    inst.elements.forEach(({ containerEl, itemEl }) => {
+      try {
+        gsap.set(containerEl, {
+          clearProps: "opacity,visibility,overflow,transition",
+        });
+        gsap.set(itemEl, {
+          clearProps: "opacity,visibility,overflow,objectFit",
+        });
+      } catch (err) {
+        console.warn("[imageReveal] element cleanup error:", err);
       }
     });
     instances.delete(id);
@@ -66,6 +82,7 @@ export function imageRevealAnim() {
     teardown(id);
 
     const timelines = [];
+    const elements = [];
 
     items.forEach((itemEl) => {
       const containerEl = itemEl.parentElement;
@@ -143,9 +160,10 @@ export function imageRevealAnim() {
       tl.from(itemEl, imageAnim, 0);
 
       timelines.push(tl);
+      elements.push({ containerEl, itemEl });
     });
 
-    instances.set(id, { timelines });
+    instances.set(id, { timelines, elements });
   }
 
   document.addEventListener("aae-animation-event", handler);
