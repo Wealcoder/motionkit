@@ -101,9 +101,9 @@ export function cursorHoverTiltAnim() {
     if (!items.length) return;
 
     const { id, vars = {} } = anim;
-    const maxTilt = toNumber(vars.maxTilt, 15);
-    const perspective = toNumber(vars.perspective, 800);
-    const duration = toNumber(vars.duration, 0.6);
+    const maxTilt = toNumber(vars.maxTilt, 5);
+    const perspective = toNumber(vars.perspective, 1200);
+    const duration = toNumber(vars.duration, 0.8);
 
     // Nothing to do if there's no tilt to apply.
     if (maxTilt === 0) return;

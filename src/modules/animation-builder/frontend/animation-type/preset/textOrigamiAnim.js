@@ -91,7 +91,10 @@ export function textOrigamiAnim() {
 
     let splitInstance;
     try {
-      splitInstance = new SplitText(itemClass, { type: "chars" });
+      splitInstance = new SplitText(itemClass, {
+        type: "chars",
+        smartWrap: true,
+      });
     } catch (err) {
       console.error("[textOrigami] SplitText failed:", err);
       return;
@@ -142,27 +145,23 @@ export function textOrigamiAnim() {
     };
 
     const runPlayWithScroll = () => {
-      const tween = gsap.fromTo(
-        chars,
-        foldFrom,
-        {
-          y: 0,
-          rotationX: 0,
-          autoAlpha: 1,
-          force3D: true,
-          stagger,
-          duration: 1,
-          ease: "none",
-          scrollTrigger: {
-            id,
-            trigger: triggerSelector || itemClass,
-            start: start === "custom" ? startCustom : start || "top bottom",
-            end: end === "custom" ? endCustom : end || "bottom top",
-            scrub: 1,
-            markers: previewMarkers,
-          },
+      const tween = gsap.fromTo(chars, foldFrom, {
+        y: 0,
+        rotationX: 0,
+        autoAlpha: 1,
+        force3D: true,
+        stagger,
+        duration: 1,
+        ease: "none",
+        scrollTrigger: {
+          id,
+          trigger: triggerSelector || itemClass,
+          start: start === "custom" ? startCustom : start || "top bottom",
+          end: end === "custom" ? endCustom : end || "bottom top",
+          scrub: 1,
+          markers: previewMarkers,
         },
-      );
+      });
       tweens.push(tween);
     };
 
