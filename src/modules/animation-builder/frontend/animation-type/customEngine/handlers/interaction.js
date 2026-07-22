@@ -59,77 +59,105 @@ export function buildInteractionAnim(anim, eventType) {
         }
       : tlCfg;
 
-  const anims = [];
-  const ctx = gsap.context(() => {
-    if (!buildCfg) return;
-    // paused override — event drives playback regardless of tlCfg.vars.paused
-    if (timelineEnabled) {
-      // Skip building an empty timeline when every step was pulled out for live flip — otherwise buildTimeline yields an inert 0-child timeline.
-      const hasSteps = (buildCfg.animations || []).length > 0;
-      const tl = hasSteps
-        ? buildTimeline(
-            buildCfg,
+  const ctx = gsap.context(() => {});
+
+  // Builds the paused gsap animation(s) exactly once, the first time it's
+  // needed. A from/fromTo tween's immediateRender fires the instant it's
+  // built — building eagerly at page load meant a click/hover animation
+  // could snap a target it shares with another trigger (e.g. a scroll
+  // reveal) to its own "from" state before the user had done anything,
+  // racing whichever animation happened to build last. Deferring the build
+  // to the trigger's own first fire means that snap only ever happens at
+  // the moment the trigger actually goes off.
+  let anims = null;
+  function buildAnims() {
+    const built = [];
+    ctx.add(() => {
+      if (!buildCfg) return;
+      // paused override — event drives playback regardless of tlCfg.vars.paused
+      if (timelineEnabled) {
+        // Skip building an empty timeline when every step was pulled out for live flip — otherwise buildTimeline yields an inert 0-child timeline.
+        const hasSteps = (buildCfg.animations || []).length > 0;
+        const tl = hasSteps
+          ? buildTimeline(
+              buildCfg,
+              { paused: true },
+              {
+                animationId: anim.id,
+                animationTitle: anim.title,
+              },
+            )
+          : null;
+        if (tl) {
+          built.push(tl);
+          if (editorMode) registerTimeline(anim.id, tl);
+        }
+      } else {
+        (buildCfg.animations || []).forEach((step) => {
+          buildStepTweens(
+            step,
             { paused: true },
             {
               animationId: anim.id,
               animationTitle: anim.title,
             },
-          )
-        : null;
-      if (tl) {
-        anims.push(tl);
-        if (editorMode) registerTimeline(anim.id, tl);
-      }
-    } else {
-      (buildCfg.animations || []).forEach((step) => {
-        buildStepTweens(
-          step,
-          { paused: true },
-          {
-            animationId: anim.id,
-            animationTitle: anim.title,
-          },
-        ).forEach((t) => {
-          anims.push(t);
-          if (editorMode) registerTimeline(anim.id, t);
+          ).forEach((t) => {
+            built.push(t);
+            if (editorMode) registerTimeline(anim.id, t);
+          });
         });
-      });
-    }
-  });
+      }
+    });
 
-  anims.forEach((a) =>
-    attachPlayLogger(a, {
-      timelineId: timelineEnabled ? tlCfg.id : null,
-      timelineData: timelineEnabled ? tlCfg : null,
-      animationId: anim.id,
-      animationData: anim,
-    }),
-  );
+    built.forEach((a) =>
+      attachPlayLogger(a, {
+        timelineId: timelineEnabled ? tlCfg.id : null,
+        timelineData: timelineEnabled ? tlCfg : null,
+        animationId: anim.id,
+        animationData: anim,
+      }),
+    );
 
-  // Live flip wrappers go in after the play-logger pass — they aren't real gsap
-  // animations, so the logger would choke on them; the listeners drive them all
-  // the same. (editorMode returns early below, so this only runs public-site.)
-  liveFlipSteps.forEach((step) => anims.push(makeLiveFlip(step, ctx)));
+    // Live flip wrappers go in after the play-logger pass — they aren't real
+    // gsap animations, so the logger would choke on them; the listeners
+    // drive them all the same.
+    liveFlipSteps.forEach((step) => built.push(makeLiveFlip(step, ctx)));
+
+    anims = built;
+    // Element-exclusive playback: a single animated element (e.g. one heading)
+    // can be the target of several click/hover anims. Register this anim's
+    // built animations so that when another anim later claims the same
+    // element it can pause+rewind these.
+    if (!editorMode) setAnims(anim.id, anims);
+    return anims;
+  }
 
   // In editor preview mode, DevTools owns playback for click/hover anims —
-  // attaching live listeners here would let user interaction call play()/
-  // reverse()/restart() on a child timeline that is already nested inside
-  // DevTools' master. With smoothChildTiming the child ticking against a
-  // paused master pushes master.time() forward, which makes the playhead
-  // ruler drift right indefinitely. Skip listeners and let DevTools drive.
+  // it scrubs/inspects the built timeline directly rather than through a
+  // trigger event, so it still needs to exist right away. Attaching live
+  // listeners here would also let user interaction call play()/reverse()/
+  // restart() on a child timeline that is already nested inside DevTools'
+  // master; with smoothChildTiming the child ticking against a paused master
+  // pushes master.time() forward, which makes the playhead ruler drift right
+  // indefinitely. Skip listeners and let DevTools drive.
   if (editorMode) {
+    buildAnims();
     return { contexts: [ctx], listeners: [] };
   }
 
-  // Element-exclusive playback: a single animated element (e.g. one heading) can be the target of several click/hover anims. Register this anim's built animations so that when another anim later claims the same element it can pause+rewind these, and collect the animated targets the listeners reset.
-  setAnims(anim.id, anims);
   const animatedEls = collectAnimatedElements(anim);
-
   const preventAnchorNav = timelineHasScrollTo(anim);
+
+  // forceBuild lets a real trigger (click, hover-enter) build on demand while
+  // hover-leave only ever reverses an animation that's already been shown —
+  // it never builds one itself, since that would snap the "from" state onto
+  // the element just because the mouse left it.
+  const getAnims = (forceBuild) => anims || (forceBuild ? buildAnims() : []);
+
   const listeners = attachInteractionListeners(
     triggers,
     eventType,
-    anims,
+    getAnims,
     preventAnchorNav,
     animatedEls,
     anim.id,
@@ -150,7 +178,7 @@ export function buildInteractionAnim(anim, eventType) {
 function attachInteractionListeners(
   triggers,
   eventType,
-  anims,
+  getAnims,
   preventAnchorNav,
   animatedEls,
   animId,
@@ -160,6 +188,7 @@ function attachInteractionListeners(
     if (eventType === "click") {
       const onClick = (ev) => {
         if (preventAnchorNav && el.tagName === "A") ev.preventDefault();
+        const anims = getAnims(true);
         const switched = claimTargets(animatedEls, animId);
         anims.forEach((t) => {
           if (switched) t.invalidate?.();
@@ -177,13 +206,14 @@ function attachInteractionListeners(
       listeners.push(() => el.removeEventListener("click", onClick));
     } else if (eventType === "hover") {
       const onEnter = () => {
+        const anims = getAnims(true);
         const switched = claimTargets(animatedEls, animId);
         anims.forEach((t) => {
           if (switched) t.invalidate?.();
           t.play();
         });
       };
-      const onLeave = () => anims.forEach((t) => t.reverse());
+      const onLeave = () => getAnims(false).forEach((t) => t.reverse());
       el.addEventListener("mouseenter", onEnter);
       el.addEventListener("mouseleave", onLeave);
       listeners.push(() => {
