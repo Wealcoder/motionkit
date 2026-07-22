@@ -163,6 +163,13 @@ function attachInteractionListeners(
         const switched = claimTargets(animatedEls, animId);
         anims.forEach((t) => {
           if (switched) t.invalidate?.();
+          // restart() re-renders the "from" values synchronously — for a
+          // staggered reveal that's still mid-flight, every target (at
+          // whatever opacity it individually happened to reach) snaps back
+          // to invisible in the same instant, reading as a broken flash
+          // rather than a replay. Let an in-flight play finish undisturbed;
+          // only a click that lands after it's at rest replays it.
+          if (t.isActive?.()) return;
           t.restart();
         });
       };

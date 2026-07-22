@@ -51,7 +51,7 @@ export function registerStandardMethods() {
       return applyFlip(tl, step, { ...from, ...to }, overlap);
     }
     if (to.splitText || from.splitText) {
-      return applySplitText(tl, step, { ...from, ...to }, overlap, "to");
+      return applySplitText(tl, step, { from, to }, overlap, "fromTo");
     }
 
     const hasScrollTo = to.scrollTo || from.scrollTo;
