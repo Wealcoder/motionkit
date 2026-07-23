@@ -32,10 +32,19 @@ function getSplit(animId, selector, splitConfig) {
     existing.owners.add(owner);
     return existing.split;
   }
+  // A DIFFERENT split config already active on this same selector must be
+  // reverted first — SplitText.create() on already-split markup corrupts it,
+  // leaving whichever animation runs next targeting stale/detached elements.
+  splitsBySig.forEach((entry, otherSig) => {
+    if (entry.selector === selector) {
+      revertEntry(entry);
+      splitsBySig.delete(otherSig);
+    }
+  });
   if (typeof SplitText === "undefined") return null;
   try {
     const split = SplitText.create(selector, splitConfig);
-    splitsBySig.set(sig, { split, owners: new Set([owner]) });
+    splitsBySig.set(sig, { split, selector, owners: new Set([owner]) });
     return split;
   } catch (e) {
     console.warn("[customEngine] SplitText failed for", selector, e);

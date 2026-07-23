@@ -148,11 +148,31 @@ export function buildInteractionAnim(anim, eventType) {
   const animatedEls = collectAnimatedElements(anim);
   const preventAnchorNav = timelineHasScrollTo(anim);
 
+  // A cached build goes stale when its targets get detached from the DOM
+  // after we already built them — e.g. a different animation sharing this
+  // same element runs a differently-configured SplitText on it, which
+  // reverts and replaces our split's spans. Replaying tweens against
+  // detached elements is silently invisible forever, so treat "all targets
+  // gone" as a signal to rebuild fresh next time instead of caching forever.
+  function isStale() {
+    return anims.some((t) => {
+      if (typeof t.targets !== "function") return false;
+      try {
+        return t.targets().some((el) => el && el.isConnected === false);
+      } catch (e) {
+        return false;
+      }
+    });
+  }
+
   // forceBuild lets a real trigger (click, hover-enter) build on demand while
   // hover-leave only ever reverses an animation that's already been shown —
   // it never builds one itself, since that would snap the "from" state onto
   // the element just because the mouse left it.
-  const getAnims = (forceBuild) => anims || (forceBuild ? buildAnims() : []);
+  const getAnims = (forceBuild) => {
+    if (anims && isStale()) anims = null;
+    return anims || (forceBuild ? buildAnims() : []);
+  };
 
   const listeners = attachInteractionListeners(
     triggers,

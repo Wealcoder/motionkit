@@ -50,10 +50,14 @@ export function claimTargets(els, animId) {
     trackEl(animId, el);
   });
 
-  // Pause displaced owners BEFORE restoring styles, otherwise their paused
-  // start-state render would land on top of the restore.
+  // Pause displaced owners BEFORE restoring styles — plain pause(), not
+  // pause(0). Seeking to 0 forces a render at that point, and for a tween
+  // with a scrollTo property that render is a real side effect: it actively
+  // scrolls the page back to wherever it was when the tween started, not just
+  // a style write. The subsequent __wcfOrigCss restore below already wipes
+  // whatever CSS state the tween was mid-flight at, so no seek is needed.
   displaced.forEach((pid) =>
-    (animsByAnim.get(pid) || []).forEach((a) => a.pause?.(0)),
+    (animsByAnim.get(pid) || []).forEach((a) => a.pause?.()),
   );
   toReset.forEach((el) => {
     if (typeof el.__wcfOrigCss === "string") el.style.cssText = el.__wcfOrigCss;
