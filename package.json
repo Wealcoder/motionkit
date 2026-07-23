@@ -1,6 +1,6 @@
 {
   "name": "motionkit-connector",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "description": "A connector for MotionKit, a library for creating animations in React,nodejs.",
   "main": "echo \"Nothing much here.\" && exit 1",
   "devDependencies": {
