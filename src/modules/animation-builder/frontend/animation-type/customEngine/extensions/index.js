@@ -6,10 +6,10 @@ import { registerFlipMethod } from "./flip.js";
 import { registerMotionPathMethod } from "./motionPath.js";
 import { registerMorphSVGMethod } from "./morphSVG.js";
 import { registerPhysics2DMethod } from "./physics2D.js";
+import { registerScrambleTextMethod } from "./scrambleText.js";
 
 // Add future plugin registrations here. Each returns true if registered.
 // Scaffolds to fill when editor wires them into step.method:
-//   registerScrambleTextMethod (window.ScrambleTextPlugin)
 //   registerCustomEaseMethod   (window.CustomEase)
 const EXTENSION_REGISTRARS = [
   registerSplitTextMethod,
@@ -19,6 +19,7 @@ const EXTENSION_REGISTRARS = [
   registerMotionPathMethod,
   registerMorphSVGMethod,
   registerPhysics2DMethod,
+  registerScrambleTextMethod,
 ];
 
 let done = false;

@@ -222,6 +222,7 @@ final class Frontend
       'scrollSmoother' => ['deps' => ['gsap', 'scrollTrigger']],
       'scrollTo'       => ['deps' => ['gsap']],
       'splitText'      => ['deps' => ['gsap']],
+      'scrambleText'   => ['deps' => ['gsap']],
       'drawSVG'        => ['deps' => ['gsap']],
       'morphSVG'       => ['deps' => ['gsap']],
       'motionPath'     => ['deps' => ['gsap']],
