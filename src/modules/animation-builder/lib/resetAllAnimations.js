@@ -28,6 +28,16 @@ function killGsap(nodes) {
   const { gsap, ScrollTrigger } = window;
   const nodeSet = new Set(nodes);
 
+  // A SplitText-driven tween's real targets are the char/word/line spans
+  // SplitText generates — those are never individually tagged with
+  // data-wcf-anim-id (only the container matching step.itemClass is, via
+  // tagAllTargets). closest() catches both: an exact-tagged element (matches
+  // itself) and a split span nested inside one (matches the ancestor). It
+  // does NOT walk to ANCESTORS of the checked element being tagged further
+  // out, so ScrollSmoother's own wrapper/body-level trigger — an ANCESTOR of
+  // our tagged elements, never a descendant — still correctly never matches.
+  const isOwned = (el) => !!(el && el.closest && el.closest("[data-wcf-anim-id]"));
+
   // Scoped sweep: only kill triggers whose trigger element OR whose driven
   // animation targets one of OUR animated elements (data-wcf-anim-id). Matching
   // the animation targets — not just the trigger element — catches animations
@@ -35,13 +45,13 @@ function killGsap(nodes) {
   // data-wcf-anim-id); without it those ScrollTriggers survive every reset and
   // accumulate on each Play/Save. ScrollSmoother's own internal trigger is
   // attached to body/wrapper and its animation targets the content wrapper —
-  // never in nodeSet — so it's never touched. No kill, no recreate, no lerp
+  // never owned — so it's never touched. No kill, no recreate, no lerp
   // interruption, ever, during a normal reset/Play cycle.
   ScrollTrigger?.getAll?.().forEach((st) => {
     const target = st.trigger || st.vars?.trigger;
     const animTargets = st.animation?.targets ? st.animation.targets() : [];
-    const ownsTrigger = target && nodeSet.has(target);
-    const ownsAnimation = animTargets.some((el) => nodeSet.has(el));
+    const ownsTrigger = isOwned(target);
+    const ownsAnimation = animTargets.some(isOwned);
     if (ownsTrigger || ownsAnimation) {
       st.kill();
     }
@@ -52,7 +62,7 @@ function killGsap(nodes) {
   gsap?.globalTimeline?.getChildren?.(true, true, false).forEach((t) => {
     try {
       const targets = t.targets ? t.targets() : [];
-      if (targets.some((el) => nodeSet.has(el))) t.kill();
+      if (targets.some(isOwned)) t.kill();
     } catch (_) {
       /* tween without resolvable targets */
     }

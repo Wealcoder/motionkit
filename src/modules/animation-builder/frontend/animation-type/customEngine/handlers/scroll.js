@@ -12,6 +12,25 @@ import { querySelectorAllCached } from "../scheduler.js";
 import { withScrollLogger } from "../helper/logger.js";
 import { detectDeviceKey } from "../helper/device.js";
 import { isTimelineEnabledFor } from "../helper/guards.js";
+import { isEditorPreviewMode } from "../customRegistry.js";
+import { claimTargets, setAnims } from "../ownership.js";
+import { collectAnimatedElements } from "../helper/interactionTargets.js";
+
+// Register this scroll animation's built tweens/timelines as the initial
+// owner of its animated elements. Without this, a click/hover animation
+// sharing the same target (e.g. the same heading, split with a different
+// SplitText config) never finds a previous owner to pause — its own build
+// then reverts this scroll tween's still-live SplitText spans out from under
+// it (see splitText.js's getSplit), and the still-ticking scroll tween keeps
+// fighting the incoming one for the same properties every frame. That
+// property/visual tug-of-war is what reads as flicker. Runtime-only: editor
+// preview never triggers this (DevTools owns playback), matching
+// ownership.js's own "only the interaction handlers claim" contract.
+function registerScrollOwnership(anim, built) {
+  if (isEditorPreviewMode()) return;
+  setAnims(anim.id, built);
+  claimTargets(collectAnimatedElements(anim), anim.id);
+}
 
 export function buildScrollAnim(anim) {
   const deviceKey = detectDeviceKey();
@@ -19,6 +38,7 @@ export function buildScrollAnim(anim) {
   if (!isTimelineEnabledFor(anim)) {
     const routedSteps = findRoutedStepTriggers(anim, deviceKey);
     if (!routedSteps.length) return null;
+    const built = [];
     const stepCtx = gsap.context(() => {
       routedSteps.forEach(({ cfg, step }) => {
         // Scroll-driven tweens can't be scrubbed by time, so — like
@@ -42,13 +62,15 @@ export function buildScrollAnim(anim) {
                 animationData: anim,
               },
             );
-            buildStepTweens(
-              { ...step, itemClass: el },
-              { scrollTrigger: scrollCfg },
-              {
-                animationId: anim.id,
-                animationTitle: anim.title,
-              },
+            built.push(
+              ...buildStepTweens(
+                { ...step, itemClass: el },
+                { scrollTrigger: scrollCfg },
+                {
+                  animationId: anim.id,
+                  animationTitle: anim.title,
+                },
+              ),
             );
           });
           return;
@@ -63,22 +85,26 @@ export function buildScrollAnim(anim) {
             animationData: anim,
           },
         );
-        buildStepTweens(
-          step,
-          { scrollTrigger: scrollCfg },
-          {
-            animationId: anim.id,
-            animationTitle: anim.title,
-          },
+        built.push(
+          ...buildStepTweens(
+            step,
+            { scrollTrigger: scrollCfg },
+            {
+              animationId: anim.id,
+              animationTitle: anim.title,
+            },
+          ),
         );
       });
     });
+    registerScrollOwnership(anim, built);
     return { contexts: [stepCtx], listeners: [] };
   }
 
   const routed = findRoutedScrollTriggers(anim, deviceKey);
   if (!routed.length) return null;
 
+  const built = [];
   const ctx = gsap.context(() => {
     routed.forEach(({ cfg, tl }) => {
       const fallbackTrigger = tl.animations?.[0]?.itemClass;
@@ -91,7 +117,7 @@ export function buildScrollAnim(anim) {
           animationData: anim,
         },
       );
-      const built = buildTimeline(
+      const tlBuilt = buildTimeline(
         tl,
         { scrollTrigger: scrollCfg },
         {
@@ -100,12 +126,13 @@ export function buildScrollAnim(anim) {
         },
       );
       // ScrollTrigger anims are scroll-driven; DevTools cannot scrub them
-      // by time, so we don't register them. They still render in GSAP.
-      if (built) {
-        // intentional no-op for registry
-      }
+      // by time, so we don't register them with DevTools. They still render
+      // in GSAP, and are registered with the ownership system below.
+      if (tlBuilt) built.push(tlBuilt);
     });
   });
+
+  registerScrollOwnership(anim, built);
 
   return { contexts: [ctx], listeners: [] };
 }

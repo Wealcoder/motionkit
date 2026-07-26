@@ -208,8 +208,13 @@ function attachInteractionListeners(
     if (eventType === "click") {
       const onClick = (ev) => {
         if (preventAnchorNav && el.tagName === "A") ev.preventDefault();
-        const anims = getAnims(true);
+        // Claim BEFORE building: a first-ever fire's build can trigger a
+        // destructive SplitText revert on a shared target (see splitText.js's
+        // getSplit), and the previous owner needs to be paused before that
+        // happens, not after — otherwise it's still actively rendering right
+        // up to (and through) the moment its spans get torn out from under it.
         const switched = claimTargets(animatedEls, animId);
+        const anims = getAnims(true);
         anims.forEach((t) => {
           if (switched) t.invalidate?.();
           // restart() re-renders the "from" values synchronously — for a
@@ -226,8 +231,10 @@ function attachInteractionListeners(
       listeners.push(() => el.removeEventListener("click", onClick));
     } else if (eventType === "hover") {
       const onEnter = () => {
-        const anims = getAnims(true);
+        // Same ordering fix as onClick — claim/pause the previous owner
+        // before building can trigger a SplitText revert on a shared target.
         const switched = claimTargets(animatedEls, animId);
+        const anims = getAnims(true);
         anims.forEach((t) => {
           if (switched) t.invalidate?.();
           t.play();
