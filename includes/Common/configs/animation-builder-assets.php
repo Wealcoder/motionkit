@@ -34,6 +34,21 @@ return [
     ],
 
     // ############## IMAGE ############## //
+    'wcf-mk-image-cm-pa' => [
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageCinematicMaskAnim.js',
+      'deps' => ['gsap', 'scrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-image-ss-pa' => [
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageSliceShutterAnim.js',
+      'deps' => ['gsap', 'scrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
+    'wcf-mk-image-md-pa' => [
+      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageMosaicDepthAnim.js',
+      'deps' => ['gsap', 'scrollTrigger'],
+      'version' => MOTIONKIT_VERSION,
+    ],
     'wcf-mk-image-hr-pa' => [
       'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageHoverRevealAnim.js',
       'deps' => ['gsap', 'scrollTrigger'],
