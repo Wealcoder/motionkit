@@ -1,12 +1,18 @@
 import { registerMethod } from "../registry.js";
 import { applyFlip } from "./flip.js";
 import { applySplitText } from "./splitText.js";
+import { prepScrambleTargets } from "./scrambleText.js";
 
 // Plugin properties (flip / splitText / scrollTo) now ride inside a normal
 // from/to/fromTo bucket instead of being their own step method — mirroring how
 // motionPath / drawSVG already work as native GSAP props. flip and splitText
 // need pre-tween DOM work so they intercept here; scrollTo just needs `window`
 // as the tween target (ScrollToPlugin scrolls the tween's target).
+//
+// scrambleText tweens build normally, but need their markup snapshotted before
+// the first render so teardown can undo the innerHTML rewrite — see
+// scrambleText.js. The splitText/flip branches return before this runs, so a
+// split step never snapshots its container mid-split.
 
 // ScrollToPlugin scrolls the tween's *target*. For window scrolling the tween
 // must target `window`, not the animated element — so when vars carry
@@ -21,6 +27,8 @@ function normalizeScrollTo(step, vars) {
   return { ...vars, scrollTo: cfg };
 }
 
+const animIdOf = (tl) => tl?.vars?.data?.animationId || null;
+
 export function registerStandardMethods() {
   registerMethod("from", (tl, step, vars, overlap) => {
     if (vars?.flip) return applyFlip(tl, step, vars, overlap);
@@ -28,6 +36,7 @@ export function registerStandardMethods() {
 
     const target = scrollToTarget(vars) || step.itemClass;
     if (!target) return;
+    if (vars.scrambleText) prepScrambleTargets(animIdOf(tl), step.itemClass);
     tl.from(target, vars.scrollTo ? normalizeScrollTo(step, vars) : vars, overlap);
   });
 
@@ -37,6 +46,7 @@ export function registerStandardMethods() {
 
     const target = scrollToTarget(vars) || step.itemClass;
     if (!target) return;
+    if (vars.scrambleText) prepScrambleTargets(animIdOf(tl), step.itemClass);
     tl.to(target, vars.scrollTo ? normalizeScrollTo(step, vars) : vars, overlap);
   });
 
@@ -57,13 +67,18 @@ export function registerStandardMethods() {
     const hasScrollTo = to.scrollTo || from.scrollTo;
     const target = hasScrollTo ? window : step.itemClass;
     if (!target) return;
+    if (to.scrambleText || from.scrambleText) {
+      prepScrambleTargets(animIdOf(tl), step.itemClass);
+    }
     const fromVars = from.scrollTo ? normalizeScrollTo(step, from) : from;
     const toVars = to.scrollTo ? normalizeScrollTo(step, to) : to;
     tl.fromTo(target, fromVars, toVars, overlap);
   });
 
   registerMethod("set", (tl, step, vars, overlap) => {
-    if (step.itemClass) tl.set(step.itemClass, vars, overlap);
+    if (!step.itemClass) return;
+    if (vars?.scrambleText) prepScrambleTargets(animIdOf(tl), step.itemClass);
+    tl.set(step.itemClass, vars, overlap);
   });
 
   registerMethod("call", (tl, step, vars, overlap) => {

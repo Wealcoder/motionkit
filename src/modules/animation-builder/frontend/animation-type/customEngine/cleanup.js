@@ -10,6 +10,10 @@ import {
   clearAll as clearCustomRegistry,
 } from "./customRegistry.js";
 import { revertSplitsFor, clearSplitCache } from "./extensions/splitText.js";
+import {
+  restoreScrambleFor,
+  clearScrambleCache,
+} from "./extensions/scrambleText.js";
 import { releaseAnim, clearOwnership } from "./ownership.js";
 import { forgetAnim, clearAnims } from "./helper/inspector.js";
 
@@ -47,6 +51,10 @@ export function teardown(id) {
   // After the gsap context revert so tween inline styles are cleared first,
   // then unwrap SplitText spans back to the original text node.
   revertSplitsFor(id);
+  // Last: ctx.revert() restores scrambled text but leaves the plugin's
+  // newClass/oldClass wrapper spans behind, and a split container has to be
+  // unwrapped before its markup can be put back.
+  restoreScrambleFor(id);
   deleteActive(id);
   unregisterAnimation(id);
   releaseAnim(id);
@@ -56,6 +64,7 @@ export function teardown(id) {
 export function teardownAll() {
   allActiveIds().forEach((id) => runCleanups(getActive(id)));
   clearSplitCache();
+  clearScrambleCache();
   clearActive();
   clearCustomRegistry();
   clearSelectorCache();
@@ -78,6 +87,11 @@ document.addEventListener("motionkit:reset-done", () => {
     });
   });
   clearSplitCache();
+  // The global reset kills tweens instead of reverting them and restores CSS
+  // only, so a scrambled element would otherwise stay stuck on garbage
+  // characters (killed mid-flight) or on the replacement text (killed after it
+  // finished) until a page reload.
+  clearScrambleCache();
   clearActive();
   clearCustomRegistry();
   clearSelectorCache();

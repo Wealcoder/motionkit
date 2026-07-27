@@ -11,6 +11,8 @@
 // Runtime-only concern: editor preview never triggers (DevTools owns playback),
 // so nothing here runs in editor mode, and only the interaction handlers claim.
 
+import { restoreScrambleElements } from "./extensions/scrambleText.js";
+
 let ownerByEl = new WeakMap(); // animated element -> owning animId
 const elsByAnim = new Map(); // animId -> Set<element>, so teardown can release
 const animsByAnim = new Map(); // animId -> built gsap animations (to pause on displacement)
@@ -63,6 +65,11 @@ export function claimTargets(els, animId) {
     if (typeof el.__wcfOrigCss === "string") el.style.cssText = el.__wcfOrigCss;
     el.setAttribute("data-wcf-anim-id", animId);
   });
+  // __wcfOrigCss covers inline styles only. A displaced scramble also left the
+  // element's innerHTML rewritten, and the caller invalidate()s the incoming
+  // tweens right after this — which makes ScrambleTextPlugin re-capture the
+  // element's CURRENT text as its "original" on the next render.
+  restoreScrambleElements(toReset);
 
   return toReset.length > 0;
 }
