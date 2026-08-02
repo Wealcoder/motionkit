@@ -20,6 +20,7 @@ use WcfAnimationBuilder\Auth\JwtTokenManager;
 use WcfAnimationBuilder\Auth\OAuthHandler;
 use WcfAnimationBuilder\Factory\ComponentFactory;
 use WcfAnimationBuilder\Support\EditorSessionTrait;
+use WcfAnimationBuilder\Helpers\Helper;
 
 /**
  * Frontend Class
@@ -834,7 +835,9 @@ final class Frontend
 
     wp_localize_script('motionkit-frontend', 'wcfanimb', [
       'all_animations' => $merged_animation,
-      'all_settings'   => $merged_settings
+      'all_settings'   => $merged_settings,
+      // Runtime customEngine log switch, read from .env each request (dev only).
+      'dev_log'        => Helper::is_dev_log()
     ]);
 
     // Allow Pro to enqueue premium preset scripts

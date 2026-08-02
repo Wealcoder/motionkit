@@ -81,6 +81,91 @@ final class Helper
     }
 
     /**
+     * Cached .env pairs, parsed once per request
+     *
+     * @var array|null
+     */
+    private static ?array $cached_env = null;
+
+    /**
+     * Read a MOTIONKIT_* value from the plugin-root .env
+     *
+     * .env is gitignored and absent from releases, so this returns $default on
+     * every customer install — the dev flags below are dev-machine only.
+     *
+     * @param string $key Env key
+     * @param mixed $default Value when .env is missing or the key is unset
+     * @return mixed Env value
+     */
+    public static function get_env(string $key, $default = null)
+    {
+        if (null === self::$cached_env) {
+            self::$cached_env = self::parse_env_file(MOTIONKIT_PLUGIN_DIR . '.env');
+        }
+        return self::$cached_env[$key] ?? $default;
+    }
+
+    /**
+     * Parse a KEY=value .env file
+     *
+     * Mirrors the loaders in webpack.config.js and scripts/copy-to-editor.js so
+     * build-time and runtime read the same file identically.
+     *
+     * @param string $file Absolute path to the .env file
+     * @return array Parsed key/value pairs, empty when unreadable
+     */
+    private static function parse_env_file(string $file): array
+    {
+        if (!is_readable($file)) {
+            return [];
+        }
+
+        $lines = @file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (false === $lines) {
+            return [];
+        }
+
+        $vars = [];
+        foreach ($lines as $raw) {
+            $line = trim($raw);
+            if ('' === $line || 0 === strpos($line, '#')) {
+                continue;
+            }
+
+            $eq = strpos($line, '=');
+            if (false === $eq) {
+                continue;
+            }
+
+            $key = trim(substr($line, 0, $eq));
+            $val = trim(substr($line, $eq + 1));
+
+            // Strip a matching pair of surrounding quotes.
+            $first = substr($val, 0, 1);
+            if (strlen($val) > 1 && ('"' === $first || "'" === $first) && substr($val, -1) === $first) {
+                $val = substr($val, 1, -1);
+            }
+
+            $vars[$key] = $val;
+        }
+
+        return $vars;
+    }
+
+    /**
+     * Whether verbose customEngine console logging is on
+     *
+     * Runtime counterpart to the __MKIT_DEV_LOG__ build flag — toggling
+     * MOTIONKIT_DEV_LOG in .env takes effect on the next request, no rebuild.
+     *
+     * @return bool True when MOTIONKIT_DEV_LOG=true
+     */
+    public static function is_dev_log(): bool
+    {
+        return 'true' === strtolower((string) self::get_env('MOTIONKIT_DEV_LOG', ''));
+    }
+
+    /**
      * Log debug message
      *
      * @param string $message Debug message
