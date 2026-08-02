@@ -4,7 +4,7 @@
  * Plugin Name: Motionkit Connector for WordPress
  * Plugin URI: https://github.com/your-username/motionkit
  * Description: A WordPress plugin that integrates the GSAP Animation Builder (Motionkit) to create and manage animations directly from the WordPress admin dashboard.
- * Version: 1.5.0
+ * Version: 1.5.1
  * Author: wealcoder
  * Author URI: https://profiles.wordpress.org/your-username/
  * License: GPL v2 or later
