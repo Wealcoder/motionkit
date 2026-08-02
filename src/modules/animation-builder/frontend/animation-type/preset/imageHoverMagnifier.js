@@ -266,8 +266,6 @@ export function imageHoverMagnifier() {
 
     const { id, vars = {} } = anim;
 
-    console.log({ vars });
-
     // Longhands, not the `border` shorthand: the shorthand takes a single width, so
     // the field's four-value output ("2px 2px 2px 2px") makes the whole declaration
     // invalid and the ring silently disappears. border-width takes 1-4 values.
