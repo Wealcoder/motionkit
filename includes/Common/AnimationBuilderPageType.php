@@ -1,6 +1,6 @@
 <?php
 
-namespace WcfAnimationBuilder\Common;
+namespace MotionKit\Common;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly

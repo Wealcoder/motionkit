@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-scroll-vf-pa";
+const PRESET_KEY = "motionkit-mk-scroll-vf-pa";
 
 export function scrollVideoFrame() {
   // id -> { timelines: GSAPTimeline[], cleanups: Array<() => void> }
@@ -79,8 +79,8 @@ export function scrollVideoFrame() {
 
     teardown(id);
 
-    containerEl.setAttribute("data-wcf-anim-id", id);
-    video.setAttribute("data-wcf-anim-id", id);
+    containerEl.setAttribute("data-motionkit-anim-id", id);
+    video.setAttribute("data-motionkit-anim-id", id);
 
     gsap.set(containerEl, {
       height: containerHeight,
@@ -193,7 +193,7 @@ export function scrollVideoFrame() {
     // can seek frames independently.
     // Skip in editor mode (proxy-snapshot) to avoid CORS issues
     const isEditorMode =
-      window.wcfanimb?.mk_token || window.location.hostname === "localhost";
+      window.motionkitData?.motionkit_token || window.location.hostname === "localhost";
     const timer = setTimeout(() => {
       if (!window.fetch || isEditorMode) return;
       fetch(src)

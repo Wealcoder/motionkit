@@ -1,7 +1,7 @@
 // Resolve the active device key by matching the configured media queries, then
 // falling back to the first configured device (finally "desktop").
 export function detectDeviceKey() {
-  const devices = Object.values(window.wcfanimb?.device_config || {});
+  const devices = Object.values(window.motionkitData?.device_config || {});
   for (const d of devices) {
     if (!d?.mediaQuery) continue;
     try {

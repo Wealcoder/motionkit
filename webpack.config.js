@@ -65,7 +65,7 @@ const sharedExternals = {
 };
 
 // Main bundle config — all entries except the editor variant. Builds with
-// __MKIT_DEVTOOLS__ = false so customAnimation.js (and the customRegistry
+// __MOTIONKIT_DEVTOOLS__ = false so customAnimation.js (and the customRegistry
 // module it pulls in) gets its DevTools branches dead-code-eliminated.
 const mainConfig = {
   ...defaultConfig,
@@ -100,15 +100,15 @@ const mainConfig = {
   plugins: [
     ...defaultConfig.plugins,
     new webpack.DefinePlugin({
-      __MKIT_DEVTOOLS__: JSON.stringify(false),
-      __MKIT_DEV_LOG__: JSON.stringify(DEV_LOG),
+      __MOTIONKIT_DEVTOOLS__: JSON.stringify(false),
+      __MOTIONKIT_DEV_LOG__: JSON.stringify(DEV_LOG),
     }),
   ],
   resolve: sharedResolve,
 };
 
 // Editor-preview build — same customAnimation source, but with
-// __MKIT_DEVTOOLS__ = true so the registry module activates. Output goes
+// __MOTIONKIT_DEVTOOLS__ = true so the registry module activates. Output goes
 // next to the slim file as customAnimation.editor.js. The copy-to-editor
 // script picks up this file and the inject-bridge serves it from the
 // motionkit-editor static dir during proxy-snapshot iframe loads.
@@ -128,8 +128,8 @@ const editorConfig = {
   module: sharedModule,
   plugins: [
     new webpack.DefinePlugin({
-      __MKIT_DEVTOOLS__: JSON.stringify(true),
-      __MKIT_DEV_LOG__: JSON.stringify(DEV_LOG),
+      __MOTIONKIT_DEVTOOLS__: JSON.stringify(true),
+      __MOTIONKIT_DEV_LOG__: JSON.stringify(DEV_LOG),
     }),
     {
       apply(compiler) {

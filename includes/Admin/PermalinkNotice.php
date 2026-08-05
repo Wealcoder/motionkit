@@ -1,6 +1,6 @@
 <?php
 
-namespace WcfAnimationBuilder\Admin;
+namespace MotionKit\Admin;
 
 /**
  * Plain-permalink admin notice.
@@ -9,7 +9,7 @@ namespace WcfAnimationBuilder\Admin;
  * via /?rest_route=... which triggers CORS preflight that some hosts block.
  * This notice nudges admins to switch to pretty permalinks.
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.2.0
  */
 

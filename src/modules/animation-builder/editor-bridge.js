@@ -50,27 +50,27 @@ function getParentOrigin() {
 
 /**
  * Build a full REST API URL.
- * wcfanimb.rest_url is pre-built by PHP and handles both pretty
+ * motionkitData.rest_url is pre-built by PHP and handles both pretty
  * (/wp-json/motionkit/v1/) and plain (?rest_route=/motionkit/v1/) forms.
  */
 function restUrl(endpoint) {
-  return (wcfanimb.rest_url || "") + endpoint;
+  return (motionkitData.rest_url || "") + endpoint;
 }
 
 /**
- * Extract the mk_token (JWT) for editor authentication.
+ * Extract the motionkit_token (JWT) for editor authentication.
  *
  * Priority:
- * 1. wcfanimb.mk_token — set by PHP (already validated server-side, most reliable)
- * 2. URL query param ?mk_token — fallback for cases where localized data is unavailable
+ * 1. motionkitData.motionkit_token — set by PHP (already validated server-side, most reliable)
+ * 2. URL query param ?motionkit_token — fallback for cases where localized data is unavailable
  */
-function getMkToken() {
+function getMotionKitToken() {
   try {
-    if (typeof wcfanimb !== "undefined" && wcfanimb.mk_token) {
-      return wcfanimb.mk_token;
+    if (typeof motionkitData !== "undefined" && motionkitData.motionkit_token) {
+      return motionkitData.motionkit_token;
     }
     const params = new URLSearchParams(window.location.search);
-    return params.get("mk_token") || "";
+    return params.get("motionkit_token") || "";
   } catch (e) {
     return "";
   }
@@ -111,7 +111,7 @@ function saveViaRest(endpoint, body, _headers, onSuccess, saveId) {
   if (!action) return;
 
   const payload = JSON.stringify({
-    token: getMkToken(),
+    token: getMotionKitToken(),
     action,
     payload: body,
   });
@@ -166,26 +166,26 @@ function saveViaRest(endpoint, body, _headers, onSuccess, saveId) {
 
 /**
  * Build the standard motionkit-response payload,
- * merging optional overrides over the cached wcfanimb values.
+ * merging optional overrides over the cached motionkitData values.
  */
 function buildResponsePayload(overrides = {}) {
   // Use ?? so legitimate empty values ([], {}, 0) from the new page
-  // overwrite stale wcfanimb cached values from the previous load.
+  // overwrite stale motionkitData cached values from the previous load.
   const payload = {
-    platform: wcfanimb.platform,
-    globalSettings: overrides.globalSettings ?? wcfanimb.global_settings,
-    pageType: wcfanimb.pageTypeConfigs,
+    platform: motionkitData.platform,
+    globalSettings: overrides.globalSettings ?? motionkitData.global_settings,
+    pageType: motionkitData.pageTypeConfigs,
     currentPageSettings:
-      overrides.currentPageSettings ?? wcfanimb.currentPageSettings,
-    globalAnimation: overrides.globalAnimation ?? wcfanimb.global_animation,
-    pageAnimation: overrides.pageAnimation ?? wcfanimb.page_animation,
+      overrides.currentPageSettings ?? motionkitData.currentPageSettings,
+    globalAnimation: overrides.globalAnimation ?? motionkitData.global_animation,
+    pageAnimation: overrides.pageAnimation ?? motionkitData.page_animation,
     favouriteCloudAnimation:
-      overrides.favouriteCloudAnimation ?? wcfanimb.favourite_cloud_animation,
+      overrides.favouriteCloudAnimation ?? motionkitData.favourite_cloud_animation,
     animationFolders:
-      overrides.animationFolders ?? wcfanimb.animation_folders,
-    deviceConfig: wcfanimb.device_config,
-    base_domain: wcfanimb.base_domain,
-    rest_url: wcfanimb.rest_url,
+      overrides.animationFolders ?? motionkitData.animation_folders,
+    deviceConfig: motionkitData.device_config,
+    base_domain: motionkitData.base_domain,
+    rest_url: motionkitData.rest_url,
   };
   return payload;
 }
@@ -219,7 +219,7 @@ function receivePageConfig() {
             { animationConfigs: globalSettings },
             headers,
             () => {
-              wcfanimb.global_settings = globalSettings;
+              motionkitData.global_settings = globalSettings;
             },
             saveId,
           );
@@ -229,12 +229,12 @@ function receivePageConfig() {
           saveViaRest(
             "current-page-settings",
             {
-              pageTypeConfigs: wcfanimb.pageTypeConfigs,
+              pageTypeConfigs: motionkitData.pageTypeConfigs,
               animationConfigs: currentPageSettings,
             },
             headers,
             () => {
-              wcfanimb.currentPageSettings = currentPageSettings;
+              motionkitData.currentPageSettings = currentPageSettings;
             },
             saveId,
           );
@@ -246,7 +246,7 @@ function receivePageConfig() {
             { animationConfigs: globalAnimation },
             headers,
             () => {
-              wcfanimb.global_animation = globalAnimation;
+              motionkitData.global_animation = globalAnimation;
             },
             saveId,
           );
@@ -256,12 +256,12 @@ function receivePageConfig() {
           saveViaRest(
             "current-page-animation",
             {
-              pageTypeConfigs: wcfanimb.pageTypeConfigs,
+              pageTypeConfigs: motionkitData.pageTypeConfigs,
               animationConfigs: pageAnimation,
             },
             headers,
             () => {
-              wcfanimb.page_animation = pageAnimation;
+              motionkitData.page_animation = pageAnimation;
             },
             saveId,
           );
@@ -286,7 +286,7 @@ function receivePageConfig() {
         const query = event.data.query || "";
         const page = event.data.page || 1;
         const perPage = event.data.per_page || 10;
-        const token = getMkToken();
+        const token = getMotionKitToken();
         // Token in query param — keeps the request as a CORS simple GET
         // (no Authorization header, no preflight).
         const searchUrl =
@@ -340,7 +340,7 @@ function receivePageConfig() {
           { favourite },
           headers,
           () => {
-            wcfanimb.favourite_cloud_animation = favourite;
+            motionkitData.favourite_cloud_animation = favourite;
           },
           saveId,
         );
@@ -357,7 +357,7 @@ function receivePageConfig() {
           { animationFolders },
           headers,
           () => {
-            wcfanimb.animation_folders = animationFolders;
+            motionkitData.animation_folders = animationFolders;
           },
           saveId,
         );
@@ -393,9 +393,9 @@ function receivePageConfig() {
       {
         type: "motionkit-ready",
         data: {
-          platform: wcfanimb.platform,
-          base_domain: wcfanimb.base_domain,
-          rest_url: wcfanimb.rest_url,
+          platform: motionkitData.platform,
+          base_domain: motionkitData.base_domain,
+          rest_url: motionkitData.rest_url,
         },
       },
       parentOrigin,

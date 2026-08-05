@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-image-stretch-pa";
+const PRESET_KEY = "motionkit-mk-image-stretch-pa";
 
 export function imageStretchAnim() {
   // id -> { timelines: GSAPTimeline[] }
@@ -73,8 +73,8 @@ export function imageStretchAnim() {
     teardown(id);
 
     // Tag both layers so the global reset sweep runs clearProps on them.
-    containerEl.setAttribute("data-wcf-anim-id", id);
-    items.forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+    containerEl.setAttribute("data-motionkit-anim-id", id);
+    items.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
 
     gsap.set(containerEl, {
       height: containerHeight,

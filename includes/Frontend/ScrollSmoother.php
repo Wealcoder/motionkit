@@ -1,6 +1,6 @@
 <?php
 
-namespace WcfAnimationBuilder\Frontend;
+namespace MotionKit\Frontend;
 
 // Prevent direct access
 if (!defined('ABSPATH')) {
@@ -14,15 +14,15 @@ if (!defined('ABSPATH')) {
  *  1. Injects #smooth-wrapper / #smooth-content around the existing body
  *     children (only if they don't already exist — safe against other plugins).
  *  2. Exposes window.motionkitRebootSmoother() — a settings-driven boot/kill
- *     function that reads wcfanimb.all_settings.scrollSmother and creates,
+ *     function that reads motionkit.all_settings.scrollSmother and creates,
  *     updates, or kills the ScrollSmoother instance.
  *
  * This runner targets the live WP frontend. Full-preview tabs skip it via the
- * mk_full_preview PHP guard; the editor iframe is driven by the editor's own
+ * motionkit_full_preview PHP guard; the editor iframe is driven by the editor's own
  * applyScrollSmoother module (src/lib/gsap/scrollSmoother.js) and never hooks
  * run_scroll_smoother in editor-preview mode.
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.0.0
  */
 final class ScrollSmoother
@@ -31,7 +31,7 @@ final class ScrollSmoother
   {
     // Skip the full-preview tab — the editor opens the WP site with its own
     // in-memory state and drives animation/smoother behavior directly.
-    if (isset($_GET['mk_full_preview']) && $_GET['mk_full_preview'] === '1') {
+    if (isset($_GET['motionkit_full_preview']) && $_GET['motionkit_full_preview'] === '1') {
       return;
     }
     ?>
@@ -56,7 +56,7 @@ final class ScrollSmoother
 
           // Sentinel for pin-end detection used elsewhere in the suite.
           var sentinel = document.createElement('div');
-          sentinel.className = 'wcf-ab-pin-end-selector-26';
+          sentinel.className = 'motionkit-pin-end-selector-26';
           sentinel.hidden = true;
           wrapper.appendChild(sentinel);
 
@@ -95,8 +95,8 @@ final class ScrollSmoother
         }
 
         function resolveSmootherValue() {
-          var all = (window.wcfanimb && window.wcfanimb.all_settings) || {};
-          var gs = (window.wcfanimb && window.wcfanimb.global_settings) || {};
+          var all = (window.motionkitData && window.motionkitData.all_settings) || {};
+          var gs = (window.motionkitData && window.motionkitData.global_settings) || {};
 
           // Per-page override wins whole — when the page has an explicit enable
           // flag it takes full precedence, even over an all-page OFF master switch,
@@ -111,7 +111,7 @@ final class ScrollSmoother
 
           if (!cfg || cfg.enable === false) return null;
 
-          var devices = all.deviceConfig || (window.wcfanimb && window.wcfanimb.device_config) || [];
+          var devices = all.deviceConfig || (window.motionkitData && window.motionkitData.device_config) || [];
           var currentKey = resolveDeviceKey(devices);
           
           // scrollSmother has 4 buckets (desktop/laptop/tablet/mobile), deviceConfig has

@@ -1,6 +1,6 @@
 <?php
 
-namespace WcfAnimationBuilder\RestApi;
+namespace MotionKit\RestApi;
 
 /**
  * REST API Class
@@ -8,7 +8,7 @@ namespace WcfAnimationBuilder\RestApi;
  * Registers WP REST API endpoints for MotionKit config operations.
  * Mirrors the existing AJAX handlers in Frontend with proper REST conventions.
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.1.0
  */
 
@@ -17,9 +17,9 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
-use WcfAnimationBuilder\Common\AnimationBuilderPageType;
-use WcfAnimationBuilder\Auth\JwtTokenManager;
-use WcfAnimationBuilder\Support\EditorSessionTrait;
+use MotionKit\Common\AnimationBuilderPageType;
+use MotionKit\Auth\JwtTokenManager;
+use MotionKit\Support\EditorSessionTrait;
 
 final class RestApi
 {
@@ -136,7 +136,7 @@ final class RestApi
     // when the editor launched this site. No WP login required.
     //
     // Auth precedence:
-    //   1. Authorization: Bearer <mk_token> (editor session) → validate.
+    //   1. Authorization: Bearer <motionkit_token> (editor session) → validate.
     //   2. No header but site is connected & has a valid logged-in admin
     //      (same-origin) → allow via cookie.
     //   3. Otherwise → 401.
@@ -311,8 +311,12 @@ final class RestApi
 
       case 'save_current_page_animation':
         // Animations live under the original key (default: mkit_pg_animation_<type>)
+        $page_type_config = $payload['pageTypeConfigs'] ?? [];
+        if (!is_array($page_type_config) || !$this->is_valid_page_type_config($page_type_config)) {
+          return new \WP_REST_Response(['success' => false, 'error' => 'invalid_page_type_config'], 400);
+        }
         $this->page_type->saveConfig(
-          $payload['pageTypeConfigs'] ?? [],
+          $page_type_config,
           $payload['animationConfigs'] ?? []
         );
         update_option('motionkit_page_settings_updated_at', time(), true);
@@ -320,8 +324,12 @@ final class RestApi
 
       case 'save_current_page_settings':
         // Settings live under a distinct key so they don't overwrite animations.
+        $page_type_config = $payload['pageTypeConfigs'] ?? [];
+        if (!is_array($page_type_config) || !$this->is_valid_page_type_config($page_type_config)) {
+          return new \WP_REST_Response(['success' => false, 'error' => 'invalid_page_type_config'], 400);
+        }
         $this->page_type->saveConfig(
-          $this->settings_config($payload['pageTypeConfigs'] ?? []),
+          $this->settings_config($page_type_config),
           $payload['animationConfigs'] ?? []
         );
 
@@ -397,8 +405,12 @@ final class RestApi
 
       case 'delete_current_page_settings':
         // Delete BOTH the settings key and the animation key so the page is fully cleared.
-        $this->page_type->deleteConfig($this->settings_config($payload['pageTypeConfigs'] ?? []));
-        $this->page_type->deleteConfig($payload['pageTypeConfigs'] ?? []);
+        $page_type_config = $payload['pageTypeConfigs'] ?? [];
+        if (!is_array($page_type_config) || !$this->is_valid_page_type_config($page_type_config)) {
+          return new \WP_REST_Response(['success' => false, 'error' => 'invalid_page_type_config'], 400);
+        }
+        $this->page_type->deleteConfig($this->settings_config($page_type_config));
+        $this->page_type->deleteConfig($page_type_config);
         update_option('motionkit_page_settings_updated_at', time(), true);
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'page_config_deleted']], 200);
 

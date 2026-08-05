@@ -1,50 +1,41 @@
-=== GSAP Animation Builder for WordPress ===
+=== Motionkit – Visual Animation with GSAP for WordPress ===
 Contributors: wealcoder
-Tags: animation, gsap, scroll animation, motion effects, 
+Tags: animation, gsap, scroll animation, page transitions, visual editor
 Requires at least: 6.7
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.5.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A powerful and customizable GSAP animation builder plugin for WordPress that allows you to create stunning animations with ease. Built with modern architecture, performance optimizations, and design patterns.
+Connects your site to the Motionkit visual editor so you can build GSAP-powered scroll, hover, and page-transition animations without writing code.
 
 == Description ==
 
-**GSAP Animation Builder for WordPress** is a powerful animation plugin that enables you to create stunning GSAP-powered animations for your WordPress website. Built with modern PHP practices, performance optimizations, and design patterns, this plugin provides a solid foundation for creating smooth, performant animations.
+Motionkit connects your WordPress site to the [Motionkit](https://motionkit.io) visual animation editor, so you can build GSAP-powered scroll effects, hover interactions, page transitions, and text/image animations without writing JavaScript.
+
+This plugin is the WordPress-side connector: it authenticates your site with the Motionkit editor, stores the animations and settings you create, and renders them on the front end using GSAP. The visual editor itself runs at editor.motionkit.io — you design animations there against a live preview of your actual pages, then Motionkit saves the result back to your site.
 
 = Key Features =
 
-* **Modern Architecture** - Built with design patterns (Factory, Strategy, Decorator, Singleton)
-* **Performance Optimized** - Lazy loading, caching, and conditional asset loading
-* **Easy Animation Creation** - Build animations with a visual interface
-* **Secure** - Comprehensive security measures and data sanitization
-* **Extensible** - Easy to extend with custom strategies and decorators
-* **Well Documented** - Comprehensive developer documentation
+* **Visual animation editor** – Build scroll-triggered, hover, and load-in animations on a live preview of your site, no code required
+* **Built on GSAP** – Industry-standard animation engine (GSAP + ScrollTrigger + ScrollSmoother) for smooth, performant motion
+* **Per-page and global animations** – Apply animations to a single post/page, a whole post type, or site-wide
+* **Ready-made presets** – Text reveals, image hover effects, scroll parallax, cursor effects, and page transitions out of the box
+* **Device-aware** – Configure different behavior per breakpoint (desktop, laptop, tablet, mobile)
+* **Secure by design** – Signed, single-use session tokens for the editor connection; sanitized input and escaped output throughout
+* **Built for performance** – Assets are only enqueued on pages that actually have animations configured
 
-= Performance Features =
+= How it works =
 
-* **Caching System** - Object caching for options and expensive operations
-* **Lazy Loading** - Components loaded only when needed
-* **Conditional Loading** - Assets loaded based on context
-* **Duplicate Prevention** - Prevents duplicate asset enqueueing
-* **Request Optimization** - Skips initialization on AJAX/cron requests
+1. Install and activate the plugin.
+2. Connect your site to Motionkit from the plugin's admin page (OAuth-style authorization — no manual API keys to copy/paste).
+3. Open the Motionkit editor and pick the page you want to animate. The editor loads a live, interactive preview of that exact page.
+4. Build your animation visually and save. The plugin stores it on your site and renders it on the front end with GSAP.
 
-= Design Patterns Implemented =
+= Requires an account =
 
-* **Singleton Pattern** - Ensures single plugin instance
-* **Factory Pattern** - Centralized component creation
-* **Strategy Pattern** - Encapsulates animation algorithms
-* **Decorator Pattern** - Extends asset loader functionality
-
-= Developer Friendly =
-
-* PSR-4 Autoloading
-* Comprehensive API documentation
-* Easy to extend and customize
-* Modern PHP 7.4+ features
-* WordPress coding standards compliant
+The visual editor at editor.motionkit.io is a hosted service operated by Motionkit. This plugin is the connector only — building and editing animations happens in that hosted editor, which requires a Motionkit account. See the "External services" section below for exactly what this plugin sends there and when.
 
 == Installation ==
 
@@ -54,117 +45,96 @@ A powerful and customizable GSAP animation builder plugin for WordPress that all
 * PHP version 7.4 or greater
 * MySQL version 5.0 or greater
 
-= Recommended Requirements =
-
-* PHP version 8.0 or greater
-* MySQL version 5.7 or greater
-* WordPress Memory limit of 128 MB or greater
-
 = Installation Steps =
 
-1. Upload the plugin folder to `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Configure settings as needed
-
-= Usage =
-
-Once activated, you can start creating animations using the plugin's animation builder interface.
-
-**Basic Usage:**
-* Access animation builder through post edit pages
-* Create and customize animations
-* Preview animations in real-time
-* Save and apply animations to your content
+1. Upload the plugin folder to `/wp-content/plugins/` directory, or install directly through the WordPress admin's "Add Plugin" screen.
+2. Activate the plugin through the 'Plugins' menu in WordPress.
+3. Go to the "Motionkit" admin menu and connect your site to your Motionkit account.
+4. Open the Motionkit editor from the same page to start building animations.
 
 == Frequently Asked Questions ==
 
-= What is GSAP Animation Builder for WordPress? =
+= What is Motionkit? =
 
-GSAP Animation Builder for WordPress is a powerful plugin that enables you to create GSAP-powered animations for your WordPress website without requiring extensive coding knowledge.
+Motionkit is a visual animation editor for WordPress, built on GSAP. This plugin connects your WordPress site to the hosted editor at editor.motionkit.io so you can design scroll effects, hover interactions, page transitions, and text/image animations without writing code, then save them back to your site.
 
-= Does this plugin require GSAP library? =
+= Do I need a Motionkit account? =
 
-Yes, the plugin is designed to work with GSAP (GreenSock Animation Platform). You'll need to load the GSAP library separately or include it with your theme.
+Yes. The visual editor is a hosted service — you connect your WordPress site to your Motionkit account once, then build animations in the editor against a live preview of your site.
 
-= What are the system requirements? =
+= Does this plugin load GSAP? =
 
-* WordPress 6.7+
-* PHP 7.4+
-* GSAP Library (loaded separately or included)
-
-= Is this plugin performance optimized? =
-
-Yes! The plugin includes multiple performance optimizations:
-* Object caching for options
-* Lazy loading of components
-* Conditional asset loading
-* Duplicate asset prevention
-* Request optimization
-
-= Can I extend this plugin? =
-
-Absolutely! The plugin is built with extensibility in mind. You can:
-* Create custom animation strategies
-* Add custom decorators
-* Hook into plugin lifecycle events
-* Extend existing functionality
-
-See the DEVELOPER.md file for detailed documentation.
+Yes. The plugin loads the GSAP animation engine (core, ScrollTrigger, and ScrollSmoother) from Motionkit's own infrastructure so animations you build in the editor actually run on your site. See "External services" below for details.
 
 = Is the plugin secure? =
 
-Yes, the plugin follows WordPress security best practices:
-* Nonce verification for AJAX requests
-* Data sanitization and validation
-* Capability checks
-* Secure coding practices
+Yes. The editor connection uses signed, single-use session tokens rather than long-lived credentials in the browser. All input is sanitized, all output is escaped, admin actions are nonce-protected and capability-checked, and the stored connection token is encrypted at rest (AES-256).
 
-== Screenshots ==
+= What happens to my animations if I disconnect? =
 
-1. **Animation Builder Interface** - Create animations with an intuitive visual interface
-2. **Performance Dashboard** - Monitor and optimize plugin performance
-3. **Asset Management** - Manage and load assets conditionally
-4. **Developer Tools** - Extend functionality with custom code
+Disconnecting revokes the editor's access to your site. Animations and settings you've already saved stay on your site — disconnecting only stops new edits from the hosted editor, it doesn't delete existing content.
+
+== External services ==
+
+This plugin connects to **Motionkit** (editor.motionkit.io), a hosted service operated by Motionkit that provides the visual animation editor. The following calls are made from your WordPress server to editor.motionkit.io:
+
+* **Connect (OAuth authorize)** — When you click "Connect" in the plugin's admin page, your browser is redirected to editor.motionkit.io to authorize the connection. Sends: your site's home URL and a one-time CSRF state token. No page content or animation data is sent at this step.
+* **Token exchange** — After you authorize, your site's server calls editor.motionkit.io once to exchange the authorization code for an access token. Sends: the authorization code and your site's home URL. Receives: an access token, which is encrypted (AES-256) before being stored in your site's database.
+* **Session launch** — When you open the Motionkit editor for a specific page, your site's server requests a short-lived, signed session token from editor.motionkit.io. Sends: your site's home URL, the URL of the page you're editing, and your connection's access token (as a Bearer header). This happens every time you open the editor for a page.
+* **Verify connection** — When you use the "Verify connection" tool in the plugin's admin page, your site's server checks whether its stored token still matches the server. Sends: your site's home URL and a one-way hash of the stored token (never the token itself).
+* **Disconnect (revoke)** — When you click "Disconnect," your site's server asks editor.motionkit.io to revoke the access token. Sends: your site's home URL and the access token being revoked.
+
+None of these calls send your site's post content, page content, or saved animation data to editor.motionkit.io — animations you build in the editor are sent back to your own WordPress site's REST API, not the other way around, and are stored in your own site's database.
+
+This plugin also loads the **GSAP animation engine** (gsap.min.js, ScrollTrigger, ScrollSmoother, and any additional GSAP plugins you enable from the editor's "GSAP Plugin" settings) from Motionkit's own infrastructure — the script URLs are issued by the Motionkit editor when you connect your site, not a third-party CDN. These scripts are required for animations to actually run in your visitors' browsers, and load automatically on any front-end page where an animation is configured. No visitor data is sent as part of loading these scripts; it's a one-way script fetch, the same as loading a font or icon library from your own server.
+
+By connecting your site to Motionkit, you agree to Motionkit's Terms of Service and Privacy Policy, linked below.
+
+* Motionkit Terms of Service: https://motionkit.io/terms
+* Motionkit Privacy Policy: https://motionkit.io/privacy
 
 == Hooks & Filters ==
 
 = Actions =
 
-* `WCF_ANIMATION_BUILDER_LOADED` - Fired after plugin initialization
-* `wcf_animation_builder_activated` - Fired on plugin activation
-* `wcf_animation_builder_deactivated` - Fired on plugin deactivation
+* `MOTIONKIT_LOADED` - Fired after plugin initialization
+* `motionkit_activated` - Fired on plugin activation
+* `motionkit_deactivated` - Fired on plugin deactivation
+* `motionkit/oauth/connected` - Fired after a successful connection to Motionkit
+
+= Filters =
+
+* `motionkit_core_lib_deps` - Add or modify GSAP script handles registered as dependencies
+* `motionkit_jwt_ttl` - Override the editor session token TTL (default 300 seconds)
+* `motionkit/editor/url` - Override the Motionkit editor base URL
+* `motionkit/editor/allowed_origins` - Override the allowed origins for the editor's postMessage/CORS connection
 
 = Usage Example =
 
 [code]
-add_action('WCF_ANIMATION_BUILDER_LOADED', function() {
+add_action('MOTIONKIT_LOADED', function() {
     // Your custom code here
 });
 [/code]
 
 == Changelog ==
 
-= 1.0.0 - 2024-01-01 =
+= 1.5.1 =
+* Internal naming consistency pass across options, hooks, and JS globals
+* Minor bug fixes
+
+= 1.5.0 =
+* Added preset animation library improvements
+* Performance and stability fixes
+
+= 1.0.0 =
 * Initial release
-* Core animation builder functionality
-* Performance optimizations
-* Caching system
-* Lazy loading implementation
-* Conditional asset loading
-* Design patterns implementation (Factory, Strategy, Decorator, Singleton)
-* Comprehensive documentation
-* Security enhancements
-* Developer-friendly API
 
 == Upgrade Notice ==
 
-= 1.0.0 =
-Initial release of GSAP Animation Builder for WordPress. Upgrade from previous versions is not applicable.
+= 1.5.1 =
+Naming/internal consistency update. No action required.
 
 == Support ==
 
-For support, feature requests, or bug reports, please visit the plugin repository or contact the development team.
-
-== Credits ==
-
-Built with modern PHP practices and WordPress coding standards. Uses design patterns for maintainability and extensibility.
+For support, feature requests, or bug reports, please visit https://motionkit.io or the plugin's support forum on WordPress.org.

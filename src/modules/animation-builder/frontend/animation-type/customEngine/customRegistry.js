@@ -5,15 +5,15 @@
 // for scoped playback (one timeline / all timelines / solo).
 //
 // Public site builds do NOT go through this registry — anims auto-play as
-// they always have. The __MKIT_DEVTOOLS__ DefinePlugin flag strips this
+// they always have. The __MOTIONKIT_DEVTOOLS__ DefinePlugin flag strips this
 // entire module's body in production so the bundle stays slim.
 
-/* global __MKIT_DEVTOOLS__ */
+/* global __MOTIONKIT_DEVTOOLS__ */
 
-const byAnimId = __MKIT_DEVTOOLS__ ? new Map() : null; // animId → gsap.Timeline[]
+const byAnimId = __MOTIONKIT_DEVTOOLS__ ? new Map() : null; // animId → gsap.Timeline[]
 
 export function registerTimeline(animId, tl) {
-  if (!__MKIT_DEVTOOLS__) return;
+  if (!__MOTIONKIT_DEVTOOLS__) return;
   if (!animId || !tl) return;
   const list = byAnimId.get(animId) || [];
   list.push(tl);
@@ -21,24 +21,24 @@ export function registerTimeline(animId, tl) {
 }
 
 export function unregisterAnimation(animId) {
-  if (!__MKIT_DEVTOOLS__) return;
+  if (!__MOTIONKIT_DEVTOOLS__) return;
   byAnimId.delete(animId);
 }
 
 export function getTimelines(animId) {
-  if (!__MKIT_DEVTOOLS__) return [];
+  if (!__MOTIONKIT_DEVTOOLS__) return [];
   return byAnimId.get(animId) || [];
 }
 
 export function getAllTimelines() {
-  if (!__MKIT_DEVTOOLS__) return [];
+  if (!__MOTIONKIT_DEVTOOLS__) return [];
   const out = [];
   for (const list of byAnimId.values()) out.push(...list);
   return out;
 }
 
 export function findTimelineById(timelineId) {
-  if (!__MKIT_DEVTOOLS__) return null;
+  if (!__MOTIONKIT_DEVTOOLS__) return null;
   for (const list of byAnimId.values()) {
     for (const tl of list) {
       if (tl?.vars?.id === timelineId) return tl;
@@ -48,15 +48,15 @@ export function findTimelineById(timelineId) {
 }
 
 export function clearAll() {
-  if (!__MKIT_DEVTOOLS__) return;
+  if (!__MOTIONKIT_DEVTOOLS__) return;
   byAnimId.clear();
 }
 
 // Expose a read-only snapshot of the registry on window so the DevTools
 // Web Component (loaded in the same iframe) can build its master timeline
 // without importing this module directly. Editor preview only.
-if (__MKIT_DEVTOOLS__ && typeof window !== "undefined") {
-  window.__mkitCustomRegistry = {
+if (__MOTIONKIT_DEVTOOLS__ && typeof window !== "undefined") {
+  window.__motionkitCustomRegistry = {
     getAllTimelines,
     findTimelineById,
     getTimelines,
@@ -69,7 +69,7 @@ if (__MKIT_DEVTOOLS__ && typeof window !== "undefined") {
 // branch in callers; editor bundles use the runtime flag set by the WC
 // element's connectedCallback.
 export function isEditorPreviewMode() {
-  if (!__MKIT_DEVTOOLS__) return false;
+  if (!__MOTIONKIT_DEVTOOLS__) return false;
   if (typeof window === "undefined") return false;
-  return window.__mkitDevToolsLoaded === true;
+  return window.__motionkitDevToolsLoaded === true;
 }

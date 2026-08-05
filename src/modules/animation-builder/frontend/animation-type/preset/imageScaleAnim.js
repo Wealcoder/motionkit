@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-image-scale-pa";
+const PRESET_KEY = "motionkit-mk-image-scale-pa";
 
 export function imageScaleAnim() {
   // id -> { timelines: GSAPTimeline[] }
@@ -75,8 +75,8 @@ export function imageScaleAnim() {
     teardown(id);
 
     // Tag both layers so the global reset sweep runs clearProps on them.
-    containerEl.setAttribute("data-wcf-anim-id", id);
-    items.forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+    containerEl.setAttribute("data-motionkit-anim-id", id);
+    items.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
 
     gsap.set(containerEl, {
       height: containerHeight,

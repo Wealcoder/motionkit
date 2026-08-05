@@ -7,7 +7,7 @@
  * so reinstalling preserves saved animations — users can bulk-clear those
  * via the REST delete endpoints if desired.
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  */
 
 if (!defined('WP_UNINSTALL_PLUGIN')) {
@@ -16,9 +16,9 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 
 $options_to_delete = [
   // Core plugin config
-  'wcf_animation_builder_options',
-  'wcf_animation_builder_version',
-  'wcf_animation_builder_creation_date',
+  'motionkit_options',
+  'motionkit_version',
+  'motionkit_creation_date',
 
   // Global animation/settings buckets
   'motionkit_global_settings',
@@ -30,9 +30,18 @@ $options_to_delete = [
   'motionkit_access_token',
   'motionkit_connected_at',
   'motionkit_connected_email',
+  'motionkit_used_jtis',
 
-  // Migration sentinels
-  'motionkit_settings_key_migrated',
+  // License / entitlement mirror
+  'motionkit_license_state',
+  // Legacy: written by the pre-1.2.0 manual "activate license" form, which
+  // never validated anything remotely. Deleted here so an uninstall doesn't
+  // leave a stale "active" flag behind for a future build to trip over.
+  'motionkit_license_key',
+  'motionkit_license_status',
+
+  // Migration sentinel
+  'motionkit_autoload_fixed_v1',
 ];
 
 foreach ($options_to_delete as $option) {
@@ -40,12 +49,19 @@ foreach ($options_to_delete as $option) {
   delete_site_option($option);
 }
 
-// Transients (session-verify cache)
+// Scheduled license refresh
+wp_clear_scheduled_hook('motionkit_license_refresh');
+
+// Transients (session-verify cache, OAuth state, license check markers).
+// The mk_session_ patterns are legacy — sites active before the
+// motionkit_session_ rename may still have these lingering.
 global $wpdb;
 $wpdb->query(
   "DELETE FROM {$wpdb->options}
    WHERE option_name LIKE '_transient_mk_session_%'
-      OR option_name LIKE '_transient_timeout_mk_session_%'"
+      OR option_name LIKE '_transient_timeout_mk_session_%'
+      OR option_name LIKE '_transient_motionkit_%'
+      OR option_name LIKE '_transient_timeout_motionkit_%'"
 );
 
 // User meta (dismissed admin notices)

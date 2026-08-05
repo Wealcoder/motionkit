@@ -34,17 +34,6 @@ export const validateStringFormat = (input) => {
   return pattern.test(input);
 };
 
-export const getResponsiveAndBelow = (configKey) => {
-  const startIndex = WCF_ANIMATION_BUILDER?.device_config.findIndex(
-    (item) => item.key === configKey
-  );
-  if (startIndex === -1) return [];
-
-  return WCF_ANIMATION_BUILDER?.device_config
-    .slice(startIndex)
-    .map((item) => item.key);
-};
-
 export function deepSmartMerge(source, target, base = {}) {
   if (typeof source !== "object" || source === null) return source;
   if (typeof target !== "object" || target === null)
@@ -206,13 +195,3 @@ export function handleMediaQuery(mediaQuery = "", callback = () => {}) {
   }
 }
 
-export const getScreenSize = (value) => {
-  let result = WCF_ANIMATION_BUILDER?.device_config.find(
-    (el) => el.key === value
-  );
-  if (result) {
-    return result;
-  } else {
-    return "100%";
-  }
-};

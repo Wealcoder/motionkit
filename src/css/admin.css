@@ -1,7 +1,7 @@
 /* MotionKit Admin Dashboard */
 
 /* Reset WP admin defaults inside our page */
-.mk-page {
+.motionkit-page {
   margin: -20px 0 0 -20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: #1a1a2e;
@@ -13,20 +13,20 @@
   justify-content: center;
 }
 
-.license_key::placeholder {
+.motionkit-license_key::placeholder {
   color: #9ca3af;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   letter-spacing: normal;
 }
 
-.mk-page *,
-.mk-page *::before,
-.mk-page *::after {
+.motionkit-page *,
+.motionkit-page *::before,
+.motionkit-page *::after {
   box-sizing: border-box;
 }
 
 /* ─── Header ──────────────────────────────────── */
-.mk-header {
+.motionkit-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -38,41 +38,41 @@
   border-radius: 12px 12px 0 0;
 }
 
-.mk-header-left {
+.motionkit-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.mk-header-logo svg {
+.motionkit-header-logo svg {
   display: block;
 }
 
-.mk-header-title {
+.motionkit-header-title {
   font-size: 16px;
   font-weight: 600;
   color: #1a1a2e;
 }
 
-.mk-header-right {
+.motionkit-header-right {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.mk-header-email {
+.motionkit-header-email {
   font-size: 13px;
   color: #6b7280;
 }
 
-.mk-header-avatar {
+.motionkit-header-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   overflow: hidden;
 }
 
-.mk-avatar-img {
+.motionkit-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -80,7 +80,7 @@
 }
 
 /* ─── Layout ──────────────────────────────────── */
-.mk-layout {
+.motionkit-layout {
   display: flex;
   width: 100%;
   max-width: 860px;
@@ -91,7 +91,7 @@
 }
 
 /* ─── Sidebar ─────────────────────────────────── */
-.mk-sidebar {
+.motionkit-sidebar {
   width: 160px;
   flex-shrink: 0;
   border-right: 1px solid #e5e7eb;
@@ -99,13 +99,13 @@
   min-height: 360px;
 }
 
-.mk-sidebar-nav {
+.motionkit-sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.mk-sidebar-link {
+.motionkit-sidebar-link {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -119,17 +119,17 @@
   outline: none;
 }
 
-.mk-sidebar-link:focus {
+.motionkit-sidebar-link:focus {
   outline: none;
   box-shadow: none;
 }
 
-.mk-sidebar-link:hover {
+.motionkit-sidebar-link:hover {
   background: #eff6ff;
   color: #2563eb;
 }
 
-.mk-sidebar-link--active {
+.motionkit-sidebar-link--active {
   background: #eff6ff;
   color: #2563eb;
   border-left-color: #2563eb;
@@ -137,7 +137,7 @@
 }
 
 
-.mk-sidebar-icon {
+.motionkit-sidebar-icon {
   font-size: 14px;
   width: 18px;
   text-align: center;
@@ -145,20 +145,20 @@
 }
 
 /* ─── Content ─────────────────────────────────── */
-.mk-content {
+.motionkit-content {
   flex: 1;
   padding: 24px 28px;
 }
 
 /* ─── Cards ───────────────────────────────────── */
-.mk-card {
+.motionkit-card {
   background: #fff;
   border: 1px solid #f3f4f6;
   border-radius: 8px;
   margin-bottom: 20px;
 }
 
-.mk-card-header {
+.motionkit-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -166,23 +166,23 @@
   border-bottom: 1px solid #f3f4f6;
 }
 
-.mk-card-header-left {
+.motionkit-card-header-left {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.mk-card-body {
+.motionkit-card-body {
   padding: 20px 24px;
 }
 
-.mk-card-footer {
+.motionkit-card-footer {
   padding: 16px 24px;
   background: #f9fafb;
   border-top: 1px solid #f3f4f6;
 }
 
-.mk-card-title {
+.motionkit-card-title {
   font-size: 15px;
   font-weight: 600;
   color: #1a1a2e;
@@ -192,25 +192,25 @@
   gap: 6px;
 }
 
-.mk-title-icon {
+.motionkit-title-icon {
   font-size: 16px;
 }
 
-.mk-card-desc {
+.motionkit-card-desc {
   font-size: 13px;
   color: #6b7280;
   margin: 0 0 16px;
   line-height: 1.5;
 }
 
-.mk-footer-title {
+.motionkit-footer-title {
   font-size: 13px;
   font-weight: 600;
   color: #1a1a2e;
   margin: 0 0 6px;
 }
 
-.mk-footer-desc {
+.motionkit-footer-desc {
   font-size: 12px;
   color: #9ca3af;
   margin: 0;
@@ -218,7 +218,7 @@
 }
 
 /* ─── Badges ──────────────────────────────────── */
-.mk-badge {
+.motionkit-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -229,18 +229,28 @@
   white-space: nowrap;
 }
 
-.mk-badge--success {
+.motionkit-badge--success {
   background: #ecfdf5;
   color: #059669;
 }
 
-.mk-badge--error {
+.motionkit-badge--error {
   background: #fef2f2;
   color: #ef4444;
 }
 
+.motionkit-badge--warning {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.motionkit-badge--neutral {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
 /* ─── Buttons ─────────────────────────────────── */
-.mk-btn {
+.motionkit-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -257,15 +267,15 @@
   white-space: nowrap;
 }
 
-.mk-btn--primary {
+.motionkit-btn--primary {
   background: #2563eb;
   color: #fff;
   border-color: #2563eb;
   box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
 }
 
-.mk-btn--primary:hover,
-.mk-btn--primary:focus {
+.motionkit-btn--primary:hover,
+.motionkit-btn--primary:focus {
   background: #1d4ed8;
   border-color: #1d4ed8;
   color: #fff;
@@ -274,24 +284,24 @@
   outline: none;
 }
 
-.mk-btn--primary:active {
+.motionkit-btn--primary:active {
   transform: translateY(0) scale(0.97);
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
   transition-duration: 0.1s;
 }
 
 /* ─── Split text hover ───────────────────────── */
-.mk-btn--split { overflow: hidden; }
-.mk-btn__text { display: inline-flex; position: relative; overflow: hidden; }
+.motionkit-btn--split { overflow: hidden; }
+.motionkit-btn__text { display: inline-flex; position: relative; overflow: hidden; }
 
-.mk-btn__char,
-.mk-btn__text::after {
+.motionkit-btn__char,
+.motionkit-btn__text::after {
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.mk-btn__char { display: inline-block; }
+.motionkit-btn__char { display: inline-block; }
 
-.mk-btn__text::after {
+.motionkit-btn__text::after {
   content: attr(data-text);
   position: absolute;
   left: 0;
@@ -300,38 +310,38 @@
   pointer-events: none;
 }
 
-.mk-btn--split:hover .mk-btn__char { transform: translateY(-110%); }
-.mk-btn--split:hover .mk-btn__text::after { transform: translateY(-100%); }
+.motionkit-btn--split:hover .motionkit-btn__char { transform: translateY(-110%); }
+.motionkit-btn--split:hover .motionkit-btn__text::after { transform: translateY(-100%); }
 
-.mk-btn--outline {
+.motionkit-btn--outline {
   background: #fff;
   color: #374151;
   border-color: #d1d5db;
 }
 
-.mk-btn--outline:hover {
+.motionkit-btn--outline:hover {
   background: #f9fafb;
   border-color: #9ca3af;
   color: #1a1a2e;
 }
 
-.mk-btn--danger {
+.motionkit-btn--danger {
   color: #ef4444;
   border-color: #fecaca;
 }
 
-.mk-btn--danger:hover {
+.motionkit-btn--danger:hover {
   background: #fef2f2;
   border-color: #ef4444;
   color: #dc2626;
 }
 
 /* ─── Forms ───────────────────────────────────── */
-.mk-form-group {
+.motionkit-form-group {
   margin-bottom: 14px;
 }
 
-.mk-input {
+.motionkit-input {
   display: block;
   width: 100%;
   padding: 12px 16px;
@@ -344,16 +354,16 @@
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.mk-input:focus {
+.motionkit-input:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.mk-input::placeholder {
+.motionkit-input::placeholder {
   color: #9ca3af;
 }
 
-.mk-form-actions {
+.motionkit-form-actions {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -361,35 +371,35 @@
 }
 
 /* ─── Info Rows (Connect tab) ─────────────────── */
-.mk-info-row {
+.motionkit-info-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 0;
 }
 
-.mk-info-row+.mk-info-row {
+.motionkit-info-row+.motionkit-info-row {
   border-top: 1px solid #f3f4f6;
 }
 
-.mk-info-content {
+.motionkit-info-content {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.mk-info-label {
+.motionkit-info-label {
   font-size: 12px;
   color: #9ca3af;
 }
 
-.mk-info-value {
+.motionkit-info-value {
   font-size: 14px;
   color: #1a1a2e;
 }
 
 /* ─── License Active ──────────────────────────── */
-.mk-license-key-display {
+.motionkit-license-key-display {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -400,7 +410,7 @@
   border-radius: 6px;
 }
 
-.mk-license-key-value {
+.motionkit-license-key-value {
   font-family: 'SF Mono', Monaco, 'Courier New', monospace;
   font-size: 13px;
   color: #4b5563;
@@ -408,7 +418,7 @@
 }
 
 /* ─── Notices ─────────────────────────────────── */
-.mk-notice {
+.motionkit-notice {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -419,30 +429,30 @@
   position: relative;
 }
 
-.mk-notice--success {
+.motionkit-notice--success {
   background: #ecfdf5;
   color: #065f46;
   border: 1px solid #a7f3d0;
 }
 
-.mk-notice--error {
+.motionkit-notice--error {
   background: #fef2f2;
   color: #991b1b;
   border: 1px solid #fecaca;
 }
 
-.mk-notice--info {
+.motionkit-notice--info {
   background: #eff6ff;
   color: #1e40af;
   border: 1px solid #bfdbfe;
 }
 
-.mk-notice-icon {
+.motionkit-notice-icon {
   font-size: 14px;
   flex-shrink: 0;
 }
 
-.mk-notice-close {
+.motionkit-notice-close {
   position: absolute;
   right: 12px;
   top: 50%;
@@ -457,14 +467,14 @@
   line-height: 1;
 }
 
-.mk-notice-close:hover {
+.motionkit-notice-close:hover {
   opacity: 1;
 }
 
 /* ─── Help Tab ────────────────────────────────── */
 
 /* Support Banner */
-.mk-support-banner {
+.motionkit-support-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -475,7 +485,7 @@
   margin-bottom: 20px;
 }
 
-.mk-support-banner-title {
+.motionkit-support-banner-title {
   font-size: 15px;
   font-weight: 600;
   color: #1a1a2e;
@@ -485,20 +495,20 @@
   gap: 6px;
 }
 
-.mk-support-banner-desc {
+.motionkit-support-banner-desc {
   font-size: 13px;
   color: #6b7280;
   margin: 0;
 }
 
 /* Help Grid — two cards side by side */
-.mk-help-grid {
+.motionkit-help-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-.mk-help-card {
+.motionkit-help-card {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -509,7 +519,7 @@
   align-items: center;
 }
 
-.mk-help-card-img {
+.motionkit-help-card-img {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -520,14 +530,14 @@
   margin-bottom: 16px;
 }
 
-.mk-help-card-title {
+.motionkit-help-card-title {
   font-size: 15px;
   font-weight: 600;
   color: #1a1a2e;
   margin: 0 0 8px;
 }
 
-.mk-help-card-desc {
+.motionkit-help-card-desc {
   font-size: 12px;
   color: #6b7280;
   margin: 0 0 16px;
@@ -535,7 +545,7 @@
 }
 
 /* Legacy (kept for compat) */
-.mk-help-link {
+.motionkit-help-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -548,12 +558,12 @@
   transition: background 0.15s;
 }
 
-.mk-help-link:hover {
+.motionkit-help-link:hover {
   background: #dbeafe;
   color: #1d4ed8;
 }
 
-.mk-card-body .license_key {
+.motionkit-card-body .motionkit-license_key {
   border: 1px solid #e5e7eb;
   background: #F4F4F5;
   padding: 5px 16px;
@@ -565,19 +575,19 @@
   width: 100%;
 }
 
-.license_key:focus {
+.motionkit-license_key:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* ─── Responsive ─────────────────────────────── */
 @media (max-width: 782px) {
-  .mk-layout {
+  .motionkit-layout {
     flex-direction: column;
     border-radius: 12px;
   }
 
-  .mk-sidebar {
+  .motionkit-sidebar {
     width: 100%;
     min-height: auto;
     border-right: none;
@@ -585,7 +595,7 @@
     padding: 8px 0;
   }
 
-  .mk-sidebar-nav {
+  .motionkit-sidebar-nav {
     flex-direction: row;
     gap: 0;
     overflow-x: auto;
@@ -594,9 +604,9 @@
     padding: 0 8px;
   }
 
-  .mk-sidebar-nav::-webkit-scrollbar { display: none; }
+  .motionkit-sidebar-nav::-webkit-scrollbar { display: none; }
 
-  .mk-sidebar-link {
+  .motionkit-sidebar-link {
     border-left: none;
     border-bottom: 2px solid transparent;
     padding: 10px 14px;
@@ -604,23 +614,23 @@
     flex-shrink: 0;
   }
 
-  .mk-sidebar-link--active {
+  .motionkit-sidebar-link--active {
     border-left-color: transparent;
     border-bottom-color: #2563eb;
   }
 
-  .mk-content {
+  .motionkit-content {
     padding: 20px 16px;
   }
 
-  .mk-header {
+  .motionkit-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
     padding: 16px 16px;
   }
 
-  .mk-help-grid {
+  .motionkit-help-grid {
     grid-template-columns: 1fr;
   }
 }

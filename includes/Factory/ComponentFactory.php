@@ -1,11 +1,11 @@
 <?php
 
-namespace WcfAnimationBuilder\Factory;
+namespace MotionKit\Factory;
 
 /**
  * Component Factory Class
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.0.0
  */
 
@@ -14,9 +14,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-use WcfAnimationBuilder\Backend\Backend;
-use WcfAnimationBuilder\Frontend\Frontend;
-use WcfAnimationBuilder\Common\Assets\AssetLoader;
+use MotionKit\Backend\Backend;
+use MotionKit\Frontend\Frontend;
+use MotionKit\Common\Assets\AssetLoader;
 
 /**
  * Component Factory Class

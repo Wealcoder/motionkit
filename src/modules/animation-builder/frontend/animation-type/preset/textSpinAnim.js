@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-text-spin-pa";
+const PRESET_KEY = "motionkit-mk-text-spin-pa";
 
 export function textSpinAnim() {
   // id -> { timelines: [], splits: [], wrappers: [{wrapper, item, clone}], cleanups: [] }
@@ -119,9 +119,9 @@ export function textSpinAnim() {
       `;
       wrapper.appendChild(clonedItem);
 
-      wrapper.setAttribute("data-wcf-anim-id", id);
-      originalItem.setAttribute("data-wcf-anim-id", id);
-      clonedItem.setAttribute("data-wcf-anim-id", id);
+      wrapper.setAttribute("data-motionkit-anim-id", id);
+      originalItem.setAttribute("data-motionkit-anim-id", id);
+      clonedItem.setAttribute("data-motionkit-anim-id", id);
 
       let originalSplit, cloneSplit;
       try {

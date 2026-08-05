@@ -120,7 +120,7 @@
 
     // Deep-clone each anim before dispatch — GSAP mutates the vars object you
     // pass to it (adds `duration`, `ease`, `parent`, etc.). Without this, those
-    // GSAP-injected props leak back into wcfanimb.all_animations.
+    // GSAP-injected props leak back into motionkitData.all_animations.
     for (var i = 0; i < built.animations.length; i++) {
       document.dispatchEvent(
         new CustomEvent("aae-animation-event", {
@@ -147,7 +147,7 @@
     );
   }
 
-  // Coalesce bursts of `wcf-animation-config` from the editor (slider drags
+  // Coalesce bursts of `motionkit-animation-config` from the editor (slider drags
   // can fire ~50/sec). We hold the latest payload and process it once per
   // animation frame — older ones are superseded and dropped, since only the
   // final state is observable. Without this, every intermediate config
@@ -178,11 +178,11 @@
   window.addEventListener("message", function (event) {
     if (!parentOrigin) parentOrigin = event.origin;
 
-    if (event.data?.type === "wcf-animation-config") {
+    if (event.data?.type === "motionkit-animation-config") {
       var payload = event.data.data || {};
       var all_animations = payload.all_animations || [];
       var all_settings = payload.all_settings || {};
-      window.wcfanimb = Object.assign({}, window.wcfanimb || {}, {
+      window.motionkitData = Object.assign({}, window.motionkitData || {}, {
         all_animations: all_animations,
         all_settings: all_settings,
       });
@@ -203,7 +203,7 @@
     }
 
     // Reset animations
-    if ("wcf-animation-config-reset" in event.data) {
+    if ("motionkit-animation-config-reset" in event.data) {
       document.dispatchEvent(
         new CustomEvent("aae-reset-animation", {
           detail: "",
@@ -217,7 +217,7 @@
     if (event.data.type === "motionkit-settings") {
       const { globalSettings = {}, currentPageSettings = {} } =
         event.data.data || {};
-      window.wcfanimb = Object.assign({}, window.wcfanimb || {}, {
+      window.motionkitData = Object.assign({}, window.motionkitData || {}, {
         currentPageSettings,
         globalSettings,
       });
@@ -238,7 +238,7 @@
     try {
       var session = new URLSearchParams(window.location.search).get("session");
       if (!session) return null;
-      var raw = localStorage.getItem("mk-preview-" + session);
+      var raw = localStorage.getItem("motionkit-preview-" + session);
       return raw ? JSON.parse(raw) : null;
     } catch (e) {
       return null;
@@ -246,7 +246,7 @@
   }
 
   window.addEventListener("load", () => {
-    const source = loadFullPreviewData() || window.wcfanimb || {};
+    const source = loadFullPreviewData() || window.motionkitData || {};
     resolveAndDispatch(source.all_animations, source.all_settings);
   });
 })();

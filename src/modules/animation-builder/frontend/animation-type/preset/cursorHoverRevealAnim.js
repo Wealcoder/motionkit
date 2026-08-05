@@ -1,6 +1,6 @@
 import { VOID_ELEMENTS } from "../../../config/VoidElement";
 
-const PRESET_KEY = "wcf-mk-cursor-cr-pa";
+const PRESET_KEY = "motionkit-mk-cursor-cr-pa";
 
 export function cursorHoverRevealAnim() {
   // id -> array of per-item teardown fns
@@ -82,7 +82,7 @@ export function cursorHoverRevealAnim() {
     }
 
     // Tag so the global reset sweep runs clearProps alongside our local teardown.
-    itemEl.setAttribute("data-wcf-anim-id", id);
+    itemEl.setAttribute("data-motionkit-anim-id", id);
     itemEl.appendChild(cursorEl);
 
     gsap.set(cursorEl, {

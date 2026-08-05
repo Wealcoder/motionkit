@@ -1,22 +1,22 @@
 import { isEditorPreviewMode } from "../customRegistry.js";
 
-/* global __MKIT_DEV_LOG__ */
+/* global __MOTIONKIT_DEV_LOG__ */
 
-// Build-time flag from webpack DefinePlugin, driven by the MOTIONKIT_DEV_LOG env var (see .env / .env.example). Now only a fallback — the same var is also read at runtime by PHP (Helper::is_dev_log) and passed through as wcfanimb.dev_log, so prefer toggling that and skip the rebuild. Baking it true still forces logs on for a dev bundle. The typeof guard keeps the module safe if the define is absent (e.g. running the source unbundled).
+// Build-time flag from webpack DefinePlugin, driven by the MOTIONKIT_DEV_LOG env var (see .env / .env.example). Now only a fallback — the same var is also read at runtime by PHP (Helper::is_dev_log) and passed through as motionkitData.dev_log, so prefer toggling that and skip the rebuild. Baking it true still forces logs on for a dev bundle. The typeof guard keeps the module safe if the define is absent (e.g. running the source unbundled).
 const DEV_LOG =
-  typeof __MKIT_DEV_LOG__ !== "undefined" && __MKIT_DEV_LOG__ === true;
+  typeof __MOTIONKIT_DEV_LOG__ !== "undefined" && __MOTIONKIT_DEV_LOG__ === true;
 
 // Live "MOTIONKIT GSAP ENGINE" logger for custom-engine animations. Fires each time an animation actually begins running — a timeline/tween onStart, or a ScrollTrigger entering its active range — so the console reflects what is animating live rather than merely what got built. Logs the editor-side identity (timeline + animation) plus the resolved ScrollTrigger data so a running animation can be traced straight back to its config.
 
 // Gate logging so it never spams a public customer site console. Resolution order, first match wins:
-//   1. window.__mkitRunLog — manual console override, `true` force-enables anywhere and `false` silences.
-//   2. wcfanimb.dev_log   — runtime flag PHP reads from .env per request, so toggling MOTIONKIT_DEV_LOG needs no rebuild.
-//   3. DEV_LOG            — the build-time define, kept so existing dev bundles keep logging unchanged.
+//   1. window.__motionkitRunLog — manual console override, `true` force-enables anywhere and `false` silences.
+//   2. motionkitData.dev_log    — runtime flag PHP reads from .env per request, so toggling MOTIONKIT_DEV_LOG needs no rebuild.
+//   3. DEV_LOG                  — the build-time define, kept so existing dev bundles keep logging unchanged.
 //   4. editor preview.
 function loggingEnabled() {
   if (typeof window === "undefined") return false;
-  if (window.__mkitRunLog != null) return !!window.__mkitRunLog;
-  if (window.wcfanimb?.dev_log) return true;
+  if (window.__motionkitRunLog != null) return !!window.__motionkitRunLog;
+  if (window.motionkitData?.dev_log) return true;
   return DEV_LOG || isEditorPreviewMode();
 }
 

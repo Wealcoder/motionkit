@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-image-ss-pa";
+const PRESET_KEY = "motionkit-mk-image-ss-pa";
 
 // Baked-in look values — kept out of the UI so the preset stays simple.
 const SLICE_SKEW = 8; // deg alternating skew as strips fly in
@@ -232,8 +232,8 @@ export function imageSliceShutterAnim() {
       }
 
       // Tag both nodes so the global reset sweep runs clearProps on each.
-      containerEl.setAttribute("data-wcf-anim-id", id);
-      itemEl.setAttribute("data-wcf-anim-id", id);
+      containerEl.setAttribute("data-motionkit-anim-id", id);
+      itemEl.setAttribute("data-motionkit-anim-id", id);
 
       // Strips are absolutely positioned inside the frame and must be clipped to it.
       const cs = getComputedStyle(containerEl);

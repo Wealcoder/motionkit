@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-popup-media-pa";
+const PRESET_KEY = "motionkit-mk-popup-media-pa";
 const POPUP_TAG = "motionkit-popup-media";
 
 // All popup styles live inside the shadow root so theme/page CSS on the
@@ -440,7 +440,7 @@ export function popupMediaAnim() {
     const savedScroll = window.pageYOffset;
 
     const host = document.createElement(POPUP_TAG);
-    host.classList.add("wcfanimb-skip-selector-full");
+    host.classList.add("motionkit-skip-selector-full");
     host.dataset.popupId = popupId;
     host.dataset.scrollPosition = String(savedScroll);
 
@@ -569,7 +569,7 @@ export function popupMediaAnim() {
       }
 
       elements.forEach((el) => {
-        el.setAttribute("data-wcf-anim-id", id);
+        el.setAttribute("data-motionkit-anim-id", id);
 
         switch (triggerType) {
           case "click":

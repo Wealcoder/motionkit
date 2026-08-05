@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-image-cm-pa";
+const PRESET_KEY = "motionkit-mk-image-cm-pa";
 
 // Baked-in look values — deliberately kept out of the UI so the preset stays
 // simple. Power users who need to tune these use a custom animation instead.
@@ -185,8 +185,8 @@ export function imageCinematicMaskAnim() {
 
       // Tag both nodes so the global reset sweep (lib/resetAllAnimations.js)
       // runs clearProps on each alongside our local teardown.
-      containerEl.setAttribute("data-wcf-anim-id", id);
-      itemEl.setAttribute("data-wcf-anim-id", id);
+      containerEl.setAttribute("data-motionkit-anim-id", id);
+      itemEl.setAttribute("data-motionkit-anim-id", id);
 
       const withShade = shade === true || shade === "true";
       const withSweep = sweep === true || sweep === "true";

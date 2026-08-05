@@ -1,10 +1,10 @@
 <?php
 
-namespace WcfAnimationBuilder\Includes;
+namespace MotionKit\Includes;
 /**
  * Custom Autoloader for GSAP Animation Builder
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.0.0
  */
 
@@ -26,7 +26,7 @@ final class Autoloader
      *
      * @var string
      */
-    private const NAMESPACE_PREFIX = 'WcfAnimationBuilder\\';
+    private const NAMESPACE_PREFIX = 'MotionKit\\';
 
     /**
      * The base directory for the namespace prefix

@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-sticky-hs-pa";
+const PRESET_KEY = "motionkit-mk-sticky-hs-pa";
 
 export function headerStickyAnim() {
   // id -> { timelines, cleanups, item, clone }
@@ -116,15 +116,15 @@ export function headerStickyAnim() {
     const endClass =
       endClassRaw && endClassRaw !== ""
         ? endClassRaw
-        : ".wcf-ab-pin-end-selector-26";
+        : ".motionkit-pin-end-selector-26";
 
     const itemClone = item.cloneNode(true);
     if (styleClass && typeof styleClass === "string") {
       itemClone.classList.add(styleClass.replace(/^[.#]/, ""));
     }
 
-    item.setAttribute("data-wcf-anim-id", id);
-    itemClone.setAttribute("data-wcf-anim-id", id);
+    item.setAttribute("data-motionkit-anim-id", id);
+    itemClone.setAttribute("data-motionkit-anim-id", id);
 
     // Sibling placement keeps theme ancestor selectors (e.g.
     // `header .wp-block-site-title { … }`) matching the clone. If a

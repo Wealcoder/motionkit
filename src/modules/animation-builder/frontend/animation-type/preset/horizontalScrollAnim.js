@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-scroll-hor-pa";
+const PRESET_KEY = "motionkit-mk-scroll-hor-pa";
 
 export function horizontalScrollAnim() {
   // id -> { timelines: GSAPTimeline[] }
@@ -70,8 +70,8 @@ export function horizontalScrollAnim() {
 
     teardown(id);
 
-    containerEl.setAttribute("data-wcf-anim-id", id);
-    items.forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+    containerEl.setAttribute("data-motionkit-anim-id", id);
+    items.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
 
     let widthsPx;
     if (

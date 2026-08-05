@@ -1,6 +1,6 @@
 import { VOID_ELEMENTS } from "../../../config/VoidElement";
 
-const PRESET_KEY = "wcf-mk-image-mg-pa";
+const PRESET_KEY = "motionkit-mk-image-mg-pa";
 
 export function imageHoverMagnifier() {
   // id -> array of per-item teardown fns
@@ -142,7 +142,7 @@ export function imageHoverMagnifier() {
     const { lens, zoomed } = buildLens({ ...cfg, imageUrl });
     clip.appendChild(lens);
     mountEl.appendChild(clip);
-    target.setAttribute("data-wcf-anim-id", id);
+    target.setAttribute("data-motionkit-anim-id", id);
 
     gsap.set(lens, { xPercent: -50, yPercent: -50, scale: 0, opacity: 0 });
 

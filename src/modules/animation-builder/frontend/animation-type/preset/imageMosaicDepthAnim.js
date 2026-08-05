@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-image-md-pa";
+const PRESET_KEY = "motionkit-mk-image-md-pa";
 
 // Baked-in look values — kept out of the UI so the preset stays simple.
 const TILE_SCATTER = 90; // px random x/y spread of the tiles before they settle
@@ -192,8 +192,8 @@ export function imageMosaicDepthAnim() {
       }
 
       // Tag both nodes so the global reset sweep runs clearProps on each.
-      containerEl.setAttribute("data-wcf-anim-id", id);
-      itemEl.setAttribute("data-wcf-anim-id", id);
+      containerEl.setAttribute("data-motionkit-anim-id", id);
+      itemEl.setAttribute("data-motionkit-anim-id", id);
 
       // Tiles are absolutely positioned inside the frame and must be clipped to it.
       const cs = getComputedStyle(containerEl);

@@ -1,11 +1,11 @@
 <?php
 
-namespace WcfAnimationBuilder\Helpers;
+namespace MotionKit\Helpers;
 
 /**
  * Helper Functions Class
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.0.0
  */
 
@@ -39,7 +39,7 @@ final class Helper
     public static function get_option(string $key, $default = null)
     {
         if (null === self::$cached_options) {
-            self::$cached_options = get_option('wcf_animation_builder_options', []);
+            self::$cached_options = get_option('motionkit_options', []);
         }
         return self::$cached_options[$key] ?? $default;
     }
@@ -54,10 +54,10 @@ final class Helper
     public static function update_option(string $key, $value): bool
     {
         if (null === self::$cached_options) {
-            self::$cached_options = get_option('wcf_animation_builder_options', []);
+            self::$cached_options = get_option('motionkit_options', []);
         }
         self::$cached_options[$key] = $value;
-        return update_option('wcf_animation_builder_options', self::$cached_options);
+        return update_option('motionkit_options', self::$cached_options);
     }
 
     /**

@@ -1,9 +1,9 @@
 // Global reset for all animation types. Editor-only — dispatched on `aae-reset-animation`.
-// Sweeps the DOM for any element marked with `data-wcf-anim-id` and clears applied state
+// Sweeps the DOM for any element marked with `data-motionkit-anim-id` and clears applied state
 // across free animations and GSAP alike.
 
-const FREE_CLASS_PREFIX = "wcf-free-ab-";
-const FREE_INIT_STYLE_CLASS = "wcf-free-ab-init-style-props";
+const FREE_CLASS_PREFIX = "motionkit-free-ab-";
+const FREE_INIT_STYLE_CLASS = "motionkit-free-ab-init-style-props";
 const CSS_VAR_PREFIX = "--animation";
 
 function clearFreeAnimationNode(node) {
@@ -30,19 +30,19 @@ function killGsap(nodes) {
 
   // A SplitText-driven tween's real targets are the char/word/line spans
   // SplitText generates — those are never individually tagged with
-  // data-wcf-anim-id (only the container matching step.itemClass is, via
+  // data-motionkit-anim-id (only the container matching step.itemClass is, via
   // tagAllTargets). closest() catches both: an exact-tagged element (matches
   // itself) and a split span nested inside one (matches the ancestor). It
   // does NOT walk to ANCESTORS of the checked element being tagged further
   // out, so ScrollSmoother's own wrapper/body-level trigger — an ANCESTOR of
   // our tagged elements, never a descendant — still correctly never matches.
-  const isOwned = (el) => !!(el && el.closest && el.closest("[data-wcf-anim-id]"));
+  const isOwned = (el) => !!(el && el.closest && el.closest("[data-motionkit-anim-id]"));
 
   // Scoped sweep: only kill triggers whose trigger element OR whose driven
-  // animation targets one of OUR animated elements (data-wcf-anim-id). Matching
+  // animation targets one of OUR animated elements (data-motionkit-anim-id). Matching
   // the animation targets — not just the trigger element — catches animations
   // that use a custom trigger selector (a section/container that never carries
-  // data-wcf-anim-id); without it those ScrollTriggers survive every reset and
+  // data-motionkit-anim-id); without it those ScrollTriggers survive every reset and
   // accumulate on each Play/Save. ScrollSmoother's own internal trigger is
   // attached to body/wrapper and its animation targets the content wrapper —
   // never owned — so it's never touched. No kill, no recreate, no lerp
@@ -84,12 +84,12 @@ function killGsap(nodes) {
   }
 }
 function runGlobalReset() {
-  const animatedNodes = [...document.querySelectorAll("[data-wcf-anim-id]")];
+  const animatedNodes = [...document.querySelectorAll("[data-motionkit-anim-id]")];
   killGsap(animatedNodes);
   animatedNodes.forEach((node) => {
     clearFreeAnimationNode(node);
-    node.removeAttribute("data-wcf-anim-id");
-    node.removeAttribute("data-wcf-mk-step-id");
+    node.removeAttribute("data-motionkit-anim-id");
+    node.removeAttribute("data-motionkit-step-id");
   });
   // Preset-specific cleanups (e.g. customEngine) listen for this event and
   // run AFTER the global nuke. Using a DOM event instead of a shared callback
@@ -100,7 +100,7 @@ function runGlobalReset() {
 
 // Two channels so presets don't need to forward:
 // - window.message: external triggers (cross-frame, explicit postMessage)
-// - document event: what frontend.js dispatches for `wcf-animation-config-reset`
+// - document event: what frontend.js dispatches for `motionkit-animation-config-reset`
 window.addEventListener("message", (e) => {
   if (e.data?.type === "aae-reset-animation") runGlobalReset();
 });

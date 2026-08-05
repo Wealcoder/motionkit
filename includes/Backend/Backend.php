@@ -1,11 +1,11 @@
 <?php
 
-namespace WcfAnimationBuilder\Backend;
+namespace MotionKit\Backend;
 
 /**
  * Backend Class
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.0.0
  */
 
@@ -14,10 +14,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use WcfAnimationBuilder\Common\Assets\AssetLoader;
-use WcfAnimationBuilder\Factory\ComponentFactory;
-use WcfAnimationBuilder\Auth\OAuthHandler;
-use WcfAnimationBuilder\Auth\JwtTokenManager;
+use MotionKit\Common\Assets\AssetLoader;
+use MotionKit\Factory\ComponentFactory;
+use MotionKit\Auth\OAuthHandler;
+use MotionKit\Auth\JwtTokenManager;
 
 /**
  * Backend Class
@@ -89,15 +89,20 @@ final class Backend {
 		}
 
 		$page_url   = get_the_permalink( $post->ID );
-		$query_args = array( 'site' => $page_url, 'platform' => 'wordpress' );
 
-		if ( OAuthHandler::is_connected() ) {
-			$query_args['token'] = JwtTokenManager::generate( $page_url );
-		}
+		// Always attach a session JWT — even before the site is connected,
+		// JwtTokenManager falls back to a local HMAC-signed token, so
+		// Frontend::is_editor_preview() can require a valid token
+		// unconditionally instead of trusting ?action=motionkit-editor alone.
+		$query_args = array(
+			'site'            => $page_url,
+			'platform'        => 'wordpress',
+			'motionkit_token' => JwtTokenManager::generate( $page_url ),
+		);
 
 		$editor_url = apply_filters( 'motionkit/editor/url', add_query_arg( $query_args, 'https://editor.motionkit.io/' ) );
 
-		$actions['wcfanimb_action'] = '<a target="_blank" href="' . esc_url( $editor_url ) . '">' . esc_html__( 'Build Animation', 'motionkit' ) . '</a>';
+		$actions['motionkit_action'] = '<a target="_blank" href="' . esc_url( $editor_url ) . '">' . esc_html__( 'Build Animation', 'motionkit' ) . '</a>';
 
 		return $actions;
 	}
@@ -120,15 +125,16 @@ final class Backend {
 			return $actions;
 		}
 
-		$query_args = array( 'site' => $page_url, 'platform' => 'wordpress' );
-
-		if ( OAuthHandler::is_connected() ) {
-			$query_args['token'] = JwtTokenManager::generate( $page_url );
-		}
+		// Always attach a session JWT — see add_custom_quick_link() above.
+		$query_args = array(
+			'site'            => $page_url,
+			'platform'        => 'wordpress',
+			'motionkit_token' => JwtTokenManager::generate( $page_url ),
+		);
 
 		$editor_url = apply_filters( 'motionkit/editor/url', add_query_arg( $query_args, 'https://editor.motionkit.io/' ) );
 
-		$actions['wcfanimb_action'] = '<a target="_blank" href="' . esc_url( $editor_url ) . '">' . esc_html__( 'Build Animation', 'motionkit' ) . '</a>';
+		$actions['motionkit_action'] = '<a target="_blank" href="' . esc_url( $editor_url ) . '">' . esc_html__( 'Build Animation', 'motionkit' ) . '</a>';
 
 		return $actions;
 	}

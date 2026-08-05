@@ -1,11 +1,11 @@
 <?php
 
-namespace WcfAnimationBuilder;
+namespace MotionKit;
 
 /**
  * Main Plugin Class
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.0.0
  */
 
@@ -14,15 +14,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-use WcfAnimationBuilder\Backend\Backend;
-use WcfAnimationBuilder\Frontend\Frontend;
-use WcfAnimationBuilder\RestApi\RestApi;
-use WcfAnimationBuilder\Admin\PermalinkNotice;
-use WcfAnimationBuilder\Migrations\SettingsKeyMigration;
-use WcfAnimationBuilder\Auth\OAuthHandler;
-use WcfAnimationBuilder\Auth\ConnectPage;
-use WcfAnimationBuilder\Includes\Autoloader;
-use WcfAnimationBuilder\Factory\ComponentFactory;
+use MotionKit\Backend\Backend;
+use MotionKit\Frontend\Frontend;
+use MotionKit\RestApi\RestApi;
+use MotionKit\Admin\PermalinkNotice;
+use MotionKit\Auth\OAuthHandler;
+use MotionKit\Auth\ConnectPage;
+use MotionKit\Auth\LicenseStatus;
+use MotionKit\Includes\Autoloader;
+use MotionKit\Factory\ComponentFactory;
 
 
 /**
@@ -40,7 +40,7 @@ final class Plugin
     /**
      * Plugin name
      */
-    public const PLUGIN_NAME = 'GSAP Animation Builder for WordPress';
+    public const PLUGIN_NAME = 'MotionKit';
 
     /**
      * Plugin slug
@@ -242,7 +242,7 @@ final class Plugin
     {
         // Skip on AJAX requests unless it's our AJAX
         if (defined('DOING_AJAX') && DOING_AJAX) {
-            return !isset($_REQUEST['action']) || strpos(sanitize_text_field( wp_unslash($_REQUEST['action'] )), 'wcf_animation_builder') === false;
+            return !isset($_REQUEST['action']) || strpos(sanitize_text_field( wp_unslash($_REQUEST['action'] )), 'motionkit_') === false;
         }
 
         // Skip on cron requests
@@ -295,6 +295,11 @@ final class Plugin
         $this->oauth = new OAuthHandler();
         $this->oauth->init();
 
+        // Keeps the connected account's license / site-limit state mirrored
+        // locally. Registered outside the is_admin() branch below so the
+        // daily WP-Cron refresh still runs — cron is not admin context.
+        (new LicenseStatus())->init();
+
         if (is_admin()) {
             $connect_page = new ConnectPage($this->oauth);
             $connect_page->init();
@@ -319,7 +324,6 @@ final class Plugin
     {
         if (is_admin()) {
             (new PermalinkNotice())->init();
-            (new SettingsKeyMigration())->init();
         }
     }
 
@@ -358,9 +362,9 @@ final class Plugin
         $this->set_default_options();
         // Flush rewrite rules so REST routes (/wp-json/motionkit/v1/...) work
         flush_rewrite_rules();
-        update_option('wcf_animation_builder_version', self::VERSION);
-        update_option('wcf_animation_builder_creation_date', gmdate('Y-m-d H:i:s'));
-        do_action('wcf_animation_builder_activated');
+        update_option('motionkit_version', self::VERSION);
+        update_option('motionkit_creation_date', gmdate('Y-m-d H:i:s'));
+        do_action('motionkit_activated');
     }
 
     /**
@@ -372,8 +376,11 @@ final class Plugin
     {
         // Flush rewrite rules
         flush_rewrite_rules();
-        
-        do_action('wcf_animation_builder_deactivated');
+
+        // Don't leave the daily license refresh scheduled on a deactivated plugin.
+        LicenseStatus::unschedule_cron();
+
+        do_action('motionkit_deactivated');
     }
 
     /**
@@ -390,12 +397,12 @@ final class Plugin
         ];
 
         // Get existing options directly to merge with defaults
-        $existing_options = get_option('wcf_animation_builder_options', []);
+        $existing_options = get_option('motionkit_options', []);
         $options = array_merge($default_options, $existing_options);
         
         // Update options and clear cache
-        update_option('wcf_animation_builder_options', $options);
-        \WcfAnimationBuilder\Helpers\Helper::clear_options_cache();
+        update_option('motionkit_options', $options);
+        \MotionKit\Helpers\Helper::clear_options_cache();
     }
 
     /**
@@ -431,12 +438,16 @@ final class Plugin
             $page_url = home_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? '/')));
         }
 
-        $query_args = ['site' => $page_url, 'platform' => 'wordpress'];
-
-        // Include JWT token if connected
-        if (OAuthHandler::is_connected()) {
-            $query_args['token'] = \WcfAnimationBuilder\Auth\JwtTokenManager::generate($page_url);
-        }
+        // Always attach a session JWT — even before the site is connected,
+        // JwtTokenManager falls back to a local HMAC-signed token, so the
+        // editor preview never has to be reachable without one. This keeps
+        // is_editor_preview()'s token check unconditional (no anonymous
+        // fallback), instead of trusting ?action=motionkit-editor alone.
+        $query_args = [
+            'site'            => $page_url,
+            'platform'        => 'wordpress',
+            'motionkit_token' => \MotionKit\Auth\JwtTokenManager::generate($page_url),
+        ];
 
         $editor_url = apply_filters('motionkit/editor/url', add_query_arg($query_args, 'https://editor.motionkit.io/'));
 

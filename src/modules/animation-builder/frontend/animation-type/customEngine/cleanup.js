@@ -24,7 +24,7 @@ export function tagElement(el, id) {
   // them. The global reset restores this — clearProps:"all" alone wipes the
   // ENTIRE style attribute, including user-authored position/size/background.
   if (el.__wcfOrigCss === undefined) el.__wcfOrigCss = el.style.cssText;
-  el.setAttribute("data-wcf-anim-id", id);
+  el.setAttribute("data-motionkit-anim-id", id);
 }
 
 function runCleanups(handle) {

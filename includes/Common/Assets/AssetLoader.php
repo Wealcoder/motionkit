@@ -1,11 +1,11 @@
 <?php
 
-namespace WcfAnimationBuilder\Common\Assets;
+namespace MotionKit\Common\Assets;
 
 /**
  * Common Asset Loader Class
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.0.0
  */
 
@@ -24,9 +24,9 @@ class AssetLoader
     /**
      * Plugin instance
      *
-     * @var \WcfAnimationBuilder\Plugin|null
+     * @var \MotionKit\Plugin|null
      */
-    private ?\WcfAnimationBuilder\Plugin $plugin = null;
+    private ?\MotionKit\Plugin $plugin = null;
 
     /**
      * Asset version
@@ -53,12 +53,12 @@ class AssetLoader
     /**
      * Get plugin instance
      *
-     * @return \WcfAnimationBuilder\Plugin Plugin instance
+     * @return \MotionKit\Plugin Plugin instance
      */
-    private function get_plugin_instance(): \WcfAnimationBuilder\Plugin
+    private function get_plugin_instance(): \MotionKit\Plugin
     {
         if (null === $this->plugin) {
-            $this->plugin = \WcfAnimationBuilder\Plugin::get_instance(MOTIONKIT_PLUGIN_FILE);
+            $this->plugin = \MotionKit\Plugin::get_instance(MOTIONKIT_PLUGIN_FILE);
         }
         return $this->plugin;
     }
@@ -181,9 +181,9 @@ class AssetLoader
     /**
      * Get plugin instance
      *
-     * @return \WcfAnimationBuilder\Plugin Plugin instance
+     * @return \MotionKit\Plugin Plugin instance
      */
-    public function get_plugin(): \WcfAnimationBuilder\Plugin
+    public function get_plugin(): \MotionKit\Plugin
     {
         return $this->get_plugin_instance();
     }

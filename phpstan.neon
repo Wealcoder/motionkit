@@ -1,0 +1,22 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 5
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+    parallel:
+        maximumNumberOfProcesses: 1
+    paths:
+        - includes/
+        - motionkit.php
+        - uninstall.php
+
+    excludePaths:
+        - vendor/
+        - node_modules/
+        - assets/build/
+
+    ignoreErrors:
+        # Add targeted exceptions only when necessary.

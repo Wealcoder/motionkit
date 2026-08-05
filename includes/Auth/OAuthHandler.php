@@ -1,6 +1,6 @@
 <?php
 
-namespace WcfAnimationBuilder\Auth;
+namespace MotionKit\Auth;
 
 /**
  * OAuth Handler
@@ -12,7 +12,7 @@ namespace WcfAnimationBuilder\Auth;
  * - Token storage (AES-256 encrypted in wp_options)
  * - Disconnect / token revocation
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.1.0
  */
 
@@ -156,9 +156,14 @@ final class OAuthHandler
   /**
    * Build the authorize URL and store state token.
    *
+   * @param bool $switch_account Force the editor to show its login screen
+   *                              instead of silently reusing the visitor's
+   *                              existing motionkit.io session — used by the
+   *                              "Switch Account" action on an already-
+   *                              connected site.
    * @return string The full authorize URL to redirect to
    */
-  public function get_authorize_url(): string
+  public function get_authorize_url(bool $switch_account = false): string
   {
     // Generate CSRF state token
     $state = bin2hex(random_bytes(32));
@@ -172,6 +177,12 @@ final class OAuthHandler
       'response_type' => 'code',
       'redirect_uri'  => $this->get_callback_url(),
     ];
+
+    if ($switch_account) {
+      // Standard OAuth convention: ask the identity provider to re-prompt
+      // for login rather than auto-approving against the current session.
+      $params['prompt'] = 'login';
+    }
 
     return add_query_arg($params, self::get_authorize_base_url());
   }
@@ -386,6 +397,10 @@ final class OAuthHandler
     delete_option(self::OPT_CONNECTED_EMAIL);
     delete_option('motionkit_jwt_secret');
     delete_option('motionkit_used_jtis');
+
+    // Listeners (LicenseStatus) wipe their own derived state — a
+    // disconnected site must not keep reading a cached entitlement.
+    do_action('motionkit/oauth/disconnected');
 
     wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&disconnected=1'));
     exit;

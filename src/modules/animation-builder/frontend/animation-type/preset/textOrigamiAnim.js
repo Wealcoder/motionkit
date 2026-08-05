@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-text-origami-pa";
+const PRESET_KEY = "motionkit-mk-text-origami-pa";
 
 export function textOrigamiAnim() {
   // id -> { tweens: [], splits: [], cleanups: [] }
@@ -103,7 +103,7 @@ export function textOrigamiAnim() {
     const chars = splitInstance.chars;
     if (!chars?.length) return;
 
-    items.forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+    items.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
 
     gsap.set(chars, {
       transformPerspective: 600,

@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-text-split-pa";
+const PRESET_KEY = "motionkit-mk-text-split-pa";
 
 export function textSplitAnim() {
   // id -> { tweens: [], splits: [], cleanups: [] }
@@ -104,7 +104,7 @@ export function textSplitAnim() {
       return;
     }
 
-    items.forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+    items.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
 
     const fromVars = { x: x || 0, y: y || 0, autoAlpha: 0 };
     const previewMarkers = markers === true && isPreviewMode();

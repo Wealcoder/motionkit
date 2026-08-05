@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Plugin Name: Motionkit Connector for WordPress
- * Plugin URI: https://github.com/your-username/motionkit
+ * Plugin Name: Motionkit – Visual Animation with GSAP for WordPress
+ * Plugin URI: https://motionkit.io
  * Description: A WordPress plugin that integrates the GSAP Animation Builder (Motionkit) to create and manage animations directly from the WordPress admin dashboard.
  * Version: 1.5.1
  * Author: wealcoder
- * Author URI: https://profiles.wordpress.org/your-username/
+ * Author URI: https://profiles.wordpress.org/wealcoder/
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: motionkit
@@ -15,7 +15,7 @@
  * Tested up to: 6.9
  * Requires PHP: 7.4
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.0.0
  */
 
@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('MOTIONKIT_VERSION', '1.1.7');
+define('MOTIONKIT_VERSION', '1.5.1');
 define('MOTIONKIT_PLUGIN_FILE', __FILE__);
 define('MOTIONKIT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MOTIONKIT_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -42,4 +42,4 @@ define('MOTIONKIT_LOADED', true);
 require_once MOTIONKIT_PLUGIN_DIR . 'includes/Plugin.php';
 
 // Initialize the plugin
-WcfAnimationBuilder\Plugin::get_instance(MOTIONKIT_PLUGIN_FILE);
+MotionKit\Plugin::get_instance(MOTIONKIT_PLUGIN_FILE);

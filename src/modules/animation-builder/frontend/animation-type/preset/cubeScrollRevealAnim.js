@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-scroll-cr-pa";
+const PRESET_KEY = "motionkit-mk-scroll-cr-pa";
 
 export function cubeScrollRevealAnim() {
   // id -> { timelines, scrollTriggers, cleanups }
@@ -87,8 +87,8 @@ export function cubeScrollRevealAnim() {
 
     teardown(id);
 
-    container.setAttribute("data-wcf-anim-id", id);
-    container.classList.add("wcfanimb-skip-selector-full");
+    container.setAttribute("data-motionkit-anim-id", id);
+    container.classList.add("motionkit-skip-selector-full");
     container.innerHTML = "";
 
     // Build cube DOM ─────────────────────────────────────────────────
@@ -460,7 +460,7 @@ export function cubeScrollRevealAnim() {
 
     // Teardown: wipe the rebuilt DOM + injected style element.
     cleanups.push(() => {
-      container.classList.remove("wcfanimb-skip-selector-full");
+      container.classList.remove("motionkit-skip-selector-full");
       container.innerHTML = "";
     });
 

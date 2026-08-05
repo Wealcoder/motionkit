@@ -2,7 +2,7 @@
 /**
  * Silence is golden.
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.0.0
  */
 

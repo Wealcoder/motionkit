@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-cursor-tilt-pa";
+const PRESET_KEY = "motionkit-mk-cursor-tilt-pa";
 
 export function cursorHoverTiltAnim() {
   // id -> array of per-item teardown fns
@@ -30,8 +30,8 @@ export function cursorHoverTiltAnim() {
   function attachToItem({ id, itemEl, maxTilt, perspective, duration }) {
     // Tag so the global reset sweep runs clearProps on this node alongside
     // our local teardown.
-    itemEl.setAttribute("data-wcf-anim-id", id);
-    itemEl.classList.add("wcfanimb-skip-selector-full");
+    itemEl.setAttribute("data-motionkit-anim-id", id);
+    itemEl.classList.add("motionkit-skip-selector-full");
 
     gsap.set(itemEl, { transformPerspective: perspective });
 
@@ -78,7 +78,7 @@ export function cursorHoverTiltAnim() {
       itemEl.removeEventListener("mousemove", onMouseMove);
       gsap.killTweensOf(itemEl);
       gsap.set(itemEl, { clearProps: "transform,transformPerspective" });
-      itemEl.classList.remove("wcfanimb-skip-selector-full");
+      itemEl.classList.remove("motionkit-skip-selector-full");
     };
   }
 

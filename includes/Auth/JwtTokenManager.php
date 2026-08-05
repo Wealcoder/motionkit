@@ -1,6 +1,6 @@
 <?php
 
-namespace WcfAnimationBuilder\Auth;
+namespace MotionKit\Auth;
 
 /**
  * JWT Token Manager
@@ -8,7 +8,7 @@ namespace WcfAnimationBuilder\Auth;
  * Generates and validates HMAC-SHA256 JSON Web Tokens for editor sessions.
  * Tokens are single-use (jti tracked) with a configurable TTL.
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.1.0
  */
 

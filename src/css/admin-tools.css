@@ -3,32 +3,32 @@
  * Loaded only on the Tools tab of the MotionKit admin page.
  */
 
-.mk-btn--sm { padding: 4px 10px !important; font-size: 12px !important; }
+.motionkit-btn--sm { padding: 4px 10px !important; font-size: 12px !important; }
 
-/* Solid danger button — wins over mk-btn--primary's blue background. */
-.mk-btn.mk-btn--primary.mk-btn--danger {
+/* Solid danger button — wins over motionkit-btn--primary's blue background. */
+.motionkit-btn.motionkit-btn--primary.motionkit-btn--danger {
   background: #dc2626;
   border-color: #dc2626;
   color: #fff;
 }
-.mk-btn.mk-btn--primary.mk-btn--danger:hover {
+.motionkit-btn.motionkit-btn--primary.motionkit-btn--danger:hover {
   background: #b91c1c;
   border-color: #b91c1c;
   color: #fff;
 }
 
-.mk-tools-search { max-width: 280px; margin-left: auto; }
+.motionkit-tools-search { max-width: 280px; margin-left: auto; }
 
-.mk-tools-table-wrap { overflow-x: auto; }
-.mk-tools-table { width: 100%; border-collapse: collapse; }
-.mk-tools-table th,
-.mk-tools-table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; vertical-align: middle; }
-.mk-tools-table th { text-align: left; font-weight: 600; background: #f9fafb; color: #374151; }
-.mk-tools-table tbody tr:hover { background: #f9fafb; }
+.motionkit-tools-table-wrap { overflow-x: auto; }
+.motionkit-tools-table { width: 100%; border-collapse: collapse; }
+.motionkit-tools-table th,
+.motionkit-tools-table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; vertical-align: middle; }
+.motionkit-tools-table th { text-align: left; font-weight: 600; background: #f9fafb; color: #374151; }
+.motionkit-tools-table tbody tr:hover { background: #f9fafb; }
 
-.mk-tools-empty { text-align: center; color: #6b7280; padding: 32px 12px; }
+.motionkit-tools-empty { text-align: center; color: #6b7280; padding: 32px 12px; }
 
-.mk-tools-type {
+.motionkit-tools-type {
   display: inline-block;
   font-size: 11px;
   font-weight: 600;
@@ -40,10 +40,10 @@
   letter-spacing: 0.3px;
 }
 
-.mk-tools-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.motionkit-tools-actions { display: flex; gap: 6px; justify-content: flex-end; }
 
-.mk-tools-pagination { display: flex; gap: 6px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
-.mk-page-btn {
+.motionkit-tools-pagination { display: flex; gap: 6px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+.motionkit-page-btn {
   min-width: 32px;
   padding: 6px 10px;
   border: 1px solid #d1d5db;
@@ -52,12 +52,12 @@
   cursor: pointer;
   font-size: 13px;
 }
-.mk-page-btn:hover { background: #f3f4f6; }
-.mk-page-btn--active { background: #2563eb; color: #fff; border-color: #2563eb; }
-.mk-page-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.motionkit-page-btn:hover { background: #f3f4f6; }
+.motionkit-page-btn--active { background: #2563eb; color: #fff; border-color: #2563eb; }
+.motionkit-page-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
 
-.mk-modal[hidden] { display: none; }
-.mk-modal {
+.motionkit-modal[hidden] { display: none; }
+.motionkit-modal {
   position: fixed;
   inset: 0;
   z-index: 100000;
@@ -65,8 +65,8 @@
   align-items: center;
   justify-content: center;
 }
-.mk-modal-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); }
-.mk-modal-box {
+.motionkit-modal-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); }
+.motionkit-modal-box {
   position: relative;
   background: #fff;
   border-radius: 8px;
@@ -75,16 +75,16 @@
   width: 90%;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
-.mk-modal-title { margin: 0 0 8px; font-size: 18px; font-weight: 600; color: #111827; }
-.mk-modal-desc { margin: 0 0 16px; color: #4b5563; font-size: 14px; line-height: 1.5; }
-.mk-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.motionkit-modal-title { margin: 0 0 8px; font-size: 18px; font-weight: 600; color: #111827; }
+.motionkit-modal-desc { margin: 0 0 16px; color: #4b5563; font-size: 14px; line-height: 1.5; }
+.motionkit-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 
-.mk-modal-progress { margin: 16px 0; }
-.mk-progress-bar { height: 10px; background: #e5e7eb; border-radius: 5px; overflow: hidden; }
-.mk-progress-fill {
+.motionkit-modal-progress { margin: 16px 0; }
+.motionkit-progress-bar { height: 10px; background: #e5e7eb; border-radius: 5px; overflow: hidden; }
+.motionkit-progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #2563eb, #60a5fa);
   width: 0%;
   transition: width 0.25s ease;
 }
-.mk-progress-label { margin-top: 8px; font-size: 12px; color: #6b7280; text-align: center; }
+.motionkit-progress-label { margin-top: 8px; font-size: 12px; color: #6b7280; text-align: center; }

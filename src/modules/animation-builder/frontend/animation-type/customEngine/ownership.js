@@ -5,7 +5,7 @@
 // applied at a time, so when a trigger fires we reset whatever the previous
 // owner left on the element back to the author's original styles, then let the
 // caller play the incoming animation. This stops their inline styles from
-// stacking and makes the single-value data-wcf-anim-id attribute correct — it
+// stacking and makes the single-value data-motionkit-anim-id attribute correct — it
 // always names the animation currently applied to the element.
 //
 // Runtime-only concern: editor preview never triggers (DevTools owns playback),
@@ -36,7 +36,7 @@ function trackEl(animId, el) {
 // Claim els for animId. Any element currently owned by a DIFFERENT animation is
 // reset: the displaced owner's animations are paused+rewound so they stop
 // writing styles, the element's original inline styles are restored, and the
-// data-wcf-anim-id attribute is re-stamped to the new owner. Returns true when
+// data-motionkit-anim-id attribute is re-stamped to the new owner. Returns true when
 // at least one element was displaced, so the caller can invalidate() the
 // incoming tweens to re-read the clean origin.
 export function claimTargets(els, animId) {
@@ -63,7 +63,7 @@ export function claimTargets(els, animId) {
   );
   toReset.forEach((el) => {
     if (typeof el.__wcfOrigCss === "string") el.style.cssText = el.__wcfOrigCss;
-    el.setAttribute("data-wcf-anim-id", animId);
+    el.setAttribute("data-motionkit-anim-id", animId);
   });
   // __wcfOrigCss covers inline styles only. A displaced scramble also left the
   // element's innerHTML rewritten, and the caller invalidate()s the incoming

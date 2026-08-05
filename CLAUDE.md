@@ -2,6 +2,10 @@
 
 You are working on **MotionKit**, a WordPress plugin that connects customer sites to the **motionkit.io** SaaS animation editor. The visual editor lives entirely at `editor.motionkit.io` — this plugin is the **WordPress-side connector only**.
 
+Preparing this plugin for wp.org submission? Read `WPORG-SUBMISSION.md` first —
+it tracks the plugin directory's rules and this codebase's live audit findings
+(open blockers, verified-OK items, pre-submission checklist).
+
 ---
 
 ## Project Identity
@@ -9,11 +13,11 @@ You are working on **MotionKit**, a WordPress plugin that connects customer site
 | Item | Value |
 |---|---|
 | Plugin slug | `motionkit` |
-| PHP namespace root | `WcfAnimationBuilder\` |
+| PHP namespace root | `MotionKit\` |
 | Text domain | `motionkit` |
-| Main file | `gsap-animation-builder-for-wordpress.php` |
-| Autoloader base | `WcfAnimationBuilder\` → `includes/` (PSR-4) |
-| JS global | `wcfanimb` |
+| Main file | `motionkit.php` |
+| Autoloader base | `MotionKit\` → `includes/` (PSR-4) |
+| JS global | `motionkitData` |
 | Constants prefix | `MOTIONKIT_*` |
 | Editor origin | `https://editor.motionkit.io` |
 
@@ -22,7 +26,7 @@ You are working on **MotionKit**, a WordPress plugin that connects customer site
 ## File Structure
 
 ```
-gsap-animation-builder-for-wordpress.php   ← Entry: constants + Plugin::get_instance()
+motionkit.php                              ← Entry: constants + Plugin::get_instance()
 uninstall.php                              ← Cleanup wp_options + user_meta on delete
 │
 includes/
@@ -38,7 +42,8 @@ includes/
 │   └── ConnectPage.php                    ← Admin "MotionKit" menu (Connect/License/Tools/Help tabs)
 │
 ├── Migrations/
-│   └── SettingsKeyMigration.php           ← One-time: mkit_pg_animation_* → mkit_pg_settings_*
+│   ├── SettingsKeyMigration.php           ← One-time: mkit_pg_animation_* → mkit_pg_settings_*
+│   └── PresetKeyMigration.php             ← One-time: presetKey values wcf-mk-* → motionkit-mk-*
 │
 ├── Admin/
 │   └── PermalinkNotice.php                ← Plain-permalinks nag notice
@@ -47,7 +52,7 @@ includes/
 │   └── Backend.php                        ← Admin hooks
 │
 ├── Frontend/
-│   └── Frontend.php                       ← Script enqueue, no-cache headers, wcfanimb localization
+│   └── Frontend.php                       ← Script enqueue, no-cache headers, motionkitData localization
 │
 ├── Common/
 │   ├── AnimationBuilderPageType.php       ← Page type detection + saveConfig/getConfig/deleteConfig
@@ -75,21 +80,21 @@ assets/build/                              ← Webpack compiled output — never
 ## Init Flow
 
 ```
-gsap-animation-builder-for-wordpress.php
+motionkit.php
   └─ Plugin::get_instance($file)
        └─ plugins_loaded → Plugin::init()
             ├─ init_auth()            → OAuthHandler + (is_admin) ConnectPage
             ├─ init_frontend()        → Frontend::init()     [all contexts]
             ├─ init_backend()         → Backend::init()      [is_admin() only]
             ├─ init_rest_api()        → RestApi::init()      [all contexts]
-            ├─ init_admin_notices()   → PermalinkNotice + SettingsKeyMigration [is_admin]
+            ├─ init_admin_notices()   → PermalinkNotice + SettingsKeyMigration + PresetKeyMigration [is_admin]
             ├─ admin_bar_menu         → add_admin_bar_build_animation()
             └─ wp_head/admin_head     → admin_bar_inline_css()
 ```
 
 `init_rest_api()` runs unconditionally — REST must serve requests from frontend iframes
-and the external editor. `SettingsKeyMigration` is idempotent (sentinel option) so it
-runs at most once per site.
+and the external editor. `SettingsKeyMigration` and `PresetKeyMigration` are both
+idempotent (sentinel option) so each runs at most once per site.
 
 ---
 
@@ -178,6 +183,17 @@ settings via `settings_config()` helper.
 wp_options for `mkit_pg_animation_*` rows whose value is associative (settings-shaped,
 not a numerically-indexed animation list) and relocates them to `mkit_pg_settings_*`.
 
+### PresetKeyMigration
+
+`includes/Migrations/PresetKeyMigration.php` runs on `admin_init` once per site
+(sentinel `motionkit_preset_key_migrated`). The 26 premium-preset identifiers were
+renamed from `wcf-mk-*` to `motionkit-mk-*` (config keys in
+`animation-builder-assets.php` + each preset's `PRESET_KEY` JS constant). This
+migration rewrites any `presetKey` field still holding an old `wcf-mk-*` value
+inside saved animation data — `motionkit_global_animations` (option) and every
+`mkit_pg_animation_<type>` row (post_meta/term_meta/option) — so animations saved
+before the rename keep matching their preset script after it.
+
 ---
 
 ## Auth & Connect UI (already implemented)
@@ -200,12 +216,12 @@ not a numerically-indexed animation list) and relocates them to `mkit_pg_setting
 
 ---
 
-## `wcfanimb` JS Global — Editor Preview Shape
+## `motionkitData` JS Global — Editor Preview Shape
 
 Set via `wp_localize_script` in `Frontend.php::enqueue_editor_preview_scripts()`:
 
 ```js
-wcfanimb = {
+motionkitData = {
   // REST endpoint base (supports both pretty + plain permalinks)
   rest_url:             'https://yoursite.com/wp-json/motionkit/v1/',
   rest_nonce:           'xyz789',   // wp_rest nonce (legacy; /save uses JWT body)
@@ -232,7 +248,7 @@ wcfanimb = {
 ```
 
 **No-cache headers** are set on any `?action=motionkit-editor` request so page caches
-(LiteSpeed, WP Rocket, Cloudflare APO) can't serve a stale `wcfanimb` snapshot:
+(LiteSpeed, WP Rocket, Cloudflare APO) can't serve a stale `motionkitData` snapshot:
 
 ```
 Cache-Control: no-store, no-cache, must-revalidate, max-age=0
@@ -247,15 +263,15 @@ Pragma: no-cache
 |---------------------------------|---------------|----------------------------------------------------------|
 | `motionkit-ready`               | iframe → editor | `{ platform, base_domain, rest_url }` — lifecycle only |
 | `motionkit-request`             | editor → iframe | `{ request: 'get-data', sessionNonce }`                |
-| `motionkit-response`            | iframe → editor | Full payload from `buildResponsePayload()` (wcfanimb.*) |
+| `motionkit-response`            | iframe → editor | Full payload from `buildResponsePayload()` (motionkitData.*) |
 | `motionkit-auth`                | editor → iframe | `{ mk_token, sessionNonce }` — forwarded after ready   |
 | `motionkit-settings`            | editor → iframe | `{ data: { globalSettings?, currentPageSettings?, globalAnimation?, pageAnimation? }, saveId }` |
 | `motionkit-save-success`        | iframe → editor | `{ endpoint, action, saveId }` — per-part ack          |
 | `motionkit-save-error`          | iframe → editor | `{ endpoint, action, saveId, error, code, status }`    |
 | `motionkit-page-search`         | editor → iframe | `{ query, page, per_page }`                            |
 | `motionkit-page-search-result`  | iframe → editor | `{ data, query, page, has_more, total }`               |
-| `wcf-animation-config`          | editor → iframe | Animation config per device (preview)                  |
-| `wcf-animation-config-reset`    | editor → iframe | (empty)                                                |
+| `motionkit-animation-config`    | editor → iframe | Animation config per device (preview)                  |
+| `motionkit-animation-config-reset` | editor → iframe | (empty)                                             |
 
 ### ⚠️ Listener timing
 `editor-bridge.js` calls `receivePageConfig()` **synchronously at script-execute time**
@@ -288,13 +304,15 @@ Filter hook: `motionkit/editor/allowed_origins`
 | `mkit_pg_animation_<type>`            | `AnimationBuilderPageType::saveConfig()` | Per-page animation list (option store_type) |
 | `mkit_pg_settings_<type>`             | `AnimationBuilderPageType::saveConfig()` | Per-page settings (option store_type)       |
 | `motionkit_settings_key_migrated`     | `SettingsKeyMigration`                  | `'1'` once migration has run                 |
+| `motionkit_preset_key_migrated`       | `PresetKeyMigration`                    | `'1'` once migration has run                 |
 | `motionkit_jwt_secret`                | `JwtTokenManager::get_secret()`         | HMAC secret                                  |
 | `motionkit_api_key`                   | OAuth flow                              | REST token endpoint key                      |
 | `motionkit_access_token`              | `OAuthHandler::handle_oauth_callback()` | Encrypted OAuth token                        |
 | `motionkit_connected_at`              | `OAuthHandler`                          | Connect timestamp                            |
 | `motionkit_connected_email`           | `OAuthHandler`                          | Connected user email                         |
-| `wcf_animation_builder_options`       | `Plugin::set_default_options()`         | General plugin options                       |
-| `wcf_animation_builder_version`       | `Plugin::activate()`                    | Last activated version                       |
+| `motionkit_options`                   | `Plugin::set_default_options()`         | General plugin options                       |
+| `motionkit_version`                   | `Plugin::activate()`                    | Last activated version                       |
+| `motionkit_creation_date`             | `Plugin::activate()`                    | First-activation timestamp                   |
 
 `uninstall.php` removes all of these plus transients (`_transient_mk_session_*`) and
 user meta (`motionkit_dismissed_permalink_notice`).
@@ -318,9 +336,9 @@ user meta (`motionkit_dismissed_permalink_notice`).
 | Hook | Type | Purpose |
 |---|---|---|
 | `MOTIONKIT_LOADED` | action | After `Plugin::init()` completes |
-| `wcf_animation_builder_activated` | action | Plugin activation |
-| `wcf_animation_builder_deactivated` | action | Plugin deactivation |
-| `wcf_animation_builder/frontend/presets/enqueue_element_scripts` | action | Editor preview enqueue (Pro) |
+| `motionkit_activated` | action | Plugin activation |
+| `motionkit_deactivated` | action | Plugin deactivation |
+| `motionkit/frontend/presets/enqueue_element_scripts` | action | Editor preview enqueue (Pro) |
 | `motionkit_core_lib_deps` | filter | Add GSAP handles as script deps |
 | `motionkit_jwt_ttl` | filter | Override JWT TTL (default 300s) |
 | `motionkit/editor/url` | filter | Override editor base URL |

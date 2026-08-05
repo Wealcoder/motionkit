@@ -1,16 +1,16 @@
 import { querySelectorAllCached } from "../scheduler.js";
 import { ownershipStatus } from "../ownership.js";
 
-/* global __MKIT_DEV_LOG__ */
+/* global __MOTIONKIT_DEV_LOG__ */
 
 // Dev-only preview inspector. When the bundle is built with MOTIONKIT_DEV_LOG=
-// true it installs a read-only `window.motionkit` getter: typing `motionkit` in
-// the console returns a deeply-frozen snapshot of every registered custom
+// true it installs a read-only `window.motionkitInspector` getter: typing
+// `motionkitInspector` in the console returns a deeply-frozen snapshot of every registered custom
 // animation (identity, config, resolved DOM targets, live status). Purely a
 // preview/debugging surface — nothing here mutates engine state, and the whole
 // module is inert (and DCE-friendly) in production where DEV_LOG is false.
 const DEV_LOG =
-  typeof __MKIT_DEV_LOG__ !== "undefined" && __MKIT_DEV_LOG__ === true;
+  typeof __MOTIONKIT_DEV_LOG__ !== "undefined" && __MOTIONKIT_DEV_LOG__ === true;
 
 // Every custom-animation config handed to the engine this session, keyed by id.
 // Populated by rememberAnim from the entry point; only ever read to build a
@@ -130,7 +130,7 @@ function buildSnapshot() {
 function install() {
   if (typeof window === "undefined") return;
   try {
-    Object.defineProperty(window, "motionkit", {
+    Object.defineProperty(window, "motionkitInspector", {
       configurable: true,
       enumerable: false,
       get: buildSnapshot,

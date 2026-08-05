@@ -1,6 +1,6 @@
 import { VOID_ELEMENTS } from "../../../config/VoidElement";
 
-const PRESET_KEY = "wcf-mk-image-sr-pa";
+const PRESET_KEY = "motionkit-mk-image-sr-pa";
 
 // Plus icon look — fixed rather than exposed in the UI. The bars are pure white
 // and difference-blended, which inverts them against whatever they sit on, so the
@@ -123,7 +123,7 @@ export function imageSpotlightHoverReveal() {
       gsap.set(plus, { xPercent: -50, yPercent: -50, scale: 0 });
     }
 
-    target.setAttribute("data-wcf-anim-id", id);
+    target.setAttribute("data-motionkit-anim-id", id);
 
     // Offset of the target inside mountEl. Zero when the overlay is a child of the
     // target itself, since then the two boxes already coincide.

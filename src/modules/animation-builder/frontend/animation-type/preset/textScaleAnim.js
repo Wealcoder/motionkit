@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-text-scale-pa";
+const PRESET_KEY = "motionkit-mk-text-scale-pa";
 
 export function textScaleAnim() {
   // id -> { tweens: [], splits: [], cleanups: [] }
@@ -100,7 +100,7 @@ export function textScaleAnim() {
     const target = splitInstance.lines;
     if (!target?.length) return;
 
-    items.forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+    items.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
 
     const previewMarkers = markers === true && isPreviewMode();
 

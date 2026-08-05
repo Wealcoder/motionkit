@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-cursor-cm-pa";
+const PRESET_KEY = "motionkit-mk-cursor-cm-pa";
 
 export function cursorHoverMoveAnim() {
   // id -> array of per-item teardown fns
@@ -30,8 +30,8 @@ export function cursorHoverMoveAnim() {
   function attachToItem({ id, itemEl, moveX, moveY, duration }) {
     // Tag so the global reset sweep runs clearProps on this node alongside
     // our local teardown.
-    itemEl.setAttribute("data-wcf-anim-id", id);
-    itemEl.classList.add("wcfanimb-skip-selector-full");
+    itemEl.setAttribute("data-motionkit-anim-id", id);
+    itemEl.classList.add("motionkit-skip-selector-full");
 
     // One reusable tween per axis is MUCH cheaper than firing gsap.to() on
     // every mousemove event (which used to create ~60 fresh tweens/sec).
@@ -72,7 +72,7 @@ export function cursorHoverMoveAnim() {
       itemEl.removeEventListener("mousemove", onMouseMove);
       gsap.killTweensOf(itemEl);
       gsap.set(itemEl, { clearProps: "transform" });
-      itemEl.classList.remove("wcfanimb-skip-selector-full");
+      itemEl.classList.remove("motionkit-skip-selector-full");
     };
   }
 

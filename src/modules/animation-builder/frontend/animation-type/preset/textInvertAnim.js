@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-text-invert-pa";
+const PRESET_KEY = "motionkit-mk-text-invert-pa";
 
 export function textInvertAnim() {
   // id -> { timelines: [], splits: [] }
@@ -71,7 +71,7 @@ export function textInvertAnim() {
     }
 
     elements.forEach((element, index) => {
-      element.setAttribute("data-wcf-anim-id", id);
+      element.setAttribute("data-motionkit-anim-id", id);
 
       const split = new SplitText(element, {
         type: "lines",

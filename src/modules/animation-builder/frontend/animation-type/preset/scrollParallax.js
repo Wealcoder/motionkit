@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-scroll-parallax-pa";
+const PRESET_KEY = "motionkit-mk-scroll-parallax-pa";
 
 export function scrollParallax() {
   const instances = new Map();
@@ -64,7 +64,7 @@ export function scrollParallax() {
     if (!smoother) {
       const currentPreviewDevice = getCurrentDevice();
       const scrollSmootherSettings =
-        wcfanimb.currentPageSettings?.scrollSmother || {};
+        motionkitData.currentPageSettings?.scrollSmother || {};
 
       const isSmmotherEnabled = scrollSmootherSettings?.enable || false;
       const smootherValue =
@@ -107,7 +107,7 @@ export function scrollParallax() {
         );
         return;
       }
-      targetEl.setAttribute("data-wcf-anim-id", id);
+      targetEl.setAttribute("data-motionkit-anim-id", id);
       elements.push(targetEl);
 
       // ── Read device values ──
@@ -127,7 +127,7 @@ export function scrollParallax() {
   }
 
   window.addEventListener("message", (event) => {
-    if (event.data?.type !== "wcf-animation-config") return;
+    if (event.data?.type !== "motionkit-animation-config") return;
     const incoming = event.data.data?.all_animations || [];
     const activeIds = new Set(incoming.map((a) => a.id).filter(Boolean));
     for (const id of [...instances.keys()]) {

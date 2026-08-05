@@ -2,7 +2,7 @@
 /**
  * Security file to prevent direct access
  *
- * @package WcfAnimationBuilder
+ * @package motionkit
  * @since 1.0.0
  */
 

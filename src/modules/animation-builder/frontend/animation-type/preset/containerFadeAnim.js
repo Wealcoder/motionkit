@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-container-fade-pa";
+const PRESET_KEY = "motionkit-mk-container-fade-pa";
 
 // Register ScrollTrigger once so `scrollTrigger: {...}` on from/to/fromTo works.
 if (typeof window !== "undefined" && window.gsap && window.ScrollTrigger) {
@@ -271,7 +271,7 @@ export function containerFadeAnimation() {
     // tag matched items so the global reset sweep can clear them
     document
       .querySelectorAll(itemClass)
-      .forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+      .forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
 
     const { x, y } = calculateFadeAxis(fadeDirection, fadeOffset);
 

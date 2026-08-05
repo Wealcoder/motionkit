@@ -1,6 +1,6 @@
 import { isPreviewMode } from "@/utils/isPreviewMode";
 
-const PRESET_KEY = "wcf-mk-text-wave-pa";
+const PRESET_KEY = "motionkit-mk-text-wave-pa";
 
 export function textWaveAnim() {
   // id -> { tweens: [], splits: [], cleanups: [] }
@@ -92,7 +92,7 @@ export function textWaveAnim() {
     const chars = splitInstance.chars;
     if (!chars?.length) return;
 
-    items.forEach((el) => el.setAttribute("data-wcf-anim-id", id));
+    items.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
 
     const previewMarkers = markers === true && isPreviewMode();
 

@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-image-hr-pa";
+const PRESET_KEY = "motionkit-mk-image-hr-pa";
 
 export function imageHoverRevealAnim() {
   // id -> array of per-item teardown fns
@@ -72,8 +72,8 @@ export function imageHoverRevealAnim() {
     parentEl.appendChild(cursorImg);
 
     // Tag both nodes so the global reset sweep runs clearProps on them.
-    itemEl.setAttribute("data-wcf-anim-id", id);
-    parentEl.setAttribute("data-wcf-anim-id", id);
+    itemEl.setAttribute("data-motionkit-anim-id", id);
+    parentEl.setAttribute("data-motionkit-anim-id", id);
 
     const initial = {
       ...resolveInitialOffset(animationPosition),

@@ -1,6 +1,6 @@
 <?php
 
-namespace WcfAnimationBuilder\Support;
+namespace MotionKit\Support;
 
 /**
  * Editor Session Trait
@@ -10,7 +10,7 @@ namespace WcfAnimationBuilder\Support;
  * option-key derivation. Mixed into both RestApi and Frontend so the logic
  * lives in one place.
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.1.0
  */
 
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
-use WcfAnimationBuilder\Auth\OAuthHandler;
+use MotionKit\Auth\OAuthHandler;
 
 trait EditorSessionTrait
 {
@@ -36,7 +36,7 @@ trait EditorSessionTrait
   private function verify_server_session(string $token): bool
   {
     // Cache key based on token hash (avoid storing raw JWT in transient key)
-    $cache_key = 'mk_session_' . substr(md5($token), 0, 16);
+    $cache_key = 'motionkit_session_' . substr(md5($token), 0, 16);
     $cached = get_transient($cache_key);
 
     if ($cached !== false) {
@@ -111,5 +111,52 @@ trait EditorSessionTrait
       );
     }
     return $cfg;
+  }
+
+  /**
+   * Validate a client-supplied pageTypeConfigs envelope before it's used to
+   * read/write post_meta, term_meta, or an option.
+   *
+   * A valid editor session JWT only proves the caller has an active session
+   * for THIS site — it says nothing about which post/term the caller was
+   * actually editing. Without this check a valid token could target any
+   * post_id/term_id/option name on the site by simply changing the payload.
+   * This confines writes to MotionKit's own known key shape and to objects
+   * that actually exist.
+   *
+   * @param array $config
+   * @return bool
+   */
+  private function is_valid_page_type_config(array $config): bool
+  {
+    $store_type = $config['store_type'] ?? '';
+    $option     = $config['option'] ?? '';
+
+    if (!in_array($store_type, ['post_meta', 'term_meta', 'option'], true)) {
+      return false;
+    }
+
+    // Every MotionKit-managed key — animation or settings, any store_type —
+    // uses this prefix. Reject anything else so a payload can never target
+    // an unrelated option/post_meta/term_meta key on the site.
+    if (!is_string($option) || strpos($option, 'mkit_pg_') !== 0) {
+      return false;
+    }
+
+    if ($store_type === 'post_meta') {
+      $id = isset($config['id']) ? (int) $config['id'] : 0;
+      if ($id <= 0 || !get_post($id)) {
+        return false;
+      }
+    }
+
+    if ($store_type === 'term_meta') {
+      $id = isset($config['id']) ? (int) $config['id'] : 0;
+      if ($id <= 0 || !get_term($id)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

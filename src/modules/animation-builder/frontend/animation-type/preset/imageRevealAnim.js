@@ -1,4 +1,4 @@
-const PRESET_KEY = "wcf-mk-image-rev-pa";
+const PRESET_KEY = "motionkit-mk-image-rev-pa";
 
 export function imageRevealAnim() {
   // id -> { timelines: GSAPTimeline[], elements: {containerEl, itemEl}[] }
@@ -90,8 +90,8 @@ export function imageRevealAnim() {
 
       // Tag both nodes so the global reset sweep (lib/resetAllAnimations.js)
       // runs clearProps on each alongside our local teardown.
-      containerEl.setAttribute("data-wcf-anim-id", id);
-      itemEl.setAttribute("data-wcf-anim-id", id);
+      containerEl.setAttribute("data-motionkit-anim-id", id);
+      itemEl.setAttribute("data-motionkit-anim-id", id);
 
       gsap.set(containerEl, {
         autoAlpha: 0,

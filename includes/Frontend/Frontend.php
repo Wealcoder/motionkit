@@ -1,11 +1,11 @@
 <?php
 
-namespace WcfAnimationBuilder\Frontend;
+namespace MotionKit\Frontend;
 
 /**
  * Frontend Class
  *
- * @package WcfAnimationBuilder
+ * @package MotionKit
  * @since 1.0.0
  */
 
@@ -14,13 +14,12 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
-use WcfAnimationBuilder\Common\Assets\AssetLoader;
-use WcfAnimationBuilder\Common\AnimationBuilderPageType;
-use WcfAnimationBuilder\Auth\JwtTokenManager;
-use WcfAnimationBuilder\Auth\OAuthHandler;
-use WcfAnimationBuilder\Factory\ComponentFactory;
-use WcfAnimationBuilder\Support\EditorSessionTrait;
-use WcfAnimationBuilder\Helpers\Helper;
+use MotionKit\Common\Assets\AssetLoader;
+use MotionKit\Common\AnimationBuilderPageType;
+use MotionKit\Auth\JwtTokenManager;
+use MotionKit\Factory\ComponentFactory;
+use MotionKit\Support\EditorSessionTrait;
+use MotionKit\Helpers\Helper;
 
 /**
  * Frontend Class
@@ -33,6 +32,25 @@ final class Frontend
   // Shared editor-connector helpers: verify_server_session(),
   // editor_allowed_origins(), settings_config().
   use EditorSessionTrait;
+
+  /**
+   * Maps get_active_plugins()'s animation-schema keys to their registered
+   * WP script handle, for the handles where the two diverge (the schema
+   * key mirrors GSAP's own tween-vars/step-method name, e.g. `scrollTo`,
+   * while the handle is renamed to match the sibling "Animation Addons for
+   * Elementor" plugin's PascalCase convention, e.g. `ScrollToPlugin`, so the
+   * two plugins dedupe the same GSAP library instead of double-loading it).
+   * Handles not listed here use the same string for both.
+   *
+   * @var array<string,string>
+   */
+  private const GSAP_SCHEMA_TO_HANDLE = [
+    'scrollTo'   => 'ScrollToPlugin',
+    'drawSVG'    => 'DrawSVGPlugin',
+    'morphSVG'   => 'MorphSVGPlugin',
+    'motionPath' => 'MotionPathPlugin',
+    'splitText'  => 'SplitText',
+  ];
 
   /**
    * Asset loader instance
@@ -90,7 +108,7 @@ final class Frontend
    *
    * Populated by register_gsap_libs() — a handle lands here only when its
    * gsapPlugin toggle is on AND it has a valid CDN URL (the always-on gsap /
-   * scrollTrigger / scrollSmoother baseline is included too). enqueue_page_scripts()
+   * ScrollTrigger / ScrollSmoother baseline is included too). enqueue_page_scripts()
    * reads this so it never declares a script dependency on an unregistered
    * handle (which triggers WP_Scripts' "unregistered dependency" notice).
    *
@@ -195,9 +213,9 @@ final class Frontend
     // AJAX handlers — must register in admin context (admin-ajax.php)
     // All config endpoints require authentication (no nopriv)
     add_action('wp_ajax_motionkit_builder_pagetype_configs', [$this, 'ajax_configs_store']);
-    add_action('wp_ajax_wcf_anim_builder_configs_delete', [$this, 'ajax_configs_delete']);
+    add_action('wp_ajax_motionkit_configs_delete', [$this, 'ajax_configs_delete']);
     add_action('wp_ajax_motionkit_builder_gl_configs_store', [$this, 'ajax_global_configs_store']);
-    add_action('wp_ajax_wcf_anim_builder_gl_configs_delete', [$this, 'ajax_global_configs_delete']);
+    add_action('wp_ajax_motionkit_gl_configs_delete', [$this, 'ajax_global_configs_delete']);
   }
 
   // ─── GSAP Library Registration ──────────────────────────────────
@@ -208,36 +226,31 @@ final class Frontend
    * @param array $deps Existing deps from filter
    * @return array Merged dependency handles
    */
+  /**
+   * Register every GSAP handle the editor has configured.
+   *
+   * Fully DB-driven: the editor saves each handle's {url, deps, version}
+   * into motionkit_global_settings.gsapPlugin.cdns[$handle], and this method
+   * just iterates whatever is there and calls wp_register_script() with it.
+   * Adding a new GSAP plugin (or bumping the pinned GSAP version) is purely
+   * an editor-side change — this method never needs a code change to learn
+   * about a new handle.
+   *
+   * @param array $deps Existing deps from filter
+   * @return array Merged dependency handles
+   */
   public function register_gsap_libs(array $deps): array
   {
     // Reset per-request state — the filter can run more than once per request.
     $this->registered_gsap_handles = [];
     $this->unavailable_gsap_handles = [];
 
-    // Handle list + dependency graph. URLs come from the DB (per wp.org
-    // guidelines, the plugin doesn't ship hardcoded CDN URLs); this array
-    // only defines which handles exist and how they depend on each other.
-    $libs = [
-      'gsap'           => ['deps' => []],
-      'scrollTrigger'  => ['deps' => ['gsap']],
-      'scrollSmoother' => ['deps' => ['gsap', 'scrollTrigger']],
-      'scrollTo'       => ['deps' => ['gsap']],
-      'splitText'      => ['deps' => ['gsap']],
-      'scrambleText'   => ['deps' => ['gsap']],
-      'drawSVG'        => ['deps' => ['gsap']],
-      'morphSVG'       => ['deps' => ['gsap']],
-      'motionPath'     => ['deps' => ['gsap']],
-      'flip'           => ['deps' => ['gsap']],
-      'physics2D'      => ['deps' => ['gsap']],
-
-    ];
-
     // gsapPlugin lives in motionkit_global_settings (edited from the editor's
     // GSAP Plugin tab). It holds per-plugin enable toggles (scrollTo, morphSVG,
-    // …) alongside a `cdns` URL map. Stored values may arrive as an associative
-    // array or stdClass depending on how the option was saved — normalize to an
-    // associative array.
-    $global = $this->get_global_settings();
+    // …) alongside a `cdns` map of { url, deps, version } per handle. Stored
+    // values may arrive as an associative array or stdClass depending on how
+    // the option was saved — normalize to an associative array.
+    $global = $this->get_global_settings();    
     $gsap_plugin = null;
     if (is_object($global) && isset($global->gsapPlugin)) {
       $gsap_plugin = $global->gsapPlugin;
@@ -256,19 +269,40 @@ final class Frontend
     // gsap core + ScrollTrigger + ScrollSmoother are the always-on baseline
     // runtime and register regardless of toggles. Every other handle is an
     // optional GSAP plugin gated by its boolean flag in gsapPlugin — register
-    // it only when the admin explicitly enabled it in the editor.
+    // it only when the admin explicitly enabled it in the editor. This
+    // allowlist is a WP-plugin policy decision (which handles form the
+    // required baseline), not something the editor's data should dictate.
+    //
+    // 'scrollSmoother' (old lowercase-first spelling) stays listed alongside
+    // 'ScrollSmoother' until the editor's cdns key rename has propagated to
+    // every site via its next Global Settings save — otherwise an
+    // un-migrated site's still-lowercase cdns entry falls through to the
+    // optional-plugin gate, finds no matching gsapPlugin toggle, and silently
+    // never registers ScrollSmoother at all.
     $always = [
       'gsap'           => true,
-      'scrollTrigger'  => true,
+      'ScrollTrigger'  => true,
+      'ScrollSmoother' => true,
       'scrollSmoother' => true,
     ];
 
-    // gsap core loads in <head> for the page-transition inline snippet. It keeps an
-    // empty deps array so presets and the snippet can list it as a dep without
-    // causing circular conflicts. All other libs (ScrollTrigger, ScrollSmoother, etc.)
-    // load in the footer — the page-transition snippet only needs window.gsap.
-    foreach ($libs as $handle => $lib) {
+    // gsap core loads in <head> for the page-transition inline snippet. All
+    // other libs (ScrollTrigger, ScrollSmoother, etc.) load in the footer —
+    // the page-transition snippet only needs window.gsap.
+    foreach ($cdns as $handle => $entry) {
+      $handle = (string) $handle;
       $is_optional = !isset($always[$handle]);
+
+      // Back-compat: sites saved before the editor switched cdns entries
+      // from a bare URL string to {url, deps, version} still have a plain
+      // string here until the next Global Settings save. Normalize so
+      // those sites keep working (deps default to ['gsap'], no version)
+      // instead of silently losing every GSAP handle until re-saved.
+      if (is_string($entry)) {
+        $entry = ['url' => $entry];
+      } else {
+        $entry = (array) $entry;
+      }
 
       // Optional plugin → skip unless its gsapPlugin toggle is enabled.
       // filter_var handles both real booleans and "true"/"1" string forms.
@@ -283,28 +317,46 @@ final class Frontend
         }
       }
 
-      $url = isset($cdns[$handle]) && is_string($cdns[$handle]) ? trim($cdns[$handle]) : '';
+      $url = isset($entry['url']) && is_string($entry['url']) ? trim($entry['url']) : '';
 
       // No URL configured → skip. Admin must set it from the editor's
       // GSAP Plugin → "GSAP Library URLs" section.
-      if ($url === '') {
+      if ($url === '' || wp_http_validate_url($url) === false) {
         if ($is_optional) {
           $this->unavailable_gsap_handles[$handle] = true;
         }
         continue;
       }
 
-      if (wp_http_validate_url($url) === false) {
-        if ($is_optional) {
-          $this->unavailable_gsap_handles[$handle] = true;
-        }
-        continue;
-      }
-
-      // Admin-supplied URLs are expected to be already versioned, so pass
-      // null to wp_register_script to avoid double-stamping ?ver=.
+      // gsap itself must never depend on anything else by construction —
+      // hardcode that guard rather than trusting DB-supplied deps for the
+      // root handle. Every other handle's deps come from the editor.
       if ($handle === 'gsap') {
-        wp_register_script($handle, $url, [], null, false);
+        $handle_deps = [];
+      } else {
+        // GSAP handles are mixed-case (ScrollTrigger, ScrollSmoother, …) — sanitize_key()
+        // would lowercase them and silently break the dependency, since the
+        // handle itself registers under its original case. Script handles are
+        // just arbitrary identifiers to WP, so a conservative allowlist
+        // (alphanumeric, underscore, hyphen) is sufficient sanitization
+        // without touching case.
+        $handle_deps = isset($entry['deps']) && is_array($entry['deps'])
+          ? array_values(array_filter(array_map(
+              static function ($dep) {
+                $dep = is_string($dep) ? preg_replace('/[^A-Za-z0-9_-]/', '', $dep) : '';
+                return $dep !== '' ? $dep : null;
+              },
+              $entry['deps']
+            )))
+          : ['gsap'];
+      }
+
+      $version = isset($entry['version']) && is_string($entry['version']) && $entry['version'] !== ''
+        ? sanitize_text_field($entry['version'])
+        : null;
+
+      if ($handle === 'gsap') {
+        wp_register_script($handle, $url, $handle_deps, $version, false);
         $this->registered_gsap_handles[$handle] = true;
 
         // Force gsap into <head> only when a page-transition snippet is
@@ -319,11 +371,28 @@ final class Frontend
         }
         continue;
       }
-      wp_register_script($handle, $url, $lib['deps'], null, true);
+
+      wp_register_script($handle, $url, $handle_deps, $version, true);
       $this->registered_gsap_handles[$handle] = true;
     }
 
-    $core_deps = ['gsap', 'scrollSmoother'];
+    // Only declare gsap/ScrollSmoother as a dep if it actually registered under
+    // that exact handle. Sites that saved gsapPlugin.cdns before the editor's
+    // handle-name rename still register the smoother under the old lowercase
+    // `scrollSmoother` key until their next save — check for either spelling
+    // so this site's real handle is used instead of a name nothing registered
+    // under (which trips WP_Scripts' "not registered" notice) or omitting the
+    // dependency entirely (which silently drops ScrollSmoother from the page).
+    $core_deps = [];
+    if (isset($this->registered_gsap_handles['gsap'])) {
+      $core_deps[] = 'gsap';
+    }
+    foreach (['ScrollSmoother', 'scrollSmoother'] as $smoother_handle) {
+      if (isset($this->registered_gsap_handles[$smoother_handle])) {
+        $core_deps[] = $smoother_handle;
+        break;
+      }
+    }
 
     return array_merge($deps, $core_deps);
   }
@@ -333,8 +402,13 @@ final class Frontend
   /**
    * Check if the current request is a SaaS editor preview.
    *
-   * When the site is connected (has an access token), a valid JWT
-   * must be present in the mk_token query param. Supports two token types:
+   * A valid JWT must always be present in the motionkit_token query param —
+   * connected or not. JwtTokenManager falls back to a locally-signed
+   * token when the site has no access token yet, so every link this
+   * plugin generates (admin bar, Connect page, editor launch) always
+   * carries one. Without this, ?action=motionkit-editor alone would let
+   * any anonymous visitor load the full motionkitData snapshot on a
+   * not-yet-connected site. Supports two token types:
    * - WP-generated JWTs (iss = site URL, validated locally)
    * - Server-generated JWTs (iss = motionkit-server, validated via SaaS API)
    *
@@ -347,24 +421,19 @@ final class Frontend
       return false;
     }
 
-    // If site is connected, require a valid JWT
-    if (OAuthHandler::is_connected()) {
-      $token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
-      if (empty($token)) {
-        return false;
-      }
-
-      // Try WP-generated token first (local validation, no HTTP call)
-      $payload = JwtTokenManager::validate_reusable($token);
-      if ($payload !== false) {
-        return true;
-      }
-
-      // Not a WP token — try server-generated token via SaaS API
-      return $this->verify_server_session($token);
+    $token = isset($_GET['motionkit_token']) ? sanitize_text_field(wp_unslash($_GET['motionkit_token'])) : '';
+    if (empty($token)) {
+      return false;
     }
 
-    return true;
+    // Try WP-generated token first (local validation, no HTTP call)
+    $payload = JwtTokenManager::validate_reusable($token);
+    if ($payload !== false) {
+      return true;
+    }
+
+    // Not a WP token — try server-generated token via SaaS API
+    return $this->verify_server_session($token);
   }
 
   /**
@@ -425,15 +494,28 @@ final class Frontend
       return;
     }
 
-    $cdn  = 'https://cdn.jsdelivr.net/npm/gsap@3.15/dist/';
-    $ver  = '3.15.0';
-    $href = esc_url($cdn . 'gsap.min.js?ver=' . $ver);
+    // Preload from wherever register_gsap_libs() actually registered the
+    // 'gsap' handle from (motionkit_global_settings.gsapPlugin.cdns.gsap) —
+    // preloading a different URL than the one the <script> tag requests
+    // defeats the preload (browser fetches twice) or preloads a resource
+    // that's never used.
+    $gsap_src = wp_scripts()->registered['gsap']->src ?? '';
+    if ($gsap_src === '') {
+      return;
+    }
+
+    $href = esc_url($gsap_src);
+    $host = wp_parse_url($href, PHP_URL_HOST);
+    if (empty($host)) {
+      return;
+    }
+    $origin = esc_url('https://' . $host);
 
     // dns-prefetch + preconnect cut TLS/DNS round-trips before the preload fires.
     // crossorigin on the preload must match the eventual <script> request (anonymous)
     // so the browser reuses the preloaded response instead of fetching twice.
-    echo "<link rel='dns-prefetch' href='https://cdn.jsdelivr.net'>\n";
-    echo "<link rel='preconnect' href='https://cdn.jsdelivr.net' crossorigin>\n";
+    echo "<link rel='dns-prefetch' href='{$origin}'>\n";
+    echo "<link rel='preconnect' href='{$origin}' crossorigin>\n";
     echo "<link rel='preload' as='script' href='{$href}' crossorigin>\n";
   }
 
@@ -498,7 +580,7 @@ final class Frontend
 
     // Full Preview mode — SaaS proxy injects its own GSAP + presets + frontend.js
     // seeded from the editor's in-memory state. WP must enqueue NOTHING to avoid
-    // duplicate libraries and stale wcfanimb data.
+    // duplicate libraries and stale motionkit data.
     if ($this->is_full_preview()) {
       nocache_headers();
       header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -508,7 +590,7 @@ final class Frontend
 
     if ($this->is_editor_preview()) {
       // Force fresh response — page caches and CDNs would otherwise serve
-      // a stale snapshot, leaving the editor with outdated wcfanimb data.
+      // a stale snapshot, leaving the editor with outdated motionkit data.
       nocache_headers();
       header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
       header('Pragma: no-cache');
@@ -527,7 +609,7 @@ final class Frontend
    */
   private function is_full_preview(): bool
   {
-    return isset($_GET['mk_full_preview']) && $_GET['mk_full_preview'] === '1';
+    return isset($_GET['motionkit_full_preview']) && $_GET['motionkit_full_preview'] === '1';
   }
 
   /**
@@ -601,7 +683,7 @@ final class Frontend
     }
 
 
-    $mk_token = isset($_GET['mk_token']) ? sanitize_text_field(wp_unslash($_GET['mk_token'])) : '';
+    $motionkit_token = isset($_GET['motionkit_token']) ? sanitize_text_field(wp_unslash($_GET['motionkit_token'])) : '';
 
     // Favourited cloud-animation ids — hydrated into the editor's cloud slice on load.
     $favourite_cloud_animation = get_option('motionkit_favourite_cloud_animation', []);
@@ -621,7 +703,7 @@ final class Frontend
       'currentPageSettings'  => $page_configs ? $page_configs : json_decode('{}'),
       'device_config'     => $devices,
       'ajaxurl'           => admin_url('admin-ajax.php'),
-      'nonce'             => wp_create_nonce('wcf-admin-preview-nonce'),
+      'nonce'             => wp_create_nonce('motionkit-admin-preview-nonce'),
       'rest_url'          => add_query_arg('rest_route', '/motionkit/v1/', home_url('/')),
       'rest_nonce'        => wp_create_nonce('wp_rest'),
       'pageTypeConfigs'   => $page_type_config,
@@ -632,14 +714,14 @@ final class Frontend
       'favourite_cloud_animation' => is_array($favourite_cloud_animation) ? $favourite_cloud_animation : [],
       'animation_folders' => $animation_folders,
       'platform'          => 'wordpress',
-      'mk_token'          => $mk_token,
+      'motionkit_token'   => $motionkit_token,
       'all_animations'    => $merged_animation,
       'all_settings'      => $merged_settings,
     ];
 
 
     // Localize on the bridge (loads independently, no GSAP deps)
-    wp_localize_script('motionkit-editor-bridge', 'wcfanimb', $localized_data);
+    wp_localize_script('motionkit-editor-bridge', 'motionkitData', $localized_data);
   }
 
   /**
@@ -757,11 +839,19 @@ final class Frontend
     }
 
     if (!empty($animation_plugins)) {
+      // get_active_plugins() returns animation-schema keys (scrollTo, drawSVG,
+      // …) which don't all match their registered WP script handle (ScrollToPlugin,
+      // DrawSVGPlugin, …) — translate before comparing against registered_gsap_handles.
+      $animation_plugins_by_handle = [];
+      foreach ($animation_plugins as $schema_key => $v) {
+        $animation_plugins_by_handle[self::GSAP_SCHEMA_TO_HANDLE[$schema_key] ?? $schema_key] = $schema_key;
+      }
+
       // Only depend on plugin handles that register_gsap_libs actually
       // registered. A plugin the admin disabled (or left without a valid CDN
       // URL) has no handle — listing it here makes WP_Scripts warn about an
       // "unregistered dependency" and skip loading motionkit-frontend.
-      $usable = array_intersect_key($animation_plugins, $this->registered_gsap_handles);
+      $usable = array_intersect_key($animation_plugins_by_handle, $this->registered_gsap_handles);
       if (!empty($usable)) {
         $deps = array_merge($deps, array_keys($usable));
       }
@@ -769,8 +859,11 @@ final class Frontend
       // Any referenced plugin with no registered handle is unavailable — drop
       // the animations that need it so the rest of the page still animates
       // instead of the whole gsap.matchMedia batch throwing on a missing lib.
-      $missing = array_diff_key($animation_plugins, $this->registered_gsap_handles);
-      if (!empty($missing)) {
+      // Map back to schema keys since reject_animations_needing_plugins()
+      // compares against get_active_plugins()'s schema-key output.
+      $missing_by_handle = array_diff_key($animation_plugins_by_handle, $this->registered_gsap_handles);
+      if (!empty($missing_by_handle)) {
+        $missing = array_fill_keys(array_values($missing_by_handle), true);
         $merged_animation = $this->reject_animations_needing_plugins($merged_animation, $missing);
       }
     }
@@ -833,7 +926,7 @@ final class Frontend
       unset($merged_settings['gsapPlugin']['cdns']);
     }
 
-    wp_localize_script('motionkit-frontend', 'wcfanimb', [
+    wp_localize_script('motionkit-frontend', 'motionkitData', [
       'all_animations' => $merged_animation,
       'all_settings'   => $merged_settings,
       // Runtime customEngine log switch, read from .env each request (dev only).
@@ -841,7 +934,7 @@ final class Frontend
     ]);
 
     // Allow Pro to enqueue premium preset scripts
-    do_action('wcf_animation_builder/frontend/presets/enqueue_element_scripts', $deps, $is_custom, $active_presets);
+    do_action('motionkit/frontend/presets/enqueue_element_scripts', $deps, $is_custom, $active_presets);
   }
 
   /**
@@ -1073,7 +1166,7 @@ final class Frontend
    */
   public function ajax_configs_store(): void
   {
-    check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+    check_ajax_referer('motionkit-admin-preview-nonce', 'motionkit_nonce');
 
     if (!current_user_can('manage_options')) {
       wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'motionkit')], 403);
@@ -1108,7 +1201,7 @@ final class Frontend
    */
   public function ajax_configs_delete(): void
   {
-    check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+    check_ajax_referer('motionkit-admin-preview-nonce', 'motionkit_nonce');
 
     if (!current_user_can('manage_options')) {
       wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'motionkit')], 403);
@@ -1138,7 +1231,7 @@ final class Frontend
    */
   public function ajax_global_configs_store(): void
   {
-    check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+    check_ajax_referer('motionkit-admin-preview-nonce', 'motionkit_nonce');
 
     if (!current_user_can('manage_options')) {
       wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'motionkit')], 403);
@@ -1171,7 +1264,7 @@ final class Frontend
    */
   public function ajax_global_configs_delete(): void
   {
-    check_ajax_referer('wcf-admin-preview-nonce', 'wcf_nonce');
+    check_ajax_referer('motionkit-admin-preview-nonce', 'motionkit_nonce');
 
     if (!current_user_can('manage_options')) {
       wp_send_json_error(['msg' => esc_html__('Unauthorized access', 'motionkit')], 403);
