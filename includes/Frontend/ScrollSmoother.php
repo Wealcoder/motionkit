@@ -56,22 +56,49 @@ final class ScrollSmoother
    */
   public static function is_enabled_for_current_page(): bool
   {
-    $global    = get_option('motionkit_global_settings');
-    $global_ss = (is_array($global) && isset($global['scrollSmother']) && is_array($global['scrollSmother']))
-      ? $global['scrollSmother']
-      : null;
-
     $page_ss = self::current_page_scroll_smoother();
 
     // Page override wins whole; otherwise the global baseline applies.
-    $cfg = (is_array($page_ss) && !empty($page_ss)) ? $page_ss : $global_ss;
+    return self::config_enables_smoother(!empty($page_ss) ? $page_ss : self::global_scroll_smoother());
+  }
+
+  /**
+   * Is the ScrollSmoother switched on at the GLOBAL (all-page) level, ignoring any
+   * per-page override? For admin/dashboard use, where there is no front-end page
+   * to resolve a per-page setting against. AAE Pro reads this to tell the user, in
+   * its own Scroll Smoother panel, that MotionKit is handling the smoother.
+   */
+  public static function is_enabled_globally(): bool
+  {
+    return self::config_enables_smoother(self::global_scroll_smoother());
+  }
+
+  /** The global scrollSmother config, or null. */
+  private static function global_scroll_smoother()
+  {
+    $global = get_option('motionkit_global_settings');
+
+    return (is_array($global) && isset($global['scrollSmother']) && is_array($global['scrollSmother']))
+      ? $global['scrollSmother']
+      : null;
+  }
+
+  /**
+   * Does a scrollSmother config (page override or global) switch the smoother on
+   * for any device? Device-agnostic — the runtime picks the device via matchMedia;
+   * PHP can't, so "on for any device" is the answer, which is the safe direction.
+   *
+   * @param mixed $cfg
+   */
+  private static function config_enables_smoother($cfg): bool
+  {
     if (!is_array($cfg)) {
       return false;
     }
 
     // The frontend runtime flattens scrollSmother.allPage -> scrollSmother
-    // (enqueue_frontend_scripts()), so the device buckets live inside allPage for
-    // the global config. Read from the same place the runtime does.
+    // (enqueue_frontend_scripts()), so device buckets live inside allPage for the
+    // global config. Read from the same place the runtime does.
     if (isset($cfg['allPage']) && is_array($cfg['allPage'])) {
       $cfg = $cfg['allPage'];
     }
