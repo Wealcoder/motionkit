@@ -456,13 +456,21 @@ final class Frontend
 
   /**
    * Register ScrollSmoother boot script (once only, when scripts will actually load).
-   * Skip if WCF Addons Pro is active — it handles the wrapper itself.
+   *
+   * Runs only when MotionKit actually owns the page smoother — connected to the
+   * editor and switched on for this page (ScrollSmoother::should_run()). This
+   * used to stand down for WCF Addons Pro unconditionally; that is reversed —
+   * MotionKit has priority, and AAE Pro reads the SAME should_run() to stand
+   * down instead. Gating on the real answer (rather than always hooking) also
+   * stops MotionKit's disabled runner from killing another plugin's smoother:
+   * run_scroll_smoother() calls ScrollSmoother.get().kill() when its own value
+   * resolves to null, so it must not run at all when MotionKit is off.
    *
    * @return void
    */
   private function maybe_init_scroll_smoother(): void
   {
-    if (defined('WCF_ADDONS_PRO_VERSION')) {
+    if (!ScrollSmoother::should_run()) {
       return;
     }
 

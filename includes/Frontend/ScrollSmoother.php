@@ -27,6 +27,97 @@ if (!defined('ABSPATH')) {
  */
 final class ScrollSmoother
 {
+  /**
+   * Should MotionKit drive the page smoother on THIS request?
+   *
+   * True only when the site is connected to the MotionKit editor (the
+   * "Connector" — an access token is present) AND the ScrollSmoother is switched
+   * on for the current page. This is the single source of truth: maybe_init_scroll_smoother()
+   * gates on it, and AAE Pro reads the same method to decide whether to stand
+   * down — so the two can never fight over the page's one ScrollSmoother.
+   */
+  public static function should_run(): bool
+  {
+    if (empty(get_option('motionkit_access_token'))) {
+      return false;
+    }
+
+    return self::is_enabled_for_current_page();
+  }
+
+  /**
+   * Is the ScrollSmoother switched on for the current page?
+   *
+   * Device-agnostic port of resolveSmootherValue() below (PHP has no matchMedia,
+   * so "on for any device" counts). Mirrors the page/global merge in
+   * Frontend.php: the page's scrollSmother replaces global's when present,
+   * `allPage` always comes from global, a page override beats the all-page master
+   * kill, and `value` 0 means off (the slider is 0-2).
+   */
+  public static function is_enabled_for_current_page(): bool
+  {
+    $global    = get_option('motionkit_global_settings');
+    $global_ss = (is_array($global) && isset($global['scrollSmother']) && is_array($global['scrollSmother']))
+      ? $global['scrollSmother']
+      : null;
+
+    $page_ss = self::current_page_scroll_smoother();
+
+    // Page override wins whole; otherwise the global baseline applies.
+    $cfg = (is_array($page_ss) && !empty($page_ss)) ? $page_ss : $global_ss;
+    if (!is_array($cfg)) {
+      return false;
+    }
+
+    // The frontend runtime flattens scrollSmother.allPage -> scrollSmother
+    // (enqueue_frontend_scripts()), so the device buckets live inside allPage for
+    // the global config. Read from the same place the runtime does.
+    if (isset($cfg['allPage']) && is_array($cfg['allPage'])) {
+      $cfg = $cfg['allPage'];
+    }
+
+    if (isset($cfg['enable']) && false === $cfg['enable']) {
+      return false;
+    }
+
+    foreach (['desktop', 'laptop', 'tablet', 'mobile'] as $device) {
+      $bucket = (isset($cfg[$device]) && is_array($cfg[$device])) ? $cfg[$device] : null;
+      if ($bucket && false !== ($bucket['enable'] ?? true) && (float) ($bucket['value'] ?? 0) > 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /** The current page's scrollSmother override (mkit_pg_settings_<type>), or null. */
+  private static function current_page_scroll_smoother()
+  {
+    if (!class_exists('\MotionKit\Common\AnimationBuilderPageType')) {
+      return null;
+    }
+
+    try {
+      $pt  = \MotionKit\Common\AnimationBuilderPageType::instance();
+      $cfg = $pt->getCurrentPageType();
+
+      if (!is_array($cfg) || empty($cfg['option'])) {
+        return null;
+      }
+
+      // getCurrentPageType() returns the ANIMATION key; settings live under the
+      // mkit_pg_settings_ prefix (same swap settings_config() does).
+      $cfg['option'] = str_replace('mkit_pg_animation_', 'mkit_pg_settings_', $cfg['option']);
+      $settings      = $pt->getConfig($cfg);
+    } catch (\Throwable $e) {
+      return null;
+    }
+
+    return (is_array($settings) && isset($settings['scrollSmother']) && is_array($settings['scrollSmother']))
+      ? $settings['scrollSmother']
+      : null;
+  }
+
   public function run_scroll_smoother(): void
   {
     // Skip the full-preview tab — the editor opens the WP site with its own
