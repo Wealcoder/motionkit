@@ -16,6 +16,7 @@ import { isEditorPreviewMode } from "../customRegistry.js";
 import { claimTargets, setAnims } from "../ownership.js";
 import { collectAnimatedElements } from "../helper/interactionTargets.js";
 import { presplitSteps } from "../extensions/splitText.js";
+import { decorateMarkers } from "../helper/markers.js";
 
 // Register this scroll animation's built tweens/timelines as the initial
 // owner of its animated elements. Without this, a click/hover animation
@@ -84,6 +85,7 @@ export function buildScrollAnim(anim) {
       });
     });
     registerScrollOwnership(anim, built);
+    decorateMarkers(built, anim.title);
     return { contexts: [stepCtx], listeners: [] };
   }
 
@@ -124,6 +126,7 @@ export function buildScrollAnim(anim) {
   });
 
   registerScrollOwnership(anim, built);
+  decorateMarkers(built, anim.title);
 
   return { contexts: [ctx], listeners: [] };
 }
