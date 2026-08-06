@@ -90,8 +90,8 @@ None of these calls send your site's post content, page content, or saved animat
 
 By connecting your site to Motionkit, you agree to Motionkit's Terms of Service and Privacy Policy, linked below. By using this plugin, GSAP is loaded from jsDelivr's CDN, subject to jsDelivr's own terms and privacy policy.
 
-* Motionkit Terms of Service: https://motionkit.io/terms
-* Motionkit Privacy Policy: https://motionkit.io/privacy
+* Motionkit Terms of Service: https://motionkit.io/terms-condition/
+* Motionkit Privacy Policy: https://motionkit.io/privacy-policy/
 
 == Changelog ==
 
