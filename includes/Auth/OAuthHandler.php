@@ -210,6 +210,8 @@ final class OAuthHandler
   // single-use transient checked with hash_equals() before anything is
   // written (below), which is the correct equivalent for this flow, not a
   // gap. The sniff can't distinguish that from an unguarded $_GET read.
+  // See readme.txt's "Why don't all requests use a WordPress nonce?" FAQ
+  // for the user-facing explanation of this same reasoning.
   // phpcs:disable WordPress.Security.NonceVerification.Recommended
   public function handle_callback(): void
   {

@@ -68,7 +68,18 @@ Yes. GSAP (core, ScrollTrigger, ScrollSmoother, and any additional GSAP plugins 
 
 = Is the plugin secure? =
 
-Yes. The editor connection uses signed, single-use session tokens rather than long-lived credentials in the browser. All input is sanitized, all output is escaped, admin actions are nonce-protected and capability-checked, and the stored connection token is encrypted at rest (AES-256).
+Yes. The editor connection uses signed, single-use session tokens rather than long-lived credentials in the browser. All input is sanitized, all output is escaped, admin actions are nonce-protected and capability-checked, and the stored connection token is encrypted at rest (AES-256). See "Why don't all requests use a WordPress nonce?" below for the handful of request types that use a different (equally strong) mechanism instead of `_wpnonce`.
+
+= Why don't all requests use a WordPress nonce? =
+
+Every admin action that changes something on your site — connecting, disconnecting, verifying the connection, deleting saved animations, and navigating between the admin page's tabs — is protected by a standard WordPress nonce (`wp_verify_nonce()`), checked before anything happens.
+
+A small number of requests use a different, purpose-built mechanism instead of a WordPress nonce, because a `_wpnonce` genuinely can't be used there — not because it was skipped:
+
+* **The OAuth callback from editor.motionkit.io** (after you click "Connect") is a redirect sent by Motionkit's server, not a link or form this site generated. A WordPress nonce is derived from this site's own secret keys, which Motionkit's server has no way to know, so it can't produce a valid one. Instead this step is protected the way OAuth is designed to be: a random, single-use `state` value this site generates before redirecting you to Motionkit, stored server-side, and checked with a timing-safe comparison when you're redirected back — the standard OAuth CSRF defense, and the reason this flow works the same way it does for "Sign in with Google/GitHub/etc." on any other site.
+* **The Motionkit editor's live-preview iframe** (opened from editor.motionkit.io, not from a link this WordPress site generated) identifies itself with a signed session token (JWT) rather than a nonce, for the same reason: the token has to be generated and validated by a party WordPress's nonce system doesn't share secrets with. The token is short-lived, single-use where applicable, and validated on every request — see "Is the plugin secure?" above for how it's issued and stored.
+
+In both cases the alternative mechanism is checked before any data is read or written; nothing is left unprotected, it's simply protected by the right tool for a request that doesn't originate from this WordPress site's own admin pages.
 
 = What happens to my animations if I disconnect? =
 

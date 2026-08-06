@@ -419,6 +419,8 @@ final class Frontend
   // the request far more strongly than a WP nonce could — a nonce would need
   // to be embedded in every editor-launch link and still wouldn't verify
   // *who* is loading it, whereas the JWT does. Not a state change either way.
+  // See readme.txt's "Why don't all requests use a WordPress nonce?" FAQ
+  // for the user-facing explanation of this same reasoning.
   // phpcs:disable WordPress.Security.NonceVerification.Recommended
   private function is_editor_preview(): bool
   {

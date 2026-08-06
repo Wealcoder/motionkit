@@ -555,6 +555,21 @@ scan mode, not real defects):
     `// phpcs:disable WordPress.Security.NonceVerification.Recommended` /
     `// phpcs:enable` pair with the specific reasoning documented inline.
 
+    **Also added** (per explicit direction that a code comment alone might
+    not read as sufficiently convincing to a human wp.org reviewer, who
+    isn't running phpcs and won't see the inline suppression comments unless
+    they open the specific file): a dedicated `readme.txt` FAQ entry, "Why
+    don't all requests use a WordPress nonce?", written in plain language
+    for a non-developer to follow — explains that every state-changing
+    admin action *does* use a nonce, and that the two exceptions (OAuth
+    callback, editor-preview iframe) use OAuth's `state` parameter and a
+    signed JWT respectively because those requests originate from
+    motionkit.io/editor.motionkit.io, not from a link this WordPress site
+    generated, so a WP nonce literally cannot be produced by the other
+    party. Each affected inline comment now also points at this FAQ entry
+    by name, so a reviewer following either code or docs lands on the same
+    explanation.
+
   Verified against the **unmodified** `WordPress-Extra` standard directly
   (not just this project's lenient `phpcs.xml.dist`, since PCP doesn't
   honor that file): a full `includes/` sweep for this sniff now returns
