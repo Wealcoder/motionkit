@@ -152,6 +152,11 @@ return [
       'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
       'version' => MOTIONKIT_VERSION,
     ],
+    'motionkit-mk-text-swipe-pa' => [
+      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSwipeRevealAnim.js',
+      'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
+      'version' => MOTIONKIT_VERSION,
+    ],
   ],
 
 ];
