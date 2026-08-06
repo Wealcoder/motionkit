@@ -426,6 +426,72 @@ will ever exist in the wild).
   so a clean write-then-read under the new key was the correct verification,
   not a migration check).
 
+### Fifth pass — Plugin Check (PCP) live scan (2026-08-06)
+
+Ran the official Plugin Check scanner against the working directory. Real,
+actionable findings and fixes:
+
+- **Trademark: plugin name contained "WordPress"** — wp.org's naming policy
+  disallows "WordPress" anywhere in a plugin's display name, no exceptions.
+  Both `readme.txt`'s `=== ... ===` title and `motionkit.php`'s `Plugin Name:`
+  said "Motionkit – Visual Animation with GSAP for WordPress" → renamed to
+  "Motionkit – Visual Animation with GSAP" in both places. (Historical
+  references to the old name elsewhere in this doc's earlier dated passes are
+  left as-is — they're a record of what the name was at that point in time.)
+- **`Tested up to` had a patch version** — wp.org only accepts `major.minor`
+  for this header (e.g. `7.0`, never `7.0.2`). Had been set to `7.0.2` in an
+  earlier pass to match WordPress.org's actual current release number, which
+  was the right *version* but the wrong *granularity* — fixed to `7.0` in
+  both `readme.txt` and `motionkit.php`.
+- **`ConnectPage.php:737`** — `$_POST['_wpnonce']` was passed straight into
+  `wp_verify_nonce()` without `wp_unslash()`/sanitization first. Low
+  functional risk (nonces are alphanumeric, unaffected by magic-quotes
+  slashing in practice) but a real gap against the sanitize-input pattern
+  used everywhere else in this file — fixed to sanitize+unslash before the
+  `wp_verify_nonce()` call, matching the pattern already used for every other
+  `$_POST`/`$_GET` read in this class.
+- **Stray duplicate file**: `scripts/copy-to-editor copy.js` (space in the
+  filename — an accidental OS-level copy of `copy-to-editor.js`, an older,
+  hardcoded-path version of the same script vs. the current `.env`-driven
+  one). Unreferenced anywhere, dev-only (`scripts/` already excluded via
+  `.distignore`), deleted.
+- **`phpstan-bootstrap.php` stale version**: still said `1.5.1` after the
+  `1.0.0` version-rename pass — synced. (PCP's separate "missing ABSPATH
+  guard" flag on this file was **not** acted on: this is a dev-only PHPStan
+  CLI stub that fakes plugin constants for static analysis, never included by
+  a real WP request, and already `.distignore`d — adding an ABSPATH check
+  would be following the rule's letter against a file the rule doesn't
+  actually apply to.)
+
+**Findings investigated and NOT changed** (confirmed false-positives for this
+scan mode, not real defects):
+
+- `.env`, `.env.example`, `phpcs.xml.dist`, `.distignore`, `.gitignore`,
+  `.claude`, `.github`, `CLAUDE.md`, `flow.md`, `USAGE.md`,
+  `WPORG-SUBMISSION.md` — PCP scans the raw working directory, not the
+  `.distignore`-filtered dist ZIP. Confirmed (Third pass, "GitHub Actions CI"
+  section below, and independently re-checked this pass) that every one of
+  these is already listed in `.distignore` and would not ship. Re-verify with
+  an actual `wp dist-archive` build before the real upload, per the
+  pre-submission checklist below.
+- All `WordPress.Security.NonceVerification.Recommended` warnings (~40+
+  across `ConnectPage.php`/`OAuthHandler.php`/`Frontend.php`/
+  `ScrollSmoother.php`) — every flagged read is a display-only `$_GET` flag
+  (active tab, error message, connected/disconnected banner state) with no
+  state-changing side effect; nonce verification protects actions that
+  *change* something, not read-only navigation params. Already
+  individually verified and excluded in this project's own `phpcs.xml.dist`
+  (see the "wp.org standard" section below) — PCP just doesn't honor that
+  local ruleset since it runs its own fixed one.
+- `WordPress.DB.DirectDatabaseQuery.*` warnings on the Tools tab bulk-delete
+  queries and `uninstall.php` — all use `$wpdb->prepare()` correctly; these
+  are one-shot admin-triggered/uninstall-time queries, not hot-path reads
+  that would benefit from `wp_cache_*` wrapping.
+- `PrefixAllGlobals.NonPrefixedVariableFound` on `uninstall.php`'s local
+  variables — WP core guarantees `uninstall.php` runs in an isolated,
+  single-execution scope; local variable names there can't collide with
+  anything.
+
 ### Account/ownership — check before submitting
 
 - A separate `wealcoder`-account plugin ("bricksfly") received a real wp.org
@@ -501,7 +567,10 @@ will ever exist in the wild).
 
 ## Pre-submission checklist
 
-- [ ] Run Plugin Check (PCP) locally against a clean build, fix everything it flags.
+- [x] Run Plugin Check (PCP) locally — done (2026-08-06), see "Fifth pass"
+      above. Real findings fixed (trademark name, Tested-up-to granularity,
+      nonce unslash, stray file); dist-scope/NonceVerification/DirectQuery
+      findings investigated and confirmed false-positives for this scan mode.
 - [ ] Sync version number across readme.txt / plugin header / `MOTIONKIT_VERSION` / package.json.
 - [x] Rewrite readme.txt — done, verified current (2026-08-04); still needs
       the `== External services ==` section extended to cover the GSAP CDN

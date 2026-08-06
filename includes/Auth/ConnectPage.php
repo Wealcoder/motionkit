@@ -734,7 +734,8 @@ final class ConnectPage
     if (!current_user_can('manage_options')) {
       return;
     }
-    if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'motionkit_tools_nonce')) {
+    $nonce = isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '';
+    if (!wp_verify_nonce($nonce, 'motionkit_tools_nonce')) {
       wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=tools&error=nonce_failed'));
       exit;
     }
