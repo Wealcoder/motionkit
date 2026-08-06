@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Motionkit – Visual Animation with GSAP for WordPress
  * Plugin URI: https://motionkit.io
- * Description: A WordPress plugin that integrates the GSAP Animation Builder (Motionkit) to create and manage animations directly from the WordPress admin dashboard.
+ * Description: Connects your site to the Motionkit visual editor so you can build GSAP-powered scroll, hover, and page-transition animations without writing code.
  * Version: 1.5.1
  * Author: wealcoder
  * Author URI: https://profiles.wordpress.org/wealcoder/
@@ -12,7 +12,7 @@
  * Text Domain: motionkit
  * Domain Path: /languages
  * Requires at least: 6.7
- * Tested up to: 6.9
+ * Tested up to: 7.0.2
  * Requires PHP: 7.4
  *
  * @package MotionKit

@@ -192,7 +192,7 @@ References:
     question from the wp.org GPL-compatibility issue above, which still
     applies regardless.
   - **Decision**: keep the CDN approach (already DB-driven per the earlier
-    `register_gsap_libs()` rewrite — no hardcoded URL in PHP anymore), and
+    `register_required_script()` rewrite — no hardcoded URL in PHP anymore), and
     write a thorough, explicit disclosure rather than attempt to bundle.
     **Done**: `readme.txt`'s "Does this plugin load GSAP?" FAQ and
     `== External services ==` section rewritten (2026-08-05) to (a) correct a
