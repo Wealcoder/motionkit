@@ -52,10 +52,15 @@ export function buildFlip(step, vars) {
 }
 
 export function applyFlip(tl, step, vars, overlap) {
-  // The Flip.from tween runs independently of `tl` — subsequent timeline
-  // steps don't wait for it (matches splitText/drawSVG behavior).
-  const anim = buildFlip(step, vars);
-  if (anim) tl.add(anim, overlap);
+  // Run capture → mutate → Flip.from when the playhead ARRIVES, or a scroll-triggered flip toggles its class at page load and diffs the wrong layout.
+  // Trade-off: the Flip.from tween is now built outside the animation's gsap.context, so teardown won't revert its transforms — only the global reset's __wcfOrigCss restore clears them. The toggled class was never reverted either way.
+  tl.call(
+    () => {
+      buildFlip(step, vars);
+    },
+    undefined,
+    overlap,
+  );
 }
 
 // Resolve the GSAP-ready vars for a flip step the same way standard.js hands
