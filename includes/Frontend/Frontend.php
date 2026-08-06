@@ -414,6 +414,12 @@ final class Frontend
    *
    * @return bool
    */
+  // This is a read-only mode-detection check gated by JWT validation
+  // (validate_reusable()/verify_server_session() below), which authenticates
+  // the request far more strongly than a WP nonce could — a nonce would need
+  // to be embedded in every editor-launch link and still wouldn't verify
+  // *who* is loading it, whereas the JWT does. Not a state change either way.
+  // phpcs:disable WordPress.Security.NonceVerification.Recommended
   private function is_editor_preview(): bool
   {
 
@@ -435,6 +441,7 @@ final class Frontend
     // Not a WP token — try server-generated token via SaaS API
     return $this->verify_server_session($token);
   }
+  // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
   /**
    * Remove X-Frame-Options for editor preview so the SaaS iframe can embed the page.
@@ -615,10 +622,14 @@ final class Frontend
    *
    * @return bool
    */
+  // Read-only boolean flag (present/absent, '1' or not) that only decides
+  // which scripts get enqueued — no state change, so no nonce needed.
+  // phpcs:disable WordPress.Security.NonceVerification.Recommended
   private function is_full_preview(): bool
   {
     return isset($_GET['motionkit_full_preview']) && $_GET['motionkit_full_preview'] === '1';
   }
+  // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
   /**
    * Editor preview mode — load all CSS/JS for the SaaS editor iframe
@@ -628,6 +639,11 @@ final class Frontend
    *
    * @return void
    */
+  // Only ever called from within an is_editor_preview() === true branch
+  // (see the call site above), so motionkit_token here is a re-read of a
+  // value that's already been JWT-validated earlier in this same request —
+  // not a fresh unauthenticated read.
+  // phpcs:disable WordPress.Security.NonceVerification.Recommended
   private function enqueue_editor_preview_scripts(): void
   {
     // Editor preview mode: only load the bridge script for postMessage communication.
@@ -731,6 +747,7 @@ final class Frontend
     // Localize on the bridge (loads independently, no GSAP deps)
     wp_localize_script('motionkit-editor-bridge', 'motionkitData', $localized_data);
   }
+  // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
   /**
    * Normal frontend — conditional script loading based on saved page configs

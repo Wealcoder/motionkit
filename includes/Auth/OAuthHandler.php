@@ -203,6 +203,14 @@ final class OAuthHandler
    *
    * @return void
    */
+  // This callback is reached via a third-party (motionkit.io) redirect, not
+  // a same-site form/link — a WP _wpnonce can't be used here since
+  // motionkit.io has no way to know WP's nonce secret. CSRF protection is
+  // the OAuth-standard 'state' parameter instead: a cryptographically random,
+  // single-use transient checked with hash_equals() before anything is
+  // written (below), which is the correct equivalent for this flow, not a
+  // gap. The sniff can't distinguish that from an unguarded $_GET read.
+  // phpcs:disable WordPress.Security.NonceVerification.Recommended
   public function handle_callback(): void
   {
     if (!isset($_GET['page'], $_GET['code'], $_GET['state'])) {
@@ -256,6 +264,7 @@ final class OAuthHandler
     wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&connected=1'));
     exit;
   }
+  // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
   /**
    * Exchange authorization code for access token via motionkit.io API.

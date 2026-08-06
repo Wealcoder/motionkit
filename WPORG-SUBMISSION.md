@@ -498,15 +498,41 @@ scan mode, not real defects):
   these is already listed in `.distignore` and would not ship. Re-verify with
   an actual `wp dist-archive` build before the real upload, per the
   pre-submission checklist below.
-- All `WordPress.Security.NonceVerification.Recommended` warnings (~40+
-  across `ConnectPage.php`/`OAuthHandler.php`/`Frontend.php`/
-  `ScrollSmoother.php`) — every flagged read is a display-only `$_GET` flag
-  (active tab, error message, connected/disconnected banner state) with no
-  state-changing side effect; nonce verification protects actions that
-  *change* something, not read-only navigation params. Already
-  individually verified and excluded in this project's own `phpcs.xml.dist`
-  (see the "wp.org standard" section below) — PCP just doesn't honor that
-  local ruleset since it runs its own fixed one.
+- `WordPress.Security.NonceVerification.Recommended` warnings (~40+ across
+  `ConnectPage.php`/`OAuthHandler.php`/`Frontend.php`/`ScrollSmoother.php`) —
+  investigated individually and resolved with two different fixes depending
+  on what each flagged read actually was (all *after* this doc's Fifth-pass
+  entry above, as a same-day follow-up once PCP's per-file output was
+  reviewed line by line rather than accepted as one blanket category):
+  - **`ConnectPage.php`'s `?tab=`** (sidebar navigation): given a **real
+    nonce** — `wp_nonce_url()` stamps the sidebar tab links with a
+    `motionkit_tab_nav` nonce, verified in both `render_page()` and
+    `enqueue_admin_styles()`, falling back to the default `connect` tab on
+    a missing/invalid nonce rather than hard-failing (an expired bookmark
+    shouldn't lock out navigation). Verified live for all three cases
+    (valid/missing/garbage nonce).
+  - **Everything else** — `render_notices()`/`get_error_message()`'s
+    redirect-appended flags (`?error=`, `?connected=`, `?disconnected=`,
+    `?license_refresh=`, `?tools_deleted=`, `?verify=`, `?error_message=`),
+    `OAuthHandler::handle_callback()` (OAuth's own `state` transient +
+    `hash_equals()` is the correct CSRF mechanism here, not a WP nonce — the
+    callback is reached via motionkit.io's redirect, which has no way to
+    know a WP nonce secret), `Frontend::is_editor_preview()` (gated by JWT
+    validation, a stronger authentication than a nonce),
+    `Frontend::is_full_preview()`/`ScrollSmoother::run_scroll_smoother()`
+    (pure read-only mode-detection booleans, no state change), and
+    `Frontend::enqueue_editor_preview_scripts()` (only ever reached after
+    `is_editor_preview()` already validated the token earlier in the same
+    request) — each given a targeted method-level
+    `// phpcs:disable WordPress.Security.NonceVerification.Recommended` /
+    `// phpcs:enable` pair with the specific reasoning documented inline at
+    each site, rather than one blanket justification.
+
+  Verified against the **unmodified** `WordPress-Extra` standard directly
+  (not just this project's lenient `phpcs.xml.dist`, since PCP doesn't
+  honor that file): a full `includes/` sweep for this sniff now returns
+  zero findings. `phpcs.xml.dist` and PHPStan both stay clean too, and the
+  site was smoke-tested live (loads clean, no fatals) after the change.
 - `WordPress.DB.DirectDatabaseQuery.*` warnings on the Tools tab bulk-delete
   queries and `uninstall.php` — all use `$wpdb->prepare()` correctly; these
   are one-shot admin-triggered/uninstall-time queries, not hot-path reads

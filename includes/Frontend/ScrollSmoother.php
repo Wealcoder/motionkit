@@ -145,6 +145,10 @@ final class ScrollSmoother
       : null;
   }
 
+  // Read-only boolean flag (present/absent, '1' or not) that only decides
+  // whether the smoother script prints — no state change, so no nonce
+  // needed. Same reasoning as Frontend::is_full_preview().
+  // phpcs:disable WordPress.Security.NonceVerification.Recommended
   public function run_scroll_smoother(): void
   {
     // Skip the full-preview tab — the editor opens the WP site with its own
@@ -299,4 +303,5 @@ final class ScrollSmoother
     </script>
     <?php
   }
+  // phpcs:enable WordPress.Security.NonceVerification.Recommended
 }
