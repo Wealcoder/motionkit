@@ -74,7 +74,14 @@ final class ConnectPage
       $version
     );
 
-    $active_tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'connect';
+    // Same nonce as the sidebar tab links (see render_page()) — mirrors its
+    // fallback-to-default behavior so the enqueued CSS always matches what
+    // render_page() actually draws.
+    $tab_nonce_valid = isset($_GET['_wpnonce'])
+      && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'motionkit_tab_nav');
+    $active_tab = ($tab_nonce_valid && isset($_GET['tab']))
+      ? sanitize_text_field(wp_unslash($_GET['tab']))
+      : 'connect';
     if ($active_tab === 'tools') {
       wp_enqueue_style(
         'motionkit-admin-tools',
@@ -155,7 +162,14 @@ final class ConnectPage
       wp_die(esc_html__('You do not have permission to access this page.', 'motionkit'));
     }
 
-    $active_tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'connect';
+    // The sidebar nonces this URL (see the tab loop below); a missing/expired
+    // nonce (e.g. an old bookmark) just falls back to the default tab rather
+    // than hard-failing, since nothing here changes state either way.
+    $tab_nonce_valid = isset($_GET['_wpnonce'])
+      && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'motionkit_tab_nav');
+    $active_tab = ($tab_nonce_valid && isset($_GET['tab']))
+      ? sanitize_text_field(wp_unslash($_GET['tab']))
+      : 'connect';
     $current_user = wp_get_current_user();
     $connection_info = OAuthHandler::get_connection_info();
     $user_email = !empty($connection_info['email']) ? $connection_info['email'] : $current_user->user_email;
@@ -202,7 +216,13 @@ final class ConnectPage
         <div class="motionkit-sidebar">
           <nav class="motionkit-sidebar-nav">
             <?php foreach ($tabs as $tab_key => $tab): ?>
-              <a href="<?php echo esc_url(admin_url('admin.php?page=motionkit-connect&tab=' . $tab_key)); ?>"
+              <?php
+              $tab_url = wp_nonce_url(
+                admin_url('admin.php?page=motionkit-connect&tab=' . $tab_key),
+                'motionkit_tab_nav'
+              );
+              ?>
+              <a href="<?php echo esc_url($tab_url); ?>"
                  class="motionkit-sidebar-link <?php echo $active_tab === $tab_key ? 'motionkit-sidebar-link--active' : ''; ?>">
                 <span class="motionkit-sidebar-icon"><?php echo wp_kses($tab['icon'], []); ?></span>
                 <?php echo esc_html($tab['label']); ?>
@@ -236,6 +256,13 @@ final class ConnectPage
 
   // ─── Notices ─────────────────────────────────────────────────
 
+  // These flags are appended by server-side redirects after an action that
+  // already verified its own nonce (OAuth callback, handle_tools_actions()).
+  // They only pick which notice banner to display — worst case a crafted URL
+  // shows a fake "connected" banner with no effect on actual connection
+  // state — so nonce-stamping every redirect target here would add
+  // complexity without a real security benefit.
+  // phpcs:disable WordPress.Security.NonceVerification.Recommended
   private function render_notices(): void
   {
     $error = isset($_GET['error']) ? sanitize_text_field(wp_unslash($_GET['error'])) : '';
@@ -344,6 +371,7 @@ final class ConnectPage
       </div>
     <?php endif;
   }
+  // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
   // ─── License Tab ─────────────────────────────────────────────
 
@@ -700,6 +728,10 @@ final class ConnectPage
 
   // ─── Helpers ─────────────────────────────────────────────────
 
+  // Same reasoning as render_notices(): $error_message is read-only display
+  // text appended by a server-side redirect after an already-verified
+  // action, not a state change — no nonce needed to guard reading it.
+  // phpcs:disable WordPress.Security.NonceVerification.Recommended
   private function get_error_message(string $error): string
   {
     $messages = [
@@ -718,6 +750,7 @@ final class ConnectPage
 
     return $messages[$error] ?? __('An unknown error occurred. Please try again.', 'motionkit');
   }
+  // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
   // ─── Tools Tab ───────────────────────────────────────────────
 
