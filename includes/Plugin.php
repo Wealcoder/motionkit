@@ -189,12 +189,17 @@ final class Plugin
 
         global $wpdb;
         $hot_options = ['motionkit_page_settings_updated_at'];
+        // Dynamic %s,%s,... placeholder list sized to $hot_options — this IS
+        // the prepare() placeholder syntax, not unescaped SQL; $hot_options is
+        // a hardcoded literal above, never external input. The sniff can't
+        // trace that {$placeholders} expands to valid %s placeholders before
+        // prepare() consumes them via the variadic ...$hot_options args below.
         $placeholders = implode(',', array_fill(0, count($hot_options), '%s'));
         // Single UPDATE rather than per-option get/delete/add cycles.
         $wpdb->query(
             $wpdb->prepare(
                 "UPDATE {$wpdb->options} SET autoload = 'yes'
-                 WHERE option_name IN ({$placeholders}) AND autoload != 'yes'",
+                 WHERE option_name IN ({$placeholders}) AND autoload != 'yes'", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
                 ...$hot_options
             )
         );

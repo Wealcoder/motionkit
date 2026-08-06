@@ -487,6 +487,19 @@ scan mode, not real defects):
   queries and `uninstall.php` — all use `$wpdb->prepare()` correctly; these
   are one-shot admin-triggered/uninstall-time queries, not hot-path reads
   that would benefit from `wp_cache_*` wrapping.
+- `Plugin.php:197` — `PreparedSQL.InterpolatedNotPrepared` /
+  `PreparedSQLPlaceholders.UnfinishedPrepare` on
+  `maybe_fix_autoload_flags()`'s dynamic `IN ({$placeholders})` clause. The
+  sniff can't trace that `$placeholders` is itself built from `%s` tokens
+  (`implode(',', array_fill(0, count($hot_options), '%s'))`) sized to match
+  the hardcoded `$hot_options` literal — the standard pattern for a
+  variable-length `IN (...)` with `$wpdb->prepare()`'s variadic args. Real
+  code, not user input; confirmed false-positive same as the equivalent
+  finding already excluded in `phpcs.xml.dist` for `ConnectPage.php`'s bulk
+  queries. Added a targeted `// phpcs:ignore` on the flagged line (rather
+  than another blanket `phpcs.xml.dist` exclusion) since PCP doesn't honor
+  that file — verified clean against the *unmodified* `WordPress-Extra`
+  standard directly, not just this project's lenient ruleset.
 - `PrefixAllGlobals.NonPrefixedVariableFound` on `uninstall.php`'s local
   variables — WP core guarantees `uninstall.php` runs in an isolated,
   single-execution scope; local variable names there can't collide with
