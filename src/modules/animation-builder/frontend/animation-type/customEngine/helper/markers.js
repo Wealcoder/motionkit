@@ -79,29 +79,74 @@ function decorate(node, title, role, scroller) {
   node.appendChild(pill);
 }
 
-// The two scroller markers aren't exposed on the instance, but every marker of one trigger
-// shares a `marker-<animation id>` class, so they're findable from the start marker's siblings.
-function scrollerMarkers(node) {
-  const key = [...node.classList].find((c) => c.startsWith("marker-"));
-  if (!key || !node.ownerDocument) return [];
-  return [...node.ownerDocument.querySelectorAll(`[class~="${key}"]`)].filter((n) =>
-    n.className.includes("gsap-marker-scroller-"),
-  );
+// Sweep the DOM rather than tracking the animations we built. On a hard reload GSAP defers
+// ScrollTrigger init past the build, so a reference captured at build time is not ready when we
+// look at it — that is why markers came up raw on load and only styled after Play re-dispatched
+// them. Reading the live marker nodes instead makes this independent of when GSAP gets around
+// to creating them.
+const SWEEP_MS = 250;
+const SWEEP_WINDOW_MS = 8000;
+let hooked = false;
+let sweepUntil = 0;
+let timer = null;
+
+// Every marker of one trigger carries `marker-<animation id>`, and the matching ScrollTrigger
+// knows the editor-side title, so a marker can be labelled without knowing who built it.
+function titlesById() {
+  const map = new Map();
+  const all = (typeof ScrollTrigger !== "undefined" && ScrollTrigger.getAll?.()) || [];
+  all.forEach((st) => {
+    const title = st.animation?.vars?.data?.animationTitle;
+    const id = st.animation?.vars?.id ?? st.vars?.id;
+    if (title && id) map.set(String(id), title);
+  });
+  return map;
 }
 
-// Called with the built tweens/timelines for one animation; only those carrying a ScrollTrigger
-// with markers enabled are touched, so a page without markers pays nothing.
-export function decorateMarkers(built, title) {
-  if (!title) return;
-  (built || []).forEach((anim) => {
-    const st = anim?.scrollTrigger;
-    if (!st || !st.vars?.markers) return;
-    decorate(st.markerStart, title, "start", false);
-    decorate(st.markerEnd, title, "end", false);
-    const node = st.markerStart || st.markerEnd;
-    if (!node) return;
-    scrollerMarkers(node).forEach((m) =>
-      decorate(m, title, m.className.includes("scroller-start") ? "start" : "end", true),
+function sweep() {
+  if (typeof document === "undefined") return;
+  const nodes = document.querySelectorAll(
+    '[class*="gsap-marker-"]:not([data-mk-marker])',
+  );
+  if (!nodes.length) return;
+  const titles = titlesById();
+  nodes.forEach((node) => {
+    const key = [...node.classList].find((c) => c.startsWith("marker-"));
+    const title = key ? titles.get(key.slice(7)) : null;
+    if (!title) return;
+    decorate(
+      node,
+      title,
+      node.className.includes("-start") ? "start" : "end",
+      node.className.includes("gsap-marker-scroller-"),
     );
   });
+}
+
+function startSweeping() {
+  sweepUntil = Date.now() + SWEEP_WINDOW_MS;
+  if (timer) return;
+  timer = setInterval(() => {
+    sweep();
+    if (Date.now() > sweepUntil) {
+      clearInterval(timer);
+      timer = null;
+    }
+  }, SWEEP_MS);
+}
+
+// Called after each scroll animation is built. The build itself is only a cue to start looking —
+// the sweep is what actually finds the markers, whenever GSAP creates them.
+export function decorateMarkers(built, title) {
+  if (!title || !built?.length) return;
+  if (!hooked && typeof ScrollTrigger !== "undefined") {
+    hooked = true;
+    try {
+      ScrollTrigger.addEventListener("refresh", sweep);
+    } catch (e) {
+      /* older ScrollTrigger without the event API — the interval still covers it */
+    }
+  }
+  sweep();
+  startSweeping();
 }
