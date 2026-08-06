@@ -425,6 +425,30 @@ will ever exist in the wild).
   with a fresh page save/load round-trip (no pre-existing data to migrate,
   so a clean write-then-read under the new key was the correct verification,
   not a migration check).
+- **Missed spot found later via full E2E (Playwright) regression, fixed
+  same day**: `EditorSessionTrait.php:142`'s `is_valid_page_type_config()` —
+  the security check that confines editor-session writes to MotionKit's own
+  key shape — still matched the literal string `'mkit_pg_'` (substring, not
+  even the full old prefix). Since `'motionkit_pg_animation_...'` doesn't
+  contain `'mkit_pg_'` as a *leading* substring (`strpos(...) !== 0` — the
+  string starts with `'motionkit_pg_'`, not `'mkit_pg_'`), this check
+  **rejected every real post-rename payload**, breaking
+  `save_current_page_animation`/`save_current_page_settings`/
+  `delete_current_page_settings` entirely (global settings/animations,
+  which don't go through this validator, still worked — that's why it
+  wasn't caught by the live DB round-trip test above, which happened to
+  exercise a path that didn't hit this specific check the same way).
+  The original repo-wide `mkit_pg_animation_|mkit_pg_settings_` grep sweep
+  missed this because the literal in the code was `'mkit_pg_'` (no
+  `animation_`/`settings_` suffix — this method checks the shared prefix
+  before either variant), not the two exact patterns that sweep searched
+  for. **Fixed**: `'mkit_pg_'` → `'motionkit_pg_'`. Verified live via 3
+  direct REST calls: (1) new-prefix payload → `200`, confirmed actually
+  persisted in `wp_options`; (2) old-prefix payload → `400
+  invalid_page_type_config`, confirming the security boundary itself is
+  intact, not just permissive now; (3) an unrelated option name
+  (`siteurl`) → `400`, confirming the check still rejects genuinely
+  out-of-scope keys.
 
 ### Fifth pass — Plugin Check (PCP) live scan (2026-08-06)
 
