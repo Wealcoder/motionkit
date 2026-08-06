@@ -209,11 +209,6 @@ final class Plugin
      */
     public function init(): void
     {
-        // Performance optimization: Skip initialization on certain requests
-        // if ($this->should_skip_init()) {
-        //     return;
-        // }
-       
         // Send platform identification header for MotionKit detect-platform
         add_action('send_headers', [$this, 'send_platform_header']);
 
@@ -230,26 +225,6 @@ final class Plugin
         add_action('wp_enqueue_scripts', [$this, 'enqueue_admin_bar_css']);
 
         do_action('MOTIONKIT_LOADED');
-    }
-
-    /**
-     * Check if initialization should be skipped
-     *
-     * @return bool True if should skip, false otherwise
-     */
-    private function should_skip_init(): bool
-    {
-        // Skip on AJAX requests unless it's our AJAX
-        if (defined('DOING_AJAX') && DOING_AJAX) {
-            return !isset($_REQUEST['action']) || strpos(sanitize_text_field( wp_unslash($_REQUEST['action'] )), 'motionkit_') === false;
-        }
-
-        // Skip on cron requests
-        if (defined('DOING_CRON') && DOING_CRON) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
