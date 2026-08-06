@@ -1,3 +1,5 @@
+import { isPreviewContext } from "../helper/previewMode.js";
+
 // "default" is an editor sentinel. Omit so ScrollTrigger picks its own default.
 export function nonDefault(v) {
   return v && v !== "default" ? v : undefined;
@@ -69,7 +71,8 @@ const OPTIONAL_PROPS = [
   ["invalidateOnRefresh", parseBool],
   ["refreshPriority", parseNumber],
   ["autoRefreshEvents", parseString],
-  ["markers", parseBool],
+  // Markers are a debugging aid — drop them on a published page even if the config saved them on.
+  ["markers", (v) => (isPreviewContext() ? parseBool(v) : undefined)],
 ];
 
 // Build a GSAP-ready ScrollTrigger config object from the editor's per-device
