@@ -3,6 +3,7 @@ import { isStepActive } from "../select/filter.js";
 import { normalizeStepVars } from "../select/merge.js";
 import { extractOverlap } from "../select/overlap.js";
 import { withCompletion, debugLog } from "../helper/logger.js";
+import { claimFromRender } from "../helper/renderOrder.js";
 
 // Stamp identity + inspection metadata onto vars BEFORE the handler builds
 // the tween. GSAP keeps vars.id and vars.data on the resulting tween object,
@@ -37,6 +38,20 @@ function buildStampedVars(tl, step, vars) {
   return withCompletion({ ...vars, id: step?.id, data }, data);
 }
 
+// `from` samples its end value off the live DOM, so a second animation on the same property lands on a value the first already perturbed — only fromTo fixes it (immediateRender:false and overwrite:"auto" both measured, both worse), so warn instead of attempting a repair.
+function warnIfStacked(tl, step, vars) {
+  if (step.method !== "from") return;
+  if (vars?.flip || vars?.scrollTo) return;
+  const animId = tl?.vars?.data?.animationId || null;
+  if (!claimFromRender(animId, step.itemClass, vars)) return;
+  debugLog("[customEngine] stacked `from` on a shared target —", {
+    animationId: animId,
+    stepId: step.id,
+    itemClass: step.itemClass,
+    hint: "another animation already animates these properties; `from` samples its end value off the live DOM, so use fromTo with explicit endpoints instead",
+  });
+}
+
 export function applyStep(tl, step) {
   if (!isStepActive(step)) return;
   const handler = getMethod(step.method);
@@ -48,6 +63,7 @@ export function applyStep(tl, step) {
   // call can have side-effectful semantics even with empty vars — let through.
   if (rawVars == null && step.method !== "call") return;
   const { vars, overlap } = extractOverlap(step, rawVars);
+  warnIfStacked(tl, step, vars);
   const stamped = buildStampedVars(tl, step, vars);
   handler(tl, step, stamped, overlap);
 }

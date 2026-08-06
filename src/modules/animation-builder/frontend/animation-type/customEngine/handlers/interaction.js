@@ -15,6 +15,7 @@ import {
   timelineHasScrollTo,
 } from "../helper/interactionTargets.js";
 import { claimTargets, setAnims } from "../ownership.js";
+import { presplitSteps } from "../extensions/splitText.js";
 
 // Adapt a flip step to the play/reverse/restart interface the interaction
 // listeners expect. Each call runs a FRESH capture → toggle → Flip.from via
@@ -72,6 +73,8 @@ export function buildInteractionAnim(anim, eventType) {
   let anims = null;
   function buildAnims() {
     const built = [];
+    // Splits must exist before ctx.add runs, or ctx.revert() owns them — see presplitSteps.
+    presplitSteps(anim.id, buildCfg?.animations);
     ctx.add(() => {
       if (!buildCfg) return;
       // paused override — event drives playback regardless of tlCfg.vars.paused

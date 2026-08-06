@@ -3,6 +3,7 @@ import { buildStepTweens } from "../mbuild/tween.js";
 import { attachPlayLogger } from "../helper/logger.js";
 import { registerTimeline, isEditorPreviewMode } from "../customRegistry.js";
 import { isTimelineEnabledFor } from "../helper/guards.js";
+import { presplitSteps } from "../extensions/splitText.js";
 
 // In editor preview mode, custom anims build paused so DevTools owns playback.
 // Public site builds remain auto-play (extraConfig undefined).
@@ -14,6 +15,7 @@ export function buildPageloadAnim(anim) {
   const editorMode = isEditorPreviewMode();
   const timelineEnabled = isTimelineEnabledFor(anim);
   const tlCfg = anim.timeline;
+  presplitSteps(anim.id, tlCfg?.animations);
   const ctx = gsap.context(() => {
     if (!tlCfg) return;
     const extra = editorMode ? { paused: true } : pageloadExtraConfig();

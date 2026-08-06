@@ -16,6 +16,10 @@ import {
 } from "./extensions/scrambleText.js";
 import { releaseAnim, clearOwnership } from "./ownership.js";
 import { forgetAnim, clearAnims } from "./helper/inspector.js";
+import {
+  releaseRenderClaims,
+  clearRenderClaims,
+} from "./helper/renderOrder.js";
 
 // Tag so resetAllAnimations.js sweeps us on global reset.
 export function tagElement(el, id) {
@@ -58,6 +62,7 @@ export function teardown(id) {
   deleteActive(id);
   unregisterAnimation(id);
   releaseAnim(id);
+  releaseRenderClaims(id);
   forgetAnim(id);
 }
 
@@ -69,6 +74,7 @@ export function teardownAll() {
   clearCustomRegistry();
   clearSelectorCache();
   clearOwnership();
+  clearRenderClaims();
   clearAnims();
 }
 
@@ -96,5 +102,6 @@ document.addEventListener("motionkit:reset-done", () => {
   clearCustomRegistry();
   clearSelectorCache();
   clearOwnership();
+  clearRenderClaims();
   clearAnims();
 });

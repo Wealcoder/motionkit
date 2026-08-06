@@ -2,8 +2,10 @@ import { requestRefresh } from "./scheduler.js";
 import { setActive, getActive } from "./registry.js";
 import { teardown } from "./cleanup.js";
 import { isCustomAnimation } from "./helper/guards.js";
-import { tagAllTargets } from "./helper/tagTargets.js";
-import { rememberAnim } from "./helper/inspector.js";
+import { tagAllTargets, untagAllTargets } from "./helper/tagTargets.js";
+import { rememberAnim, forgetAnim } from "./helper/inspector.js";
+import { revertSplitsFor } from "./extensions/splitText.js";
+import { releaseRenderClaims } from "./helper/renderOrder.js";
 import { buildHandle } from "./handlers/index.js";
 
 // Public entry point for the custom engine. isCustomAnimation is re-exported
@@ -21,7 +23,14 @@ export function handleCustomAnimation(anim) {
   tagAllTargets(anim);
 
   const handle = buildHandle(anim);
-  if (!handle) return;
+  // Nothing was built means nothing will ever tear this down, so undo what the pre-build steps left behind.
+  if (!handle) {
+    untagAllTargets(anim);
+    revertSplitsFor(anim.id);
+    releaseRenderClaims(anim.id);
+    forgetAnim(anim.id);
+    return;
+  }
 
   setActive(anim.id, handle);
   requestRefresh();

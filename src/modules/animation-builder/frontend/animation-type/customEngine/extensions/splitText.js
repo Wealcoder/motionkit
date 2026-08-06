@@ -1,4 +1,5 @@
 import { registerMethod } from "../registry.js";
+import { normalizeStepVars } from "../select/merge.js";
 
 // SplitText instances deduped by selector + config signature ACROSS animations
 // — two different animations targeting the same element with the same split
@@ -14,8 +15,20 @@ const splitsBySig = new Map(); // sig -> { split, owners: Set<animId> }
 // one owner key so a global clear can still revert them.
 const NO_ANIM = "__no_anim__";
 
+let elSeq = 0;
+const elKeys = new WeakMap();
+
+// scroll.js hands an ELEMENT as itemClass on the per-element path, and every element stringifies to the same "[object HTMLHeadingElement]" — so they need distinct keys.
+function keyFor(selector) {
+  if (typeof selector === "string") return selector;
+  if (selector?.nodeType !== 1) return String(selector);
+  let k = elKeys.get(selector);
+  if (!k) elKeys.set(selector, (k = `__el${++elSeq}`));
+  return k;
+}
+
 function sigKey(selector, splitConfig) {
-  return `${selector}::${JSON.stringify(splitConfig)}`;
+  return `${keyFor(selector)}::${JSON.stringify(splitConfig)}`;
 }
 
 // The editor saves duration/ease/stagger/delay on BOTH the from and to buckets
@@ -32,15 +45,15 @@ function getSplit(animId, selector, splitConfig) {
     existing.owners.add(owner);
     return existing.split;
   }
-  // A DIFFERENT split config already active on this same selector must be
-  // reverted first — SplitText.create() on already-split markup corrupts it,
-  // leaving whichever animation runs next targeting stale/detached elements.
-  splitsBySig.forEach((entry, otherSig) => {
-    if (entry.selector === selector) {
-      revertEntry(entry);
-      splitsBySig.delete(otherSig);
-    }
+  // Share a live split with a different config rather than reverting it — re-splitting corrupts the markup, and reverting would yank the spans from every animation still using it. First config wins while it has owners.
+  let conflict = null;
+  splitsBySig.forEach((entry) => {
+    if (!conflict && entry.selector === selector) conflict = entry;
   });
+  if (conflict) {
+    conflict.owners.add(owner);
+    return conflict.split;
+  }
   if (typeof SplitText === "undefined") return null;
   try {
     const split = SplitText.create(selector, splitConfig);
@@ -83,6 +96,30 @@ export function clearSplitCache() {
   splitsBySig.clear();
 }
 
+// Mirrors how applySplitText resolves its config, so a pre-split produces the same sig and the later call is a pure cache hit.
+export function splitConfigForStep(step) {
+  const vars = normalizeStepVars(step);
+  if (!vars) return null;
+  const raw =
+    step.method === "fromTo"
+      ? vars.to?.splitText || vars.from?.splitText
+      : vars.splitText;
+  if (!raw || typeof raw !== "object") return null;
+  const cfg = { ...raw };
+  if (cfg.mask === "none") delete cfg.mask;
+  return cfg;
+}
+
+// gsap.context() reverts any SplitText created inside it, ignoring the owners refcount — so build splits out here and leave the context only the tweens.
+export function presplitSteps(animId, steps) {
+  if (typeof SplitText === "undefined") return;
+  (steps || []).forEach((step) => {
+    if (!step?.itemClass || step.disabled === true) return;
+    const cfg = splitConfigForStep(step);
+    if (cfg) getSplit(animId, step.itemClass, cfg);
+  });
+}
+
 // Most granular wins: chars > words > lines.
 function resolveTargetKey(type) {
   if (typeof type !== "string") return "chars";
@@ -90,6 +127,16 @@ function resolveTargetKey(type) {
   if (type.includes("words")) return "words";
   if (type.includes("lines")) return "lines";
   return "chars";
+}
+
+// A shared split may not have the type this step asked for, so fall back to what it produced instead of animating nothing.
+function pickTargets(split, type) {
+  const requested = resolveTargetKey(type);
+  if (split[requested]?.length) return split[requested];
+  for (const key of ["chars", "words", "lines"]) {
+    if (split[key]?.length) return split[key];
+  }
+  return null;
 }
 
 // SplitText runs as a PROPERTY now: it rides inside a from/to bucket as
@@ -120,7 +167,7 @@ export function applySplitText(tl, step, vars, overlap, method = "from") {
 
   if (!split) return;
 
-  const targets = split[resolveTargetKey(splitConfig.type)];
+  const targets = pickTargets(split, splitConfig.type);
   if (!targets?.length) return;
 
   if (method === "fromTo") {

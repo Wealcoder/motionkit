@@ -22,3 +22,21 @@ export function tagAllTargets(anim) {
     });
   });
 }
+
+// Undo tagAllTargets when the build produced no handle, since teardown will never run to clear those tags. __wcfOrigCss stays — it's the author's baseline, not an ownership claim.
+export function untagAllTargets(anim) {
+  (anim.timeline?.animations || []).forEach((step) => {
+    if (!step?.itemClass) return;
+    querySelectorAllCached(step.itemClass).forEach((el) => {
+      if (!el?.getAttribute) return;
+      if (el.getAttribute("data-motionkit-anim-id") === anim.id) {
+        el.removeAttribute("data-motionkit-anim-id");
+      }
+      const ids = (el.getAttribute("data-motionkit-step-id") || "")
+        .split(",")
+        .filter((id) => id && id !== step.id);
+      if (ids.length) el.setAttribute("data-motionkit-step-id", ids.join(","));
+      else el.removeAttribute("data-motionkit-step-id");
+    });
+  });
+}
