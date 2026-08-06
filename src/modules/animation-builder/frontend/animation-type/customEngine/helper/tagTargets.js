@@ -31,6 +31,11 @@ export function untagAllTargets(anim) {
       if (!el?.getAttribute) return;
       if (el.getAttribute("data-motionkit-anim-id") === anim.id) {
         el.removeAttribute("data-motionkit-anim-id");
+        // Nothing is going to animate this element, so give its CSS transition back.
+        if (el.__wcfTransitionSuppressed) {
+          el.style.removeProperty("transition");
+          delete el.__wcfTransitionSuppressed;
+        }
       }
       const ids = (el.getAttribute("data-motionkit-step-id") || "")
         .split(",")

@@ -21,6 +21,26 @@ import {
   clearRenderClaims,
 } from "./helper/renderOrder.js";
 
+// Transition properties that would race a tween. `all` is the common one — page-builder themes
+// (Stackable, Blocksy) put `transition: all .12s` on every heading and text block.
+const RACING_TRANSITION = /\b(all|transform|translate|scale|rotate|opacity|visibility)\b/;
+
+// A CSS transition on a property GSAP is animating fights it every frame and leaves the tween
+// parked at its from-value — measured on a Stackable heading: `from({x:"50px"})` ended at 50
+// instead of 0. Suppress it inline; the __wcfOrigCss snapshot above is taken first, so the global
+// reset puts the author's own transition back.
+function suppressRacingTransition(el) {
+  let tp;
+  try {
+    tp = getComputedStyle(el).transitionProperty;
+  } catch (e) {
+    return;
+  }
+  if (!tp || tp === "none" || !RACING_TRANSITION.test(tp)) return;
+  el.style.setProperty("transition", "none", "important");
+  el.__wcfTransitionSuppressed = true;
+}
+
 // Tag so resetAllAnimations.js sweeps us on global reset.
 export function tagElement(el, id) {
   if (!el || !el.setAttribute) return;
@@ -29,6 +49,7 @@ export function tagElement(el, id) {
   // ENTIRE style attribute, including user-authored position/size/background.
   if (el.__wcfOrigCss === undefined) el.__wcfOrigCss = el.style.cssText;
   el.setAttribute("data-motionkit-anim-id", id);
+  suppressRacingTransition(el);
 }
 
 function runCleanups(handle) {
