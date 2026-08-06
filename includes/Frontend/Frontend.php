@@ -655,7 +655,7 @@ final class Frontend
     // Page-type descriptor (store_type, id, option) — used for both reads + writes.
     $page_type_config = $this->page_type->getCurrentPageType();
 
-    // Page settings live under mkit_pg_settings_<type> (separate key from animations).
+    // Page settings live under motionkit_pg_settings_<type> (separate key from animations).
     $settings_config = $this->settings_config($page_type_config);
     $page_configs = $this->page_type->getConfig($settings_config);
 
@@ -665,7 +665,7 @@ final class Frontend
     $global_settings  = $this->get_global_settings();
     $global_animation = $this->get_global_animations();
 
-    // Page-level animation list — original key (mkit_pg_animation_<type>).
+    // Page-level animation list — original key (motionkit_pg_animation_<type>).
     $page_animation = $this->page_type->getConfig($page_type_config);
 
     // Merge global and page animation lists — not override
@@ -787,7 +787,7 @@ final class Frontend
       is_array($page_animation) ? $page_animation : []
     );
 
-    // Page settings live under mkit_pg_settings_<type> — separate from animations.
+    // Page settings live under motionkit_pg_settings_<type> — separate from animations.
     $settings_config = $this->settings_config($page_type_config);
 
     $page_settings = $this->page_type->getConfig($settings_config);

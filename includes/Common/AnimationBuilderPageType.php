@@ -15,7 +15,7 @@ class AnimationBuilderPageType
   /**
    * Option name prefix for storing configs.
    */
-  public $option_name = 'mkit_pg_animation_';
+  public $option_name = 'motionkit_pg_animation_';
 
   /**
    * Instance

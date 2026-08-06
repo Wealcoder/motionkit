@@ -310,7 +310,7 @@ final class RestApi
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_animation_saved']], 200);
 
       case 'save_current_page_animation':
-        // Animations live under the original key (default: mkit_pg_animation_<type>)
+        // Animations live under the original key (default: motionkit_pg_animation_<type>)
         $page_type_config = $payload['pageTypeConfigs'] ?? [];
         if (!is_array($page_type_config) || !$this->is_valid_page_type_config($page_type_config)) {
           return new \WP_REST_Response(['success' => false, 'error' => 'invalid_page_type_config'], 400);

@@ -354,6 +354,9 @@ the actual ask).
     family, `ConnectPage.php` `TOOLS_OPTION_PREFIX`/`TOOLS_SETTINGS_PREFIX`)
     — `mkit_` has no hyphen after `mk`, a structurally different token that
     the rename pattern (`\bmk-` with a required hyphen) never matched.
+    **Since renamed to `motionkit_pg_animation_*`/`motionkit_pg_settings_*`
+    in a later pass (2026-08-06)** — see the naming-consistency note below;
+    no longer left as-is.
   - `mk-preview-` (a `localStorage` key in `frontend.js:241`, used for
     passing preview data through a URL `session` param) — not a CSS class,
     no shared-namespace collision risk the way a CSS selector has (scoped to
@@ -375,6 +378,53 @@ the actual ask).
   `background-color` on `.motionkit-header` resolves correctly
   (`rgb(255, 255, 255)`), zero elements in the rendered DOM still carry an
   `mk-`-prefixed class, zero console errors.
+
+### Fourth pass — `mkit_pg_*` → `motionkit_pg_*` option/meta-key prefix (2026-08-06)
+
+The per-page animation/settings storage key prefix (`mkit_pg_animation_*` /
+`mkit_pg_settings_*`) was flagged as inconsistent with the rest of the
+plugin's `motionkit_*` option-key convention — `mkit_` is a valid, unique,
+≥4-character prefix (never a wp.org collision risk on its own), but it read
+as a leftover from an earlier naming scheme once every other option key had
+already been renamed to `motionkit_*` in the first naming-consistency pass.
+
+**Decision**: full rename, no back-compat shim. MotionKit has not shipped a
+public release yet, so there's no installed-site data in the old key shape
+to migrate — unlike the `SettingsKeyMigration`/`PresetKeyMigration` classes
+from the first two passes (both **since removed**, along with the
+`includes/Migrations/` directory entirely — same reasoning: nothing to
+migrate pre-release, so the migration machinery was dead weight once the
+option-key rename made a genuinely first-run key shape the only one that
+will ever exist in the wild).
+
+- **Source of truth**: `AnimationBuilderPageType::$option_name` (was
+  `'mkit_pg_animation_'`) → `'motionkit_pg_animation_'`. Every other file
+  either reads this property directly or derives the settings variant from
+  it via `EditorSessionTrait::settings_config()`'s regex swap (updated to
+  match the new prefix), so this was the only place holding a literal that
+  needed to change to fix the shape everywhere downstream.
+- **Also updated**: `ConnectPage.php`'s `TOOLS_OPTION_PREFIX`/
+  `TOOLS_SETTINGS_PREFIX` constants (used by the Tools tab's bulk-delete and
+  cascade-delete logic — `$wpdb->esc_like()` LIKE-query prefix matching,
+  `substr()` suffix extraction), `ScrollSmoother.php`'s prefix-swap
+  `str_replace()`, and every doc-comment across `Frontend.php`, `RestApi.php`
+  referencing the literal old prefix.
+- **Docs synced**: `CLAUDE.md`'s wp_options table, `motionkitData` shape
+  sample, REST payload example, and Security Rules bullet all updated to the
+  new prefix; the `SettingsKeyMigration`/`PresetKeyMigration` sections and
+  their `Migrations/` file-tree entries removed entirely (dead — the classes
+  no longer exist). Also caught two unrelated already-stale bits in the same
+  pass: `mk_token` → `motionkit_token` (the `motionkitData` JS field never
+  actually had an `mk_` prefix in real code, doc just hadn't caught up to an
+  earlier rename) and `wcf-admin-preview-nonce` → `motionkit-admin-preview-nonce`
+  in the same sample block. `USAGE.md`/`flow.md` (dev-only, excluded from the
+  shipped ZIP via `.distignore`) updated too, for consistency.
+- Verified: repo-wide `mkit_pg_animation_|mkit_pg_settings_` sweep after the
+  rename found zero remaining matches in any `.php` file; `php -l` and
+  `phpcs` clean on every touched file; live-tested on `development.local`
+  with a fresh page save/load round-trip (no pre-existing data to migrate,
+  so a clean write-then-read under the new key was the correct verification,
+  not a migration check).
 
 ### Account/ownership — check before submitting
 

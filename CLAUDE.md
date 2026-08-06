@@ -41,10 +41,6 @@ includes/
 │   ├── OAuthHandler.php                   ← OAuth connect/disconnect to motionkit.io
 │   └── ConnectPage.php                    ← Admin "MotionKit" menu (Connect/License/Tools/Help tabs)
 │
-├── Migrations/
-│   ├── SettingsKeyMigration.php           ← One-time: mkit_pg_animation_* → mkit_pg_settings_*
-│   └── PresetKeyMigration.php             ← One-time: presetKey values wcf-mk-* → motionkit-mk-*
-│
 ├── Admin/
 │   └── PermalinkNotice.php                ← Plain-permalinks nag notice
 │
@@ -87,14 +83,13 @@ motionkit.php
             ├─ init_frontend()        → Frontend::init()     [all contexts]
             ├─ init_backend()         → Backend::init()      [is_admin() only]
             ├─ init_rest_api()        → RestApi::init()      [all contexts]
-            ├─ init_admin_notices()   → PermalinkNotice + SettingsKeyMigration + PresetKeyMigration [is_admin]
+            ├─ init_admin_notices()   → PermalinkNotice [is_admin]
             ├─ admin_bar_menu         → add_admin_bar_build_animation()
             └─ wp_head/admin_head     → admin_bar_inline_css()
 ```
 
 `init_rest_api()` runs unconditionally — REST must serve requests from frontend iframes
-and the external editor. `SettingsKeyMigration` and `PresetKeyMigration` are both
-idempotent (sentinel option) so each runs at most once per site.
+and the external editor.
 
 ---
 
@@ -128,7 +123,7 @@ Cloudflare policy can 405 us.
           | "delete_current_page_settings"
           | "get_settings",
   "payload": {
-    "pageTypeConfigs": { "store_type": "post_meta", "id": 42, "option": "mkit_pg_animation_page" },
+    "pageTypeConfigs": { "store_type": "post_meta", "id": 42, "option": "motionkit_pg_animation_page" },
     "animationConfigs": { ... }
   }
 }
@@ -163,8 +158,8 @@ overwrite animations (or vice versa):
 
 | What                              | Key                             | Store                     |
 |-----------------------------------|---------------------------------|---------------------------|
-| Page animations (timeline list)   | `mkit_pg_animation_<type>`      | post_meta/term_meta/option |
-| Page settings (scroll smoother…)  | `mkit_pg_settings_<type>`       | post_meta/term_meta/option |
+| Page animations (timeline list)   | `motionkit_pg_animation_<type>` | post_meta/term_meta/option |
+| Page settings (scroll smoother…)  | `motionkit_pg_settings_<type>`  | post_meta/term_meta/option |
 | Global settings                   | `motionkit_global_settings`     | option                    |
 | Global animations                 | `motionkit_global_animations`   | option                    |
 
@@ -175,24 +170,6 @@ overwrite animations (or vice versa):
 settings via `settings_config()` helper.
 
 `delete_current_page_settings` clears BOTH keys.
-
-### SettingsKeyMigration
-
-`includes/Migrations/SettingsKeyMigration.php` runs on `admin_init` once per site
-(sentinel `motionkit_settings_key_migrated`). Scans post_meta, term_meta, and
-wp_options for `mkit_pg_animation_*` rows whose value is associative (settings-shaped,
-not a numerically-indexed animation list) and relocates them to `mkit_pg_settings_*`.
-
-### PresetKeyMigration
-
-`includes/Migrations/PresetKeyMigration.php` runs on `admin_init` once per site
-(sentinel `motionkit_preset_key_migrated`). The 26 premium-preset identifiers were
-renamed from `wcf-mk-*` to `motionkit-mk-*` (config keys in
-`animation-builder-assets.php` + each preset's `PRESET_KEY` JS constant). This
-migration rewrites any `presetKey` field still holding an old `wcf-mk-*` value
-inside saved animation data — `motionkit_global_animations` (option) and every
-`mkit_pg_animation_<type>` row (post_meta/term_meta/option) — so animations saved
-before the rename keep matching their preset script after it.
 
 ---
 
@@ -227,23 +204,23 @@ motionkitData = {
   rest_nonce:           'xyz789',   // wp_rest nonce (legacy; /save uses JWT body)
 
   // Editor session JWT — bridge forwards this in /save body
-  mk_token:             '<JWT>',
+  motionkit_token:       '<JWT>',
 
   // Page identity
-  pageTypeConfigs:      { store_type: 'post_meta', id: 42, option: 'mkit_pg_animation_page' },
+  pageTypeConfigs:      { store_type: 'post_meta', id: 42, option: 'motionkit_pg_animation_page' },
   base_domain:          'https://yoursite.com',
   platform:             'wordpress',
 
   // Fresh data snapshots read on every editor-preview page load
-  currentPageSettings:  { ... },   // from mkit_pg_settings_<type>
-  page_animation:       [ ... ],   // from mkit_pg_animation_<type>
+  currentPageSettings:  { ... },   // from motionkit_pg_settings_<type>
+  page_animation:       [ ... ],   // from motionkit_pg_animation_<type>
   global_settings:      { ... },   // from motionkit_global_settings
   global_animation:     [ ... ],   // from motionkit_global_animations
   device_config:        [{ key, title, viewWidth, mediaQuery }, ...],
 
   // Legacy (not used by editor saves, kept for admin tools)
   ajaxurl:              'https://yoursite.com/wp-admin/admin-ajax.php',
-  nonce:                'abc123',  // wcf-admin-preview-nonce
+  nonce:                'abc123',  // motionkit-admin-preview-nonce
 }
 ```
 
@@ -301,10 +278,8 @@ Filter hook: `motionkit/editor/allowed_origins`
 |---------------------------------------|-----------------------------------------|----------------------------------------------|
 | `motionkit_global_settings`           | `RestApi::dispatch_simple()`            | Global settings (scroll smoother, etc.)      |
 | `motionkit_global_animations`         | `RestApi::dispatch_simple()`            | Global animation list                        |
-| `mkit_pg_animation_<type>`            | `AnimationBuilderPageType::saveConfig()` | Per-page animation list (option store_type) |
-| `mkit_pg_settings_<type>`             | `AnimationBuilderPageType::saveConfig()` | Per-page settings (option store_type)       |
-| `motionkit_settings_key_migrated`     | `SettingsKeyMigration`                  | `'1'` once migration has run                 |
-| `motionkit_preset_key_migrated`       | `PresetKeyMigration`                    | `'1'` once migration has run                 |
+| `motionkit_pg_animation_<type>`       | `AnimationBuilderPageType::saveConfig()` | Per-page animation list (option store_type) |
+| `motionkit_pg_settings_<type>`        | `AnimationBuilderPageType::saveConfig()` | Per-page settings (option store_type)       |
 | `motionkit_jwt_secret`                | `JwtTokenManager::get_secret()`         | HMAC secret                                  |
 | `motionkit_api_key`                   | OAuth flow                              | REST token endpoint key                      |
 | `motionkit_access_token`              | `OAuthHandler::handle_oauth_callback()` | Encrypted OAuth token                        |
@@ -355,8 +330,8 @@ user meta (`motionkit_dismissed_permalink_notice`).
 - Escape all output: `esc_html()`, `esc_url()`, `esc_attr()`
 - Never store raw access tokens — always AES-256 encrypt (handled by `OAuthHandler::encrypt()`)
 - CORS `allowed_origins` must NOT include `'*'` — the current list is explicit
-- Page settings and animations must go to their own keys (`mkit_pg_settings_*` vs
-  `mkit_pg_animation_*`) — never collapse back into a single key
+- Page settings and animations must go to their own keys (`motionkit_pg_settings_*`
+  vs `motionkit_pg_animation_*`) — never collapse back into a single key
 
 ---
 
