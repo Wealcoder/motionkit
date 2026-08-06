@@ -5,16 +5,14 @@
 // every refresh — so nothing here touches those. The outer node keeps its box and its border,
 // which is the line marking the exact scroll position; the badge is an inner pill.
 
-// mkOverlayLogo.png from the editor, inlined so the preview iframe and a published page both
-// render it without a plugin-URL lookup. 48x60, ~1.5KB base64.
+// mkOverlayLogo.png from the editor with its floating top dot removed and cropped to the mark,
+// inlined so the preview iframe and a published page both render it without a plugin-URL lookup.
 const LOGO =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAA8CAYAAAAgwDn8AAAACXBIWXMAACE4AAAhOAFFljFgAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAA+tJREFUeAHVmktME0EYgGeWPmxttdZERVFrPBqx8eDBR1IuJt705k304hFIvHgwQEwMJ8WjegASE9QLGh9EMbaJwRjQtCQIJGpYQxB5CEtbKN3SjvsDgzxautuZ6cKXbEqzw/b72tl0t7sICYIQ4teWMFmkSVs8aKuwJD9FVhPeEhE55LdGRB75zR2hSfl0yC9HoM2GJhUkxqhEHLDQP260TQWO7XXUuu0lfrsFezIEySPRVCj0U6l/crVU1rEtBRkj7/iLTYOeKyf3VJWX2it3OLAvrmaUuRSKTCaSNWeOuCLLAxvexate9syT4EAm2zLY1Bn353sxeEezzPUAzPeldSun1yBMuY22d7lpxPdlKBnO9tGNx9LkUedMLYzDDztVf6lLCrvsUs6NqfNE+T2dqLh6ZkV1jgjtAWJlbWnGGCsr1vm0h+qlp43aOhltIH/z/O5g+X6rL9eYWZWgux+mK3Brtxrc57YEUB70RrCiR57S/SsZkqwSzjs9AJu2X+zf6QjeeRO9iARhRB7wea1+CXZYpBOIOH7A2Vb/Kn4FccaoPIAx8kjIILCvnDy4rZlnRCHyFMMBAM8IFnmgoACARtx+HatFBcIqDxQcAEDEKZ+zrpAIHvIAUwBgK8GGI3jJA8wBgJEInvIAlwAAIs4e3V7X2p3KGcFbHuAWQNnnLskaIUIe4B4ArI0QJQ9YkCCWItCL3okWUfIAhsPojY5EWYgl0+iQlygnyqxCTiEn4hkxUwgA+YNegkTJU4QEUHl/mRWJhntAMeUBrgHFlge4BZghD3AJMEse4BLgdWVMkQeYv8i82wkqL7Mhs2D+BHY4CDIT5gAJI1NhP6GxmFvAHDD4N43MhDlgLIoXfuYzC+aAndtKUPu3lGkRXL4HdjutpkVwO5QwK4LrwZwZEdwPp4sdIeSEppgRwk4pixUhLABw2yzK06+z90VGCAugl6SunXZVP+6aqRcVISQgOU/kldfTrp9z14mK4B4A8v1D6rqLgaIiuAZQ+ZoLDjnbehER3ALyyVN4R3AJiM5ldMlTeEYwBwwrqtwWHtctT+EVwRQA8u/7pyqa9d0Msg4eEQUHsMpTWCMKChiLzUd4yFNYIgwHfB9XI+29w9zkKYVEwFgpkcrIev8B5D/9GNHkjxi9uUkXRiPsFixLqTRp0TNYtDzFSET/qBqSOvpmG4eVlLzRQHlSDRVDnqInYjSalls6lfqFJ5XaVcSWz8nw2tvN3vamybMutRGZxIOPsTq4vWwt/X9SwbZwwgdjVv2sdq8jFnDapADB0mGnDff0jSQiDZd2hZCJwJt7PeAJYLR4Y1bHQOL5rQv/nf4BIQuRy2mUeJAAAAAASUVORK5CYII=";
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAA2CAYAAACBWxqaAAADnUlEQVR4nMXaPWgTYRzH8d9zTS4mJhojqNWqEScRa3Bw8AXSRXHTzU3r4qiCi4O0RZBOvozq0BYEX5YqvqEVG5CK+EJSqFZQ6YHUaOPLmcSkubw8DubRqmm93P2fux90C5fvp0nJpXcM9R0d/Bpfv9TfFfK1xHweFq5xaOlsOZF4q/dc7mzV4MJ2902E921acqi91bd/gZ9F80ZNny4j9aVYOrJ1TTD164G99/KHboxW+PCrWqOfib6RfMzp+L196eizd6Ukb7BMrsovjHzvAgB2fsSItQaVZNCnzHowo8L199+KHZ1bZ6glxx/bsXi4fbk3OttjCgbHqQffOpSQitNzxQOA6mHh5Qv9w068EmbiASCgMuxc5+9SvAozFSUQJ29nd5PV/jWz8WLRiDem+DwsbPYJVA8Lb1gRGOy5md9nq7TBmo0HAMYQnvu902BBn4JNK+f1UyKsxIs1DQAxwk48rAIwA3HiVq7L6jHsxsMOAHXE5mig2wqCIh52AQCgtrCmEVTxoACgSQRlPKgAqCO2rZ3ffelpeVYEdTwoAWLLQi0NETLiIQOABghZ8QDgoT6gWB2B62OfBmTFAwC7MVrh/zuZs7pcqYpVEa5vbPOaPl1pZp/yNTlvIdTjV0Y4ZMWLSQGI+FibV8bh/xg5wMl4UAOcjgclwI14UAHcigcVIBKsuRIPig+yyHyO9jaVpsbCbL8CC/ycpsTibAMURhNi+fntHkD1uCuwDZj4XKUpsTjbgKksQ8Fw7+/ANmDhvBbceVF2DUHyObA44HUNQXYq4RaC9GTODQT56bTTCClfaJxESPtK6RRCGgAAQqpHv/K8cFYmQhpAXFc7sCV4+OKT7z2yEFIApQrXZl4UPLg91C0LQQ4oVbg2/s7454qmLAQpQMQf2eVveGFcBoIM8L94MWoECSA7XTMVL0aJsA2Y1A1tMJkxHS9GhbAFmNQN7f74145+izeDUCAsA+zGi9lFWAJM5SopingxO4imAa8zRurO2CRZvJgVRMHgUIrlmumQ1xkj9ehNuqO/c41uNXSuNYvweZimlKt8wMyDZceLNYMY/2gklKGXhTOTennOV0H7YiSciBczg/iYrWoDI3oPAGB/Xzo68LiU/Pt2s7tjVX71iXHGiehGO/cw153JVf+55Wz8Q3l4MFmMAsAf/1Y7PZSLB1QlzpmyOqCy0ZfpYqp3z6KEWwDUf7kH4+E4w88bs4ZeFa8d3/W76QekE3JSLlhi3AAAAABJRU5ErkJggg==";
 
 const STYLE_ID = "motionkit-marker-style";
-// Editor design tokens --accent / --accent-light. Start and end read apart by fill vs outline
-// rather than by hue, so the markers stay on brand.
+// Editor design token --accent. Start and end share one chip design; the label tells them apart.
 const ACCENT = "#2c76e6";
-const ACCENT_LIGHT = "#71a5e8";
 const MAX_TITLE = 20;
 
 const MARKER_CSS = `
@@ -22,17 +20,23 @@ const MARKER_CSS = `
    leftward into the page instead of off the right edge, without touching that geometry. */
 .mk-mk{background:none!important;border-width:0!important;
  padding:0!important;font-size:0!important;line-height:0!important;direction:rtl!important}
-.mk-mk__pill{direction:ltr;display:inline-flex;align-items:center;gap:6px;vertical-align:bottom;
- margin:3px 6px;padding:3px 9px 3px 4px;border-radius:999px;
- background:rgba(15,16,21,.92);box-shadow:0 1px 8px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.1);
- font:600 11px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+/* clip-path draws the arrow, so no border-radius and no box-shadow (a shadow would be clipped
+   off by the same path). An element marker points RIGHT, toward the line it marks; the padding
+   on that side keeps the chip clear of the tip. */
+.mk-mk__pill{direction:ltr;display:inline-flex;align-items:center;gap:5px;vertical-align:bottom;
+ flex-direction:row-reverse;margin:2px 6px;padding:2px 9px 2px 2px;
+ clip-path:polygon(0 0,calc(100% - 7px) 0,100% 50%,calc(100% - 7px) 100%,0 100%);
+ background:rgba(15,16,21,.92);
+ font:600 10px/1.4 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
  color:#f4f4f5;letter-spacing:.01em;white-space:nowrap;backdrop-filter:blur(6px)}
-.mk-mk__logo{width:13px;height:13px;flex:none;object-fit:contain;display:block}
-.mk-mk__role{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
- padding:1px 5px;border-radius:999px}
-.mk-mk--start .mk-mk__role{background:${ACCENT};color:#fff}
-.mk-mk--end .mk-mk__role{color:${ACCENT_LIGHT};box-shadow:inset 0 0 0 1px ${ACCENT_LIGHT}59}
-.mk-mk--scroller .mk-mk__pill{background:rgba(15,16,21,.62);color:#d4d4d8;font-weight:500}
+.mk-mk__logo{width:11px;height:11px;flex:none;object-fit:contain;display:block}
+/* Not align-self:stretch — the chip shares the same centre line as the logo and the name. */
+.mk-mk__role{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+ padding:2px 5px;display:flex;align-items:center;line-height:1;background:${ACCENT};color:#fff}
+/* Scroller markers sit at the viewport edge, so theirs mirrors: point and logo on the left. */
+.mk-mk--scroller .mk-mk__pill{background:rgba(15,16,21,.62);color:#d4d4d8;font-weight:500;
+ flex-direction:row;padding:2px 2px 2px 12px;
+ clip-path:polygon(0 50%,7px 0,100% 0,100% 100%,7px 100%)}
 .mk-mk--scroller .mk-mk__logo{opacity:.55}
 `;
 
