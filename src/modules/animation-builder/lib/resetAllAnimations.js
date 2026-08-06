@@ -47,9 +47,30 @@ function killGsap(nodes) {
   // attached to body/wrapper and its animation targets the content wrapper —
   // never owned — so it's never touched. No kill, no recreate, no lerp
   // interruption, ever, during a normal reset/Play cycle.
+  // A timeline has no targets() of its own, so flatten it to its child tweens. Without this a
+  // timeline-mode animation pointed at a custom trigger matches NEITHER test — the trigger
+  // container is never tagged and the timeline reports no targets — so its ScrollTrigger and
+  // markers survive every reset.
+  const targetsOf = (anim) => {
+    if (!anim) return [];
+    if (typeof anim.targets === "function") return anim.targets();
+    if (typeof anim.getChildren === "function") {
+      return anim
+        .getChildren(true, true, false)
+        .reduce(
+          (acc, child) =>
+            typeof child.targets === "function"
+              ? acc.concat(child.targets())
+              : acc,
+          [],
+        );
+    }
+    return [];
+  };
+
   ScrollTrigger?.getAll?.().forEach((st) => {
     const target = st.trigger || st.vars?.trigger;
-    const animTargets = st.animation?.targets ? st.animation.targets() : [];
+    const animTargets = targetsOf(st.animation);
     const ownsTrigger = isOwned(target);
     const ownsAnimation = animTargets.some(isOwned);
     if (ownsTrigger || ownsAnimation) {
