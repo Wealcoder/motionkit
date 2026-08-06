@@ -231,7 +231,10 @@ final class OAuthHandler
     // Verify CSRF state token
     $stored_state = get_transient(self::OPT_STATE_TOKEN);
     if (!$stored_state || !hash_equals($stored_state, $state)) {
-      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&error=invalid_state'));
+      wp_safe_redirect(wp_nonce_url(
+        admin_url('admin.php?page=motionkit-connect&tab=connect&error=invalid_state'),
+        'motionkit_notice'
+      ));
       exit;
     }
 
@@ -240,13 +243,13 @@ final class OAuthHandler
 
     // Exchange auth code for access token
     $result = $this->exchange_code_for_token($code);
-   
+
     if (is_wp_error($result)) {
       $redirect = admin_url('admin.php?page=motionkit-connect&tab=connect&error=' . $result->get_error_code());
       if ($result->get_error_message()) {
         $redirect = add_query_arg('error_message', rawurlencode($result->get_error_message()), $redirect);
       }
-      wp_safe_redirect($redirect);
+      wp_safe_redirect(wp_nonce_url($redirect, 'motionkit_notice'));
       exit;
     }
 
@@ -261,7 +264,10 @@ final class OAuthHandler
 
     do_action('motionkit/oauth/connected');
 
-    wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&connected=1'));
+    wp_safe_redirect(wp_nonce_url(
+      admin_url('admin.php?page=motionkit-connect&tab=connect&connected=1'),
+      'motionkit_notice'
+    ));
     exit;
   }
   // phpcs:enable WordPress.Security.NonceVerification.Recommended
@@ -325,12 +331,18 @@ final class OAuthHandler
     $result = $this->verify_token_with_server();
 
     if (is_wp_error($result)) {
-      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&verify=error&reason=' . $result->get_error_code()));
+      wp_safe_redirect(wp_nonce_url(
+        admin_url('admin.php?page=motionkit-connect&verify=error&reason=' . $result->get_error_code()),
+        'motionkit_notice'
+      ));
       exit;
     }
 
     $status = $result ? 'valid' : 'invalid';
-    wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&verify=' . $status));
+    wp_safe_redirect(wp_nonce_url(
+      admin_url('admin.php?page=motionkit-connect&verify=' . $status),
+      'motionkit_notice'
+    ));
     exit;
   }
 
@@ -411,7 +423,10 @@ final class OAuthHandler
     // disconnected site must not keep reading a cached entitlement.
     do_action('motionkit/oauth/disconnected');
 
-    wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=connect&disconnected=1'));
+    wp_safe_redirect(wp_nonce_url(
+      admin_url('admin.php?page=motionkit-connect&tab=connect&disconnected=1'),
+      'motionkit_notice'
+    ));
     exit;
   }
 

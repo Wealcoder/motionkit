@@ -256,20 +256,23 @@ final class ConnectPage
 
   // ─── Notices ─────────────────────────────────────────────────
 
-  // These flags are appended by server-side redirects after an action that
-  // already verified its own nonce (OAuth callback, handle_tools_actions()).
-  // They only pick which notice banner to display — worst case a crafted URL
-  // shows a fake "connected" banner with no effect on actual connection
-  // state — so nonce-stamping every redirect target here would add
-  // complexity without a real security benefit.
-  // phpcs:disable WordPress.Security.NonceVerification.Recommended
   private function render_notices(): void
   {
+    // These flags are appended by redirects this plugin controls (OAuth
+    // callback, handle_tools_actions(), the bulk-delete JS) and are now
+    // nonce-stamped via wp_nonce_url()/wp_create_nonce('motionkit_notice')
+    // at every one of those redirect sites. A missing/invalid nonce (e.g. a
+    // hand-crafted or stale URL) just shows no notice at all rather than
+    // hard-failing — nothing here is destructive either way, so a silent
+    // fallback is enough.
+    $notice_nonce_valid = isset($_GET['_wpnonce'])
+      && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'motionkit_notice');
+
+    if (!$notice_nonce_valid) {
+      return;
+    }
+
     $error = isset($_GET['error']) ? sanitize_text_field(wp_unslash($_GET['error'])) : '';
-    // Presence-only flags — sanitize_text_field() always returns a string
-    // (never null), so this can't change the isset() result; it's here only
-    // so the value is never touched unsanitized, for defense-in-depth even
-    // though nothing downstream reads what the sanitized value actually is.
     $just_connected = isset($_GET['connected']) && is_string(sanitize_text_field(wp_unslash($_GET['connected'])));
     $just_disconnected = isset($_GET['disconnected']) && is_string(sanitize_text_field(wp_unslash($_GET['disconnected'])));
     $license_refresh = isset($_GET['license_refresh']) ? sanitize_key(wp_unslash($_GET['license_refresh'])) : '';
@@ -371,7 +374,6 @@ final class ConnectPage
       </div>
     <?php endif;
   }
-  // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
   // ─── License Tab ─────────────────────────────────────────────
 
@@ -728,9 +730,9 @@ final class ConnectPage
 
   // ─── Helpers ─────────────────────────────────────────────────
 
-  // Same reasoning as render_notices(): $error_message is read-only display
-  // text appended by a server-side redirect after an already-verified
-  // action, not a state change — no nonce needed to guard reading it.
+  // Only ever called from render_notices(), which already verified the
+  // 'motionkit_notice' nonce before reaching this — $error_message here is
+  // a re-read of an already-verified request, not an independent one.
   // phpcs:disable WordPress.Security.NonceVerification.Recommended
   private function get_error_message(string $error): string
   {
@@ -769,7 +771,10 @@ final class ConnectPage
     }
     $nonce = isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '';
     if (!wp_verify_nonce($nonce, 'motionkit_tools_nonce')) {
-      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=tools&error=nonce_failed'));
+      wp_safe_redirect(wp_nonce_url(
+        admin_url('admin.php?page=motionkit-connect&tab=tools&error=nonce_failed'),
+        'motionkit_notice'
+      ));
       exit;
     }
 
@@ -780,7 +785,10 @@ final class ConnectPage
       $option = sanitize_text_field(wp_unslash($_POST['option_key'] ?? ''));
       $id = isset($_POST['object_id']) ? (int) $_POST['object_id'] : 0;
       $this->delete_animation_record($store, $option, $id);
-      wp_safe_redirect(admin_url('admin.php?page=motionkit-connect&tab=tools&tools_deleted=1'));
+      wp_safe_redirect(wp_nonce_url(
+        admin_url('admin.php?page=motionkit-connect&tab=tools&tools_deleted=1'),
+        'motionkit_notice'
+      ));
       exit;
     }
   }
@@ -1069,6 +1077,7 @@ final class ConnectPage
   {
     $ajax_nonce = wp_create_nonce('motionkit_tools_ajax');
     $ajax_url = admin_url('admin-ajax.php');
+    $notice_nonce = wp_create_nonce('motionkit_notice');
     ?>
     <!-- Danger Zone -->
     <div class="motionkit-card">
@@ -1281,7 +1290,7 @@ final class ConnectPage
         }
         label.textContent = strings.done + ' (' + totalDeleted + ')';
         setTimeout(()=>{
-          window.location.href = <?php echo wp_json_encode(admin_url('admin.php?page=motionkit-connect&tab=tools')); ?> + '&tools_all_deleted=' + totalDeleted;
+          window.location.href = <?php echo wp_json_encode(admin_url('admin.php?page=motionkit-connect&tab=tools')); ?> + '&tools_all_deleted=' + totalDeleted + '&_wpnonce=' + <?php echo wp_json_encode($notice_nonce); ?>;
         }, 600);
       }
       confirmBtn.addEventListener('click', runBulk);
