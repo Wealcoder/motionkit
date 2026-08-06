@@ -175,7 +175,7 @@ final class Helper
     public static function log(string $message, string $level = 'info'): void
     {
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log(sprintf('[GSAP Animation Builder] %s: %s', strtoupper($level), $message));
+            error_log(sprintf('[MotionKit] %s: %s', strtoupper($level), $message));
         }
     }
 }

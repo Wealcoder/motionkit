@@ -1,0 +1,111 @@
+name: PHP CI
+
+on:
+  push:
+    branches: [main, motionkit-connector]
+    paths:
+      - '**.php'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'phpstan.neon'
+      - 'phpcs.xml.dist'
+      - '.github/workflows/php-ci.yml'
+  pull_request:
+    paths:
+      - '**.php'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'phpstan.neon'
+      - 'phpcs.xml.dist'
+      - '.github/workflows/php-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Syntax check (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 7.4 matches readme.txt's "Requires PHP"; 8.2/8.3 catch forward-compat breakage early.
+        php: ['7.4', '8.2', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, openssl, curl, json
+          coverage: none
+
+      - name: Lint all PHP files (php -l)
+        run: |
+          set -e
+          find . \
+            -path ./vendor -prune -o \
+            -path ./node_modules -prune -o \
+            -path ./assets/build -prune -o \
+            -name '*.php' -print \
+            | xargs -n1 -P4 php -l
+
+  phpstan:
+    name: PHPStan (static analysis)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, openssl, curl, json
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist
+
+      - name: Run PHPStan
+        run: composer run phpstan
+
+  phpcs:
+    name: Coding standards (phpcs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, openssl, curl, json
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist
+
+      # Warnings (WordPress.Security.NonceVerification.Recommended — all
+      # confirmed false positives on read-only GET navigation params, see
+      # phpcs.xml.dist / WPORG-SUBMISSION.md) are surfaced but don't fail the
+      # build; only errors do. Re-run without --warning-severity=0 locally
+      # (`composer run phpcs`) to see warnings during development.
+      - name: Run phpcs
+        run: vendor/bin/phpcs --standard=phpcs.xml.dist --warning-severity=0 includes/ motionkit.php uninstall.php

@@ -64,7 +64,7 @@ Yes. The visual editor is a hosted service — you connect your WordPress site t
 
 = Does this plugin load GSAP? =
 
-Yes. The plugin loads the GSAP animation engine (core, ScrollTrigger, and ScrollSmoother) from Motionkit's own infrastructure so animations you build in the editor actually run on your site. See "External services" below for details.
+Yes. GSAP (core, ScrollTrigger, ScrollSmoother, and any additional GSAP plugins you enable from the editor's "GSAP Plugin" settings) is loaded from the jsDelivr CDN (cdn.jsdelivr.net) so animations you build in the editor actually run on your site. GSAP is licensed by Webflow, Inc. under its own Standard No Charge license (not GPL) — this plugin does not bundle GSAP's source; it registers a WordPress script dependency pointing at the CDN URL, the same way a theme might load a Google Font. See "External services" below for details, including why GSAP is loaded this way instead of bundled.
 
 = Is the plugin secure? =
 
@@ -86,12 +86,17 @@ This plugin connects to **Motionkit** (editor.motionkit.io), a hosted service op
 
 None of these calls send your site's post content, page content, or saved animation data to editor.motionkit.io — animations you build in the editor are sent back to your own WordPress site's REST API, not the other way around, and are stored in your own site's database.
 
-This plugin also loads the **GSAP animation engine** (gsap.min.js, ScrollTrigger, ScrollSmoother, and any additional GSAP plugins you enable from the editor's "GSAP Plugin" settings) from Motionkit's own infrastructure — the script URLs are issued by the Motionkit editor when you connect your site, not a third-party CDN. These scripts are required for animations to actually run in your visitors' browsers, and load automatically on any front-end page where an animation is configured. No visitor data is sent as part of loading these scripts; it's a one-way script fetch, the same as loading a font or icon library from your own server.
+This plugin also loads the **GSAP animation engine** (gsap.min.js, ScrollTrigger, ScrollSmoother, and any additional GSAP plugins you enable from the editor's "GSAP Plugin" settings) from the **jsDelivr CDN** (cdn.jsdelivr.net), a free public CDN for open-source and public npm packages. The exact script URL, version, and dependency list for each GSAP file is configured from the Motionkit editor's "GSAP Plugin" settings and stored in your site's database — this plugin's own code contains no hardcoded GSAP URL. These scripts are required for animations to actually run in your visitors' browsers, and load automatically on any front-end page where an animation is configured. No visitor data is sent as part of loading these scripts; it's a one-way script fetch, the same as a theme loading a font from Google Fonts or a library from a public CDN.
 
-By connecting your site to Motionkit, you agree to Motionkit's Terms of Service and Privacy Policy, linked below.
+**Why GSAP isn't bundled with this plugin:** GSAP is developed and licensed by Webflow, Inc. under the "GSAP Standard No Charge" license (https://gsap.com/licensing/), not the GPL or an OSI-approved open-source license. Under that license GSAP itself is free to use, including plugins that were formerly paid-only (SplitText, MorphSVGPlugin, DrawSVGPlugin, etc.), but its terms are not GPL-compatible, so this plugin cannot redistribute GSAP's source files inside its own (GPLv2-or-later) codebase. Loading it from a CDN at the version and URL you (or the Motionkit editor's defaults) configure keeps GSAP's own license terms intact and outside this plugin's redistribution — the same reasoning that governs any GPL WordPress plugin that depends on a non-GPL-compatible JavaScript library it can't ship internally.
+
+By connecting your site to Motionkit, you agree to Motionkit's Terms of Service and Privacy Policy, linked below. By using this plugin, GSAP is loaded from jsDelivr's CDN, subject to jsDelivr's own terms and privacy policy.
 
 * Motionkit Terms of Service: https://motionkit.io/terms
 * Motionkit Privacy Policy: https://motionkit.io/privacy
+* GSAP License (Webflow, Inc.): https://gsap.com/licensing/
+* jsDelivr Terms of Service: https://www.jsdelivr.com/terms
+* jsDelivr Privacy Policy: https://www.jsdelivr.com/privacy-policy-jsdelivr-net
 
 == Hooks & Filters ==
 

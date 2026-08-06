@@ -512,19 +512,19 @@ final class Frontend
       return;
     }
 
-    $href = esc_url($gsap_src);
-    $host = wp_parse_url($href, PHP_URL_HOST);
+    $host = wp_parse_url($gsap_src, PHP_URL_HOST);
     if (empty($host)) {
       return;
     }
-    $origin = esc_url('https://' . $host);
+    $origin = 'https://' . $host;
 
     // dns-prefetch + preconnect cut TLS/DNS round-trips before the preload fires.
     // crossorigin on the preload must match the eventual <script> request (anonymous)
     // so the browser reuses the preloaded response instead of fetching twice.
-    echo "<link rel='dns-prefetch' href='{$origin}'>\n";
-    echo "<link rel='preconnect' href='{$origin}' crossorigin>\n";
-    echo "<link rel='preload' as='script' href='{$href}' crossorigin>\n";
+    // Escaped inline at the point of output (not earlier) so a scanner can verify it.
+    printf("<link rel='dns-prefetch' href='%s'>\n", esc_url($origin));
+    printf("<link rel='preconnect' href='%s' crossorigin>\n", esc_url($origin));
+    printf("<link rel='preload' as='script' href='%s' crossorigin>\n", esc_url($gsap_src));
   }
 
   public function print_page_transition_code(): void

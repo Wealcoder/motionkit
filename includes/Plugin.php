@@ -162,7 +162,6 @@ final class Plugin
     private function init_hooks(): void
     {
         add_action('plugins_loaded', [$this, 'init'], 10);
-        add_action('init', [$this, 'load_textdomain'], 10);
         // One-shot autoload migration — flips legacy option rows that were
         // saved with autoload=no but are read on every frontend request, so
         // they join the alloptions cache instead of triggering a SELECT per
@@ -338,17 +337,6 @@ final class Plugin
         if (!headers_sent()) {
             header('X-Motionkit-Platform: wordpress');
         }
-    }
-
-    /**
-     * Load plugin textdomain
-     *
-     * @return void
-     */
-    public function load_textdomain(): void
-    {  
-        
-        //load_textdomain($domain, $mo_file);
     }
 
     /**

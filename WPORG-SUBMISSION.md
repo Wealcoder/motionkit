@@ -165,28 +165,47 @@ References:
   `wp dist-archive` before upload that the resulting ZIP only contains
   `assets/`, `includes/`, `languages/`, `index.php`, `uninstall.php`,
   `motionkit.php`, `readme.txt`, `license.txt`.
-- [ ] **GSAP is loaded entirely from remote CDN URLs — even though admin-
-  supplied, this likely still trips the "no remote file calling" rule (#13
-  above).** `Frontend.php` `register_gsap_libs()` never bundles GSAP; it
-  registers `wp_register_script` handles pointing at whatever CDN URL the
-  admin typed into the editor's "GSAP Plugin" tab (`gsapPlugin.cdns` in
-  `motionkit_global_settings`). The existing code comment ("URLs come from
-  the DB per wp.org guidelines") assumed this sidesteps the rule — re-reading
-  the actual rule text, letting the *admin* supply the URL doesn't change that
-  the *plugin* is the one fetching a required runtime script remotely; a
-  reviewer will likely still flag it. **Decision pending from user** (checking
-  GSAP's current license terms first): if GSAP's plugin set (SplitText,
-  MorphSVG, DrawSVG, MotionPath, Flip, Physics2D, ScrollTrigger,
-  ScrollSmoother, etc.) is now MIT/free under the pinned version this plugin
-  targets, bundle GSAP core + those plugins locally like any other JS
-  dependency and drop the CDN mechanism entirely. If any are still
-  Club-GreenSock-restricted and can't be bundled, keep the CDN path only for
-  those specific paid plugins and write a thorough, explicit
-  `== External services ==` disclosure in readme.txt framing it as
-  bring-your-own-licensed-library — expect more reviewer scrutiny on this
-  framing than a standard service disclosure gets. Also fix the one hardcoded
-  `cdn.jsdelivr.net/npm/gsap@3.15` URL at `Frontend.php:427` — inconsistent
-  with the DB-driven model either way this resolves.
+- [x] **GSAP CDN-loading question — RESOLVED as CDN-with-disclosure
+  (verified 2026-08-05).** Checked GSAP's actual current license
+  (https://gsap.com/licensing/ + https://gsap.com/community/standard-license/,
+  fetched directly, not assumed):
+  - GSAP is now free to use in full — including every plugin that was
+    formerly Club GreenSock-only (SplitText, MorphSVGPlugin, DrawSVGPlugin,
+    etc.) — under Webflow's own **"GSAP Standard No Charge" license**. This
+    is **not MIT and not GPL-compatible** — it's a proprietary license
+    Webflow retains. So bundling GSAP's source inside this plugin's
+    (GPLv2-or-later) codebase is off the table regardless of cost — a
+    GPL-compatible-license requirement (rule #7) can't be satisfied by
+    bundling a non-GPL library, free or not.
+  - The license's "Prohibited Uses" clause bars use in "tools that allow
+    users to build visual animations without code that... compete with
+    Webflow's visual animation building capabilities." This looked like it
+    might block MotionKit outright (a visual animation editor), but the
+    license's own FAQ has a question asked verbatim about this exact
+    scenario — *"What if a WordPress plugin or theme or other niche tool
+    allows users to create GSAP-driven effects through a visual interface?
+    Is that prohibited?"* — answered no: Webflow "encourage[s] developers to
+    build on top of GSAP, including visual tools that don't directly compete
+    with Webflow's rich animation-building capabilities." MotionKit is a
+    niche WP animation tool, not a Webflow-competing page-builder platform,
+    so this doesn't block MotionKit under Webflow's own license — a separate
+    question from the wp.org GPL-compatibility issue above, which still
+    applies regardless.
+  - **Decision**: keep the CDN approach (already DB-driven per the earlier
+    `register_gsap_libs()` rewrite — no hardcoded URL in PHP anymore), and
+    write a thorough, explicit disclosure rather than attempt to bundle.
+    **Done**: `readme.txt`'s "Does this plugin load GSAP?" FAQ and
+    `== External services ==` section rewritten (2026-08-05) to (a) correct a
+    factually wrong claim that GSAP loads from "Motionkit's own
+    infrastructure" — the real default is the public jsDelivr CDN
+    (`cdn.jsdelivr.net`), confirmed against `gsapPlugin.js`'s
+    `GSAP_CDN_BASE` in the editor repo — and (b) add a dedicated "Why GSAP
+    isn't bundled with this plugin" paragraph naming Webflow as the license
+    holder, the license's non-GPL status, and the reasoning for CDN-loading
+    instead of bundling. This is the bring-your-own-license framing rule #13
+    calls for; expect a reviewer may still ask questions, but the disclosure
+    is now accurate and complete rather than the previous mismatch between
+    docs and actual behavior.
 
 ### Naming inconsistency — RESOLVED (2026-08-02)
 
@@ -438,8 +457,9 @@ the actual ask).
       the `== External services ==` section extended to cover the GSAP CDN
       mechanism once its shape is decided (see GSAP item below — the
       OAuth/connect/disconnect/session calls are already fully disclosed).
-- [ ] Resolve the GSAP CDN-loading question (bundle vs. disclosed exception —
-      pending user's check of GSAP's current plugin licensing).
+- [x] Resolve the GSAP CDN-loading question — resolved 2026-08-05, CDN with
+      full disclosure (GSAP's license is non-GPL, can't be bundled; readme.txt
+      updated with accurate jsDelivr-CDN disclosure + licensing rationale).
 - [x] License tab — resolved, verified current (2026-08-05); real
       billing.local-backed data embedded in the Connect tab, no fake
       activation flow exists.
@@ -456,9 +476,10 @@ the actual ask).
 
 ### PHPStan (added 2026-08-02)
 
-- `composer.json` (dev-only, gitignored `vendor/`/`composer.lock`, all excluded
-  via `.distignore`): `szepeviktor/phpstan-wordpress` (bundles WordPress core
-  stubs + a PHPStan extension) at level 5.
+- `composer.json` (dev-only; `vendor/` gitignored, `composer.lock` tracked for
+  CI reproducibility, both excluded from the shipped ZIP via `.distignore`):
+  `szepeviktor/phpstan-wordpress` (bundles WordPress core stubs + a PHPStan
+  extension) at level 5.
 - `phpstan.neon`: scans `includes/`, `motionkit.php`, `uninstall.php`;
   excludes `vendor/`, `node_modules/`, `assets/build/`.
 - `phpstan-bootstrap.php`: defines the `MOTIONKIT_*` constants that normally
@@ -481,6 +502,67 @@ disables the worker architecture entirely and runs single-process) reliably
 works and is now the standing invocation. If this stops being necessary on a
 different machine/PHP setup, `--debug`'s per-file progress noise can be
 dropped in favor of the cleaner default output.
+
+### GitHub Actions CI (added 2026-08-06)
+
+`.github/workflows/php-ci.yml` — three independent jobs, on push to
+`main`/`motionkit-connector` and on PRs touching PHP/config files:
+
+- **`lint`**: `php -l` across every `.php` file (excluding `vendor/`,
+  `node_modules/`, `assets/build/`), matrixed across PHP 7.4 (the readme.txt
+  floor), 8.2, and 8.3 (forward-compat).
+- **`phpstan`**: `composer run phpstan` (level 5, same config as local dev).
+- **`phpcs`**: `phpcs.xml.dist` — a deliberately lenient WordPress-Extra
+  ruleset, not the strict default. See the `phpcs.xml.dist` inline comments
+  for the full reasoning per exclusion; summary:
+  - **Formatting-only exclusions** (indentation, brace style, paren spacing,
+    array alignment, short-ternary, Yoda conditions, PSR-4 file naming,
+    per-class camelCase methods): this codebase uses 2-space indentation and
+    a handful of consistent style choices that aren't WPCS defaults.
+    Reformatting ~2,400 lines to chase indentation alone wasn't worth the
+    diff noise — excluded rather than fought file-by-file. Revisit if the
+    project ever standardizes on WPCS's tab/brace conventions.
+  - **Verified-safe exclusions** (each checked against the actual code before
+    excluding, not rubber-stamped): `NonceVerification` on read-only GET
+    tab/notice params (all already sanitized, nonces don't apply to
+    non-state-changing navigation); dynamic-IN-clause `$wpdb->prepare()` in
+    `Plugin::maybe_fix_autoload_flags()` (sniff can't trace the placeholder
+    string through `implode()`, but `%s` is genuinely present); `$wpdb`-style
+    silenced-error usage in `Helper::parse_env_file()` (guarded by
+    `is_readable()` + explicit `false` check, `@` only suppresses the
+    race-condition warning between them); `base64_encode/decode` (JWT
+    base64url segments, AES-256 token encryption, one inline SVG icon — all
+    confirmed benign, matches the existing "Verified OK" audit note below);
+    `$global->gsapPlugin` camelCase (a dynamic stdClass property from decoded
+    JSON, its name dictated by the editor's own data shape, not a PHP
+    property this codebase declares); `'wordpress'` lowercase (a
+    machine-readable API contract value sent to the SaaS's platform-detection
+    endpoint, not human-readable prose); hook naming (`motionkit/editor/url`
+    style `/`-namespaced hooks and the all-caps `MOTIONKIT_LOADED` — both a
+    deliberate, already-documented convention per CLAUDE.md/readme.txt,
+    changing either would break existing integrators);
+    `RestApi::add_cors_headers()`'s unused `$server` param (required by
+    WordPress core's fixed `rest_pre_serve_request` filter signature).
+  - **Real findings fixed, not excluded** (same pass, 2026-08-06): two
+    `EscapeOutput` false-positives in `Frontend.php`'s preload `<link>` tags
+    and `ConnectPage.php`'s button-char animation were restructured to escape
+    inline at the `printf`/`echo` site instead of one statement earlier (same
+    output, but now verifiable by both the sniff and a human reviewer); a
+    hardcoded HTML-entity tab icon switched from raw `echo` to `wp_kses($x,
+    [])`; two missing `translators:` comments added for `%d`/`%s` placeholder
+    strings; `in_array()` in `AnimationBuilderPageType` given strict-mode
+    `true`; a dead `load_textdomain()` no-op method (and its `init` hook)
+    removed entirely — wp.org auto-loads translations from the `Text Domain`
+    header since WP 4.6, no manual call needed; stale `[GSAP Animation
+    Builder]` log-message branding fixed to `[MotionKit]`; an unused
+    `$current_user` parameter removed from the private, single-call-site
+    `render_disconnected_state()`.
+  - Warnings (currently just the 40 `NonceVerification` false-positives
+    above) are surfaced in local `composer run phpcs` output but don't fail
+    CI (`--warning-severity=0` in the workflow) — only errors do.
+- Confirmed clean end-to-end on 2026-08-06: fresh `composer install` from
+  the committed `composer.lock`, `php -l` sweep, `composer run phpstan`
+  (no errors), and `phpcs` (exit 0 with warnings suppressed) all pass.
 
 ### PHP CLI environment quirk (this machine)
 

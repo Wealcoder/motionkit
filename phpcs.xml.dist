@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<ruleset name="MotionKit">
+	<description>Coding standards for the MotionKit WordPress connector plugin.</description>
+
+	<file>includes</file>
+	<file>motionkit.php</file>
+	<file>uninstall.php</file>
+
+	<arg value="sp"/>
+	<arg name="colors"/>
+	<arg name="extensions" value="php"/>
+
+	<config name="testVersion" value="7.4-"/>
+	<config name="minimum_supported_wp_version" value="6.7"/>
+
+	<rule ref="WordPress-Extra">
+		<!--
+		This codebase uses 2-space indentation, not WPCS's tab-based default.
+		Reformatting ~2,400 lines across 25 files for indentation alone isn't
+		worth the diff noise — excluded here rather than fought file-by-file.
+		Revisit if the project ever standardizes on tabs.
+		-->
+		<exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
+		<exclude name="Generic.WhiteSpace.ScopeIndent"/>
+		<exclude name="Generic.Formatting.MultipleStatementAlignment"/>
+		<exclude name="Universal.WhiteSpace.PrecisionAlignment"/>
+		<exclude name="PEAR.Functions.FunctionCallSignature.Indent"/>
+		<exclude name="PEAR.Functions.FunctionCallSignature.OpeningIndent"/>
+		<exclude name="PEAR.Functions.FunctionCallSignature.CloseBracketLine"/>
+		<exclude name="PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket"/>
+		<exclude name="PEAR.Functions.FunctionCallSignature.MultipleArguments"/>
+		<exclude name="PEAR.Functions.FunctionCallSignature.SpaceAfterOpenBracket"/>
+		<exclude name="PEAR.Functions.FunctionCallSignature.SpaceBeforeCloseBracket"/>
+		<exclude name="WordPress.Arrays.ArrayIndentation"/>
+		<exclude name="WordPress.Arrays.MultipleStatementAlignment"/>
+		<exclude name="WordPress.Arrays.ArrayDeclarationSpacing"/>
+		<exclude name="PSR2.ControlStructures.SwitchDeclaration.BreakIndent"/>
+		<exclude name="PSR2.Namespaces.NamespaceDeclaration.BlankLineAfter"/>
+		<exclude name="PSR2.Classes.ClassDeclaration.CloseBraceAfterBody"/>
+		<exclude name="Generic.Classes.OpeningBraceSameLine"/>
+
+		<!--
+		Brace/spacing style sniffs this codebase doesn't follow (K&R-ish
+		braces, no space inside parens, no space around array key =>, short
+		array syntax) — same reasoning as indentation: a formatting
+		preference, not a functional or security concern.
+		-->
+		<exclude name="Generic.Functions.OpeningFunctionBraceKernighanRitchie"/>
+		<exclude name="Generic.ControlStructures.ControlSignature.SpaceAfterKeyword"/>
+		<exclude name="Squiz.ControlStructures.ControlSignature.SpaceAfterKeyword"/>
+		<exclude name="Squiz.ControlStructures.ControlSignature.SpaceAfterCloseParenthesis"/>
+		<exclude name="WordPress.WhiteSpace.ControlStructureSpacing"/>
+		<exclude name="WordPress.WhiteSpace.OperatorSpacing"/>
+		<exclude name="WordPress.WhiteSpace.CastStructureSpacing"/>
+		<exclude name="Universal.ControlStructures.DisallowLonelyIf"/>
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+		<exclude name="Universal.WhiteSpace.CommaSpacing"/>
+		<exclude name="Universal.Operators.DisallowStandalonePostIncrementDecrement"/>
+		<exclude name="NormalizedArrays.Arrays.ArrayBraceSpacing"/>
+		<exclude name="NormalizedArrays.Arrays.CommaAfterLast"/>
+		<exclude name="WordPress.Arrays.ArrayKeySpacingRestrictions"/>
+		<exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing"/>
+		<exclude name="Generic.WhiteSpace.ArbitraryParenthesesSpacing"/>
+		<exclude name="Squiz.WhiteSpace.SuperfluousWhitespace"/>
+		<exclude name="Squiz.PHP.EmbeddedPhp.ContentAfterOpen"/>
+		<exclude name="Squiz.PHP.EmbeddedPhp.ContentBeforeEnd"/>
+		<exclude name="PSR2.Files.EndFileNewline"/>
+		<exclude name="Generic.Files.LineEndings"/>
+		<exclude name="Generic.ControlStructures.InlineControlStructure"/>
+
+		<!--
+		Yoda conditions are a WPCS default but not enforced here — a style
+		preference, not a functional/security rule.
+		-->
+		<exclude name="WordPress.PHP.YodaConditions"/>
+
+		<!--
+		Hook naming here is a deliberate, documented convention (see CLAUDE.md's
+		Hooks & Filters table + readme.txt): '/'-namespaced hooks for the
+		editor/connect family (motionkit/editor/url, motionkit/oauth/connected,
+		etc. — a common modern WP convention, e.g. WooCommerce's woocommerce/...)
+		and the all-caps MOTIONKIT_LOADED lifecycle event is part of the
+		plugin's documented public API (readme.txt usage example) — renaming
+		either would be a breaking change for existing integrators.
+		-->
+		<exclude name="WordPress.NamingConventions.ValidHookName"/>
+
+		<!--
+		File-naming conventions (hyphenated-lowercase, filename-matches-class)
+		aren't followed by this codebase's PSR-4 structure (StudlyCase files
+		matching class names, e.g. Frontend.php) — that's the PSR-4 standard
+		this project follows, not a defect.
+		-->
+		<exclude name="WordPress.Files.FileName"/>
+
+		<!--
+		AnimationBuilderPageType's public API (saveConfig/getConfig/etc.) is
+		consistently camelCase by design, not a stray inconsistency — a style
+		choice for that class, not a functional/security concern.
+		-->
+		<exclude name="WordPress.NamingConventions.ValidFunctionName"/>
+
+		<!-- Short ternary (?:) is valid, safe PHP — a lint opinion, not a defect. -->
+		<exclude name="Universal.Operators.DisallowShortTernary"/>
+
+		<!--
+		This codebase's file-header order (namespace/docblock placement) is
+		consistent project-wide — a style choice, not a defect.
+		-->
+		<exclude name="PSR12.Files.FileHeader"/>
+
+		<!-- Multiple assignment in one statement ($a = $b = ...) — a style opinion. -->
+		<exclude name="Squiz.PHP.DisallowMultipleAssignments"/>
+
+		<!-- Reserved-keyword-shaped parameter names ($default, $array, $class) read fine in context. -->
+		<exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames"/>
+
+		<!--
+		Dynamic-IN-clause $wpdb->prepare() (Plugin.php maybe_fix_autoload_flags)
+		builds its placeholder string via implode() before interpolating it —
+		a standard safe pattern the sniff can't trace through statically, so it
+		misreports "no placeholders found" even though %s is genuinely present
+		in the final query string handed to prepare().
+		-->
+		<exclude name="WordPress.DB.PreparedSQL.InterpolatedNotPrepared"/>
+		<exclude name="WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare"/>
+
+		<!--
+		$global->gsapPlugin (Frontend.php) is a dynamic stdClass property from
+		decoded motionkit_global_settings JSON — its camelCase name is dictated
+		by the editor's own data shape (gsapPlugin.js), not a PHP property this
+		codebase declares or can rename.
+		-->
+		<exclude name="WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase"/>
+
+		<!--
+		Helper::parse_env_file()'s @file() read is guarded by an is_readable()
+		check immediately before it and an explicit false-return check right
+		after — the @ only suppresses the race-condition warning between the
+		two, not error handling in general.
+		-->
+		<exclude name="WordPress.PHP.NoSilencedErrors"/>
+
+		<!-- Helper::log() is already gated behind a WP_DEBUG check — the standard WP debug-log pattern. -->
+		<exclude name="WordPress.PHP.DevelopmentFunctions.error_log_error_log"/>
+
+		<!--
+		base64_encode/decode usage here is all verified benign, not
+		obfuscation: JWT base64url segment encoding (JwtTokenManager), AES-256
+		token-at-rest encryption (OAuthHandler::encrypt/decrypt), and one
+		inline SVG data-URI admin-menu icon (ConnectPage::get_menu_icon).
+		-->
+		<exclude name="WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode"/>
+		<exclude name="WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode"/>
+
+		<!--
+		RestApi::add_cors_headers()'s unused $server param is required by
+		WordPress core's fixed rest_pre_serve_request filter signature
+		(add_filter(..., 10, 4)) — can't be dropped without breaking the hook
+		contract, even though the callback doesn't need it.
+		-->
+		<exclude name="Generic.CodeAnalysis.UnusedFunctionParameter"/>
+
+		<!--
+		'wordpress' (lowercase) is a machine-readable API contract value sent
+		to the external Motionkit SaaS's platform-detection endpoint (8 call
+		sites: X-Motionkit-Platform header, 'platform' payload field) — not
+		human-readable prose, so the sniff's "capitalize WordPress" rule
+		doesn't apply. Changing the casing would silently break the SaaS's
+		platform-detection string match.
+		-->
+		<exclude name="WordPress.WP.CapitalPDangit"/>
+	</rule>
+
+	<!-- Verify every gettext string uses the exact 'motionkit' text domain. -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="motionkit"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Flag anything not compatible with the readme.txt-declared PHP floor. -->
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!--
+	Prefix rules need the project's actual prefixes, not WPCS's placeholder
+	guess. uninstall.php's top-level $options_to_delete/$option variables are
+	real PHP globals, but WP core guarantees uninstall.php runs in isolation
+	(no other plugin executes in the same request) — the naming-collision
+	risk this rule protects against doesn't apply to that specific file.
+	-->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="motionkit"/>
+				<element value="MotionKit"/>
+				<element value="MOTIONKIT"/>
+				<element value="mkit"/>
+			</property>
+		</properties>
+		<exclude-pattern>uninstall\.php</exclude-pattern>
+	</rule>
+
+	<exclude-pattern>assets/build/*</exclude-pattern>
+	<exclude-pattern>vendor/*</exclude-pattern>
+	<exclude-pattern>node_modules/*</exclude-pattern>
+</ruleset>

@@ -67,9 +67,11 @@ final class PermalinkNotice
 
   public function handle_dismiss(): void
   {
+
     if (!current_user_can('manage_options')) {
       wp_die(esc_html__('Permission denied.', 'motionkit'), '', ['response' => 403]);
     }
+    
     check_admin_referer('motionkit_dismiss_permalink_notice');
 
     update_user_meta(get_current_user_id(), self::DISMISS_META, 1);

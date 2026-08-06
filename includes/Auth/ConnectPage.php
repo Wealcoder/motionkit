@@ -187,7 +187,7 @@ final class ConnectPage
             <?php foreach ($tabs as $tab_key => $tab): ?>
               <a href="<?php echo esc_url(admin_url('admin.php?page=motionkit-connect&tab=' . $tab_key)); ?>"
                  class="motionkit-sidebar-link <?php echo $active_tab === $tab_key ? 'motionkit-sidebar-link--active' : ''; ?>">
-                <span class="motionkit-sidebar-icon"><?php echo $tab['icon']; ?></span>
+                <span class="motionkit-sidebar-icon"><?php echo wp_kses($tab['icon'], []); ?></span>
                 <?php echo esc_html($tab['label']); ?>
               </a>
             <?php endforeach; ?>
@@ -295,7 +295,10 @@ final class ConnectPage
     if ($tools_all_deleted): ?>
       <div class="motionkit-notice motionkit-notice--success">
         <span class="motionkit-notice-icon">&#10004;</span>
-        <?php echo esc_html(sprintf(_n('Deleted %d animation record.', 'Deleted %d animation records.', $tools_all_deleted, 'motionkit'), $tools_all_deleted)); ?>
+        <?php
+        // translators: %d is the number of animation records deleted.
+        echo esc_html(sprintf(_n('Deleted %d animation record.', 'Deleted %d animation records.', $tools_all_deleted, 'motionkit'), $tools_all_deleted));
+        ?>
         <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
       </div>
     <?php endif;
@@ -315,7 +318,10 @@ final class ConnectPage
     <?php elseif ($verify === 'error'): ?>
       <div class="motionkit-notice motionkit-notice--error">
         <span class="motionkit-notice-icon">&#9888;</span>
-        <?php echo esc_html(sprintf(__('Verification failed: %s', 'motionkit'), $verify_reason ?: 'unknown error')); ?>
+        <?php
+        // translators: %s is the reason the verification check failed.
+        echo esc_html(sprintf(__('Verification failed: %s', 'motionkit'), $verify_reason ?: 'unknown error'));
+        ?>
         <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
       </div>
     <?php endif;
@@ -543,7 +549,7 @@ final class ConnectPage
       $this->render_connected_state($info, $current_user);
       $this->render_license_tab();
     } else {
-      $this->render_disconnected_state($current_user);
+      $this->render_disconnected_state();
     }
   }
 
@@ -627,8 +633,11 @@ final class ConnectPage
               $text = __('Launch Motionkit', 'motionkit');
               $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
               foreach ($chars as $i => $char) {
-                $c = $char === ' ' ? '&nbsp;' : esc_html($char);
-                printf('<span class="motionkit-btn__char" style="transition-delay:%.2fs">%s</span>', $i * 0.02, $c);
+                printf(
+                  '<span class="motionkit-btn__char" style="transition-delay:%ss">%s</span>',
+                  esc_attr(sprintf('%.2f', $i * 0.02)),
+                  $char === ' ' ? '&nbsp;' : esc_html($char)
+                );
               }
             ?>
           </span>
@@ -638,7 +647,7 @@ final class ConnectPage
     <?php
   }
 
-  private function render_disconnected_state(\WP_User $current_user): void
+  private function render_disconnected_state(): void
   {
     $authorize_url = $this->oauth->get_authorize_url();
 
