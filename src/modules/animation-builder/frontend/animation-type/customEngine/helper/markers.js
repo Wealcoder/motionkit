@@ -11,8 +11,11 @@ const LOGO =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAA8CAYAAAAgwDn8AAAACXBIWXMAACE4AAAhOAFFljFgAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAA+tJREFUeAHVmktME0EYgGeWPmxttdZERVFrPBqx8eDBR1IuJt705k304hFIvHgwQEwMJ8WjegASE9QLGh9EMbaJwRjQtCQIJGpYQxB5CEtbKN3SjvsDgzxautuZ6cKXbEqzw/b72tl0t7sICYIQ4teWMFmkSVs8aKuwJD9FVhPeEhE55LdGRB75zR2hSfl0yC9HoM2GJhUkxqhEHLDQP260TQWO7XXUuu0lfrsFezIEySPRVCj0U6l/crVU1rEtBRkj7/iLTYOeKyf3VJWX2it3OLAvrmaUuRSKTCaSNWeOuCLLAxvexate9syT4EAm2zLY1Bn353sxeEezzPUAzPeldSun1yBMuY22d7lpxPdlKBnO9tGNx9LkUedMLYzDDztVf6lLCrvsUs6NqfNE+T2dqLh6ZkV1jgjtAWJlbWnGGCsr1vm0h+qlp43aOhltIH/z/O5g+X6rL9eYWZWgux+mK3Brtxrc57YEUB70RrCiR57S/SsZkqwSzjs9AJu2X+zf6QjeeRO9iARhRB7wea1+CXZYpBOIOH7A2Vb/Kn4FccaoPIAx8kjIILCvnDy4rZlnRCHyFMMBAM8IFnmgoACARtx+HatFBcIqDxQcAEDEKZ+zrpAIHvIAUwBgK8GGI3jJA8wBgJEInvIAlwAAIs4e3V7X2p3KGcFbHuAWQNnnLskaIUIe4B4ArI0QJQ9YkCCWItCL3okWUfIAhsPojY5EWYgl0+iQlygnyqxCTiEn4hkxUwgA+YNegkTJU4QEUHl/mRWJhntAMeUBrgHFlge4BZghD3AJMEse4BLgdWVMkQeYv8i82wkqL7Mhs2D+BHY4CDIT5gAJI1NhP6GxmFvAHDD4N43MhDlgLIoXfuYzC+aAndtKUPu3lGkRXL4HdjutpkVwO5QwK4LrwZwZEdwPp4sdIeSEppgRwk4pixUhLABw2yzK06+z90VGCAugl6SunXZVP+6aqRcVISQgOU/kldfTrp9z14mK4B4A8v1D6rqLgaIiuAZQ+ZoLDjnbehER3ALyyVN4R3AJiM5ldMlTeEYwBwwrqtwWHtctT+EVwRQA8u/7pyqa9d0Msg4eEQUHsMpTWCMKChiLzUd4yFNYIgwHfB9XI+29w9zkKYVEwFgpkcrIev8B5D/9GNHkjxi9uUkXRiPsFixLqTRp0TNYtDzFSET/qBqSOvpmG4eVlLzRQHlSDRVDnqInYjSalls6lfqFJ5XaVcSWz8nw2tvN3vamybMutRGZxIOPsTq4vWwt/X9SwbZwwgdjVv2sdq8jFnDapADB0mGnDff0jSQiDZd2hZCJwJt7PeAJYLR4Y1bHQOL5rQv/nf4BIQuRy2mUeJAAAAAASUVORK5CYII=";
 
 const STYLE_ID = "motionkit-marker-style";
-const START = "#34d399";
-const END = "#fb7185";
+// Editor design tokens --accent / --accent-light. Start and end read apart by fill vs outline
+// rather than by hue, so the markers stay on brand.
+const ACCENT = "#2c76e6";
+const ACCENT_LIGHT = "#71a5e8";
+const MAX_TITLE = 20;
 
 const MARKER_CSS = `
 /* GSAP pins the scroller markers to a fixed 149px box; direction:rtl makes a wider pill spill
@@ -26,9 +29,9 @@ const MARKER_CSS = `
  color:#f4f4f5;letter-spacing:.01em;white-space:nowrap;backdrop-filter:blur(6px)}
 .mk-mk__logo{width:13px;height:13px;flex:none;object-fit:contain;display:block}
 .mk-mk__role{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
- padding:1px 5px;border-radius:999px;background:rgba(255,255,255,.09)}
-.mk-mk--start .mk-mk__role{color:${START}}
-.mk-mk--end .mk-mk__role{color:${END}}
+ padding:1px 5px;border-radius:999px}
+.mk-mk--start .mk-mk__role{background:${ACCENT};color:#fff}
+.mk-mk--end .mk-mk__role{color:${ACCENT_LIGHT};box-shadow:inset 0 0 0 1px ${ACCENT_LIGHT}59}
 .mk-mk--scroller .mk-mk__pill{background:rgba(15,16,21,.62);color:#d4d4d8;font-weight:500}
 .mk-mk--scroller .mk-mk__logo{opacity:.55}
 `;
@@ -58,8 +61,10 @@ function decorate(node, title, role, scroller) {
   logo.src = LOGO;
   logo.alt = "";
 
+  // Long titles would push the badge across the page, so cap them.
   const name = node.ownerDocument.createElement("span");
-  name.textContent = title;
+  name.textContent =
+    title.length > MAX_TITLE ? `${title.slice(0, MAX_TITLE - 1)}…` : title;
 
   const tag = node.ownerDocument.createElement("span");
   tag.className = "mk-mk__role";
