@@ -85,7 +85,7 @@ motionkit.php
             ├─ init_rest_api()        → RestApi::init()      [all contexts]
             ├─ init_admin_notices()   → PermalinkNotice [is_admin]
             ├─ admin_bar_menu         → add_admin_bar_build_animation()
-            └─ wp_head/admin_head     → admin_bar_inline_css()
+            └─ wp_enqueue_scripts     → enqueue_admin_bar_css()
 ```
 
 `init_rest_api()` runs unconditionally — REST must serve requests from frontend iframes

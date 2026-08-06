@@ -705,7 +705,7 @@ final class ConnectPage
           <?php esc_html_e('Get quick assistance from our dedicated support team', 'motionkit'); ?>
         </p>
       </div>
-      <a href="https://motionkit.io/support" target="_blank" class="motionkit-btn motionkit-btn--primary">
+      <a href="https://crowdyflow.ticksy.com/" target="_blank" class="motionkit-btn motionkit-btn--primary">
         <?php esc_html_e('Get Support', 'motionkit'); ?>
       </a>
     </div>
@@ -726,7 +726,7 @@ final class ConnectPage
         <p class="motionkit-help-card-desc">
           <?php esc_html_e('Get quick assistance from our dedicated support team whenever you need help', 'motionkit'); ?>
         </p>
-        <a href="https://motionkit.io/community" target="_blank" class="motionkit-btn motionkit-btn--primary">
+        <a href="https://crowdyflow.ticksy.com/" target="_blank" class="motionkit-btn motionkit-btn--primary">
           <?php esc_html_e('Join Community', 'motionkit'); ?>
         </a>
       </div>

@@ -1,0 +1,33 @@
+/* MotionKit admin bar "Build Animation" node */
+
+#wp-admin-bar-motionkit-build-animation > .ab-item {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.motionkit-ab-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  background-image: var(--motionkit-ab-icon-url);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.motionkit-ab-label {
+  background: linear-gradient(135deg, #FF69B4, #FFD700, #7CFC00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+}
+
+#wp-admin-bar-motionkit-build-animation:hover .motionkit-ab-label {
+  background: linear-gradient(135deg, #FF85C8, #FFE34D, #98FF2E);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

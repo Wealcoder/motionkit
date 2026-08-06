@@ -224,10 +224,10 @@ final class Plugin
         $this->init_rest_api();
         $this->init_admin_notices();
 
-        // Admin bar runs on both frontend and admin
+        // Admin bar node only renders on the frontend (add_admin_bar_build_animation
+        // bails on is_admin()), so its CSS only needs to load there too.
         add_action('admin_bar_menu', [$this, 'add_admin_bar_build_animation'], 100);
-        add_action('wp_head', [$this, 'admin_bar_inline_css']);
-        add_action('admin_head', [$this, 'admin_bar_inline_css']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_admin_bar_css']);
 
         do_action('MOTIONKIT_LOADED');
     }
@@ -454,45 +454,30 @@ final class Plugin
     }
 
     /**
-     * Inline CSS for the admin bar icon
+     * Enqueue the admin bar icon's CSS (frontend only — the node itself
+     * only renders there, see add_admin_bar_build_animation()).
      */
-    public function admin_bar_inline_css(): void
+    public function enqueue_admin_bar_css(): void
     {
         if (!is_admin_bar_showing() || !current_user_can('manage_options')) {
             return;
         }
-        ?>
-        <style>
-            #wp-admin-bar-motionkit-build-animation > .ab-item {
-                display: flex !important;
-                align-items: center !important;
-            }
-            .motionkit-ab-icon {
-                display: inline-block;
-                width: 20px;
-                height: 20px;
-                margin-right: 6px;
-                background-image: url('<?php echo esc_url(MOTIONKIT_PLUGIN_URL . 'assets/images/Logo.png'); ?>');
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                flex-shrink: 0;
-            }
-            .motionkit-ab-label {
-                background: linear-gradient(135deg, #FF69B4, #FFD700, #7CFC00);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                font-weight: 600;
-            }
-            #wp-admin-bar-motionkit-build-animation:hover .motionkit-ab-label {
-                background: linear-gradient(135deg, #FF85C8, #FFE34D, #98FF2E);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-            }
-        </style>
-        <?php
+
+        $version = defined('MOTIONKIT_VERSION') ? MOTIONKIT_VERSION : '1.0.0';
+
+        wp_enqueue_style(
+            'motionkit-admin-bar',
+            plugins_url('assets/build/admin-bar.css', MOTIONKIT_PLUGIN_FILE),
+            [],
+            $version
+        );
+
+        // The icon URL is the only per-request dynamic piece; pass it as a
+        // CSS custom property rather than templating it into the file itself.
+        wp_add_inline_style(
+            'motionkit-admin-bar',
+            ':root{--motionkit-ab-icon-url:url(' . esc_url(MOTIONKIT_PLUGIN_URL . 'assets/images/Logo.png') . ');}'
+        );
     }
 
     /**
