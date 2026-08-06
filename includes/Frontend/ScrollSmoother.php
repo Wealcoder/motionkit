@@ -120,12 +120,12 @@ final class ScrollSmoother
   /** The current page's scrollSmother override (motionkit_pg_settings_<type>), or null. */
   private static function current_page_scroll_smoother()
   {
-    if (!class_exists('\MotionKit\Common\AnimationBuilderPageType')) {
+    if (!class_exists('\MotionKit\Common\MotionkitBuilderPageType')) {
       return null;
     }
 
     try {
-      $pt  = \MotionKit\Common\AnimationBuilderPageType::instance();
+      $pt  = \MotionKit\Common\MotionkitBuilderPageType::instance();
       $cfg = $pt->getCurrentPageType();
 
       if (!is_array($cfg) || empty($cfg['option'])) {

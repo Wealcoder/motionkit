@@ -397,7 +397,7 @@ migrate pre-release, so the migration machinery was dead weight once the
 option-key rename made a genuinely first-run key shape the only one that
 will ever exist in the wild).
 
-- **Source of truth**: `AnimationBuilderPageType::$option_name` (was
+- **Source of truth**: `MotionkitBuilderPageType::$option_name` (was
   `'mkit_pg_animation_'`) → `'motionkit_pg_animation_'`. Every other file
   either reads this property directly or derives the settings variant from
   it via `EditorSessionTrait::settings_config()`'s regex swap (updated to
@@ -600,7 +600,7 @@ dropped in favor of the cleaner default output.
     output, but now verifiable by both the sniff and a human reviewer); a
     hardcoded HTML-entity tab icon switched from raw `echo` to `wp_kses($x,
     [])`; two missing `translators:` comments added for `%d`/`%s` placeholder
-    strings; `in_array()` in `AnimationBuilderPageType` given strict-mode
+    strings; `in_array()` in `MotionkitBuilderPageType` given strict-mode
     `true`; a dead `load_textdomain()` no-op method (and its `init` hook)
     removed entirely — wp.org auto-loads translations from the `Text Domain`
     header since WP 4.6, no manual call needed; stale `[GSAP Animation

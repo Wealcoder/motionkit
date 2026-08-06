@@ -94,7 +94,7 @@
 		<exclude name="WordPress.Files.FileName"/>
 
 		<!--
-		AnimationBuilderPageType's public API (saveConfig/getConfig/etc.) is
+		MotionkitBuilderPageType's public API (saveConfig/getConfig/etc.) is
 		consistently camelCase by design, not a stray inconsistency — a style
 		choice for that class, not a functional/security concern.
 		-->

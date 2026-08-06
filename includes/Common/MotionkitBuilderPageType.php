@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
   exit; // Exit if accessed directly
 }
 
-class AnimationBuilderPageType
+class MotionkitBuilderPageType
 {
   private static $instance = null;
 

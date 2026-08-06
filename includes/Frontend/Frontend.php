@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 use MotionKit\Common\Assets\AssetLoader;
-use MotionKit\Common\AnimationBuilderPageType;
+use MotionKit\Common\MotionkitBuilderPageType;
 use MotionKit\Auth\JwtTokenManager;
 use MotionKit\Factory\ComponentFactory;
 use MotionKit\Support\EditorSessionTrait;
@@ -62,9 +62,9 @@ final class Frontend
   /**
    * Page type resolver
    *
-   * @var AnimationBuilderPageType
+   * @var MotionkitBuilderPageType
    */
-  private AnimationBuilderPageType $page_type;
+  private MotionkitBuilderPageType $page_type;
 
   /**
    * ScrollSmoother manager
@@ -184,7 +184,7 @@ final class Frontend
   public function init(): void
   {
     $this->asset_loader = ComponentFactory::create_asset_loader();
-    $this->page_type = AnimationBuilderPageType::instance();
+    $this->page_type = MotionkitBuilderPageType::instance();
     $this->smoother = new ScrollSmoother();
 
     $this->init_hooks();
@@ -1298,9 +1298,9 @@ final class Frontend
   /**
    * Get page type resolver
    *
-   * @return AnimationBuilderPageType Page type instance
+   * @return MotionkitBuilderPageType Page type instance
    */
-  public function get_page_type(): AnimationBuilderPageType
+  public function get_page_type(): MotionkitBuilderPageType
   {
     return $this->page_type;
   }

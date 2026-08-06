@@ -29,7 +29,7 @@ gsap-animation-builder-for-wordpress.php    <- Entry point, MOTIONKIT_* constant
 |   |   +-- Frontend.php                    <- Script loading, AJAX handlers, preset resolution
 |   |
 |   +-- Common/
-|   |   +-- AnimationBuilderPageType.php    <- Page type detection + save/get/delete config
+|   |   +-- MotionkitBuilderPageType.php    <- Page type detection + save/get/delete config
 |   |   +-- Assets/
 |   |   |   +-- AssetLoader.php             <- wp_enqueue wrapper with deduplication
 |   |   +-- configs/
@@ -88,7 +88,7 @@ AJAX requests run through `admin-ajax.php` where `is_admin() = true`. Frontend r
 
 ## Page Type Detection
 
-`AnimationBuilderPageType::getCurrentPageType()` returns a config array for any WordPress page:
+`MotionkitBuilderPageType::getCurrentPageType()` returns a config array for any WordPress page:
 
 | Page Type               | store_type  | option key pattern                         |
 | ----------------------- | ----------- | ------------------------------------------ |

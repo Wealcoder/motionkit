@@ -51,7 +51,7 @@ includes/
 │   └── Frontend.php                       ← Script enqueue, no-cache headers, motionkitData localization
 │
 ├── Common/
-│   ├── AnimationBuilderPageType.php       ← Page type detection + saveConfig/getConfig/deleteConfig
+│   ├── MotionkitBuilderPageType.php       ← Page type detection + saveConfig/getConfig/deleteConfig
 │   ├── Assets/AssetLoader.php             ← wp_enqueue wrapper with deduplication
 │   └── configs/
 │       ├── animation-builder-assets.php   ← Preset asset registry
@@ -278,8 +278,8 @@ Filter hook: `motionkit/editor/allowed_origins`
 |---------------------------------------|-----------------------------------------|----------------------------------------------|
 | `motionkit_global_settings`           | `RestApi::dispatch_simple()`            | Global settings (scroll smoother, etc.)      |
 | `motionkit_global_animations`         | `RestApi::dispatch_simple()`            | Global animation list                        |
-| `motionkit_pg_animation_<type>`       | `AnimationBuilderPageType::saveConfig()` | Per-page animation list (option store_type) |
-| `motionkit_pg_settings_<type>`        | `AnimationBuilderPageType::saveConfig()` | Per-page settings (option store_type)       |
+| `motionkit_pg_animation_<type>`       | `MotionkitBuilderPageType::saveConfig()` | Per-page animation list (option store_type) |
+| `motionkit_pg_settings_<type>`        | `MotionkitBuilderPageType::saveConfig()` | Per-page settings (option store_type)       |
 | `motionkit_jwt_secret`                | `JwtTokenManager::get_secret()`         | HMAC secret                                  |
 | `motionkit_api_key`                   | OAuth flow                              | REST token endpoint key                      |
 | `motionkit_access_token`              | `OAuthHandler::handle_oauth_callback()` | Encrypted OAuth token                        |
