@@ -5,7 +5,8 @@ namespace MotionKit\Auth;
 /**
  * Admin Dashboard Page
  *
- * WordPress admin page with tabbed layout: Connect, Tools, License, Help.
+ * WordPress admin page with tabbed layout: Connect, Tools. License status
+ * renders inline inside the Connect tab.
  *
  * Menu: MotionKit
  * URL:  /wp-admin/admin.php?page=motionkit-connect
@@ -35,7 +36,7 @@ final class ConnectPage
   {
     add_action('admin_menu', [$this, 'register_menu']);
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_styles']);
-    add_action('admin_head', [$this, 'print_menu_icon_style']);
+    add_action('admin_enqueue_scripts', [$this, 'enqueue_menu_icon_style']);
     add_action('admin_init', [$this, 'handle_tools_actions']);
     add_action('current_screen', [$this, 'suppress_foreign_admin_notices']);
     add_action('wp_ajax_motionkit_tools_list', [$this, 'ajax_tools_list']);
@@ -106,9 +107,21 @@ final class ConnectPage
     );
   }
 
-  public function print_menu_icon_style(): void
+  /**
+   * Enqueue the top-level menu icon sizing CSS. Runs on every admin page
+   * (unlike enqueue_admin_styles(), which is gated to our own settings
+   * page) since the admin menu sidebar itself is global.
+   */
+  public function enqueue_menu_icon_style(): void
   {
-    echo '<style>#adminmenu #toplevel_page_motionkit-connect .wp-menu-image img{width:23px;height:23px;padding:7px 0 0;}</style>';
+    $version = defined('MOTIONKIT_VERSION') ? MOTIONKIT_VERSION : '1.0.0';
+
+    wp_enqueue_style(
+      'motionkit-admin-menu-icon',
+      plugins_url('assets/build/admin-menu-icon.css', MOTIONKIT_PLUGIN_FILE),
+      [],
+      $version
+    );
   }
 
   private function get_menu_icon(): string

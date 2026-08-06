@@ -83,6 +83,7 @@ const mainConfig = {
       admin: "./src/css/admin.css",
       "admin-tools": "./src/css/admin-tools.css",
       "admin-bar": "./src/css/admin-bar.css",
+      "admin-menu-icon": "./src/css/admin-menu-icon.css",
       ...getPresetEntries({
         folder:
           "./src/modules/animation-builder/frontend/animation-type/preset",
