@@ -39,7 +39,7 @@ includes/
 ├── Auth/
 │   ├── JwtTokenManager.php                ← Mint + validate editor session JWTs
 │   ├── OAuthHandler.php                   ← OAuth connect/disconnect to motionkit.io
-│   └── ConnectPage.php                    ← Admin "MotionKit" menu (Connect/License/Tools/Help tabs)
+│   └── ConnectPage.php                    ← Admin "MotionKit" menu (Connect/Tools tabs)
 │
 ├── Admin/
 │   └── PermalinkNotice.php                ← Plain-permalinks nag notice
@@ -181,7 +181,9 @@ settings via `settings_config()` helper.
 - `includes/Auth/OAuthHandler.php` — OAuth connect/disconnect flow to motionkit.io.
   Fires `do_action('motionkit/oauth/connected')` on successful connect.
 - `includes/Auth/ConnectPage.php` — top-level admin menu ("MotionKit") with tabs:
-  Connect / License / Tools / Help. Render-methods per tab.
+  Connect / Tools. Render-methods per tab. License status renders inline inside
+  the Connect tab (`render_license_tab()` is a private method embedded in
+  `render_connect_tab()`, not a separate navigable tab).
 
 ### Permission model (RestApi.php)
 

@@ -152,8 +152,6 @@ final class ConnectPage
       'tools'   => ['label' => __('Tools', 'motionkit'),   'icon' => '&#128295;'],
     ];
 
-    $tabs['help'] = ['label' => __('Help', 'motionkit'), 'icon' => '&#9432;'];
-
     ?>
     <div class="motionkit-page">
 
@@ -208,9 +206,6 @@ final class ConnectPage
           switch ($active_tab) {
             case 'tools':
               $this->render_tools_tab();
-              break;
-            case 'help':
-              $this->render_help_tab();
               break;
             case 'connect':
             default:
@@ -689,73 +684,6 @@ final class ConnectPage
     </div>
     <?php
   }
-
-  // ─── Help Tab ────────────────────────────────────────────────
-
-  private function render_help_tab(): void
-  {
-    ?>
-    <!-- Support Banner -->
-    <div class="motionkit-support-banner">
-      <div class="motionkit-support-banner-content">
-        <h3 class="motionkit-support-banner-title">
-          <span>&#9889;</span> <?php esc_html_e('Support', 'motionkit'); ?>
-        </h3>
-        <p class="motionkit-support-banner-desc">
-          <?php esc_html_e('Get quick assistance from our dedicated support team', 'motionkit'); ?>
-        </p>
-      </div>
-      <a href="https://crowdyflow.ticksy.com/" target="_blank" class="motionkit-btn motionkit-btn--primary">
-        <?php esc_html_e('Get Support', 'motionkit'); ?>
-      </a>
-    </div>
-
-    <!-- Community + Documentation cards -->
-    <div class="motionkit-help-grid">
-      <div class="motionkit-help-card">
-        <div class="motionkit-help-card-img">
-          <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
-            <circle cx="35" cy="40" r="16" fill="#BFDBFE"/>
-            <circle cx="60" cy="35" r="18" fill="#93C5FD"/>
-            <circle cx="85" cy="40" r="16" fill="#BFDBFE"/>
-            <circle cx="48" cy="50" r="14" fill="#DBEAFE"/>
-            <circle cx="72" cy="50" r="14" fill="#DBEAFE"/>
-          </svg>
-        </div>
-        <h4 class="motionkit-help-card-title"><?php esc_html_e('Community', 'motionkit'); ?></h4>
-        <p class="motionkit-help-card-desc">
-          <?php esc_html_e('Get quick assistance from our dedicated support team whenever you need help', 'motionkit'); ?>
-        </p>
-        <a href="https://crowdyflow.ticksy.com/" target="_blank" class="motionkit-btn motionkit-btn--primary">
-          <?php esc_html_e('Join Community', 'motionkit'); ?>
-        </a>
-      </div>
-
-      <div class="motionkit-help-card">
-        <div class="motionkit-help-card-img">
-          <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
-            <rect x="30" y="10" width="50" height="60" rx="4" fill="#FDE68A" stroke="#F59E0B" stroke-width="1.5"/>
-            <rect x="40" y="15" width="50" height="60" rx="4" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
-            <line x1="48" y1="30" x2="82" y2="30" stroke="#F59E0B" stroke-width="1.5"/>
-            <line x1="48" y1="40" x2="75" y2="40" stroke="#FCD34D" stroke-width="1.5"/>
-            <line x1="48" y1="50" x2="78" y2="50" stroke="#FCD34D" stroke-width="1.5"/>
-            <circle cx="80" cy="60" r="10" fill="#34D399" stroke="#fff" stroke-width="2"/>
-            <polyline points="76,60 79,63 85,57" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <h4 class="motionkit-help-card-title"><?php esc_html_e('Documentation', 'motionkit'); ?></h4>
-        <p class="motionkit-help-card-desc">
-          <?php esc_html_e('Explore step by step guides and tutorials to get the most out of the plugin', 'motionkit'); ?>
-        </p>
-        <a href="https://motionkit.io/docs" target="_blank" class="motionkit-btn motionkit-btn--primary">
-          <?php esc_html_e('Read Documents', 'motionkit'); ?>
-        </a>
-      </div>
-    </div>
-
-    <?php
-  }
-
 
   // ─── Helpers ─────────────────────────────────────────────────
 
