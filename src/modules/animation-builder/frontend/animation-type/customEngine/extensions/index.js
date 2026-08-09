@@ -22,17 +22,30 @@ const EXTENSION_REGISTRARS = [
   registerScrambleTextMethod,
 ];
 
-let done = false;
+// Registrars that reported their plugin missing, so a later attempt can pick them up.
+let outstanding = null;
 
-export function registerAllExtensions() {
-  if (done) return;
-  done = true;
-  registerStandardMethods();
-  EXTENSION_REGISTRARS.forEach((fn) => {
+function attempt(registrars) {
+  const missing = [];
+  registrars.forEach((fn) => {
     try {
-      fn();
+      if (!fn()) missing.push(fn);
     } catch (e) {
       console.warn("[customEngine] extension registration failed:", e);
     }
   });
+  return missing;
+}
+
+// Plugins arrive through the asset loader's active-plugins broadcast, which can land after
+// this module runs. Registration used to be one-shot, so anything that arrived late never
+// registered at all — its vars were silently dropped by gsap, and scrambleText additionally
+// left its snapshot machinery off, so teardown could not restore the rewritten innerHTML.
+export function registerAllExtensions() {
+  if (outstanding === null) {
+    registerStandardMethods();
+    outstanding = attempt(EXTENSION_REGISTRARS);
+    return;
+  }
+  if (outstanding.length) outstanding = attempt(outstanding);
 }

@@ -34,11 +34,12 @@ export function normalizeStepVars(step) {
     }
     case "call":
       return v.call || v;
-    case "scrollTo":
+    case "scrollTo": {
       const vars = v[step.method] || v;
       return vars && Object.keys(vars).length
         ? flattenCustom(vars)
         : { autoKill: true };
+    }
     default: {
       const vars = v[step.method] || v;
       return vars && Object.keys(vars).length ? flattenCustom(vars) : null;

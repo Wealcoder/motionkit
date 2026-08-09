@@ -30,7 +30,9 @@ export function querySelectorAllCached(selector) {
   } catch (e) {
     els = [];
   }
-  selectorCache.set(selector, els);
+  // Never cache a miss. Lazy-loaded sections and slider clones arrive after the first
+  // build, and a cached empty result meant they stayed unanimated until a full reload.
+  if (els.length) selectorCache.set(selector, els);
   return els;
 }
 

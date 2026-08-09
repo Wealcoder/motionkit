@@ -15,6 +15,8 @@ import { isTimelineEnabledFor } from "../helper/guards.js";
 import { isEditorPreviewMode } from "../customRegistry.js";
 import { claimTargets, setAnims } from "../ownership.js";
 import { collectAnimatedElements } from "../helper/interactionTargets.js";
+import { presplitSteps } from "../extensions/splitText.js";
+import { decorateMarkers } from "../helper/markers.js";
 
 // Register this scroll animation's built tweens/timelines as the initial
 // owner of its animated elements. Without this, a click/hover animation
@@ -38,46 +40,31 @@ export function buildScrollAnim(anim) {
   if (!isTimelineEnabledFor(anim)) {
     const routedSteps = findRoutedStepTriggers(anim, deviceKey);
     if (!routedSteps.length) return null;
-    const built = [];
-    const stepCtx = gsap.context(() => {
-      routedSteps.forEach(({ cfg, step }) => {
-        // Scroll-driven tweens can't be scrubbed by time, so — like
-        // timeline-mode scroll anims — they aren't registered with DevTools.
-        // When the user left the trigger as default it resolves to itemClass,
-        // and itemClass may match many elements. A single tween + one
-        // ScrollTrigger over the whole set fires the entire group the moment
-        // the FIRST element scrolls in. So with a default trigger we split the
-        // step per matched element — each gets its own tween + ScrollTrigger
-        // anchored to itself, so it animates when IT enters the viewport.
-        // An explicit trigger keeps the group behavior: one trigger element
-        // intentionally drives every matched element together.
-        if (!nonDefault(cfg.trigger)) {
-          querySelectorAllCached(step.itemClass).forEach((el) => {
-            const scrollCfg = withScrollLogger(
-              buildScrollTriggerConfig(cfg, el),
-              {
-                timelineId: null,
-                timelineData: null,
-                animationId: anim.id,
-                animationData: anim,
-              },
-            );
-            built.push(
-              ...buildStepTweens(
-                { ...step, itemClass: el },
-                { scrollTrigger: scrollCfg },
-                {
-                  animationId: anim.id,
-                  animationTitle: anim.title,
-                },
-              ),
-            );
-          });
-          return;
-        }
+    // A default trigger resolves to itemClass, which may match many elements — one shared ScrollTrigger would fire the whole group the moment the FIRST element scrolls in, so split the step per element and anchor each to itself.
+    // An explicit trigger keeps the group behavior: one trigger element intentionally drives every matched element together.
+    const units = [];
+    routedSteps.forEach(({ cfg, step }) => {
+      if (!nonDefault(cfg.trigger)) {
+        querySelectorAllCached(step.itemClass).forEach((el) =>
+          units.push({ cfg, step: { ...step, itemClass: el }, trigger: el }),
+        );
+        return;
+      }
+      units.push({ cfg, step, trigger: step.itemClass });
+    });
 
+    // Splits must exist before the context opens, or ctx.revert() owns them — see presplitSteps.
+    presplitSteps(
+      anim.id,
+      units.map((u) => u.step),
+    );
+
+    const built = [];
+    // Scroll-driven tweens can't be scrubbed by time, so — like timeline-mode scroll anims — they aren't registered with DevTools.
+    const stepCtx = gsap.context((self) => {
+      units.forEach(({ cfg, step, trigger }) => {
         const scrollCfg = withScrollLogger(
-          buildScrollTriggerConfig(cfg, step.itemClass),
+          buildScrollTriggerConfig(cfg, trigger),
           {
             timelineId: null,
             timelineData: null,
@@ -92,20 +79,27 @@ export function buildScrollAnim(anim) {
             {
               animationId: anim.id,
               animationTitle: anim.title,
+              ctx: self,
             },
           ),
         );
       });
     });
     registerScrollOwnership(anim, built);
+    decorateMarkers(built, anim.title);
     return { contexts: [stepCtx], listeners: [] };
   }
 
   const routed = findRoutedScrollTriggers(anim, deviceKey);
   if (!routed.length) return null;
 
+  presplitSteps(
+    anim.id,
+    routed.flatMap(({ tl }) => tl.animations || []),
+  );
+
   const built = [];
-  const ctx = gsap.context(() => {
+  const ctx = gsap.context((self) => {
     routed.forEach(({ cfg, tl }) => {
       const fallbackTrigger = tl.animations?.[0]?.itemClass;
       const scrollCfg = withScrollLogger(
@@ -123,6 +117,7 @@ export function buildScrollAnim(anim) {
         {
           animationId: anim.id,
           animationTitle: anim.title,
+          ctx: self,
         },
       );
       // ScrollTrigger anims are scroll-driven; DevTools cannot scrub them
@@ -133,6 +128,7 @@ export function buildScrollAnim(anim) {
   });
 
   registerScrollOwnership(anim, built);
+  decorateMarkers(built, anim.title);
 
   return { contexts: [ctx], listeners: [] };
 }

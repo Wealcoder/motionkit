@@ -3,25 +3,23 @@ import { buildStepTweens } from "../mbuild/tween.js";
 import { attachPlayLogger } from "../helper/logger.js";
 import { registerTimeline, isEditorPreviewMode } from "../customRegistry.js";
 import { isTimelineEnabledFor } from "../helper/guards.js";
-
-// In editor preview mode, custom anims build paused so DevTools owns playback.
-// Public site builds remain auto-play (extraConfig undefined).
-function pageloadExtraConfig() {
-  return isEditorPreviewMode() ? { paused: true } : undefined;
-}
+import { presplitSteps } from "../extensions/splitText.js";
 
 export function buildPageloadAnim(anim) {
   const editorMode = isEditorPreviewMode();
   const timelineEnabled = isTimelineEnabledFor(anim);
   const tlCfg = anim.timeline;
-  const ctx = gsap.context(() => {
+  presplitSteps(anim.id, tlCfg?.animations);
+  const ctx = gsap.context((self) => {
     if (!tlCfg) return;
-    const extra = editorMode ? { paused: true } : pageloadExtraConfig();
+    // Editor preview builds paused so DevTools owns playback; public builds auto-play.
+    const extra = editorMode ? { paused: true } : undefined;
 
     if (timelineEnabled) {
       const tl = buildTimeline(tlCfg, extra, {
         animationId: anim.id,
         animationTitle: anim.title,
+        ctx: self,
       });
       attachPlayLogger(tl, {
         timelineId: tlCfg.id,
@@ -39,6 +37,7 @@ export function buildPageloadAnim(anim) {
       const tweens = buildStepTweens(step, extra, {
         animationId: anim.id,
         animationTitle: anim.title,
+        ctx: self,
       });
       tweens.forEach((t) =>
         attachPlayLogger(t, {

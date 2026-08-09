@@ -34,7 +34,7 @@ export function findRoutedScrollTriggers(anim, deviceKey) {
 }
 
 // No-timeline counterpart of findRoutedScrollTriggers: each enabled scroll
-// trigger's per-device cfg.timeline holds a STEP id, so we resolve to the step
+// trigger's per-device cfg.animation holds a STEP id, so we resolve to the step
 // and the caller builds a standalone tween per routed step.
 export function findRoutedStepTriggers(anim, deviceKey) {
   const out = [];

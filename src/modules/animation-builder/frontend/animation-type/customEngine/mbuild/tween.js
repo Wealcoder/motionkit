@@ -11,11 +11,9 @@ import { applyStep } from "./step.js";
 // standalone tweens and stash them. The timeline POSITION (overlap) argument
 // has no meaning without a timeline, so the sink ignores its trailing arg.
 //
-// flip and call don't map cleanly onto a single scroll-driven tween: flip's
-// Flip.from tween is collected via add() and call becomes a zero-delay
-// delayedCall. extraVars can't be merged into an already-built child, but
-// `paused` is applied post-hoc in add() so click/hover children stay paused
-// until the event drives them; a ScrollTrigger passed to them is still dropped.
+// call (and therefore flip, which routes through it) becomes a zero-duration tween so extraVars
+// still applies. add() takes an already-built child, so extraVars can't be merged in — only
+// `paused` is applied post-hoc there, and a ScrollTrigger passed to it is dropped.
 function createTweenSink(extraVars, dataCtx) {
   const withExtra = (vars) =>
     extraVars ? { ...(vars || {}), ...extraVars } : vars;
@@ -46,7 +44,15 @@ function createTweenSink(extraVars, dataCtx) {
       return t;
     },
     call(fn, args) {
-      const t = gsap.delayedCall(0, fn, args || []);
+      // A tween rather than delayedCall, so extraVars applies — delayedCall ignores both `paused`
+      // and `scrollTrigger`, which fired scroll- and click-routed `call` steps (and, since
+      // applyFlip routes through here, flips) at page load instead of on the trigger. The
+      // duration has to be non-zero: a zero-duration tween completes before ScrollTrigger can
+      // gate it, which is exactly how the delayedCall version failed.
+      const t = gsap.to(
+        {},
+        withExtra({ duration: 0.001, onStart: () => fn(...(args || [])) }),
+      );
       tweens.push(t);
       return t;
     },
@@ -72,6 +78,7 @@ export function buildStepTweens(step, extraVars, animContext = {}) {
     timelineTitle: null,
   };
   const sink = createTweenSink(extraVars, dataCtx);
+  sink.__mkCtx = animContext.ctx || null;
   applyStep(sink, step);
   return sink.tweens;
 }
