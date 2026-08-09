@@ -61,7 +61,7 @@ export function buildScrollAnim(anim) {
 
     const built = [];
     // Scroll-driven tweens can't be scrubbed by time, so — like timeline-mode scroll anims — they aren't registered with DevTools.
-    const stepCtx = gsap.context(() => {
+    const stepCtx = gsap.context((self) => {
       units.forEach(({ cfg, step, trigger }) => {
         const scrollCfg = withScrollLogger(
           buildScrollTriggerConfig(cfg, trigger),
@@ -79,6 +79,7 @@ export function buildScrollAnim(anim) {
             {
               animationId: anim.id,
               animationTitle: anim.title,
+              ctx: self,
             },
           ),
         );
@@ -98,7 +99,7 @@ export function buildScrollAnim(anim) {
   );
 
   const built = [];
-  const ctx = gsap.context(() => {
+  const ctx = gsap.context((self) => {
     routed.forEach(({ cfg, tl }) => {
       const fallbackTrigger = tl.animations?.[0]?.itemClass;
       const scrollCfg = withScrollLogger(
@@ -116,6 +117,7 @@ export function buildScrollAnim(anim) {
         {
           animationId: anim.id,
           animationTitle: anim.title,
+          ctx: self,
         },
       );
       // ScrollTrigger anims are scroll-driven; DevTools cannot scrub them

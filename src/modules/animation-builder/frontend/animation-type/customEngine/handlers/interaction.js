@@ -88,6 +88,7 @@ export function buildInteractionAnim(anim, eventType) {
               {
                 animationId: anim.id,
                 animationTitle: anim.title,
+                ctx,
               },
             )
           : null;
@@ -103,6 +104,7 @@ export function buildInteractionAnim(anim, eventType) {
             {
               animationId: anim.id,
               animationTitle: anim.title,
+              ctx,
             },
           ).forEach((t) => {
             built.push(t);

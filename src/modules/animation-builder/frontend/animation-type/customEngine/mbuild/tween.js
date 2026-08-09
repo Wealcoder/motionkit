@@ -78,6 +78,7 @@ export function buildStepTweens(step, extraVars, animContext = {}) {
     timelineTitle: null,
   };
   const sink = createTweenSink(extraVars, dataCtx);
+  sink.__mkCtx = animContext.ctx || null;
   applyStep(sink, step);
   return sink.tweens;
 }

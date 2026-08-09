@@ -18,26 +18,26 @@ const MAX_TITLE = 20;
 const MARKER_CSS = `
 /* GSAP pins the scroller markers to a fixed 149px box; direction:rtl makes a wider pill spill
    leftward into the page instead of off the right edge, without touching that geometry. */
-.mk-mk{background:none!important;border-width:0!important;
+.motionkit-marker{background:none!important;border-width:0!important;
  padding:0!important;font-size:0!important;line-height:0!important;direction:rtl!important}
 /* clip-path draws the arrow, so no border-radius and no box-shadow (a shadow would be clipped
    off by the same path). An element marker points RIGHT, toward the line it marks; the padding
    on that side keeps the chip clear of the tip. */
-.mk-mk__pill{direction:ltr;display:inline-flex;align-items:center;gap:5px;vertical-align:bottom;
+.motionkit-marker__pill{direction:ltr;display:inline-flex;align-items:center;gap:5px;vertical-align:bottom;
  flex-direction:row-reverse;margin:2px 6px;padding:2px 9px 2px 2px;
  clip-path:polygon(0 0,calc(100% - 7px) 0,100% 50%,calc(100% - 7px) 100%,0 100%);
  background:rgba(15,16,21,.92);
  font:600 10px/1.4 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
- color:#f4f4f5;letter-spacing:.01em;white-space:nowrap;backdrop-filter:blur(6px)}
-.mk-mk__logo{width:11px;height:11px;flex:none;object-fit:contain;display:block}
+ color:#f4f4f5;letter-spacing:.01em;white-space:nowrap}
+.motionkit-marker__logo{width:11px;height:11px;flex:none;object-fit:contain;display:block}
 /* Not align-self:stretch — the chip shares the same centre line as the logo and the name. */
-.mk-mk__role{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+.motionkit-marker__role{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
  padding:2px 5px;display:flex;align-items:center;line-height:1;background:${ACCENT};color:#fff}
 /* Scroller markers sit at the viewport edge, so theirs mirrors: point and logo on the left. */
-.mk-mk--scroller .mk-mk__pill{background:rgba(15,16,21,.62);color:#d4d4d8;font-weight:500;
+.motionkit-marker--scroller .motionkit-marker__pill{background:rgba(15,16,21,.62);color:#d4d4d8;font-weight:500;
  flex-direction:row;padding:2px 2px 2px 12px;
  clip-path:polygon(0 50%,7px 0,100% 0,100% 100%,7px 100%)}
-.mk-mk--scroller .mk-mk__logo{opacity:.55}
+.motionkit-marker--scroller .motionkit-marker__logo{opacity:.55}
 `;
 
 function ensureStyle(doc) {
@@ -54,14 +54,14 @@ function decorate(node, title, role, scroller) {
   node.dataset.mkMarker = "1";
   ensureStyle(node.ownerDocument);
 
-  node.classList.add("mk-mk", `mk-mk--${role}`);
-  if (scroller) node.classList.add("mk-mk--scroller");
+  node.classList.add("motionkit-marker", `motionkit-marker--${role}`);
+  if (scroller) node.classList.add("motionkit-marker--scroller");
 
   const pill = node.ownerDocument.createElement("span");
-  pill.className = "mk-mk__pill";
+  pill.className = "motionkit-marker__pill";
 
   const logo = node.ownerDocument.createElement("img");
-  logo.className = "mk-mk__logo";
+  logo.className = "motionkit-marker__logo";
   logo.src = LOGO;
   logo.alt = "";
 
@@ -71,7 +71,7 @@ function decorate(node, title, role, scroller) {
     title.length > MAX_TITLE ? `${title.slice(0, MAX_TITLE - 1)}…` : title;
 
   const tag = node.ownerDocument.createElement("span");
-  tag.className = "mk-mk__role";
+  tag.className = "motionkit-marker__role";
   tag.textContent = scroller ? `scroller ${role}` : role;
 
   pill.append(logo, name, tag);
@@ -84,11 +84,8 @@ function decorate(node, title, role, scroller) {
 // look at it — that is why markers came up raw on load and only styled after Play re-dispatched
 // them. Reading the live marker nodes instead makes this independent of when GSAP gets around
 // to creating them.
-const SWEEP_MS = 250;
-const SWEEP_WINDOW_MS = 8000;
 let hooked = false;
-let sweepUntil = 0;
-let timer = null;
+let observer = null;
 
 // Every marker of one trigger carries `marker-<animation id>`, and the matching ScrollTrigger
 // knows the editor-side title, so a marker can be labelled without knowing who built it.
@@ -123,20 +120,19 @@ function sweep() {
   });
 }
 
-function startSweeping() {
-  sweepUntil = Date.now() + SWEEP_WINDOW_MS;
-  if (timer) return;
-  timer = setInterval(() => {
-    sweep();
-    if (Date.now() > sweepUntil) {
-      clearInterval(timer);
-      timer = null;
-    }
-  }, SWEEP_MS);
+// Watch for the marker nodes instead of polling for them — GSAP appends them to the body, so
+// the observer fires the moment they exist no matter how late ScrollTrigger initialises.
+function watch() {
+  if (observer || typeof MutationObserver === "undefined" || !document.body) return;
+  observer = new MutationObserver((records) => {
+    const added = records.some((r) => r.addedNodes.length);
+    if (added) sweep();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// Called after each scroll animation is built. The build itself is only a cue to start looking —
-// the sweep is what actually finds the markers, whenever GSAP creates them.
+// Called after each scroll animation is built. The build is only a cue to start looking — the
+// sweep and the observer are what actually find the markers, whenever GSAP creates them.
 export function decorateMarkers(built, title) {
   if (!title || !built?.length) return;
   if (!hooked && typeof ScrollTrigger !== "undefined") {
@@ -144,9 +140,9 @@ export function decorateMarkers(built, title) {
     try {
       ScrollTrigger.addEventListener("refresh", sweep);
     } catch (e) {
-      /* older ScrollTrigger without the event API — the interval still covers it */
+      /* older ScrollTrigger without the event API — the observer still covers it */
     }
   }
+  watch();
   sweep();
-  startSweeping();
 }

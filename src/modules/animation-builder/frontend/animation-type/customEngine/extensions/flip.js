@@ -53,10 +53,12 @@ export function buildFlip(step, vars) {
 
 export function applyFlip(tl, step, vars, overlap) {
   // Run capture → mutate → Flip.from when the playhead ARRIVES, or a scroll-triggered flip toggles its class at page load and diffs the wrong layout.
-  // Trade-off: the Flip.from tween is now built outside the animation's gsap.context, so teardown won't revert its transforms — only the global reset's __wcfOrigCss restore clears them. The toggled class was never reverted either way.
+  // Build it through the animation's own gsap.context (stashed on the timeline by mbuild) so teardown still reverts the transforms even though the tween is created long after the context closed.
+  const ctx = tl?.__mkCtx;
   tl.call(
     () => {
-      buildFlip(step, vars);
+      if (ctx) ctx.add(() => buildFlip(step, vars));
+      else buildFlip(step, vars);
     },
     undefined,
     overlap,

@@ -20,6 +20,8 @@ export function buildTimeline(tlCfg, extraConfig, animContext = {}) {
     },
   };
   const tl = gsap.timeline(tlVars);
+  // Kept off vars.data — that object is stamped onto every tween and read by DevTools.
+  tl.__mkCtx = animContext.ctx || null;
   for (const step of tlCfg?.animations || []) {
     applyStep(tl, step);
   }

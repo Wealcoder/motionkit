@@ -7,6 +7,7 @@ import { rememberAnim, forgetAnim } from "./helper/inspector.js";
 import { revertSplitsFor } from "./extensions/splitText.js";
 import { releaseRenderClaims } from "./helper/renderOrder.js";
 import { buildHandle } from "./handlers/index.js";
+import { registerAllExtensions } from "./extensions/index.js";
 
 // Public entry point for the custom engine. isCustomAnimation is re-exported
 // here so customAnimation.js keeps a single import surface; the trigger-type
@@ -15,6 +16,9 @@ export { isCustomAnimation };
 
 export function handleCustomAnimation(anim) {
   if (!isCustomAnimation(anim)) return;
+
+  // Cheap no-op once everything registered; picks up plugins that loaded after boot.
+  registerAllExtensions();
 
   // Live-update safety — editor re-dispatches on every edit.
   if (getActive(anim.id)) teardown(anim.id);

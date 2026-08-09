@@ -111,5 +111,38 @@ export function buildScrollTriggerConfig(cfg, fallbackTrigger) {
     if (v !== undefined) out[key] = v;
   }
 
+  // GSAP ignores toggleActions once scrub is set, so emitting both let the editor offer a
+  // combination that silently does nothing. Drop the one that loses.
+  if (out.scrub !== undefined) delete out.toggleActions;
+
+  // ScrollTriggers refresh in creation order, and animations arrive in config order rather
+  // than page order — which mis-measures pin spacing. Rank by the trigger's document position
+  // so refresh runs top-to-bottom. An author-set value always wins.
+  if (out.refreshPriority === undefined) {
+    const priority = documentOrderPriority(out.trigger);
+    if (priority !== undefined) out.refreshPriority = priority;
+  }
+
   return out;
+}
+
+// Measured against GSAP 3.15 rather than trusted from the docs, which contradict each other on
+// this: refreshPriority 100 refreshed before 0, which refreshed before -100. So HIGHER runs
+// first, and an element nearer the top of the page needs the higher number — hence negating the
+// document offset.
+function documentOrderPriority(trigger) {
+  if (!trigger || typeof document === "undefined") return undefined;
+  let el = trigger;
+  if (typeof trigger === "string") {
+    try {
+      el = document.querySelector(trigger);
+    } catch (e) {
+      return undefined;
+    }
+  }
+  if (!el || el.nodeType !== 1 || typeof el.getBoundingClientRect !== "function") {
+    return undefined;
+  }
+  const top = el.getBoundingClientRect().top + (window.scrollY || 0);
+  return Number.isFinite(top) ? -Math.round(top) : undefined;
 }

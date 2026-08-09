@@ -108,23 +108,26 @@ function toEntry(anim) {
   };
 }
 
-// Freeze the snapshot so console readers can't mutate it, but never recurse
-// into DOM nodes (freezing a live element would break it) and guard against any
-// accidental cycle. The stored configs carry no gsap-injected `parent` cycle —
-// gsap mutates spread copies, not these — so freezing them is safe.
-function deepFreeze(value, seen) {
+// Copy before freezing. rememberAnim stores the object straight off the CustomEvent detail —
+// the same object window.__motionkitAnims hands to DevTools — so freezing it in place made
+// merely reading the inspector silently seal live config. DOM nodes are passed through by
+// reference (copying or freezing an element would break it) and cycles are guarded.
+function frozenCopy(value, seen) {
   if (value === null || typeof value !== "object") return value;
   if (typeof Node !== "undefined" && value instanceof Node) return value;
-  if (seen.has(value)) return value;
-  seen.add(value);
-  Object.keys(value).forEach((k) => deepFreeze(value[k], seen));
-  return Object.freeze(value);
+  if (seen.has(value)) return seen.get(value);
+  const copy = Array.isArray(value) ? [] : {};
+  seen.set(value, copy);
+  Object.keys(value).forEach((k) => {
+    copy[k] = frozenCopy(value[k], seen);
+  });
+  return Object.freeze(copy);
 }
 
 function buildSnapshot() {
   const rows = [];
   animConfigs.forEach((anim) => rows.push(toEntry(anim)));
-  return deepFreeze(rows, new WeakSet());
+  return frozenCopy(rows, new WeakMap());
 }
 
 function install() {

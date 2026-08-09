@@ -76,9 +76,11 @@ export function registerStandardMethods() {
   });
 
   registerMethod("set", (tl, step, vars, overlap) => {
-    if (!step.itemClass) return;
+    // Same window redirect as from/to/fromTo — ScrollToPlugin scrolls the tween's target.
+    const target = scrollToTarget(vars) || step.itemClass;
+    if (!target) return;
     if (vars?.scrambleText) prepScrambleTargets(animIdOf(tl), step.itemClass);
-    tl.set(step.itemClass, vars, overlap);
+    tl.set(target, vars.scrollTo ? normalizeScrollTo(step, vars) : vars, overlap);
   });
 
   registerMethod("call", (tl, step, vars, overlap) => {

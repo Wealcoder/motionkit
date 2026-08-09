@@ -52,6 +52,18 @@ export function tagElement(el, id) {
   suppressRacingTransition(el);
 }
 
+// Give an animation's elements their CSS transition back once nothing is animating them.
+// Only the ones this animation still owns — a later animation may have claimed them since.
+function restoreTransition(id) {
+  document
+    .querySelectorAll(`[data-motionkit-anim-id="${CSS.escape(id)}"]`)
+    .forEach((el) => {
+      if (!el.__wcfTransitionSuppressed) return;
+      el.style.removeProperty("transition");
+      delete el.__wcfTransitionSuppressed;
+    });
+}
+
 function runCleanups(handle) {
   handle?.listeners?.forEach((fn) => {
     try {
@@ -80,15 +92,28 @@ export function teardown(id) {
   // newClass/oldClass wrapper spans behind, and a split container has to be
   // unwrapped before its markup can be put back.
   restoreScrambleFor(id);
+  restoreTransition(id);
   deleteActive(id);
   unregisterAnimation(id);
   releaseAnim(id);
   releaseRenderClaims(id);
   forgetAnim(id);
+  // The DOM this animation matched can change between teardown and the rebuild that
+  // usually follows, so don't let the next build resolve selectors against stale nodes.
+  clearSelectorCache();
 }
 
+// Revert our own contexts rather than trusting the global sweep to have found every
+// ScrollTrigger and inline style we created — its ownership test is a heuristic, and a
+// timeline-mode animation on a custom trigger slipped through it until recently.
+//
+// clearScrambleCache matters because the global reset kills tweens instead of reverting
+// them, which leaves a scrambled element on garbage characters or on the replacement text.
 export function teardownAll() {
-  allActiveIds().forEach((id) => runCleanups(getActive(id)));
+  allActiveIds().forEach((id) => {
+    runCleanups(getActive(id));
+    restoreTransition(id);
+  });
   clearSplitCache();
   clearScrambleCache();
   clearActive();
@@ -103,26 +128,4 @@ export function teardownAll() {
 // after its global nuke. We subscribe via a DOM event rather than a static
 // import so production bundles never pull resetAllAnimations in — in prod
 // this listener registers but the event never fires.
-document.addEventListener("motionkit:reset-done", () => {
-  allActiveIds().forEach((id) => {
-    getActive(id)?.listeners?.forEach((fn) => {
-      try {
-        fn();
-      } catch (e) {
-        /* noop */
-      }
-    });
-  });
-  clearSplitCache();
-  // The global reset kills tweens instead of reverting them and restores CSS
-  // only, so a scrambled element would otherwise stay stuck on garbage
-  // characters (killed mid-flight) or on the replacement text (killed after it
-  // finished) until a page reload.
-  clearScrambleCache();
-  clearActive();
-  clearCustomRegistry();
-  clearSelectorCache();
-  clearOwnership();
-  clearRenderClaims();
-  clearAnims();
-});
+document.addEventListener("motionkit:reset-done", teardownAll);
