@@ -23,14 +23,12 @@ References:
    construction and is the preferred pattern. Hooks, options, JS globals, and
    any remaining global-scope constants still need the long prefix even inside
    a namespaced plugin.
-4. **Only ship runtime files.** php, js, css, txt, md (readme only), json, xml,
-   png/svg/jpg. No `node_modules`, no `src/` (pre-build JS), no build configs
-   (`webpack.config.js`, `jsconfig.json`), no `.env`, no lockfiles, no internal
-   docs (CLAUDE.md, flow.md, USAGE.md, DEVELOPER.md), no `.git*`. Use a
-   `.distignore` + `wp dist-archive` (or manually curate the SVN `trunk/`) so
-   the shipped ZIP only contains what the plugin needs to run.
+4. **Only ship runtime files (unless compiling).** php, js, css, txt, md (readme only), json, xml,
+   png/svg/jpg. No `node_modules`, no `.env`, no lockfiles, no internal
+   docs (CLAUDE.md, flow.md, USAGE.md, DEVELOPER.md), no `.git*`. 
+   **Exception:** If you ship minified/compiled files (like `assets/build/`), you *must* also include the unminified source code (`src/`) and build configs (`webpack.config.js`, `package.json`) in the ZIP so reviewers can verify them.
 5. **No obfuscated/unreadable code.** Minified build output from a normal
-   bundler (webpack/Terser) is fine. Hand-obfuscated PHP, base64-wrapped
+   bundler (webpack/Terser) is fine, **provided the source code is included**. Hand-obfuscated PHP, base64-wrapped
    `eval()`, etc. is not.
 6. **External service calls must be disclosed.** Any `wp_remote_get/post` to a
    third-party domain (including your own SaaS) needs to be called out in
@@ -158,13 +156,10 @@ References:
   plan name, sites used/limit, expiry, "last checked", and the stale-outage
   notice added earlier this session) — no local flag-flipping, no
   unvalidated input acceptance anywhere in this path.
-- [ ] **Non-runtime files would ship in a naive ZIP**: `.env.example`,
-  `package-lock.json`, `jsconfig.json`, `webpack.config.js`, `node_modules/`,
-  `src/`, `scripts/`, `CLAUDE.md`, `README.md`, `USAGE.md`, `flow.md`,
-  `.gitignore`. → `.distignore` added at plugin root (2026-08-02); verify with
-  `wp dist-archive` before upload that the resulting ZIP only contains
-  `assets/`, `includes/`, `languages/`, `index.php`, `uninstall.php`,
-  `motionkit.php`, `readme.txt`, `license.txt`.
+- [x] **Non-runtime files excluded via `.distignore`**: `.env.example`,
+  `package-lock.json`, `jsconfig.json`, `node_modules/`, `scripts/`, `CLAUDE.md`, 
+  `README.md`, `USAGE.md`, `flow.md`, `.gitignore`. 
+  *Note:* `src/`, `package.json`, and `webpack.config.js` were previously excluded but have been restored to the ZIP output per wp.org reviewer request, to allow verification of the compiled files in `assets/build/`.
 - [x] **GSAP CDN-loading question — RESOLVED as CDN-with-disclosure
   (verified 2026-08-05).** Checked GSAP's actual current license
   (https://gsap.com/licensing/ + https://gsap.com/community/standard-license/,
@@ -676,7 +671,7 @@ scan mode, not real defects):
       above. Real findings fixed (trademark name, Tested-up-to granularity,
       nonce unslash, stray file); dist-scope/NonceVerification/DirectQuery
       findings investigated and confirmed false-positives for this scan mode.
-- [ ] Sync version number across readme.txt / plugin header / `MOTIONKIT_VERSION` / package.json.
+- [x] Sync version number across readme.txt / plugin header / `MOTIONKIT_VERSION` / package.json.
 - [x] Rewrite readme.txt — done, verified current (2026-08-04); still needs
       the `== External services ==` section extended to cover the GSAP CDN
       mechanism once its shape is decided (see GSAP item below — the
@@ -687,11 +682,11 @@ scan mode, not real defects):
 - [x] License tab — resolved, verified current (2026-08-05); real
       billing.local-backed data embedded in the Connect tab, no fake
       activation flow exists.
-- [ ] Replace placeholder Plugin URI / Author URI.
+- [x] Replace placeholder Plugin URI / Author URI.
 - [ ] Confirm the wp.org account used to submit has a `motionkit.io` email,
       not a personal/gmail address.
-- [ ] Confirm `.distignore` output via `wp dist-archive` (or manual zip) contains
-      only runtime files.
+- [x] Confirm `.distignore` output via `wp dist-archive` (or manual zip) contains
+      runtime files **plus** `src/`, `package.json`, and `webpack.config.js` for reviewer source verification.
 - [ ] Re-run full security/performance review after the above changes land.
 
 ---

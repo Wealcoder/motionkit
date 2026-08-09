@@ -12,13 +12,10 @@
 
 node_modules
 vendor
-src
 scripts
 tests
 
-package.json
 package-lock.json
-webpack.config.js
 jsconfig.json
 composer.json
 composer.lock
