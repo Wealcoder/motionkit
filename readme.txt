@@ -99,7 +99,7 @@ None of these calls send your site's post content, page content, or saved animat
 
 **Why GSAP isn't bundled with this plugin:** GSAP is developed and licensed by Webflow, Inc. under the "GSAP Standard No Charge" license (https://gsap.com/licensing/), not the GPL or an OSI-approved open-source license. Under that license GSAP itself is free to use, including plugins that were formerly paid-only (SplitText, MorphSVGPlugin, DrawSVGPlugin, etc.), but its terms are not GPL-compatible, so this plugin cannot redistribute GSAP's source files inside its own (GPLv2-or-later) codebase. Loading it from a CDN at the version and URL you (or the Motionkit editor's defaults) configure keeps GSAP's own license terms intact and outside this plugin's redistribution — the same reasoning that governs any GPL WordPress plugin that depends on a non-GPL-compatible JavaScript library it can't ship internally.
 
-By connecting your site to Motionkit, you agree to Motionkit's Terms of Service and Privacy Policy, linked below. By using this plugin, GSAP is loaded from jsDelivr's CDN, subject to jsDelivr's own terms and privacy policy.
+By connecting your site to Motionkit, you agree to Motionkit's Terms of Service and Privacy Policy, linked below. When you use this plugin, GSAP is loaded from jsDelivr's CDN, subject to jsDelivr's own terms and privacy policy.
 
 * Motionkit Terms of Service: https://motionkit.io/terms-condition/
 * Motionkit Privacy Policy: https://motionkit.io/privacy-policy/
