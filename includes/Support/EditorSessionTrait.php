@@ -139,7 +139,7 @@ trait EditorSessionTrait
     // Every MotionKit-managed key — animation or settings, any store_type —
     // uses this prefix. Reject anything else so a payload can never target
     // an unrelated option/post_meta/term_meta key on the site.
-    if (!is_string($option) || strpos($option, 'mkit_pg_') !== 0) {
+    if (!is_string($option) || strpos($option, 'motionkit_pg_') !== 0) {
       return false;
     }
 
