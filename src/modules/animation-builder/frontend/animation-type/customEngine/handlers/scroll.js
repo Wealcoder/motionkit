@@ -12,7 +12,7 @@ import { querySelectorAllCached } from "../scheduler.js";
 import { withScrollLogger } from "../helper/logger.js";
 import { detectDeviceKey } from "../helper/device.js";
 import { isTimelineEnabledFor } from "../helper/guards.js";
-import { isEditorPreviewMode } from "../customRegistry.js";
+import { registerTimeline, isEditorPreviewMode } from "../customRegistry.js";
 import { claimTargets, setAnims } from "../ownership.js";
 import { collectAnimatedElements } from "../helper/interactionTargets.js";
 import { presplitSteps } from "../extensions/splitText.js";
@@ -23,7 +23,7 @@ import { decorateMarkers } from "../helper/markers.js";
 // sharing the same target (e.g. the same heading, split with a different
 // SplitText config) never finds a previous owner to pause — its own build
 // then reverts this scroll tween's still-live SplitText spans out from under
-// it (see splitText.js's getSplit), and the still-ticking scroll tween keeps
+// it (see splitText.js's getSplitEntry), and the still-ticking scroll tween keeps
 // fighting the incoming one for the same properties every frame. That
 // property/visual tug-of-war is what reads as flicker. Runtime-only: editor
 // preview never triggers this (DevTools owns playback), matching
@@ -36,6 +36,7 @@ function registerScrollOwnership(anim, built) {
 
 export function buildScrollAnim(anim) {
   const deviceKey = detectDeviceKey();
+  const editorMode = isEditorPreviewMode();
 
   if (!isTimelineEnabledFor(anim)) {
     const routedSteps = findRoutedStepTriggers(anim, deviceKey);
@@ -60,7 +61,7 @@ export function buildScrollAnim(anim) {
     );
 
     const built = [];
-    // Scroll-driven tweens can't be scrubbed by time, so — like timeline-mode scroll anims — they aren't registered with DevTools.
+    // Non-timeline mode builds standalone tweens with no timeline to register — same as the non-timeline pageload path. Only the timeline-mode branch below registers with DevTools.
     const stepCtx = gsap.context((self) => {
       units.forEach(({ cfg, step, trigger }) => {
         const scrollCfg = withScrollLogger(
@@ -117,13 +118,19 @@ export function buildScrollAnim(anim) {
         {
           animationId: anim.id,
           animationTitle: anim.title,
+          scrollDriven: true,
           ctx: self,
         },
       );
-      // ScrollTrigger anims are scroll-driven; DevTools cannot scrub them
-      // by time, so we don't register them with DevTools. They still render
-      // in GSAP, and are registered with the ownership system below.
-      if (tlBuilt) built.push(tlBuilt);
+      if (!tlBuilt) return;
+      built.push(tlBuilt);
+      // Register so DevTools can list the timeline, resolve its step tweens
+      // for the Inspector, and route edits to it. It is deliberately NOT
+      // composed into the DevTools master: master.add() reparents the timeline
+      // into a paused master, and ScrollTrigger could no longer advance it —
+      // scroll preview would freeze. vars.data.scrollDriven is the marker
+      // devtoolsMaster checks to skip it.
+      if (editorMode) registerTimeline(anim.id, tlBuilt);
     });
   });
 

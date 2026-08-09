@@ -215,7 +215,7 @@ function attachInteractionListeners(
         if (preventAnchorNav && el.tagName === "A") ev.preventDefault();
         // Claim BEFORE building: a first-ever fire's build can trigger a
         // destructive SplitText revert on a shared target (see splitText.js's
-        // getSplit), and the previous owner needs to be paused before that
+        // getSplitEntry), and the previous owner needs to be paused before that
         // happens, not after — otherwise it's still actively rendering right
         // up to (and through) the moment its spans get torn out from under it.
         const switched = claimTargets(animatedEls, animId);
