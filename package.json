@@ -80,14 +80,14 @@
   "license": "GPL-2.0-or-later",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Wealcoder/wcf-addons.git"
+    "url": "git+https://github.com/Wealcoder/motionkit.git"
   },
   "keywords": [
     "elementor",
     "gutenber"
   ],
   "bugs": {
-    "url": "https://github.com/Wealcoder/wcf-addons/issues"
+    "url": "https://github.com/Wealcoder/motionkit/issues"
   },
-  "homepage": "https://github.com/Wealcoder/wcf-addons#readme"
+  "homepage": "https://github.com/Wealcoder/motionkit#readme"
 }

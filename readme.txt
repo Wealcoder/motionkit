@@ -1,12 +1,13 @@
 === Motionkit – Visual Animation with GSAP ===
 Contributors: wealcoder
-Tags: animation, gsap, scroll animation, page transitions, visual editor
+Tags: animation, scroll animation, visual editor
 Requires at least: 6.7
 Tested up to: 7.0
 Requires PHP: 7.4
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Donate link: https://buy.stripe.com/3cs3dI7DQauI0py9AC
 
 Connects your site to the Motionkit visual editor so you can build GSAP-powered scroll, hover, and page-transition animations without writing code.
 
@@ -117,3 +118,13 @@ https://github.com/Wealcoder/motionkit
 == Support ==
 
 For support, feature requests, or bug reports, please visit https://motionkit.io or the plugin's support forum on WordPress.org.
+
+== Screenshots ==
+
+1. The visual editor interface
+2. Connecting your site to Motionkit
+
+== Upgrade Notice ==
+
+= 1.0.0 =
+* Initial release. No upgrade needed.

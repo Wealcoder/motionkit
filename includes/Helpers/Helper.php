@@ -164,18 +164,5 @@ final class Helper
     {
         return 'true' === strtolower((string) self::get_env('MOTIONKIT_DEV_LOG', ''));
     }
-
-    /**
-     * Log debug message
-     *
-     * @param string $message Debug message
-     * @param string $level Log level
-     * @return void
-     */
-    public static function log(string $message, string $level = 'info'): void
-    {
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log(sprintf('[MotionKit] %s: %s', strtoupper($level), $message));
-        }
-    }
+        
 }
