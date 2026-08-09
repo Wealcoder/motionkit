@@ -93,6 +93,10 @@ export function imageRevealAnim() {
       containerEl.setAttribute("data-motionkit-anim-id", id);
       itemEl.setAttribute("data-motionkit-anim-id", id);
 
+      // Preview-one mode: this pair stays tagged for the editor's inspector, but nothing
+      // is built for it — only the previewed animation may play.
+      if (anim.mkInert) return;
+
       gsap.set(containerEl, {
         autoAlpha: 0,
         overflow: "hidden",

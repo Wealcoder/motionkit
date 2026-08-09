@@ -105,6 +105,15 @@ export function cursorHoverMoveAnim() {
     // Live-update safety: drop the prior setup for this id before rebuild.
     teardown(id);
 
+    // Preview-one mode: tag the targets so the editor's inspector keeps its markers,
+    // then bail before any listener or tween is attached.
+    if (anim.mkInert) {
+      items.forEach((itemEl) =>
+        itemEl.setAttribute("data-motionkit-anim-id", id),
+      );
+      return;
+    }
+
     const teardowns = [];
     items.forEach((itemEl) => {
       teardowns.push(attachToItem({ id, itemEl, moveX, moveY, duration }));

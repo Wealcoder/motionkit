@@ -176,6 +176,16 @@ export function imageCinematicMaskAnim() {
     // Live-update safety: tear down any prior setup for this id first.
     teardown(id);
 
+    // Preview-one mode: tag each item and its container (both are tagged in the build loop
+    // below) so the editor's inspector keeps its markers, then bail without building.
+    if (anim.mkInert) {
+      items.forEach((itemEl) => {
+        itemEl.setAttribute("data-motionkit-anim-id", id);
+        itemEl.parentElement?.setAttribute("data-motionkit-anim-id", id);
+      });
+      return;
+    }
+
     const timelines = [];
     const elements = [];
 

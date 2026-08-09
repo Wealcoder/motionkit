@@ -108,9 +108,7 @@
     return { animations: animations };
   }
 
-  function resolveAndDispatch(all_animations, all_settings) {
-    console.log("resolveAndDispatch 2", { all_animations, all_settings });
-
+  function resolveAndDispatch(all_animations, all_settings, play_only) {
     var devices = Object.values(
       (all_settings && all_settings.deviceConfig) || {},
     );
@@ -122,9 +120,17 @@
     // pass to it (adds `duration`, `ease`, `parent`, etc.). Without this, those
     // GSAP-injected props leak back into motionkitData.all_animations.
     for (var i = 0; i < built.animations.length; i++) {
+      var detail = deepClone(built.animations[i]);
+      // Preview-one mode. The editor sends the WHOLE list even when it only wants a
+      // single animation played, so every target still gets resolved and tagged with
+      // data-motionkit-anim-id and the editor's animation inspector keeps its markers.
+      // Engines read mkInert and stop after tagging instead of building anything —
+      // sending a one-entry list instead (the old behaviour) made every other
+      // animation vanish from the DOM for as long as the preview lasted.
+      if (play_only) detail.mkInert = detail.id !== play_only;
       document.dispatchEvent(
         new CustomEvent("aae-animation-event", {
-          detail: deepClone(built.animations[i]),
+          detail: detail,
           bubbles: true,
           cancelable: true,
         }),
@@ -171,7 +177,7 @@
         cancelable: true,
       }),
     );
-    resolveAndDispatch(cfg.all_animations, cfg.all_settings);
+    resolveAndDispatch(cfg.all_animations, cfg.all_settings, cfg.play_only);
   }
 
   // Listen for messages from the editor
@@ -195,6 +201,9 @@
       pendingConfig = {
         all_animations: all_animations,
         all_settings: all_settings,
+        // Id of the one animation allowed to play; every other one builds inert.
+        // Absent on a normal push, which plays the whole list as before.
+        play_only: payload.play_only || null,
       };
       if (!rebuildScheduled) {
         rebuildScheduled = true;

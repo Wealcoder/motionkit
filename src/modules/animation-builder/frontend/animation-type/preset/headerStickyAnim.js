@@ -112,6 +112,13 @@ export function headerStickyAnim() {
 
     teardown(id);
 
+    // Preview-one mode: tag the real item so the editor's inspector keeps its marker,
+    // then bail before the sticky clone is created — only the previewed animation builds.
+    if (anim.mkInert) {
+      item.setAttribute("data-motionkit-anim-id", id);
+      return;
+    }
+
     const calculatedPosition = convertToPixels(startPosition);
     const endClass =
       endClassRaw && endClassRaw !== ""

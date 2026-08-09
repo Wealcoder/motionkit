@@ -76,6 +76,10 @@ export function imageStretchAnim() {
     containerEl.setAttribute("data-motionkit-anim-id", id);
     items.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
 
+    // Preview-one mode: targets stay tagged above so the editor's inspector keeps
+    // its markers, but nothing is built — only the previewed animation may play.
+    if (anim.mkInert) return;
+
     gsap.set(containerEl, {
       height: containerHeight,
       transition: "none",

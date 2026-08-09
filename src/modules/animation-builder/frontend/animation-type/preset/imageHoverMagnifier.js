@@ -292,6 +292,15 @@ export function imageHoverMagnifier() {
     // Live-update safety: tear down any prior setup for this id before rebuild.
     teardown(id);
 
+    // Preview-one mode: tag the targets so the editor's inspector keeps its markers,
+    // then bail before the lens DOM and its listeners are built.
+    if (anim.mkInert) {
+      items.forEach((target) =>
+        target.setAttribute("data-motionkit-anim-id", id),
+      );
+      return;
+    }
+
     const teardowns = [];
     items.forEach((target) =>
       teardowns.push(attachToItem({ id, target, cfg })),
