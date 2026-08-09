@@ -173,7 +173,7 @@ final class OAuthHandler
 
     $params = [
       'state'         => $state,
-      'site'          => home_url(),
+      'site'          => home_url('/'),
       'response_type' => 'code',
       'redirect_uri'  => $this->get_callback_url(),
     ];
@@ -272,7 +272,7 @@ final class OAuthHandler
       ],
       'body' => wp_json_encode([
         'code'         => $code,
-        'site'         => home_url(),
+        'site'         => home_url('/'),
         'redirect_uri' => $this->get_callback_url(),
         'grant_type'   => 'authorization_code',
       ]),

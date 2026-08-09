@@ -56,7 +56,7 @@ final class JwtTokenManager
           'Authorization' => 'Bearer ' . $access_token,
         ],
         'body'    => wp_json_encode([
-          'site'     => home_url('/'),
+          'site'     => home_url(),
           'page_url' => $site_url,
         ]),
         'timeout' => 15,

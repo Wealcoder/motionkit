@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 use MotionKit\Common\Assets\AssetLoader;
-use MotionKit\Common\AnimationBuilderPageType;
+use MotionKit\Common\MotionkitBuilderPageType;
 use MotionKit\Auth\JwtTokenManager;
 use MotionKit\Factory\ComponentFactory;
 use MotionKit\Support\EditorSessionTrait;
@@ -62,9 +62,9 @@ final class Frontend
   /**
    * Page type resolver
    *
-   * @var AnimationBuilderPageType
+   * @var MotionkitBuilderPageType
    */
-  private AnimationBuilderPageType $page_type;
+  private MotionkitBuilderPageType $page_type;
 
   /**
    * ScrollSmoother manager
@@ -89,7 +89,7 @@ final class Frontend
   /**
    * Per-request memo for `motionkit_global_settings`.
    *
-   * Read by both `register_gsap_libs` (CDN URL map) and `enqueue_page_scripts`
+   * Read by both `register_required_script` (CDN URL map) and `enqueue_page_scripts`
    * (settings merge). Sentinel `false` = not yet read.
    *
    * @var array|object|false
@@ -106,7 +106,7 @@ final class Frontend
   /**
    * GSAP handles that actually registered this request.
    *
-   * Populated by register_gsap_libs() — a handle lands here only when its
+   * Populated by register_required_script() — a handle lands here only when its
    * gsapPlugin toggle is on AND it has a valid CDN URL (the always-on gsap /
    * ScrollTrigger / ScrollSmoother baseline is included too). enqueue_page_scripts()
    * reads this so it never declares a script dependency on an unregistered
@@ -184,7 +184,7 @@ final class Frontend
   public function init(): void
   {
     $this->asset_loader = ComponentFactory::create_asset_loader();
-    $this->page_type = AnimationBuilderPageType::instance();
+    $this->page_type = MotionkitBuilderPageType::instance();
     $this->smoother = new ScrollSmoother();
 
     $this->init_hooks();
@@ -201,7 +201,7 @@ final class Frontend
     add_action('send_headers', [$this, 'allow_editor_iframe']);
 
     // Register GSAP CDN scripts via core deps filter
-    add_filter('motionkit_core_lib_deps', [$this, 'register_gsap_libs']);
+    add_filter('motionkit_core_lib_deps', [$this, 'register_required_script']);
 
     // Frontend script enqueue — only on actual page loads (not admin/AJAX)
     if (!is_admin()) {
@@ -239,7 +239,7 @@ final class Frontend
    * @param array $deps Existing deps from filter
    * @return array Merged dependency handles
    */
-  public function register_gsap_libs(array $deps): array
+  public function register_required_script(array $deps): array
   {
     // Reset per-request state — the filter can run more than once per request.
     $this->registered_gsap_handles = [];
@@ -502,7 +502,7 @@ final class Frontend
       return;
     }
 
-    // Preload from wherever register_gsap_libs() actually registered the
+    // Preload from wherever register_required_script() actually registered the
     // 'gsap' handle from (motionkit_global_settings.gsapPlugin.cdns.gsap) —
     // preloading a different URL than the one the <script> tag requests
     // defeats the preload (browser fetches twice) or preloads a resource
@@ -655,17 +655,17 @@ final class Frontend
     // Page-type descriptor (store_type, id, option) — used for both reads + writes.
     $page_type_config = $this->page_type->getCurrentPageType();
 
-    // Page settings live under mkit_pg_settings_<type> (separate key from animations).
+    // Page settings live under motionkit_pg_settings_<type> (separate key from animations).
     $settings_config = $this->settings_config($page_type_config);
     $page_configs = $this->page_type->getConfig($settings_config);
 
     // Global settings + global animations (wp_options).
-    // Read through memos so we don't re-fetch options that register_gsap_libs
+    // Read through memos so we don't re-fetch options that register_required_script
     // already pulled earlier in this same request.
     $global_settings  = $this->get_global_settings();
     $global_animation = $this->get_global_animations();
 
-    // Page-level animation list — original key (mkit_pg_animation_<type>).
+    // Page-level animation list — original key (motionkit_pg_animation_<type>).
     $page_animation = $this->page_type->getConfig($page_type_config);
 
     // Merge global and page animation lists — not override
@@ -773,7 +773,7 @@ final class Frontend
 
     // Global settings + global animations (saved by editor to wp_options).
     // Read through memos so the same option isn't re-fetched on subsequent
-    // hooks (register_gsap_libs already pulled global_settings earlier in
+    // hooks (register_required_script already pulled global_settings earlier in
     // this same request).
 
 
@@ -787,7 +787,7 @@ final class Frontend
       is_array($page_animation) ? $page_animation : []
     );
 
-    // Page settings live under mkit_pg_settings_<type> — separate from animations.
+    // Page settings live under motionkit_pg_settings_<type> — separate from animations.
     $settings_config = $this->settings_config($page_type_config);
 
     $page_settings = $this->page_type->getConfig($settings_config);
@@ -855,7 +855,7 @@ final class Frontend
         $animation_plugins_by_handle[self::GSAP_SCHEMA_TO_HANDLE[$schema_key] ?? $schema_key] = $schema_key;
       }
 
-      // Only depend on plugin handles that register_gsap_libs actually
+      // Only depend on plugin handles that register_required_script actually
       // registered. A plugin the admin disabled (or left without a valid CDN
       // URL) has no handle — listing it here makes WP_Scripts warn about an
       // "unregistered dependency" and skip loading motionkit-frontend.
@@ -1298,9 +1298,9 @@ final class Frontend
   /**
    * Get page type resolver
    *
-   * @return AnimationBuilderPageType Page type instance
+   * @return MotionkitBuilderPageType Page type instance
    */
-  public function get_page_type(): AnimationBuilderPageType
+  public function get_page_type(): MotionkitBuilderPageType
   {
     return $this->page_type;
   }

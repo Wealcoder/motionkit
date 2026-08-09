@@ -94,8 +94,8 @@ trait EditorSessionTrait
 
   /**
    * Derive the page-settings config from the page-animation config by
-   * swapping the option key prefix. Animations use mkit_pg_animation_*,
-   * settings use mkit_pg_settings_* — same store_type and id.
+   * swapping the option key prefix. Animations use motionkit_pg_animation_*,
+   * settings use motionkit_pg_settings_* — same store_type and id.
    *
    * @param array $animation_config
    * @return array
@@ -105,8 +105,8 @@ trait EditorSessionTrait
     $cfg = $animation_config;
     if (!empty($cfg['option']) && is_string($cfg['option'])) {
       $cfg['option'] = preg_replace(
-        '/^mkit_pg_animation_/',
-        'mkit_pg_settings_',
+        '/^motionkit_pg_animation_/',
+        'motionkit_pg_settings_',
         $cfg['option']
       );
     }

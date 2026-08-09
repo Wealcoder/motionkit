@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
-use MotionKit\Common\AnimationBuilderPageType;
+use MotionKit\Common\MotionkitBuilderPageType;
 use MotionKit\Auth\JwtTokenManager;
 use MotionKit\Support\EditorSessionTrait;
 
@@ -35,9 +35,9 @@ final class RestApi
   /**
    * Page type resolver
    *
-   * @var AnimationBuilderPageType
+   * @var MotionkitBuilderPageType
    */
-  private AnimationBuilderPageType $page_type;
+  private MotionkitBuilderPageType $page_type;
 
   /**
    * Initialize REST API
@@ -46,7 +46,7 @@ final class RestApi
    */
   public function init(): void
   {
-    $this->page_type = AnimationBuilderPageType::instance();
+    $this->page_type = MotionkitBuilderPageType::instance();
     add_action('rest_api_init', [$this, 'register_routes']);
     // CORS simple requests skip the OPTIONS preflight, but the response
     // still needs Access-Control-Allow-Origin or the browser blocks JS
@@ -310,7 +310,7 @@ final class RestApi
         return new \WP_REST_Response(['success' => true, 'data' => ['msg' => 'global_animation_saved']], 200);
 
       case 'save_current_page_animation':
-        // Animations live under the original key (default: mkit_pg_animation_<type>)
+        // Animations live under the original key (default: motionkit_pg_animation_<type>)
         $page_type_config = $payload['pageTypeConfigs'] ?? [];
         if (!is_array($page_type_config) || !$this->is_valid_page_type_config($page_type_config)) {
           return new \WP_REST_Response(['success' => false, 'error' => 'invalid_page_type_config'], 400);

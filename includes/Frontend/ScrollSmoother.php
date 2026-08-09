@@ -117,15 +117,15 @@ final class ScrollSmoother
     return false;
   }
 
-  /** The current page's scrollSmother override (mkit_pg_settings_<type>), or null. */
+  /** The current page's scrollSmother override (motionkit_pg_settings_<type>), or null. */
   private static function current_page_scroll_smoother()
   {
-    if (!class_exists('\MotionKit\Common\AnimationBuilderPageType')) {
+    if (!class_exists('\MotionKit\Common\MotionkitBuilderPageType')) {
       return null;
     }
 
     try {
-      $pt  = \MotionKit\Common\AnimationBuilderPageType::instance();
+      $pt  = \MotionKit\Common\MotionkitBuilderPageType::instance();
       $cfg = $pt->getCurrentPageType();
 
       if (!is_array($cfg) || empty($cfg['option'])) {
@@ -133,8 +133,8 @@ final class ScrollSmoother
       }
 
       // getCurrentPageType() returns the ANIMATION key; settings live under the
-      // mkit_pg_settings_ prefix (same swap settings_config() does).
-      $cfg['option'] = str_replace('mkit_pg_animation_', 'mkit_pg_settings_', $cfg['option']);
+      // motionkit_pg_settings_ prefix (same swap settings_config() does).
+      $cfg['option'] = str_replace('motionkit_pg_animation_', 'motionkit_pg_settings_', $cfg['option']);
       $settings      = $pt->getConfig($cfg);
     } catch (\Throwable $e) {
       return null;

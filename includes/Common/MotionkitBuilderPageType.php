@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
   exit; // Exit if accessed directly
 }
 
-class AnimationBuilderPageType
+class MotionkitBuilderPageType
 {
   private static $instance = null;
 
@@ -15,7 +15,7 @@ class AnimationBuilderPageType
   /**
    * Option name prefix for storing configs.
    */
-  public $option_name = 'mkit_pg_animation_';
+  public $option_name = 'motionkit_pg_animation_';
 
   /**
    * Instance
