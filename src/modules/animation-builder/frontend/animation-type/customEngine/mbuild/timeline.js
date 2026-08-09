@@ -17,6 +17,9 @@ export function buildTimeline(tlCfg, extraConfig, animContext = {}) {
       animationTitle: animContext.animationTitle || null,
       timelineId: tlCfg?.id || null,
       timelineTitle: tlCfg?.title || null,
+      // ScrollTrigger owns this timeline's playhead — DevTools must not
+      // compose it into its master (that would reparent it away from ST).
+      scrollDriven: !!animContext.scrollDriven,
     },
   };
   const tl = gsap.timeline(tlVars);
