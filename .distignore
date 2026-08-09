@@ -42,3 +42,4 @@ WPORG-SUBMISSION.md
 *.map
 Thumbs.db
 .DS_Store
+mcp-*.png
