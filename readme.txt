@@ -104,6 +104,11 @@ By connecting your site to Motionkit, you agree to Motionkit's Terms of Service 
 * Motionkit Terms of Service: https://motionkit.io/terms-condition/
 * Motionkit Privacy Policy: https://motionkit.io/privacy-policy/
 
+== Source Code ==
+
+The source code and development repository for this plugin is available on GitHub:
+https://github.com/Wealcoder/motionkit
+
 == Changelog ==
 
 = 1.0.0 =
