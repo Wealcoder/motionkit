@@ -195,7 +195,7 @@ final class Plugin
         // trace that {$placeholders} expands to valid %s placeholders before
         // prepare() consumes them via the variadic ...$hot_options args below.
         $placeholders = implode(',', array_fill(0, count($hot_options), '%s'));
-        // Single UPDATE rather than per-option get/delete/add cycles.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $wpdb->query(
             $wpdb->prepare(
                 "UPDATE {$wpdb->options} SET autoload = 'yes'

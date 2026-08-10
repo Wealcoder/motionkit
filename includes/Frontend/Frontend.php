@@ -203,6 +203,14 @@ final class Frontend
     // Register GSAP CDN scripts via core deps filter
     add_filter('motionkit_core_lib_deps', [$this, 'register_required_script']);
 
+    // Stand-down signal for another plugin's page smoother. A page has exactly
+    // one ScrollSmoother, and MotionKit takes priority whenever it owns one
+    // (see maybe_init_scroll_smoother()), so BricksFly's predicate is filtered
+    // to false rather than letting two instances fight over the page. AAE Pro
+    // resolves the same conflict by pulling ScrollSmoother::should_run()
+    // itself; BricksFly exposes a filter, so we push the answer there instead.
+    add_filter('bricksfly_smooth_scroller_is_active', [$this, 'veto_third_party_smoother']);
+
     // Frontend script enqueue — only on actual page loads (not admin/AJAX)
     if (!is_admin()) {
       add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_scripts'], 60);
@@ -484,6 +492,27 @@ final class Frontend
     }
 
     add_action('wp_footer', [$this->smoother, 'run_scroll_smoother']);
+  }
+
+  /**
+   * Switch off BricksFly's page smoother when MotionKit owns it.
+   *
+   * Filter callback for `bricksfly_smooth_scroller_is_active` (BricksFly free,
+   * includes/helper.php) — returning false there suppresses both its
+   * #smooth-wrapper / #smooth-content markup and the ScrollSmoother its
+   * frontend script would otherwise create.
+   *
+   * Evaluated lazily, at filter time rather than at hook registration:
+   * should_run() reads the per-page scrollSmother override, which needs the
+   * resolved query. When MotionKit is NOT driving the smoother this returns
+   * BricksFly's own answer untouched, so its setting keeps working normally.
+   *
+   * @param bool $active BricksFly's own resolved state.
+   * @return bool
+   */
+  public function veto_third_party_smoother($active): bool
+  {
+    return ScrollSmoother::should_run() ? false : (bool) $active;
   }
 
   /**
