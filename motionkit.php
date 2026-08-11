@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Plugin Name: Motionkit – Visual Animation with GSAP
+ * Plugin Name: Motionkit – Visual GSAP Animation for WordPress
  * Plugin URI: https://motionkit.io
  * Description: Connects your site to the Motionkit visual editor so you can build GSAP-powered scroll, hover, and page-transition animations without writing code.
  * Version: 1.0.0
@@ -20,26 +20,26 @@
  */
 
 // Prevent direct access
-if (!defined('ABSPATH')) {
-  exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
 // Define plugin constants
-define('MOTIONKIT_VERSION', '1.0.0');
-define('MOTIONKIT_PLUGIN_FILE', __FILE__);
-define('MOTIONKIT_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('MOTIONKIT_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('MOTIONKIT_PLUGIN_BASENAME', plugin_basename(__FILE__));
+define( 'MOTIONKIT_VERSION', '1.0.0' );
+define( 'MOTIONKIT_PLUGIN_FILE', __FILE__ );
+define( 'MOTIONKIT_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'MOTIONKIT_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'MOTIONKIT_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 // Check if plugin is already loaded
-if (defined('MOTIONKIT_LOADED')) {
-  return;
+if ( defined( 'MOTIONKIT_LOADED' ) ) {
+	return;
 }
 
-define('MOTIONKIT_LOADED', true);
+define( 'MOTIONKIT_LOADED', true );
 
 // Load the main plugin class
 require_once MOTIONKIT_PLUGIN_DIR . 'includes/Plugin.php';
 
 // Initialize the plugin
-MotionKit\Plugin::get_instance(MOTIONKIT_PLUGIN_FILE);
+MotionKit\Plugin::get_instance( MOTIONKIT_PLUGIN_FILE );

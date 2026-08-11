@@ -1,4 +1,4 @@
-=== Motionkit – Visual Animation with GSAP ===
+=== Motionkit – Visual GSAP Animation for WordPress ===
 Contributors: wealcoder
 Tags: animation, scroll animation, visual editor
 Requires at least: 6.7
