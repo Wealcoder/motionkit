@@ -26,6 +26,11 @@ export function handleCustomAnimation(anim) {
   rememberAnim(anim);
   tagAllTargets(anim);
 
+  // Preview-one mode (frontend.js sets mkInert on every animation except the one being
+  // previewed). Targets are tagged above so the editor's inspector still finds them —
+  // we just don't build a handle, so nothing plays, scrubs, or listens.
+  if (anim.mkInert) return;
+
   const handle = buildHandle(anim);
   // Nothing was built means nothing will ever tear this down, so undo what the pre-build steps left behind.
   if (!handle) {

@@ -537,6 +537,11 @@ export function popupMediaAnim() {
     // Live-update safety: tear down any prior setup for this id.
     teardown(id);
 
+    // Preview-one mode: only the previewed animation may open a popup. Selector-driven
+    // triggers still tag their elements below so the inspector keeps its marker; page_load
+    // has no element to tag, so it bails right here.
+    if (anim.mkInert && triggerType === "page_load") return;
+
     const teardowns = [];
     let scrollTrigger = null;
     const openFn = () =>
@@ -570,6 +575,10 @@ export function popupMediaAnim() {
 
       elements.forEach((el) => {
         el.setAttribute("data-motionkit-anim-id", id);
+
+        // Tagged for the inspector, but no trigger listener while another animation
+        // is the one being previewed.
+        if (anim.mkInert) return;
 
         switch (triggerType) {
           case "click":

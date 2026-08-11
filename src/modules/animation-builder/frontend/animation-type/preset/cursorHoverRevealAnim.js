@@ -200,6 +200,18 @@ export function cursorHoverRevealAnim() {
     // Live-update safety: tear down any prior setup for this id before rebuild.
     teardown(id);
 
+    // Preview-one mode: tag the targets (mirroring attachToItem's void-element hop) so the
+    // editor's inspector keeps its markers, then bail before any cursor node is injected.
+    if (anim.mkInert) {
+      items.forEach((originalEl) => {
+        const el = VOID_ELEMENTS.has(originalEl.tagName)
+          ? originalEl.parentElement
+          : originalEl;
+        el?.setAttribute("data-motionkit-anim-id", id);
+      });
+      return;
+    }
+
     const teardowns = [];
     items.forEach((originalEl) => {
       const isVoid = VOID_ELEMENTS.has(originalEl.tagName);

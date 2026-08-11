@@ -73,6 +73,13 @@ export function textSpinAnim() {
 
     teardown(id);
 
+    // Preview-one mode: tag the original targets so the editor's inspector keeps its markers,
+    // then bail before the wrapper/clone DOM is built — only the previewed animation builds.
+    if (anim.mkInert) {
+      elements.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
+      return;
+    }
+
     const timelines = [];
     const splits = [];
     const wrappers = [];

@@ -6,7 +6,6 @@ const END_SCALE = 1; // image settles back to full size
 const IMAGE_SHIFT = 12; // % parallax drift of the image inside the frame
 const FRAME_TRAVEL = 72; // px the frame slides in from
 const TILT = 8; // deg 3D tilt as the frame settles
-const SHADE_OPACITY = 0.22; // resting opacity of the cinematic shade
 
 // Directional clip-path masks. Start states hide the frame from one edge (or
 // pinched-in for centerOut); the timeline reveals to inset(0).
@@ -37,11 +36,15 @@ function directionOffset(direction, amount, unit) {
   return offset;
 }
 
-// Build the cinematic overlays (shade + sweep) as children of the frame, only
-// for the layers that are enabled. Styles are inline so no stylesheet needs to
-// ship with the preset. Returns nulls when nothing is needed.
-function buildOverlays(containerEl, { withShade, withSweep }) {
-  if (!withShade && !withSweep) return { wrap: null, shade: null, sweep: null };
+// Build the light-sweep overlay as a child of the frame. Styles are inline so
+// no stylesheet needs to ship with the preset. Returns nulls when the sweep is
+// disabled, so nothing is injected into the DOM at all.
+//
+// Note: there is deliberately no full-bleed shade/tint layer here. An overlay
+// that rests at a non-zero opacity sits over the image forever after the
+// reveal; the sweep is safe because it animates back to opacity 0.
+function buildOverlays(containerEl, { withSweep }) {
+  if (!withSweep) return { wrap: null, sweep: null };
 
   const wrap = document.createElement("div");
   wrap.setAttribute("data-mk-cm-overlay", "");
@@ -54,49 +57,42 @@ function buildOverlays(containerEl, { withShade, withSweep }) {
     zIndex: "2",
   });
 
-  let shade = null;
-  if (withShade) {
-    shade = document.createElement("div");
-    Object.assign(shade.style, {
-      position: "absolute",
-      inset: "0",
-      background:
-        "linear-gradient(135deg, rgba(255,255,255,0.22), transparent 34%), linear-gradient(to top, rgba(0,0,0,0.45), transparent 42%)",
-      mixBlendMode: "overlay",
-      opacity: "0",
-    });
-    wrap.appendChild(shade);
-  }
-
-  let sweep = null;
-  if (withSweep) {
-    sweep = document.createElement("div");
-    Object.assign(sweep.style, {
-      position: "absolute",
-      top: "0",
-      bottom: "0",
-      width: "42%",
-      left: "-58%",
-      background:
-        "linear-gradient(90deg, transparent, rgba(255,255,255,0.64), transparent)",
-      mixBlendMode: "overlay",
-      transform: "skewX(-18deg)",
-      opacity: "0",
-    });
-    wrap.appendChild(sweep);
-  }
+  const sweep = document.createElement("div");
+  Object.assign(sweep.style, {
+    position: "absolute",
+    top: "0",
+    bottom: "0",
+    width: "42%",
+    left: "-58%",
+    background:
+      "linear-gradient(90deg, transparent, rgba(255,255,255,0.64), transparent)",
+    mixBlendMode: "overlay",
+    transform: "skewX(-18deg)",
+    opacity: "0",
+  });
+  wrap.appendChild(sweep);
 
   containerEl.appendChild(wrap);
-  return { wrap, shade, sweep };
+  return { wrap, sweep };
 }
 
 export function imageCinematicMaskAnim() {
-  // id -> { timelines, elements: [{ containerEl, itemEl, overlay, restorePosition }] }
+  // id -> { timelines, cleanups, elements: [{ containerEl, itemEl, overlay, restorePosition }] }
   const instances = new Map();
 
   function teardown(id) {
     const inst = instances.get(id);
     if (!inst) return;
+
+    // Detach click/hover listeners before reverting, so a late event can't
+    // restart a timeline we're about to kill.
+    inst.cleanups.forEach((off) => {
+      try {
+        off();
+      } catch (err) {
+        console.warn("[imageCinematicMask] listener teardown error:", err);
+      }
+    });
 
     inst.timelines.forEach((tl) => {
       try {
@@ -109,7 +105,7 @@ export function imageCinematicMaskAnim() {
 
     inst.elements.forEach(({ containerEl, itemEl, overlay, restorePosition }) => {
       try {
-        // Remove the injected shade/sweep layer.
+        // Remove the injected sweep layer.
         if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
 
         // clip-path / transforms / filter are applied via bare gsap.set() at
@@ -159,7 +155,6 @@ export function imageCinematicMaskAnim() {
       vars: {
         direction = "bottomToTop",
         startScale = 1.28,
-        shade = true,
         sweep = true,
         delay = 0,
         duration = 1.25,
@@ -176,8 +171,23 @@ export function imageCinematicMaskAnim() {
     // Live-update safety: tear down any prior setup for this id first.
     teardown(id);
 
+    // Preview-one mode: tag each item and its container (both are tagged in the build loop
+    // below) so the editor's inspector keeps its markers, then bail without building.
+    if (anim.mkInert) {
+      items.forEach((itemEl) => {
+        itemEl.setAttribute("data-motionkit-anim-id", id);
+        itemEl.parentElement?.setAttribute("data-motionkit-anim-id", id);
+      });
+      return;
+    }
+
     const timelines = [];
     const elements = [];
+    const cleanups = [];
+
+    // click/hover are interaction-driven: the timeline is built paused and
+    // played by listeners on the trigger element(s).
+    const isInteraction = triggerType === "click" || triggerType === "hover";
 
     items.forEach((itemEl) => {
       const containerEl = itemEl.parentElement;
@@ -188,39 +198,38 @@ export function imageCinematicMaskAnim() {
       containerEl.setAttribute("data-motionkit-anim-id", id);
       itemEl.setAttribute("data-motionkit-anim-id", id);
 
-      const withShade = shade === true || shade === "true";
       const withSweep = sweep === true || sweep === "true";
 
-      // Absolutely-positioned overlays need a positioned frame.
+      // The absolutely-positioned sweep overlay needs a positioned frame.
       let restorePosition = false;
-      if (
-        (withShade || withSweep) &&
-        getComputedStyle(containerEl).position === "static"
-      ) {
+      if (withSweep && getComputedStyle(containerEl).position === "static") {
         containerEl.style.position = "relative";
         restorePosition = true;
       }
 
-      const {
-        wrap: overlay,
-        shade: shadeEl,
-        sweep: sweepEl,
-      } = buildOverlays(containerEl, { withShade, withSweep });
+      const { wrap: overlay, sweep: sweepEl } = buildOverlays(containerEl, {
+        withSweep,
+      });
 
       const frameOffset = directionOffset(direction, FRAME_TRAVEL, "pixel");
       const imageOffset = directionOffset(direction, IMAGE_SHIFT);
 
-      const tlConfig =
-        triggerType === "page_load"
-          ? { delay }
-          : {
-              delay,
-              scrollTrigger: {
-                trigger: resolvedTriggerClass || containerEl,
-                start: resolvedStart,
-                scrub: triggerType === "play_with_scroll",
-              },
-            };
+      let tlConfig;
+      if (triggerType === "page_load") {
+        tlConfig = { delay };
+      } else if (isInteraction) {
+        // Held at time 0 (the masked start state) until the user interacts.
+        tlConfig = { delay, paused: true };
+      } else {
+        tlConfig = {
+          delay,
+          scrollTrigger: {
+            trigger: resolvedTriggerClass || containerEl,
+            start: resolvedStart,
+            scrub: triggerType === "play_with_scroll",
+          },
+        };
+      }
 
       const tl = gsap.timeline(tlConfig);
 
@@ -264,15 +273,6 @@ export function imageCinematicMaskAnim() {
           0,
         );
 
-      // Cinematic shade: flash up, then settle to the resting opacity.
-      if (shadeEl) {
-        tl.to(shadeEl, { autoAlpha: 0.9, duration: duration * 0.32 }, 0.12).to(
-          shadeEl,
-          { autoAlpha: SHADE_OPACITY, duration: duration * 0.55 },
-          duration * 0.56,
-        );
-      }
-
       // Light sweep across the frame.
       if (sweepEl) {
         const at = duration * 0.28;
@@ -293,11 +293,56 @@ export function imageCinematicMaskAnim() {
         );
       }
 
+      // Interaction triggers: resolve the element(s) that receive the
+      // listeners, falling back to the frame itself when no trigger selector
+      // is configured (matches the scrollTrigger fallback above).
+      if (isInteraction) {
+        let triggerEls = [containerEl];
+        if (resolvedTriggerClass) {
+          try {
+            const found = document.querySelectorAll(resolvedTriggerClass);
+            if (found.length) triggerEls = [...found];
+          } catch (err) {
+            console.warn(
+              `[imageCinematicMask] invalid trigger selector "${resolvedTriggerClass}":`,
+              err.message,
+            );
+          }
+        }
+
+        triggerEls.forEach((triggerEl) => {
+          if (triggerType === "click") {
+            // Replay from the start on every click.
+            const onClick = () => {
+              tl.restart(true);
+            };
+            triggerEl.addEventListener("click", onClick);
+            cleanups.push(() =>
+              triggerEl.removeEventListener("click", onClick),
+            );
+          } else {
+            // Hover: reveal on enter, re-mask on leave so it can play again.
+            const onEnter = () => {
+              tl.play();
+            };
+            const onLeave = () => {
+              tl.reverse();
+            };
+            triggerEl.addEventListener("mouseenter", onEnter);
+            triggerEl.addEventListener("mouseleave", onLeave);
+            cleanups.push(() => {
+              triggerEl.removeEventListener("mouseenter", onEnter);
+              triggerEl.removeEventListener("mouseleave", onLeave);
+            });
+          }
+        });
+      }
+
       timelines.push(tl);
       elements.push({ containerEl, itemEl, overlay, restorePosition });
     });
 
-    instances.set(id, { timelines, elements });
+    instances.set(id, { timelines, cleanups, elements });
   }
 
   document.addEventListener("aae-animation-event", handler);

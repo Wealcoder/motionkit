@@ -79,6 +79,13 @@ export function textSplitAnim() {
 
     teardown(id);
 
+    // Preview-one mode: tag the targets so the editor's inspector keeps its markers, then
+    // bail before SplitText rewrites the DOM — only the previewed animation may build.
+    if (anim.mkInert) {
+      items.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
+      return;
+    }
+
     const tweens = [];
     const splits = [];
     const cleanups = [];

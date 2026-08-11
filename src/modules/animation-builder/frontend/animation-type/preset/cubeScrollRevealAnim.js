@@ -88,6 +88,12 @@ export function cubeScrollRevealAnim() {
     teardown(id);
 
     container.setAttribute("data-motionkit-anim-id", id);
+
+    // Preview-one mode: the container stays tagged above so the editor's inspector keeps
+    // its marker, but we bail before the DOM rewrite below — only the previewed animation
+    // may build.
+    if (anim.mkInert) return;
+
     container.classList.add("motionkit-skip-selector-full");
     container.innerHTML = "";
 

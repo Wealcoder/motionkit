@@ -164,6 +164,16 @@ export function imageHoverRevealAnim() {
 
     teardown(id);
 
+    // Preview-one mode: tag the item and its parent (both are tagged by attachToItem) so the
+    // editor's inspector keeps its markers, then bail before the cursor image is injected.
+    if (anim.mkInert) {
+      items.forEach((itemEl) => {
+        itemEl.setAttribute("data-motionkit-anim-id", id);
+        itemEl.parentElement?.setAttribute("data-motionkit-anim-id", id);
+      });
+      return;
+    }
+
     const teardowns = [];
     items.forEach((itemEl) => {
       teardowns.push(

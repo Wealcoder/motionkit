@@ -273,6 +273,10 @@ export function containerFadeAnimation() {
       .querySelectorAll(itemClass)
       .forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
 
+    // Preview-one mode: targets stay tagged above so the editor's inspector keeps its
+    // markers, but nothing is built — only the previewed animation may play.
+    if (anim.mkInert) return;
+
     const { x, y } = calculateFadeAxis(fadeDirection, fadeOffset);
 
     const config = {

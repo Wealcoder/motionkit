@@ -110,6 +110,10 @@ export function scrollParallax() {
       targetEl.setAttribute("data-motionkit-anim-id", id);
       elements.push(targetEl);
 
+      // Preview-one mode: this item stays tagged for the editor's inspector, but no
+      // ScrollSmoother effect is registered — only the previewed animation may play.
+      if (anim.mkInert) return;
+
       // ── Read device values ──
       const bucket = devices[device] ?? devices.desktop ?? {};
       const speed = Number(bucket.dataSpeed ?? 1);

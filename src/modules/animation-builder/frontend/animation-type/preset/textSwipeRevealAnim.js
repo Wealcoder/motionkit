@@ -87,6 +87,13 @@ export function textSwipeRevealAnim() {
 
     teardown(id); // live-update safety
 
+    // Preview-one mode: tag the targets so the editor's inspector keeps its markers, then
+    // bail before SplitText runs — splitting rewrites the DOM and would be wasted work.
+    if (anim.mkInert) {
+      items.forEach((el) => el.setAttribute("data-motionkit-anim-id", id));
+      return;
+    }
+
     const origin = sweepOrigin(direction);
 
     // Resolve the units to cover (one bar each). Split into lines/words, or use
