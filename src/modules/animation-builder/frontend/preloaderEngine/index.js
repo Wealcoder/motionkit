@@ -9,8 +9,6 @@ import {
   uncoverPage,
 } from "./dom.js";
 import { trackProgress } from "./progress.js";
-import { buildPreset } from "./presets/index.js";
-import { buildCustom, playIntro } from "./custom.js";
 import { playReveal } from "./reveal.js";
 
 // Preloader engine — orchestration.
@@ -25,6 +23,10 @@ import { playReveal } from "./reveal.js";
 //   3. the absolute watchdog armed here
 //
 // Any one of them is enough to uncover the page.
+//
+// This module imports NO preset. The visual builder is injected by the entry point in
+// frontend/preloader/, one entry per preset, so a bundle carries the core plus exactly the
+// preset the site selected — see presets/shared.js for the builder contract.
 
 let started = false;
 
@@ -41,7 +43,28 @@ function dropCover() {
   }
 }
 
-export function runPreloader() {
+/**
+ * Build the visual, absorbing anything it throws.
+ *
+ * A preset that dies must leave a plain cover that still reveals on schedule, never a
+ * stalled page. This also covers the bundle/config mismatch case: if a cached page loads
+ * the bundle for one preset while the stored settings now name another, `build` simply
+ * renders nothing recognisable and the cover behaves like a bare overlay.
+ */
+function safeBuild(build, ctx, cfg) {
+  if (typeof build !== "function") return {};
+  try {
+    return build(ctx, cfg.preset || {}) || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+/**
+ * @param {(ctx: object, cfg: object) => object} build the selected preset's builder,
+ *        supplied by the entry point. Omitted or throwing means "cover with no visual".
+ */
+export function runPreloader(build) {
   if (started) return;
   started = true;
 
@@ -90,12 +113,7 @@ export function runPreloader() {
     const chrome = buildChrome(root, cfg);
     const ctx = { visual: chrome.visual, content: chrome.content, root };
 
-    const visual =
-      cfg.mode === "custom"
-        ? buildCustom(ctx, cfg.preset)
-        : buildPreset(cfg.presetKey, ctx, cfg.preset);
-
-    if (cfg.mode === "custom") playIntro(chrome.content, cfg.preset);
+    const visual = safeBuild(build, ctx, cfg);
 
     const startReveal = () => {
       const run = visual.revealOverride

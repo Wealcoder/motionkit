@@ -201,6 +201,45 @@ final class Frontend
    * @param array $preloader
    * @return array
    */
+  /**
+   * Plugin-relative path of the engine bundle for the selected preloader, or null.
+   *
+   * There is one bundle per preset — each carrying the engine core plus that single preset
+   * — so a visitor downloads only what the site actually uses. This resolves which one.
+   *
+   * The key comes from a stored option, so it is whitelisted by character class before it
+   * is ever concatenated into a path, and the resulting file is verified to exist. A key
+   * naming a preset this build does not ship falls back to the spinner rather than
+   * enqueueing a 404.
+   */
+  private function preloader_bundle(array $preloader): ?string
+  {
+    $dir = 'assets/build/modules/animation-builder/frontend/preloader/';
+
+    $is_custom = isset($preloader['tabs']) && $preloader['tabs'] === 'custom';
+    if ($is_custom) {
+      $key = 'custom';
+    } else {
+      $base = $this->preloader_base($preloader);
+      $key = isset($base['preloaderType']) && is_string($base['preloaderType'])
+        ? $base['preloaderType']
+        : 'spinner';
+    }
+
+    if (!preg_match('/^[A-Za-z0-9_-]{1,40}$/', $key)) {
+      $key = 'spinner';
+    }
+
+    if (file_exists(MOTIONKIT_PLUGIN_DIR . $dir . $key . '.js')) {
+      return $dir . $key . '.js';
+    }
+    if (file_exists(MOTIONKIT_PLUGIN_DIR . $dir . 'spinner.js')) {
+      return $dir . 'spinner.js';
+    }
+
+    return null;
+  }
+
   private function preloader_base(array $preloader): array
   {
     $mode = (isset($preloader['tabs']) && $preloader['tabs'] === 'custom')
@@ -238,6 +277,12 @@ final class Frontend
 
     $preloader = $this->get_preloader();
     if ($preloader === null) {
+      return;
+    }
+
+    // No engine bundle means nothing would take the cover down except the CSS failsafe,
+    // which would hide the site for the whole maxDuration. Better to skip covering at all.
+    if ($this->preloader_bundle($preloader) === null) {
       return;
     }
 
@@ -317,9 +362,14 @@ final class Frontend
       return;
     }
 
+    $bundle = $this->preloader_bundle($preloader);
+    if ($bundle === null) {
+      return;
+    }
+
     wp_enqueue_script(
       'motionkit-preloader',
-      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/preloader.js',
+      MOTIONKIT_PLUGIN_URL . $bundle,
       array(),
       MOTIONKIT_VERSION,
       false
