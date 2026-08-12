@@ -87,6 +87,16 @@ final class Frontend
   private $page_transition_cache = false;
 
   /**
+   * Per-request memo for the resolved preloader config.
+   *
+   * `null` = read, disabled or absent. `array` = read, active. Sentinel `false` = not
+   * yet read. Two call sites per page load (head cover, script enqueue).
+   *
+   * @var array|null|false
+   */
+  private $preloader_cache = false;
+
+  /**
    * Per-request memo for `motionkit_global_settings`.
    *
    * Read by both `register_required_script` (CDN URL map) and `enqueue_page_scripts`
@@ -148,6 +158,181 @@ final class Frontend
   }
 
   /**
+   * Resolve the active preloader config, memoized per request.
+   *
+   * Reads `motionkit_global_settings.preloader` — the editor saves it there through the
+   * ordinary `save_global_settings` path, so no dedicated option or REST action exists
+   * for it (unlike the page-transition code blob, which has to ship generated JS).
+   *
+   * Global scope only for now. `currentPageSettings.preloader` already rides through the
+   * settings merge further down this class, but the head cover has to be decided before
+   * that merge runs, so per-page overrides are deliberately not honoured yet.
+   *
+   * @return array|null Config array when enabled, null otherwise.
+   */
+  private function get_preloader()
+  {
+    if ($this->preloader_cache !== false) {
+      return $this->preloader_cache;
+    }
+
+    $settings = $this->get_global_settings();
+    if (is_object($settings)) {
+      $settings = (array) $settings;
+    }
+    if (!is_array($settings) || !isset($settings['preloader'])) {
+      return $this->preloader_cache = null;
+    }
+
+    $preloader = $settings['preloader'];
+    if (is_object($preloader)) {
+      $preloader = (array) $preloader;
+    }
+    if (!is_array($preloader) || empty($preloader['enable'])) {
+      return $this->preloader_cache = null;
+    }
+
+    return $this->preloader_cache = $preloader;
+  }
+
+  /**
+   * Pull the active mode's settings sub-array (preset or custom) out of the config.
+   *
+   * @param array $preloader
+   * @return array
+   */
+  private function preloader_base(array $preloader): array
+  {
+    $mode = (isset($preloader['tabs']) && $preloader['tabs'] === 'custom')
+      ? 'custom'
+      : 'preset';
+    $base = isset($preloader[$mode]) ? $preloader[$mode] : [];
+    if (is_object($base)) {
+      $base = (array) $base;
+    }
+    return is_array($base) ? $base : [];
+  }
+
+  /**
+   * Paint the preloader cover before anything else renders.
+   *
+   * This is CSS + a two-line class-setting script, NOT the engine. That split is the
+   * whole design: `register_required_script()` forces GSAP into <head> as a
+   * render-blocking CDN fetch, so anything waiting on GSAP paints *after* it. A
+   * JS-built cover would therefore let the real page show first and drop the preloader
+   * on top of already-visible content — worse than having no preloader at all.
+   *
+   * The stylesheet also carries a pure-CSS failsafe: after maxDuration the page un-hides
+   * itself with no JavaScript involved. If the engine bundle 404s, if GSAP never
+   * arrives, if the visitor has JS disabled — the site still becomes visible. A
+   * preloader must fail open, because its failure mode is an invisible website.
+   *
+   * @since 1.2.0
+   * @return void
+   */
+  public function print_preloader_cover(): void
+  {
+    if ($this->is_editor_preview() || $this->is_full_preview()) {
+      return;
+    }
+
+    $preloader = $this->get_preloader();
+    if ($preloader === null) {
+      return;
+    }
+
+    $base = $this->preloader_base($preloader);
+
+    $background = isset($base['background']) && is_string($base['background'])
+      ? $base['background']
+      : '#0a0a0a';
+    // Printed raw into a stylesheet, so only accept literal colour syntax.
+    if (!preg_match('/^#[0-9a-fA-F]{3,8}$|^rgba?\([0-9,.\s%]+\)$/', $background)) {
+      $background = '#0a0a0a';
+    }
+
+    $max = isset($base['maxDuration']) ? (float) $base['maxDuration'] : 8.0;
+    if ($max < 1) {
+      $max = 1.0;
+    }
+    if ($max > 60) {
+      $max = 60.0;
+    }
+
+    // A translucent overlay is a deliberate request to SEE the page through it, so the
+    // pre-paint body mask is only applied when the overlay is fully opaque. Masking a
+    // translucent preloader would make the opacity setting do nothing.
+    $opacity = isset($base['overlayOpacity']) ? (float) $base['overlayOpacity'] : 1.0;
+    $mask_body = $opacity >= 1;
+
+    $css = sprintf(
+      'html.motionkit-preloading{background:%s!important;animation:mk-pl-failsafe-html .01s linear %ss forwards}',
+      $background,
+      $max
+    );
+    if ($mask_body) {
+      $css .= sprintf(
+        'html.motionkit-preloading body{visibility:hidden;animation:mk-pl-failsafe-body .01s linear %ss forwards}',
+        $max
+      );
+    }
+    $css .= '@keyframes mk-pl-failsafe-html{to{background:transparent!important}}';
+    $css .= '@keyframes mk-pl-failsafe-body{to{visibility:visible}}';
+
+    printf(
+      "\n<style id='motionkit-preloader-cover-style'>%s</style>\n",
+      $css
+    );
+
+    // Sets the class synchronously so <body> is hidden from the very first paint.
+    wp_print_inline_script_tag(
+      "document.documentElement.className+=' motionkit-preloading';",
+      array('id' => 'motionkit-preloader-cover')
+    );
+  }
+
+  /**
+   * Enqueue the preloader engine into <head>, with its config inlined before it.
+   *
+   * Deliberately dependency-free and NOT part of `enqueue_page_scripts()`:
+   *  - that method hard-returns when no GSAP CDN is configured, and the preloader works
+   *    without GSAP (reveal.js falls back to CSS transitions)
+   *  - `motionkitData` is localized onto the footer handle, far too late for us
+   *
+   * `wp_add_inline_script` rather than `wp_localize_script` because localize casts
+   * scalars to strings — `enable` would arrive as "1" and the engine's `!== true` check
+   * would reject its own config.
+   *
+   * @since 1.2.0
+   * @return void
+   */
+  public function enqueue_preloader(): void
+  {
+    if ($this->is_editor_preview() || $this->is_full_preview()) {
+      return;
+    }
+
+    $preloader = $this->get_preloader();
+    if ($preloader === null) {
+      return;
+    }
+
+    wp_enqueue_script(
+      'motionkit-preloader',
+      MOTIONKIT_PLUGIN_URL . 'assets/build/modules/animation-builder/frontend/preloader.js',
+      array(),
+      MOTIONKIT_VERSION,
+      false
+    );
+
+    wp_add_inline_script(
+      'motionkit-preloader',
+      'window.__MOTIONKIT_PRELOADER__=' . wp_json_encode($preloader) . ';',
+      'before'
+    );
+  }
+
+  /**
    * Read motionkit_global_settings, memoized per request.
    *
    * Returns the raw value (array or object) — callers normalize as needed.
@@ -205,6 +390,11 @@ final class Frontend
 
     // Frontend script enqueue — only on actual page loads (not admin/AJAX)
     if (!is_admin()) {
+      // Preloader runs ahead of everything else: its cover must paint before the
+      // render-blocking GSAP CDN fetch, and its engine bundle must execute before <body>
+      // is parsed. Priority 0 on wp_head and 5 on wp_enqueue_scripts buy both.
+      add_action('wp_enqueue_scripts', [$this, 'enqueue_preloader'], 5);
+      add_action('wp_head', [$this, 'print_preloader_cover'], 0);
       add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_scripts'], 60);
       add_action('wp_head', [$this, 'print_gsap_preload'], 1);
       add_action('wp_head', [$this, 'print_page_transition_code'], 99);

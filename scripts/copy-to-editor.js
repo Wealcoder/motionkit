@@ -37,6 +37,10 @@ const COPY_ITEMS = [
   ["frontend/customAnimation.editor.js", "frontend/customAnimation.js"],
   // Whole preset folder — one entry covers every built preset, no per-file list to maintain.
   "frontend/presets",
+  // Preloader engine. The editor needs it for two things: the in-editor Preview button,
+  // and the HTML export, which inlines this exact bundle so the exported snippet and the
+  // plugin runtime can never drift apart.
+  "frontend/preloader.js",
 ];
 
 // Connector root holds the build output; defaults to this repo when MOTIONKIT_CONNECTOR_PATH is unset.

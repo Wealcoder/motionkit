@@ -91,6 +91,10 @@ const mainConfig = {
       // Slim production build — DevTools registry stripped
       "modules/animation-builder/frontend/customAnimation":
         "./src/modules/animation-builder/frontend/animation-type/customAnimation.js",
+      // Preloader engine — standalone, shares nothing with customEngine or the page
+      // transition runtime. Loaded in <head> so it can cover before first paint.
+      "modules/animation-builder/frontend/preloader":
+        "./src/modules/animation-builder/frontend/preloader.js",
     };
   },
   output: {
