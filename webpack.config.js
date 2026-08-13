@@ -92,6 +92,19 @@ const mainConfig = {
       // Slim production build — DevTools registry stripped
       "modules/animation-builder/frontend/customAnimation":
         "./src/modules/animation-builder/frontend/animation-type/customAnimation.js",
+      // Preloader engine — standalone, shares nothing with customEngine or the page
+      // transition runtime. Loaded in <head> so it can cover before first paint.
+      //
+      // One bundle per preset, each = engine core + that single preset. PHP enqueues only
+      // the file matching the selected Preloader Type, so a visitor never downloads the
+      // other fifteen. The core is duplicated across the outputs on disk, which is the
+      // deliberate trade: disk is free, and the alternative (a shared chunk, or a runtime
+      // dynamic import) costs a second request at the one moment on the page where
+      // latency is most expensive.
+      ...getPresetEntries({
+        folder: "./src/modules/animation-builder/frontend/preloader",
+        outPrefix: "modules/animation-builder/frontend/preloader/",
+      }),
     };
   },
   output: {

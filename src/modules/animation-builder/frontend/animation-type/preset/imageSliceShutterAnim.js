@@ -134,12 +134,22 @@ function buildSlices(containerEl, src, count, axis) {
 }
 
 export function imageSliceShutterAnim() {
-  // id -> { timelines, elements: [{ containerEl, itemEl, wrap, restorePosition, restoreOverflow }] }
+  // id -> { timelines, cleanups, elements: [{ containerEl, itemEl, wrap, restorePosition, restoreOverflow }] }
   const instances = new Map();
 
   function teardown(id) {
     const inst = instances.get(id);
     if (!inst) return;
+
+    // Detach click/hover listeners before reverting, so a late event can't
+    // restart a timeline we're about to kill.
+    inst.cleanups.forEach((off) => {
+      try {
+        off();
+      } catch (err) {
+        console.warn("[imageSliceShutter] listener teardown error:", err);
+      }
+    });
 
     inst.timelines.forEach((tl) => {
       try {
@@ -217,6 +227,11 @@ export function imageSliceShutterAnim() {
 
     const timelines = [];
     const elements = [];
+    const cleanups = [];
+
+    // click/hover are interaction-driven: the timeline is built paused and
+    // played by listeners on the trigger element(s).
+    const isInteraction = triggerType === "click" || triggerType === "hover";
 
     items.forEach((itemEl) => {
       const containerEl = itemEl.parentElement;
@@ -254,17 +269,23 @@ export function imageSliceShutterAnim() {
 
       const { wrap, slices } = buildSlices(containerEl, src, count, sliceAxis);
 
-      const tlConfig =
-        triggerType === "page_load"
-          ? { delay }
-          : {
-              delay,
-              scrollTrigger: {
-                trigger: resolvedTriggerClass || containerEl,
-                start: resolvedStart,
-                scrub: triggerType === "play_with_scroll",
-              },
-            };
+      let tlConfig;
+      if (triggerType === "page_load") {
+        tlConfig = { delay };
+      } else if (isInteraction) {
+        // Held at time 0 (strips offscreen, real image hidden) until the user
+        // interacts.
+        tlConfig = { delay, paused: true };
+      } else {
+        tlConfig = {
+          delay,
+          scrollTrigger: {
+            trigger: resolvedTriggerClass || containerEl,
+            start: resolvedStart,
+            scrub: triggerType === "play_with_scroll",
+          },
+        };
+      }
 
       const tl = gsap.timeline(tlConfig);
 
@@ -301,6 +322,57 @@ export function imageSliceShutterAnim() {
         .set(itemEl, { autoAlpha: 1 }, `>-${handoff}`)
         .to(wrap, { autoAlpha: 0, duration: handoff, ease: "power2.out" }, "<");
 
+      // Interaction triggers: resolve the element(s) that receive the
+      // listeners, falling back to the frame itself when no trigger selector
+      // is configured (matches the scrollTrigger fallback above).
+      if (isInteraction) {
+        // A paused timeline hasn't rendered frame 0 yet, so the strips would
+        // sit at their natural position (a visible, seamed copy of the image)
+        // until the first interaction. Render time 0 now to apply the start
+        // state, then hold there.
+        tl.progress(0, true).pause();
+
+        let triggerEls = [containerEl];
+        if (resolvedTriggerClass) {
+          try {
+            const found = document.querySelectorAll(resolvedTriggerClass);
+            if (found.length) triggerEls = [...found];
+          } catch (err) {
+            console.warn(
+              `[imageSliceShutter] invalid trigger selector "${resolvedTriggerClass}":`,
+              err.message,
+            );
+          }
+        }
+
+        triggerEls.forEach((triggerEl) => {
+          if (triggerType === "click") {
+            // Replay from the start on every click.
+            const onClick = () => {
+              tl.restart(true);
+            };
+            triggerEl.addEventListener("click", onClick);
+            cleanups.push(() =>
+              triggerEl.removeEventListener("click", onClick),
+            );
+          } else {
+            // Hover: shutter in on enter, back out on leave so it can play again.
+            const onEnter = () => {
+              tl.play();
+            };
+            const onLeave = () => {
+              tl.reverse();
+            };
+            triggerEl.addEventListener("mouseenter", onEnter);
+            triggerEl.addEventListener("mouseleave", onLeave);
+            cleanups.push(() => {
+              triggerEl.removeEventListener("mouseenter", onEnter);
+              triggerEl.removeEventListener("mouseleave", onLeave);
+            });
+          }
+        });
+      }
+
       timelines.push(tl);
       elements.push({
         containerEl,
@@ -311,7 +383,7 @@ export function imageSliceShutterAnim() {
       });
     });
 
-    instances.set(id, { timelines, elements });
+    instances.set(id, { timelines, cleanups, elements });
   }
 
   document.addEventListener("aae-animation-event", handler);
