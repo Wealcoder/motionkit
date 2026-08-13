@@ -35,23 +35,17 @@ const FILES = [
   'frontend/freePresets/textClipRevealAnim.js',
   'frontend/freePresets/textClipSlideRightAnim.js',
   'frontend/freePresets/textClipSlideUpAnim.js',
-  'frontend/presets/containerFadeAnim.js',
   'frontend/presets/cubeScrollRevealAnim.js',
   'frontend/presets/cursorHoverMoveAnim.js',
   'frontend/presets/cursorHoverRevealAnim.js',
   'frontend/presets/headerStickyAnim.js',
   'frontend/presets/horizontalScrollAnim.js',
   'frontend/presets/imageHoverRevealAnim.js',
-  'frontend/presets/imageRevealAnim.js',
   'frontend/presets/imageScaleAnim.js',
   'frontend/presets/imageStretchAnim.js',
   'frontend/presets/popupMediaAnim.js',
   'frontend/presets/scrollVideoFrame.js',
-  'frontend/presets/textInvertAnim.js',
-  'frontend/presets/textRotateAnim.js',
-  'frontend/presets/textScaleAnim.js',
   'frontend/presets/textSpinAnim.js',
-  'frontend/presets/textSplitAnim.js',
 ];
 
 function resolveDest() {

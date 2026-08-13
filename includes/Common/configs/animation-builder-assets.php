@@ -9,13 +9,6 @@ defined('ABSPATH') || die();
 
 return [
   'premiumPresets' => [
-    // ############## CONTAINER ############## //
-    'motionkit-mk-container-fade-pa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/containerFadeAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-
     // ############## CURSOR ############## //
     'motionkit-mk-cursor-cm-pa' => [
       'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/cursorHoverMoveAnim.js',
@@ -61,11 +54,6 @@ return [
     ],
     'motionkit-mk-image-hr-pa' => [
       'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageHoverRevealAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'motionkit-mk-image-rev-pa' => [
-      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageRevealAnim.js',
       'deps' => ['gsap', 'ScrollTrigger'],
       'version' => MOTIONKIT_VERSION,
     ],
@@ -117,11 +105,6 @@ return [
     ],
 
     // ############## TEXT ############## //
-    'motionkit-mk-text-invert-pa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textInvertAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
-      'version' => MOTIONKIT_VERSION,
-    ],
     'motionkit-mk-text-origami-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textOrigamiAnim.js',
       'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
@@ -132,23 +115,8 @@ return [
       'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
       'version' => MOTIONKIT_VERSION,
     ],
-    'motionkit-mk-text-rotate-pa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textRotateAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'motionkit-mk-text-scale-pa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textScaleAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
-      'version' => MOTIONKIT_VERSION,
-    ],
     'motionkit-mk-text-spin-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSpinAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'motionkit-mk-text-split-pa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSplitAnim.js',
       'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
       'version' => MOTIONKIT_VERSION,
     ],

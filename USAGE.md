@@ -217,7 +217,7 @@ Each animation entry in the config:
 {
   "id": "unique-id",
   "type": "preset | custom | free_animation",
-  "preset": "wcf-text-split-animation",
+  "preset": "wcf-text-wave-animation",
   "enable": 1,
   "selector": ".my-element",
   "...": "animation-specific properties"
@@ -247,19 +247,13 @@ Each animation entry in the config:
 - `wcf-scroll-video-animation`
 - `wcf-horizontal-scroll-animation`
 - `wcf-cube-scroll-reveal-animation`
-- `wcf-image-reveal-animation`
 - `wcf-image-hover-reveal-animation`
 - `wcf-cursor-hover-reveal-animation`
 - `wcf-cursor-hover-move-animation`
 - `wcf-image-stretch-animation`
 - `wcf-image-scale-animation`
-- `wcf-text-split-animation`
-- `wcf-text-rotate-animation`
-- `wcf-text-scale-animation`
-- `wcf-text-invert-animation`
 - `wcf-text-spin-animation`
 - `wcf-popup-media-animation`
-- `wcf-container-fade-animation`
 - `wcf-header-sticky-animation`
 
 ### Free Presets (no GSAP dependency)
