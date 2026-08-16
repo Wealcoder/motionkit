@@ -4,6 +4,7 @@ import { normalizeStepVars } from "../select/merge.js";
 import { extractOverlap } from "../select/overlap.js";
 import { withCompletion, debugLog } from "../helper/logger.js";
 import { claimFromRender } from "../helper/renderOrder.js";
+import { stripParallax } from "../extensions/parallax.js";
 
 // Stamp identity + inspection metadata onto vars BEFORE the handler builds
 // the tween. GSAP keeps vars.id and vars.data on the resulting tween object,
@@ -62,7 +63,13 @@ export function applyStep(tl, step) {
   const rawVars = normalizeStepVars(step);
   // call can have side-effectful semantics even with empty vars — let through.
   if (rawVars == null && step.method !== "call") return;
-  const { vars, overlap } = extractOverlap(step, rawVars);
+  // Parallax is a ScrollSmoother effect registered outside the timeline (see
+  // extensions/parallax.js), never a tween var. Strip it so GSAP can't try to
+  // animate it as a CSS property; null means parallax was all this step
+  // carried, so there is no tween to build at all.
+  const tweenVars = stripParallax(rawVars, step.method);
+  if (tweenVars == null && step.method !== "call") return;
+  const { vars, overlap } = extractOverlap(step, tweenVars);
   warnIfStacked(tl, step, vars);
   const stamped = buildStampedVars(tl, step, vars);
   handler(tl, step, stamped, overlap);

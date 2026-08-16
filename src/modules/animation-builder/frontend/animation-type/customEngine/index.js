@@ -5,6 +5,10 @@ import { isCustomAnimation } from "./helper/guards.js";
 import { tagAllTargets, untagAllTargets } from "./helper/tagTargets.js";
 import { rememberAnim, forgetAnim } from "./helper/inspector.js";
 import { revertSplitsFor } from "./extensions/splitText.js";
+import {
+  applyParallaxSteps,
+  releaseParallaxFor,
+} from "./extensions/parallax.js";
 import { releaseRenderClaims } from "./helper/renderOrder.js";
 import { buildHandle } from "./handlers/index.js";
 import { registerAllExtensions } from "./extensions/index.js";
@@ -31,12 +35,24 @@ export function handleCustomAnimation(anim) {
   // we just don't build a handle, so nothing plays, scrubs, or listens.
   if (anim.mkInert) return;
 
-  const handle = buildHandle(anim);
+  // Parallax is a persistent ScrollSmoother effect rather than a tween, so it is
+  // registered here — before any trigger handler opens a gsap.context, and for
+  // every trigger type alike. Building it inside a context would let ctx.revert()
+  // own it, and building it inside a handler would gate an ambient scroll effect
+  // behind a click/hover event.
+  const hasParallax = applyParallaxSteps(anim.id, anim.timeline?.animations);
+
+  let handle = buildHandle(anim);
+  // A parallax-only animation legitimately builds no timeline (e.g. on an
+  // on_scroll trigger with no ScrollTrigger rows). Give it an empty handle so it
+  // still lands in the active registry and teardown runs to kill its effects.
+  if (!handle && hasParallax) handle = { contexts: [], listeners: [] };
   // Nothing was built means nothing will ever tear this down, so undo what the pre-build steps left behind.
   if (!handle) {
     untagAllTargets(anim);
     revertSplitsFor(anim.id);
     releaseRenderClaims(anim.id);
+    releaseParallaxFor(anim.id);
     forgetAnim(anim.id);
     return;
   }

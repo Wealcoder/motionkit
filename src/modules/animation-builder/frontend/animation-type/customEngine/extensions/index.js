@@ -7,6 +7,7 @@ import { registerMotionPathMethod } from "./motionPath.js";
 import { registerMorphSVGMethod } from "./morphSVG.js";
 import { registerPhysics2DMethod } from "./physics2D.js";
 import { registerScrambleTextMethod } from "./scrambleText.js";
+import { registerParallaxMethod } from "./parallax.js";
 
 // Add future plugin registrations here. Each returns true if registered.
 // Scaffolds to fill when editor wires them into step.method:
@@ -20,6 +21,7 @@ const EXTENSION_REGISTRARS = [
   registerMorphSVGMethod,
   registerPhysics2DMethod,
   registerScrambleTextMethod,
+  registerParallaxMethod,
 ];
 
 // Registrars that reported their plugin missing, so a later attempt can pick them up.

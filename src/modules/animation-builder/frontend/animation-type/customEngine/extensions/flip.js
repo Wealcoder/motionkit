@@ -1,5 +1,6 @@
 import { registerMethod } from "../registry.js";
 import { normalizeStepVars } from "../select/merge.js";
+import { stripParallax } from "./parallax.js";
 
 // Flip runs as a PROPERTY now: it rides inside a from/to/fromTo bucket as
 // `{ flip: { absolute, scale, fade, spin, toggleClass, targets, props, ... } }`
@@ -68,8 +69,11 @@ export function applyFlip(tl, step, vars, overlap) {
 // Resolve the GSAP-ready vars for a flip step the same way standard.js hands
 // them to applyFlip: from/to pass their bucket straight through, fromTo merges
 // both sides (to wins), and the legacy flip method is already flat.
+// This path resolves vars straight off the step rather than through applyStep,
+// so it has to strip `parallax` itself — everything left here is spread into
+// Flip.from's vars, where an unknown key becomes a property GSAP tries to tween.
 export function flipVarsForStep(step) {
-  const vars = normalizeStepVars(step);
+  const vars = stripParallax(normalizeStepVars(step), step.method);
   if (!vars) return null;
   if (step.method === "fromTo") {
     return { ...(vars.from || {}), ...(vars.to || {}) };
