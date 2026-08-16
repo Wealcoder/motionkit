@@ -268,19 +268,32 @@ final class ConnectPage
     $notice_nonce_valid = isset($_GET['_wpnonce'])
       && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'motionkit_notice');
 
-    if (!$notice_nonce_valid) {
+    $error = isset($_GET['error']) ? sanitize_text_field(wp_unslash($_GET['error'])) : '';
+
+    // Error notices render regardless of the nonce. They are display-only and
+    // non-destructive, and suppressing one leaves the user on a page that
+    // still reads "Not Connected" with no stated reason — which is how a
+    // failed connect (e.g. the site-limit 403 from /connect/token) came to
+    // look like a silent no-op. A stale or missing nonce is exactly the case
+    // where the user most needs to be told what happened.
+    //
+    // Success/action flags below stay nonce-gated: those assert something
+    // happened, so a forged URL claiming "Connected Successfully" would be
+    // misleading in a way an error message is not.
+    if (!$notice_nonce_valid && !$error) {
       return;
     }
-
-    $error = isset($_GET['error']) ? sanitize_text_field(wp_unslash($_GET['error'])) : '';
-    $just_connected = isset($_GET['connected']) && is_string(sanitize_text_field(wp_unslash($_GET['connected'])));
-    $just_disconnected = isset($_GET['disconnected']) && is_string(sanitize_text_field(wp_unslash($_GET['disconnected'])));
-    $license_refresh = isset($_GET['license_refresh']) ? sanitize_key(wp_unslash($_GET['license_refresh'])) : '';
-    $refresh_reason = isset($_GET['reason']) ? sanitize_text_field(wp_unslash($_GET['reason'])) : '';
-    $tools_deleted = isset($_GET['tools_deleted']) ? (int) $_GET['tools_deleted'] : 0;
-    $tools_all_deleted = isset($_GET['tools_all_deleted']) ? (int) $_GET['tools_all_deleted'] : 0;
-    $verify = isset($_GET['verify']) ? sanitize_text_field(wp_unslash($_GET['verify'])) : '';
-    $verify_reason = isset($_GET['reason']) ? sanitize_text_field(wp_unslash($_GET['reason'])) : '';
+    // Every flag below asserts that an action succeeded, so all of them stay
+    // behind the nonce — reaching this point with an invalid nonce means we
+    // are here solely to render $error above.
+    $just_connected = $notice_nonce_valid && isset($_GET['connected']) && is_string(sanitize_text_field(wp_unslash($_GET['connected'])));
+    $just_disconnected = $notice_nonce_valid && isset($_GET['disconnected']) && is_string(sanitize_text_field(wp_unslash($_GET['disconnected'])));
+    $license_refresh = $notice_nonce_valid && isset($_GET['license_refresh']) ? sanitize_key(wp_unslash($_GET['license_refresh'])) : '';
+    $refresh_reason = $notice_nonce_valid && isset($_GET['reason']) ? sanitize_text_field(wp_unslash($_GET['reason'])) : '';
+    $tools_deleted = $notice_nonce_valid && isset($_GET['tools_deleted']) ? (int) $_GET['tools_deleted'] : 0;
+    $tools_all_deleted = $notice_nonce_valid && isset($_GET['tools_all_deleted']) ? (int) $_GET['tools_all_deleted'] : 0;
+    $verify = $notice_nonce_valid && isset($_GET['verify']) ? sanitize_text_field(wp_unslash($_GET['verify'])) : '';
+    $verify_reason = $notice_nonce_valid && isset($_GET['reason']) ? sanitize_text_field(wp_unslash($_GET['reason'])) : '';
 
     if ($error): ?>
       <div class="motionkit-notice motionkit-notice--error">
@@ -744,10 +757,21 @@ final class ConnectPage
       'nonce_failed'          => __('Security check failed. Please try again.', 'motionkit'),
     ];
 
-    // Check for server-provided message in the URL.
-    $server_msg = isset($_GET['error_message']) ? sanitize_text_field(wp_unslash($_GET['error_message'])) : '';
-    if ($server_msg) {
-      return $server_msg;
+    // The server-provided message is richer than the static text above (it
+    // names the actual count and cap), so prefer it — but only when the nonce
+    // verified. Errors now render without a nonce so a failed connect always
+    // states a reason, which means this value can be attacker-supplied; echoing
+    // it unconditionally would let a crafted URL put arbitrary text into a
+    // notice styled as official plugin output. Unverified requests fall back to
+    // the trusted static message for the error code instead.
+    $notice_nonce_valid = isset($_GET['_wpnonce'])
+      && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'motionkit_notice');
+
+    if ($notice_nonce_valid) {
+      $server_msg = isset($_GET['error_message']) ? sanitize_text_field(wp_unslash($_GET['error_message'])) : '';
+      if ($server_msg) {
+        return $server_msg;
+      }
     }
 
     return $messages[$error] ?? __('An unknown error occurred. Please try again.', 'motionkit');
