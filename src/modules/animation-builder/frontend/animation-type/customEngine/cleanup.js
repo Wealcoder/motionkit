@@ -14,6 +14,10 @@ import {
   restoreScrambleFor,
   clearScrambleCache,
 } from "./extensions/scrambleText.js";
+import {
+  releaseParallaxFor,
+  clearParallaxCache,
+} from "./extensions/parallax.js";
 import { releaseAnim, clearOwnership } from "./ownership.js";
 import { forgetAnim, clearAnims } from "./helper/inspector.js";
 import {
@@ -92,6 +96,9 @@ export function teardown(id) {
   // newClass/oldClass wrapper spans behind, and a split container has to be
   // unwrapped before its markup can be put back.
   restoreScrambleFor(id);
+  // ScrollSmoother effects are created outside the gsap context (see
+  // extensions/parallax.js), so ctx.revert() above never touched them.
+  releaseParallaxFor(id);
   restoreTransition(id);
   deleteActive(id);
   unregisterAnimation(id);
@@ -116,6 +123,7 @@ export function teardownAll() {
   });
   clearSplitCache();
   clearScrambleCache();
+  clearParallaxCache();
   clearActive();
   clearCustomRegistry();
   clearSelectorCache();
