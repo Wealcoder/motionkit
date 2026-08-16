@@ -433,10 +433,6 @@ final class ConnectPage
           <p class="motionkit-card-desc">
             <?php esc_html_e('Your license has been disabled. Please contact support.', 'motionkit'); ?>
           </p>
-        <?php elseif ('inactive' === $state['status']): ?>
-          <p class="motionkit-card-desc">
-            <?php esc_html_e('Your license is not activated on this site yet. Reconnect the site, or activate it from your MotionKit account, to unlock premium features here.', 'motionkit'); ?>
-          </p>
         <?php elseif (!$state['exists']): ?>
           <p class="motionkit-card-desc">
             <?php esc_html_e("You're on the Free plan. Upgrade anytime from your MotionKit account to unlock premium presets and pro features.", 'motionkit'); ?>

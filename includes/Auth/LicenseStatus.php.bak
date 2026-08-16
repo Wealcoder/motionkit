@@ -79,15 +79,8 @@ final class LicenseStatus
    * Statuses the remote is allowed to report. Anything else is coerced to
    * 'unknown' rather than stored verbatim — this option is read by every
    * gate, so it must never hold an arbitrary string.
-   *
-   * 'inactive' is EDD's own wording for a license that has been paid for but
-   * is not activated on any site yet. Leaving it out of this list coerced it
-   * to 'unknown', which reads as "Unable to verify" and, with exists still
-   * false, showed a paying customer the Free plan badge. It is listed here so
-   * the real state survives; it is deliberately NOT valid (see is_valid()),
-   * because entitlement follows activation, not purchase.
    */
-  private const KNOWN_STATUSES = ['active', 'inactive', 'expired', 'disabled', 'none', 'unknown'];
+  private const KNOWN_STATUSES = ['active', 'expired', 'disabled', 'none', 'unknown'];
 
   /**
    * Register hooks.
@@ -651,8 +644,6 @@ final class LicenseStatus
       $message = __('Your MotionKit license has expired. Renew it to keep using premium features.', 'motionkit');
     } elseif ('disabled' === $state['status']) {
       $message = __('Your MotionKit license has been disabled. Please contact support.', 'motionkit');
-    } elseif ('inactive' === $state['status']) {
-      $message = __('Your MotionKit license is not activated on this site yet. Reconnect the site, or activate it from your MotionKit account, to unlock premium features here.', 'motionkit');
     } else {
       $message = __('The connected MotionKit account has no active license. Premium features are unavailable on this site.', 'motionkit');
     }
