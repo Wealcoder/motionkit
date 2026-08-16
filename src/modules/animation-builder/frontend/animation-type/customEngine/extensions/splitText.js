@@ -123,15 +123,35 @@ export function clearSplitCache() {
   splitsBySig.clear();
 }
 
+// The editor's code-block field can emit `splitText` as a JSON STRING rather
+// than an object (e.g. splitText: '{ "type": "chars", "subset": "even" }'). A
+// string would be spread character-by-character into {0:"{",1:" ",...}, which
+// silently produces a config with no `type` and no `subset` — the split still
+// happens, but every option is lost. Parse it back into an object first.
+function coerceSplitConfig(raw) {
+  if (typeof raw !== "string") return raw;
+  const text = raw.trim();
+  if (!text) return null;
+  try {
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch (e) {
+    console.warn("[customEngine] splitText config is not valid JSON:", raw);
+    return null;
+  }
+}
+
 // UI-only keys ride inside the same splitText object as the real create options:
-// `mask: "none"` is the select's placeholder for "no mask", and `revertElement`
-// is the revert-on-complete flag. Neither is a SplitText.create option, and both
-// have to be stripped identically here and in applySplitText — otherwise the
-// pre-split and the tween build hash different sigs and split the element twice.
+// `mask: "none"` is the select's placeholder for "no mask", `revertElement` is
+// the revert-on-complete flag, and `subset` narrows which split pieces this step
+// animates. None is a SplitText.create option, and all have to be stripped
+// identically here and in applySplitText — otherwise the pre-split and the
+// tween build hash different sigs and split the element twice.
 function normalizeSplitConfig(raw) {
-  const cfg = { ...(raw || {}) };
+  const cfg = { ...(coerceSplitConfig(raw) || {}) };
   if (cfg.mask === "none") delete cfg.mask;
   delete cfg.revertElement;
+  delete cfg.subset;
   return cfg;
 }
 
@@ -139,10 +159,14 @@ function normalizeSplitConfig(raw) {
 export function splitConfigForStep(step) {
   const vars = normalizeStepVars(step);
   if (!vars) return null;
-  const raw =
+  // Coerce BEFORE the object guard — a JSON-string config would otherwise be
+  // rejected here, skipping the pre-split while applySplitText still builds
+  // one, and the two would hash different sigs.
+  const raw = coerceSplitConfig(
     step.method === "fromTo"
       ? vars.to?.splitText || vars.from?.splitText
-      : vars.splitText;
+      : vars.splitText,
+  );
   if (!raw || typeof raw !== "object") return null;
   return normalizeSplitConfig(raw);
 }
@@ -164,6 +188,21 @@ function resolveTargetKey(type) {
   if (type.includes("words")) return "words";
   if (type.includes("lines")) return "lines";
   return "chars";
+}
+
+// UI-only `subset`: animate only part of the split so two steps on the SAME
+// element can drive opposite halves — e.g. an origami fold where even chars come
+// from above and odd from below. Works for any split type (chars/words/lines):
+// it filters by position in whatever array pickTargets returned, so GSAP never
+// sees this key. Stripped in normalizeSplitConfig, so both steps hash the same
+// sig and share one split rather than re-splitting the element.
+//
+// Unknown or absent values return the ORIGINAL array (same identity, no copy) —
+// a typo degrades to animating everything rather than animating nothing.
+function applySubset(targets, subset) {
+  if (subset === "even") return targets.filter((_, i) => i % 2 === 0);
+  if (subset === "odd") return targets.filter((_, i) => i % 2 === 1);
+  return targets;
 }
 
 // A shared split may not have the type this step asked for, so fall back to what it produced instead of animating nothing.
@@ -193,8 +232,11 @@ export function applySplitText(tl, step, vars, overlap, method = "from") {
   if (typeof SplitText === "undefined") return;
 
   const animId = tl?.vars?.data?.animationId || null;
-  const rawSplitCfg =
-    method === "fromTo" ? vars.to?.splitText || vars.from?.splitText : vars.splitText;
+  // Coerce once here too — `revertElement` and `subset` are read off the RAW
+  // config below, and a JSON-string config would expose neither.
+  const rawSplitCfg = coerceSplitConfig(
+    method === "fromTo" ? vars.to?.splitText || vars.from?.splitText : vars.splitText,
+  );
   const splitConfig = normalizeSplitConfig(rawSplitCfg);
   // Optional "Revert Element" property — restore the original markup once this
   // tween finishes instead of leaving the element as split spans.
@@ -203,8 +245,13 @@ export function applySplitText(tl, step, vars, overlap, method = "from") {
 
   if (!entry) return;
 
-  const targets = pickTargets(entry.split, splitConfig.type);
-  if (!targets?.length) return;
+  const rawTargets = pickTargets(entry.split, splitConfig.type);
+  if (!rawTargets?.length) return;
+  // Read `subset` off the RAW config — normalizeSplitConfig deleted it from splitConfig.
+  const targets = applySubset(rawTargets, rawSplitCfg?.subset);
+  // A subset can be empty even when the split produced pieces (e.g. a
+  // single-character element with subset:"odd") — don't hand GSAP an empty array.
+  if (!targets.length) return;
 
   if (method === "fromTo") {
     const fromVars = { ...vars.from };
