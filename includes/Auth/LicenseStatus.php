@@ -225,7 +225,20 @@ final class LicenseStatus
     $stored = get_option(self::OPT_STATE);
 
     if (!is_array($stored) || empty($stored['checked_at'])) {
-      return self::empty_state();
+      // Never successfully checked. This is NOT the same as "checked, and the
+      // account has no license" — but empty_state()'s 'none' status is what
+      // the Connect page renders as the "Free plan" badge, so a connected
+      // site that has not managed a single successful check yet would tell a
+      // paying customer they are on the free tier. Report it as
+      // indeterminate instead; is_valid() is false either way, so this grants
+      // nothing — it only changes a confident wrong claim into an honest one.
+      $unchecked = self::empty_state();
+
+      if (OAuthHandler::is_connected()) {
+        $unchecked['status'] = 'unknown';
+      }
+
+      return $unchecked;
     }
 
     $age = time() - (int) $stored['checked_at'];
