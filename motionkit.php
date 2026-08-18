@@ -38,6 +38,12 @@ if ( defined( 'MOTIONKIT_LOADED' ) ) {
 
 define( 'MOTIONKIT_LOADED', true );
 
+// Public API for other plugins and themes. Loaded before the plugin class so
+// the functions exist from the moment this file is included — an integration
+// hooking 'plugins_loaded' at any priority can call them, rather than having
+// to guess when MotionKit finished booting.
+require_once MOTIONKIT_PLUGIN_DIR . 'includes/api-functions.php';
+
 // Load the main plugin class
 require_once MOTIONKIT_PLUGIN_DIR . 'includes/Plugin.php';
 
