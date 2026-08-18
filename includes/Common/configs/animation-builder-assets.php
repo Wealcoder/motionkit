@@ -105,18 +105,8 @@ return [
     ],
 
     // ############## TEXT ############## //
-    'motionkit-mk-text-origami-pa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textOrigamiAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
-      'version' => MOTIONKIT_VERSION,
-    ],
     'motionkit-mk-text-wave-pa' => [
       'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textWaveAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'motionkit-mk-text-spin-pa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/textSpinAnim.js',
       'deps' => ['gsap', 'ScrollTrigger', 'SplitText'],
       'version' => MOTIONKIT_VERSION,
     ],

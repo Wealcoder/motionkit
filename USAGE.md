@@ -252,7 +252,6 @@ Each animation entry in the config:
 - `wcf-cursor-hover-move-animation`
 - `wcf-image-stretch-animation`
 - `wcf-image-scale-animation`
-- `wcf-text-spin-animation`
 - `wcf-popup-media-animation`
 - `wcf-header-sticky-animation`
 
