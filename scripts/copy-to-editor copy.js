@@ -45,7 +45,6 @@ const FILES = [
   'frontend/presets/imageStretchAnim.js',
   'frontend/presets/popupMediaAnim.js',
   'frontend/presets/scrollVideoFrame.js',
-  'frontend/presets/textSpinAnim.js',
 ];
 
 function resolveDest() {

@@ -91,16 +91,21 @@ export function horizontalScrollAnim() {
       widthsPx = new Array(items.length).fill(def);
     }
 
-    const totalWidth = widthsPx.reduce((sum, w) => sum + w, 0);
-    const totalScrollPx = totalWidth - containerEl.offsetWidth;
-
     gsap.set(containerEl, { height: containerHeight, transition: "none" });
     items.forEach((el, i) =>
       gsap.set(el, { width: widthsPx[i], flexShrink: 0 }),
     );
 
+    // Measure the track rather than summing widthsPx: the row's real width
+    // also includes flex `gap` and the track's own padding, which the sum
+    // can't see. Summing left that spacing untravelled, so the pin released
+    // with the last item still off-screen.
+    const trackEl = items[0].parentElement;
+    const getScrollPx = () =>
+      Math.max(0, trackEl.scrollWidth - containerEl.offsetWidth);
+
     // Items fit (or only one item) — no horizontal scroll needed.
-    if (totalScrollPx <= 0) {
+    if (getScrollPx() <= 0) {
       instances.set(id, { timelines: [] });
       return;
     }
@@ -110,10 +115,11 @@ export function horizontalScrollAnim() {
         trigger: containerEl,
         pin: true,
         start: "top top",
-        // Pin range = totalScrollPx (1:1 horizontal travel to vertical
+        // Pin range = the measured travel (1:1 horizontal to vertical
         // scroll). Decoupling from `bottom bottom` means the animation
         // gets a sensible scroll length regardless of `containerHeight`.
-        end: () => "+=" + totalScrollPx,
+        // Measured in the callback so invalidateOnRefresh re-reads it.
+        end: () => "+=" + getScrollPx(),
         // Smooth catch-up over 1 second instead of jumping with every
         // wheel-tick. Drop to 0.5 if it feels laggy, or back to `true` for
         // instant 1:1 mapping.
@@ -124,7 +130,7 @@ export function horizontalScrollAnim() {
     });
 
     tl.to(items, {
-      x: () => -totalScrollPx,
+      x: () => -getScrollPx(),
       ease: "none",
       force3D: true,
     });
