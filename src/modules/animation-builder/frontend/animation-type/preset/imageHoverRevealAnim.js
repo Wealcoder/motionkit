@@ -43,7 +43,13 @@ export function imageHoverRevealAnim() {
     }
   }
 
-  function attachToItem({ id, itemEl, cursorImgConfig, animationPosition }) {
+  function attachToItem({
+    id,
+    itemEl,
+    cursorImgConfig,
+    animationPosition,
+    imageRotation,
+  }) {
     const parentEl = itemEl.parentElement;
     if (!parentEl) return () => {};
 
@@ -75,9 +81,12 @@ export function imageHoverRevealAnim() {
     itemEl.setAttribute("data-motionkit-anim-id", id);
     parentEl.setAttribute("data-motionkit-anim-id", id);
 
+    // rotation lives in the initial set (not the reveal tween) so the tilt holds
+    // steady through the scale-in, the quickTo x/y follow, and the reverse.
     const initial = {
       ...resolveInitialOffset(animationPosition),
       scale: 0,
+      rotation: imageRotation,
       opacity: 0,
       force3D: true,
     };
@@ -152,8 +161,11 @@ export function imageHoverRevealAnim() {
       imageWidth = "300px",
       imageHeight = "400px",
       animationPosition = "center",
+      imageRotation = 0,
       zIndex,
     } = vars;
+
+    const rotation = Number(imageRotation) || 0;
 
     const cursorImgConfig = {
       imageUrl,
@@ -177,7 +189,13 @@ export function imageHoverRevealAnim() {
     const teardowns = [];
     items.forEach((itemEl) => {
       teardowns.push(
-        attachToItem({ id, itemEl, cursorImgConfig, animationPosition }),
+        attachToItem({
+          id,
+          itemEl,
+          cursorImgConfig,
+          animationPosition,
+          imageRotation: rotation,
+        }),
       );
     });
 

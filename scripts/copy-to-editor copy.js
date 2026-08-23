@@ -41,8 +41,6 @@ const FILES = [
   'frontend/presets/headerStickyAnim.js',
   'frontend/presets/horizontalScrollAnim.js',
   'frontend/presets/imageHoverRevealAnim.js',
-  'frontend/presets/imageScaleAnim.js',
-  'frontend/presets/imageStretchAnim.js',
   'frontend/presets/popupMediaAnim.js',
   'frontend/presets/scrollVideoFrame.js',
 ];
