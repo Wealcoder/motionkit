@@ -4,12 +4,19 @@ export function horizontalScrollAnim() {
   // id -> { timelines: GSAPTimeline[] }
   const instances = new Map();
 
-  function convertToPixels(value) {
+  // `el` is the item the value belongs to — `%` is relative to that item's
+  // own natural width, so 100% keeps whatever the content/CSS already sized
+  // it to. Measured before any width is applied, or the second read would
+  // just return the width we set on the first.
+  function convertToPixels(value, el) {
     if (value == null || value === "") return 0;
     const str = String(value);
     if (str.endsWith("px")) return parseFloat(str);
     if (str.endsWith("vw")) return (parseFloat(str) / 100) * window.innerWidth;
-    if (str.endsWith("%")) return (parseFloat(str) / 100) * window.innerWidth;
+    if (str.endsWith("%")) {
+      if (!el) return 0;
+      return (parseFloat(str) / 100) * el.getBoundingClientRect().width;
+    }
     const num = parseFloat(str);
     if (Number.isFinite(num)) return num;
     console.warn("[horizontalScroll] unsupported unit:", value);
@@ -85,10 +92,11 @@ export function horizontalScrollAnim() {
     ) {
       widthsPx = itemsWidth
         .slice(0, items.length)
-        .map((w) => convertToPixels(w));
+        .map((w, i) => convertToPixels(w, items[i]));
     } else {
-      const def = convertToPixels(itemWidth);
-      widthsPx = new Array(items.length).fill(def);
+      // Resolved per item rather than once: a `%` value measures each item's
+      // own width, so the results differ even though the input is shared.
+      widthsPx = items.map((el) => convertToPixels(itemWidth, el));
     }
 
     gsap.set(containerEl, { height: containerHeight, transition: "none" });

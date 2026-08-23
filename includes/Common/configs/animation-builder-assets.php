@@ -57,16 +57,6 @@ return [
       'deps' => ['gsap', 'ScrollTrigger'],
       'version' => MOTIONKIT_VERSION,
     ],
-    'motionkit-mk-image-scale-pa' => [
-      'src' => MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageScaleAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
-    'motionkit-mk-image-stretch-pa' => [
-      'src' =>  MOTIONKIT_PLUGIN_URL . '/assets/build/modules/animation-builder/frontend/presets/imageStretchAnim.js',
-      'deps' => ['gsap', 'ScrollTrigger'],
-      'version' => MOTIONKIT_VERSION,
-    ],
 
     // ############## POPUP ############## //
     'motionkit-mk-popup-media-pa' => [
