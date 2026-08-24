@@ -2,8 +2,13 @@
 
 namespace MotionKit\Auth;
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+  exit;
+}
+
 /**
- * OAuth Handler
+ * OAuth Handler Class
  *
  * Manages the OAuth connect flow between WordPress and motionkit.io:
  * - State token generation (CSRF protection)
@@ -15,12 +20,6 @@ namespace MotionKit\Auth;
  * @package MotionKit
  * @since 1.1.0
  */
-
-// Prevent direct access
-if (!defined('ABSPATH')) {
-  exit;
-}
-
 final class OAuthHandler
 {
   /**
@@ -39,7 +38,7 @@ final class OAuthHandler
   private const REVOKE_URL = 'https://editor.motionkit.io/connect/revoke';
 
   /**
-   * Get the authorize URL (filterable for dev environments).
+   * Get the authorize URL.
    *
    * @return string
    */
@@ -49,7 +48,7 @@ final class OAuthHandler
   }
 
   /**
-   * Get the token exchange URL (filterable for dev environments).
+   * Get the token exchange URL.
    *
    * @return string
    */
@@ -59,7 +58,7 @@ final class OAuthHandler
   }
 
   /**
-   * Get the revoke URL (filterable for dev environments).
+   * Get the revoke URL.
    *
    * @return string
    */
@@ -69,7 +68,7 @@ final class OAuthHandler
   }
 
   /**
-   * Get the validate URL (filterable for dev environments).
+   * Get the validate URL.
    *
    * @return string
    */
@@ -79,8 +78,7 @@ final class OAuthHandler
   }
 
   /**
-   * Get the verify-session URL (filterable for dev environments).
-   * Used to validate server-generated editor session JWTs.
+   * Get the verify-session URL.
    *
    * @return string
    */
@@ -104,13 +102,8 @@ final class OAuthHandler
    */
   public function init(): void
   {
-    // Handle OAuth callback
     add_action('admin_init', [$this, 'handle_callback']);
-
-    // Handle disconnect action
     add_action('admin_init', [$this, 'handle_disconnect']);
-
-    // Handle verify action
     add_action('admin_init', [$this, 'handle_verify']);
   }
 
@@ -156,19 +149,12 @@ final class OAuthHandler
   /**
    * Build the authorize URL and store state token.
    *
-   * @param bool $switch_account Force the editor to show its login screen
-   *                              instead of silently reusing the visitor's
-   *                              existing motionkit.io session — used by the
-   *                              "Switch Account" action on an already-
-   *                              connected site.
-   * @return string The full authorize URL to redirect to
+   * @param bool $switch_account
+   * @return string
    */
   public function get_authorize_url(bool $switch_account = false): string
   {
-    // Generate CSRF state token
     $state = bin2hex(random_bytes(32));
-
-    // Store state token (expires in 10 minutes)
     set_transient(self::OPT_STATE_TOKEN, $state, 600);
 
     $params = [
@@ -179,47 +165,30 @@ final class OAuthHandler
     ];
 
     if ($switch_account) {
-      // Standard OAuth convention: ask the identity provider to re-prompt
-      // for login rather than auto-approving against the current session.
       $params['prompt'] = 'login';
     }
 
     return add_query_arg($params, self::get_authorize_base_url());
   }
 
-  /**
-   * Get the OAuth callback URL (WP admin page).
-   *
-   * @return string
-   */
   private function get_callback_url(): string
   {
     return admin_url('admin.php?page=motionkit-connect');
   }
 
-  /**
-   * Handle the OAuth callback from motionkit.io.
-   * Validates state token, exchanges code for access token, stores token.
-   *
-   * @return void
-   */
-  // This callback is reached via a third-party (motionkit.io) redirect, not
-  // a same-site form/link — a WP _wpnonce can't be used here since
-  // motionkit.io has no way to know WP's nonce secret. CSRF protection is
-  // the OAuth-standard 'state' parameter instead: a cryptographically random,
-  // single-use transient checked with hash_equals() before anything is
-  // written (below), which is the correct equivalent for this flow, not a
-  // gap. The sniff can't distinguish that from an unguarded $_GET read.
-  // See readme.txt's "Why don't all requests use a WordPress nonce?" FAQ
-  // for the user-facing explanation of this same reasoning.
-  // phpcs:disable WordPress.Security.NonceVerification.Recommended
   public function handle_callback(): void
   {
     if (!isset($_GET['page'], $_GET['code'], $_GET['state'])) {
       return;
     }
 
-    if ($_GET['page'] !== 'motionkit-connect') {
+    // Unslash + sanitize the page slug before comparing. CSRF for this OAuth
+    // callback is enforced by the unpredictable, server-stored `state` transient
+    // validated with hash_equals() below — a _wpnonce can't survive the round
+    // trip to the external authorize server. This sanitize is to satisfy the
+    // input-validation sniffer; the comparison itself is a strict match.
+    $page = sanitize_key(wp_unslash($_GET['page']));
+    if ($page !== 'motionkit-connect') {
       return;
     }
 
@@ -230,7 +199,6 @@ final class OAuthHandler
     $code = sanitize_text_field(wp_unslash($_GET['code']));
     $state = sanitize_text_field(wp_unslash($_GET['state']));
 
-    // Verify CSRF state token
     $stored_state = get_transient(self::OPT_STATE_TOKEN);
     if (!$stored_state || !hash_equals($stored_state, $state)) {
       wp_safe_redirect(wp_nonce_url(
@@ -240,10 +208,8 @@ final class OAuthHandler
       exit;
     }
 
-    // Delete state token (single-use)
     delete_transient(self::OPT_STATE_TOKEN);
 
-    // Exchange auth code for access token
     $result = $this->exchange_code_for_token($code);
 
     if (is_wp_error($result)) {
@@ -255,7 +221,6 @@ final class OAuthHandler
       exit;
     }
 
-    // Store encrypted token
     $encrypted = self::encrypt($result['access_token']);
     update_option(self::OPT_ACCESS_TOKEN, $encrypted, false);
     update_option(self::OPT_CONNECTED_AT, current_time('mysql'), false);
@@ -272,14 +237,7 @@ final class OAuthHandler
     ));
     exit;
   }
-  // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-  /**
-   * Exchange authorization code for access token via motionkit.io API.
-   *
-   * @param string $code The authorization code
-   * @return array|\WP_Error Token data on success, WP_Error on failure
-   */
   private function exchange_code_for_token(string $code)
   {
     $response = wp_remote_post(self::get_token_url(), [
@@ -311,11 +269,6 @@ final class OAuthHandler
     return $body;
   }
 
-  /**
-   * Handle verify action — check if the local token matches the server.
-   *
-   * @return void
-   */
   public function handle_verify(): void
   {
     if (!isset($_GET['motionkit_verify'])) {
@@ -348,11 +301,6 @@ final class OAuthHandler
     exit;
   }
 
-  /**
-   * Verify the stored token against the MotionKit server.
-   *
-   * @return bool|\WP_Error True if valid, false if mismatch, WP_Error on failure
-   */
   public function verify_token_with_server()
   {
     $token = self::get_access_token();
@@ -379,11 +327,6 @@ final class OAuthHandler
     return !empty($body['valid']);
   }
 
-  /**
-   * Handle disconnect action.
-   *
-   * @return void
-   */
   public function handle_disconnect(): void
   {
     if (!isset($_GET['motionkit_disconnect'])) {
@@ -394,35 +337,25 @@ final class OAuthHandler
       return;
     }
 
-    // Verify nonce
     if (!isset($_GET['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'motionkit_disconnect')) {
       return;
     }
 
-    // Attempt to revoke token on motionkit.io and get disconnect token.
     $token = self::get_access_token();
-    $disconnect_token = '';
     if ($token) {
-      $response = wp_remote_post(self::get_revoke_url(), [
+      wp_remote_post(self::get_revoke_url(), [
         'timeout' => 10,
         'headers' => ['Content-Type' => 'application/json'],
         'body'    => wp_json_encode(['access_token' => $token, 'site' => home_url()]),
       ]);
-      if (!is_wp_error($response)) {
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-        $disconnect_token = $body['disconnect_token'] ?? '';
-      }
     }
 
-    // Clean up local storage
     delete_option(self::OPT_ACCESS_TOKEN);
     delete_option(self::OPT_CONNECTED_AT);
     delete_option(self::OPT_CONNECTED_EMAIL);
     delete_option('motionkit_jwt_secret');
     delete_option('motionkit_used_jtis');
 
-    // Listeners (LicenseStatus) wipe their own derived state — a
-    // disconnected site must not keep reading a cached entitlement.
     do_action('motionkit/oauth/disconnected');
 
     wp_safe_redirect(wp_nonce_url(
@@ -432,12 +365,6 @@ final class OAuthHandler
     exit;
   }
 
-  /**
-   * Encrypt a value using AES-256-CBC.
-   *
-   * @param string $value Plain text value
-   * @return string Base64-encoded encrypted value
-   */
   private static function encrypt(string $value): string
   {
     $key = self::get_encryption_key();
@@ -447,12 +374,6 @@ final class OAuthHandler
     return base64_encode($iv . $encrypted);
   }
 
-  /**
-   * Decrypt an AES-256-CBC encrypted value.
-   *
-   * @param string $encrypted Base64-encoded encrypted value
-   * @return string|false Decrypted value, or false on failure
-   */
   private static function decrypt(string $encrypted)
   {
     $key = self::get_encryption_key();
@@ -468,14 +389,8 @@ final class OAuthHandler
     return openssl_decrypt($ciphertext, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
   }
 
-  /**
-   * Get the encryption key derived from WordPress salts.
-   *
-   * @return string 32-byte key
-   */
   private static function get_encryption_key(): string
   {
-    // Use WordPress AUTH_KEY + SECURE_AUTH_KEY as key material
     $material = (defined('AUTH_KEY') ? AUTH_KEY : 'default-key') .
                 (defined('SECURE_AUTH_KEY') ? SECURE_AUTH_KEY : 'default-secure-key');
 

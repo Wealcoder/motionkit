@@ -15,8 +15,6 @@ if (!defined('ABSPATH')) {
 }
 
 use MotionKit\Backend\Backend;
-use MotionKit\Frontend\Frontend;
-use MotionKit\RestApi\RestApi;
 use MotionKit\Admin\PermalinkNotice;
 use MotionKit\Auth\OAuthHandler;
 use MotionKit\Auth\ConnectPage;
@@ -84,25 +82,11 @@ final class Plugin
     private Autoloader $autoloader;
 
     /**
-     * Frontend instance
-     *
-     * @var Frontend|null
-     */
-    private ?Frontend $frontend = null;
-
-    /**
      * Backend instance
      *
      * @var Backend|null
      */
     private ?Backend $backend = null;
-
-    /**
-     * REST API instance
-     *
-     * @var RestApi|null
-     */
-    private ?RestApi $rest_api = null;
 
     /**
      * OAuth handler instance
@@ -219,9 +203,7 @@ final class Plugin
 
         // Initialize components (lazy loading)
         $this->init_auth();
-        $this->init_frontend();
         $this->init_backend();
-        $this->init_rest_api();
         $this->init_admin_notices();
 
         // Admin bar node only renders on the frontend (add_admin_bar_build_animation
@@ -230,21 +212,6 @@ final class Plugin
         add_action('wp_enqueue_scripts', [$this, 'enqueue_admin_bar_css']);
 
         do_action('MOTIONKIT_LOADED');
-    }
-
-    /**
-     * Initialize frontend functionality
-     *
-     * Runs in all contexts: Frontend handles its own context checks —
-     * wp_enqueue_scripts only fires on page loads, AJAX handlers
-     * fire in admin context (admin-ajax.php).
-     *
-     * @return void
-     */
-    private function init_frontend(): void
-    {
-        $this->frontend = ComponentFactory::create_frontend();
-        $this->frontend->init();
     }
 
     
@@ -283,17 +250,6 @@ final class Plugin
             $connect_page = new ConnectPage($this->oauth);
             $connect_page->init();
         }
-    }
-
-    /**
-     * Initialize REST API endpoints
-     *
-     * @return void
-     */
-    private function init_rest_api(): void
-    {
-        $this->rest_api = new RestApi();
-        $this->rest_api->init();
     }
 
     /**
@@ -488,16 +444,6 @@ final class Plugin
     public function get_plugin_url(): string
     {
         return $this->plugin_url;
-    }
-
-    /**
-     * Get frontend instance
-     *
-     * @return Frontend|null The frontend instance
-     */
-    public function get_frontend(): ?Frontend
-    {
-        return $this->frontend;
     }
 
     /**

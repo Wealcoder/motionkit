@@ -9,20 +9,20 @@ License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://buy.stripe.com/3cs3dI7DQauI0py9AC
 
-Connects your site to the Motionkit visual editor so you can build GSAP-powered scroll, hover, and page-transition animations without writing code.
+Connects your site to the Motionkit visual editor so you can build GSAP-powered scroll, hover, and entrance animations without writing code.
 
 == Description ==
 
-Motionkit connects your WordPress site to the [Motionkit](https://motionkit.io) visual animation editor, so you can build GSAP-powered scroll effects, hover interactions, page transitions, and text/image animations without writing JavaScript.
+Motionkit connects your WordPress site to the [Motionkit](https://motionkit.io) visual animation editor, so you can build GSAP-powered scroll effects, hover interactions, and text/image animations without writing JavaScript.
 
 This plugin is the WordPress-side connector: it authenticates your site with the Motionkit editor, stores the animations and settings you create, and renders them on the front end using GSAP. The visual editor itself runs at editor.motionkit.io — you design animations there against a live preview of your actual pages, then Motionkit saves the result back to your site.
 
 = Key Features =
 
 * **Visual animation editor** – Build scroll-triggered, hover, and load-in animations on a live preview of your site, no code required
-* **Built on GSAP** – Industry-standard animation engine (GSAP + ScrollTrigger + ScrollSmoother) for smooth, performant motion
+* **Built on GSAP** – Industry-standard animation engine (GSAP + ScrollTrigger) for smooth, performant motion
 * **Per-page and global animations** – Apply animations to a single post/page, a whole post type, or site-wide
-* **Ready-made presets** – Text reveals, image hover effects, scroll parallax, cursor effects, and page transitions out of the box
+* **Ready-made presets** – Text reveals, image hover effects, scroll parallax, and interactive hover effects out of the box
 * **Device-aware** – Configure different behavior per breakpoint (desktop, laptop, tablet, mobile)
 * **Secure by design** – Signed, single-use session tokens for the editor connection; sanitized input and escaped output throughout
 * **Built for performance** – Assets are only enqueued on pages that actually have animations configured
@@ -57,7 +57,7 @@ The visual editor at editor.motionkit.io is a hosted service operated by Motionk
 
 = What is Motionkit? =
 
-Motionkit is a visual animation editor for WordPress, built on GSAP. This plugin connects your WordPress site to the hosted editor at editor.motionkit.io so you can design scroll effects, hover interactions, page transitions, and text/image animations without writing code, then save them back to your site.
+Motionkit is a visual animation editor for WordPress, built on GSAP. This plugin connects your WordPress site to the hosted editor at editor.motionkit.io so you can design scroll effects, hover interactions, and text/image animations without writing code, then save them back to your site.
 
 = Do I need a Motionkit account? =
 
@@ -65,7 +65,7 @@ Yes. The visual editor is a hosted service — you connect your WordPress site t
 
 = Does this plugin load GSAP? =
 
-Yes. GSAP (core, ScrollTrigger, ScrollSmoother, and any additional GSAP plugins you enable from the editor's "GSAP Plugin" settings) is loaded from the jsDelivr CDN (cdn.jsdelivr.net) so animations you build in the editor actually run on your site. GSAP is licensed by Webflow, Inc. under its own Standard No Charge license (not GPL) — this plugin does not bundle GSAP's source; it registers a WordPress script dependency pointing at the CDN URL, the same way a theme might load a Google Font. See "External services" below for details, including why GSAP is loaded this way instead of bundled.
+Yes. GSAP (core and ScrollTrigger) is loaded from the jsDelivr CDN (cdn.jsdelivr.net) so animations you build in the editor actually run on your site. GSAP is licensed by Webflow, Inc. under its own Standard No Charge license (not GPL) — this plugin does not bundle GSAP's source; it registers a WordPress script dependency pointing at the CDN URL, the same way a theme might load a Google Font. See "External services" below for details, including why GSAP is loaded this way instead of bundled.
 
 = Is the plugin secure? =
 
