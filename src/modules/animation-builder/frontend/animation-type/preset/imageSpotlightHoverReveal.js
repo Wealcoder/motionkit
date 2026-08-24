@@ -106,7 +106,14 @@ export function imageSpotlightHoverReveal() {
       backgroundColor: cfg.overlayColor,
       // Dark from the moment the animation is applied, not from first hover.
       opacity: String(cfg.darkness),
-      borderRadius: "20px",
+      // Follow the target's own corners instead of guessing a radius: a square
+      // shade over a rounded image leaves dark triangles outside its corners, and
+      // an over-large one cuts into a square target. `inherit` is enough for the
+      // child case; the sibling overlay is not in the target's box, so its radius
+      // has to be read off the target and copied.
+      borderRadius: isVoid
+        ? window.getComputedStyle(target).borderRadius
+        : "inherit",
       pointerEvents: "none",
       zIndex: String(cfg.zIndex),
       ...(isVoid ? {} : { inset: "0" }),
@@ -138,6 +145,9 @@ export function imageSpotlightHoverReveal() {
         top: `${offset.top}px`,
         width: `${target.offsetWidth}px`,
         height: `${target.offsetHeight}px`,
+        // Re-read here as well: a percentage radius resolves against the box, so a
+        // value captured at attach time goes stale as soon as the image reflows.
+        borderRadius: window.getComputedStyle(target).borderRadius,
       });
     }
 
