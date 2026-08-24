@@ -1,0 +1,9 @@
+/* MotionKit top-level admin menu icon sizing (applies on every wp-admin
+   page, since the admin menu sidebar is global — unlike admin.css, which
+   only loads on the MotionKit settings page itself). */
+
+#adminmenu #toplevel_page_motionkit-connect .wp-menu-image img {
+  width: 23px;
+  height: 23px;
+  padding: 7px 0 0;
+}

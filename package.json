@@ -1,7 +1,7 @@
 {
-  "name": "motionkit-connector",
-  "version": "0.5.2",
-  "description": "A connector for MotionKit, a library for creating animations in React,nodejs.",
+  "name": "motionkit",
+  "version": "1.0.0",
+  "description": "MotionKit WordPress Connector",
   "main": "echo \"Nothing much here.\" && exit 1",
   "devDependencies": {
     "@babel/core": "^7.28.4",
@@ -72,7 +72,7 @@
     "style-fix": "stylelint --syntax scss **/*.scss --fix",
     "js-fix": "eslint . --fix",
     "i18n": "wp i18n make-pot .",
-    "build": "wp-scripts build && node scripts/copy-to-editor.js",
+    "build": "wp-scripts build",
     "build:wp": "wp-scripts build",
     "start": "wp-scripts start"
   },
@@ -80,14 +80,14 @@
   "license": "GPL-2.0-or-later",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Wealcoder/wcf-addons.git"
+    "url": "git+https://github.com/Wealcoder/motionkit.git"
   },
   "keywords": [
     "elementor",
     "gutenber"
   ],
   "bugs": {
-    "url": "https://github.com/Wealcoder/wcf-addons/issues"
+    "url": "https://github.com/Wealcoder/motionkit/issues"
   },
-  "homepage": "https://github.com/Wealcoder/wcf-addons#readme"
+  "homepage": "https://github.com/Wealcoder/motionkit#readme"
 }

@@ -12,5 +12,7 @@ Thumbs.db
 
 *.log
 *.map
+*.bak
+*.orig
 
 .env

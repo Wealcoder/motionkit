@@ -16,11 +16,6 @@ parameters:
 			path: includes/Frontend/Frontend.php
 
 		-
-			message: "#^Method MotionKit\\\\Plugin\\:\\:should_skip_init\\(\\) is unused\\.$#"
-			count: 1
-			path: includes/Plugin.php
-
-		-
 			message: "#^Unreachable statement \\- code above always terminates\\.$#"
 			count: 1
 			path: includes/RestApi/RestApi.php

@@ -12,13 +12,10 @@
 
 node_modules
 vendor
-src
 scripts
 tests
 
-package.json
 package-lock.json
-webpack.config.js
 jsconfig.json
 composer.json
 composer.lock
@@ -40,5 +37,8 @@ WPORG-SUBMISSION.md
 
 *.log
 *.map
+*.bak
+*.orig
 Thumbs.db
 .DS_Store
+mcp-*.png

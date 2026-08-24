@@ -15,8 +15,6 @@ if (!defined('ABSPATH')) {
 }
 
 use MotionKit\Backend\Backend;
-use MotionKit\Frontend\Frontend;
-use MotionKit\RestApi\RestApi;
 use MotionKit\Admin\PermalinkNotice;
 use MotionKit\Auth\OAuthHandler;
 use MotionKit\Auth\ConnectPage;
@@ -84,25 +82,11 @@ final class Plugin
     private Autoloader $autoloader;
 
     /**
-     * Frontend instance
-     *
-     * @var Frontend|null
-     */
-    private ?Frontend $frontend = null;
-
-    /**
      * Backend instance
      *
      * @var Backend|null
      */
     private ?Backend $backend = null;
-
-    /**
-     * REST API instance
-     *
-     * @var RestApi|null
-     */
-    private ?RestApi $rest_api = null;
 
     /**
      * OAuth handler instance
@@ -189,12 +173,17 @@ final class Plugin
 
         global $wpdb;
         $hot_options = ['motionkit_page_settings_updated_at'];
+        // Dynamic %s,%s,... placeholder list sized to $hot_options — this IS
+        // the prepare() placeholder syntax, not unescaped SQL; $hot_options is
+        // a hardcoded literal above, never external input. The sniff can't
+        // trace that {$placeholders} expands to valid %s placeholders before
+        // prepare() consumes them via the variadic ...$hot_options args below.
         $placeholders = implode(',', array_fill(0, count($hot_options), '%s'));
-        // Single UPDATE rather than per-option get/delete/add cycles.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $wpdb->query(
             $wpdb->prepare(
                 "UPDATE {$wpdb->options} SET autoload = 'yes'
-                 WHERE option_name IN ({$placeholders}) AND autoload != 'yes'",
+                 WHERE option_name IN ({$placeholders}) AND autoload != 'yes'", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
                 ...$hot_options
             )
         );
@@ -209,19 +198,12 @@ final class Plugin
      */
     public function init(): void
     {
-        // Performance optimization: Skip initialization on certain requests
-        // if ($this->should_skip_init()) {
-        //     return;
-        // }
-       
         // Send platform identification header for MotionKit detect-platform
         add_action('send_headers', [$this, 'send_platform_header']);
 
         // Initialize components (lazy loading)
         $this->init_auth();
-        $this->init_frontend();
         $this->init_backend();
-        $this->init_rest_api();
         $this->init_admin_notices();
 
         // Admin bar node only renders on the frontend (add_admin_bar_build_animation
@@ -230,41 +212,6 @@ final class Plugin
         add_action('wp_enqueue_scripts', [$this, 'enqueue_admin_bar_css']);
 
         do_action('MOTIONKIT_LOADED');
-    }
-
-    /**
-     * Check if initialization should be skipped
-     *
-     * @return bool True if should skip, false otherwise
-     */
-    private function should_skip_init(): bool
-    {
-        // Skip on AJAX requests unless it's our AJAX
-        if (defined('DOING_AJAX') && DOING_AJAX) {
-            return !isset($_REQUEST['action']) || strpos(sanitize_text_field( wp_unslash($_REQUEST['action'] )), 'motionkit_') === false;
-        }
-
-        // Skip on cron requests
-        if (defined('DOING_CRON') && DOING_CRON) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Initialize frontend functionality
-     *
-     * Runs in all contexts: Frontend handles its own context checks —
-     * wp_enqueue_scripts only fires on page loads, AJAX handlers
-     * fire in admin context (admin-ajax.php).
-     *
-     * @return void
-     */
-    private function init_frontend(): void
-    {
-        $this->frontend = ComponentFactory::create_frontend();
-        $this->frontend->init();
     }
 
     
@@ -303,17 +250,6 @@ final class Plugin
             $connect_page = new ConnectPage($this->oauth);
             $connect_page->init();
         }
-    }
-
-    /**
-     * Initialize REST API endpoints
-     *
-     * @return void
-     */
-    private function init_rest_api(): void
-    {
-        $this->rest_api = new RestApi();
-        $this->rest_api->init();
     }
 
     /**
@@ -508,16 +444,6 @@ final class Plugin
     public function get_plugin_url(): string
     {
         return $this->plugin_url;
-    }
-
-    /**
-     * Get frontend instance
-     *
-     * @return Frontend|null The frontend instance
-     */
-    public function get_frontend(): ?Frontend
-    {
-        return $this->frontend;
     }
 
     /**

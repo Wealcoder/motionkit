@@ -15,7 +15,6 @@ if (!defined('ABSPATH')) {
 }
 
 use MotionKit\Backend\Backend;
-use MotionKit\Frontend\Frontend;
 use MotionKit\Common\Assets\AssetLoader;
 
 /**
@@ -36,16 +35,6 @@ final class ComponentFactory
     }
 
     /**
-     * Create frontend instance
-     *
-     * @return Frontend Frontend instance
-     */
-    public static function create_frontend(): Frontend
-    {
-        return new Frontend();
-    }
-
-    /**
      * Create asset loader instance
      *
      * @return AssetLoader Asset loader instance
@@ -54,6 +43,4 @@ final class ComponentFactory
     {
         return new AssetLoader();
     }
-   
 }
-
