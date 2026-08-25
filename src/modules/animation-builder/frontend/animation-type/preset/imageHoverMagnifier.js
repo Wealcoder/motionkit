@@ -58,7 +58,22 @@ export function imageHoverMagnifier() {
     return String(url).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   }
 
-  function buildLens({ imageUrl, size, ringStyle, zIndex }) {
+  // Walks up for the first non-transparent background, mirroring what actually
+  // paints behind the image. Falls back to white at the document root, matching
+  // the browser's own canvas.
+  function resolveBackdrop(target) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      const bg = window.getComputedStyle(node).backgroundColor;
+      if (bg && bg !== "transparent" && !/^rgba\(0,\s*0,\s*0,\s*0\)$/.test(bg)) {
+        return bg;
+      }
+      node = node.parentElement;
+    }
+    return "#ffffff";
+  }
+
+  function buildLens({ imageUrl, size, ringStyle, zIndex, lensBackground }) {
     const lens = document.createElement("div");
     lens.setAttribute("data-mk-magnifier", "");
     Object.assign(lens.style, {
@@ -72,6 +87,13 @@ export function imageHoverMagnifier() {
       pointerEvents: "none",
       willChange: "transform",
       zIndex: String(zIndex),
+      // Opaque backdrop. A PNG with an alpha channel (logos, cut-out product
+      // shots, isometric art) magnifies its transparent pixels as transparent,
+      // and the untouched original sitting directly behind the lens shows
+      // through them — reading as an un-magnified copy beside the magnified
+      // part. The backdrop stops the lens being see-through; it is invisible
+      // on a fully opaque image.
+      backgroundColor: lensBackground,
       ...ringStyle,
     });
 
@@ -137,9 +159,20 @@ export function imageHoverMagnifier() {
       mountEl.style.position = "relative";
     }
 
-    const radius = cfg.size / 2;
+    // Both re-derived by syncBox on every mouseenter: the lens shrinks when the
+    // image is too small to fill it, so neither is fixed at attach time.
+    let lensSize = cfg.size;
+    let radius = lensSize / 2;
+    // The target's box, re-measured by syncBox on every mouseenter. zoomOffset
+    // clamps against these, so they must be the same numbers the zoomed layer
+    // was sized from.
+    let boxW = 0;
+    let boxH = 0;
     const clip = buildClip({ target, isVoid, zIndex: cfg.zIndex });
-    const { lens, zoomed } = buildLens({ ...cfg, imageUrl });
+    // An explicit lensBackground wins; otherwise match whatever paints behind the
+    // image so the lens is indistinguishable from it on an opaque photo.
+    const lensBackground = cfg.lensBackground || resolveBackdrop(target);
+    const { lens, zoomed } = buildLens({ ...cfg, imageUrl, lensBackground });
     clip.appendChild(lens);
     mountEl.appendChild(clip);
     target.setAttribute("data-motionkit-anim-id", id);
@@ -158,8 +191,23 @@ export function imageHoverMagnifier() {
           height: `${target.offsetHeight}px`,
         });
       }
-      zoomed.style.width = `${target.clientWidth * cfg.zoom}px`;
-      zoomed.style.height = `${target.clientHeight * cfg.zoom}px`;
+      // offsetWidth, not clientWidth — everything else here measures the same box
+      // via offsetWidth/getBoundingClientRect, and clientWidth drops the border.
+      // clientWidth would also shrink the paint area on a bordered image.
+      boxW = target.offsetWidth;
+      boxH = target.offsetHeight;
+      zoomed.style.width = `${boxW * cfg.zoom}px`;
+      zoomed.style.height = `${boxH * cfg.zoom}px`;
+
+      // A lens wider than the magnified image can never be filled by it — the
+      // shortfall would show as a transparent arc no clamping can close. Shrink
+      // the lens to what the image can actually cover. Usually a no-op; it only
+      // bites on a small image with a large lens or a near-1x zoom.
+      const maxLens = Math.min(boxW * cfg.zoom, boxH * cfg.zoom);
+      lensSize = Math.min(cfg.size, maxLens);
+      radius = lensSize / 2;
+      lens.style.width = `${lensSize}px`;
+      lens.style.height = `${lensSize}px`;
     }
     syncBox();
 
@@ -174,9 +222,27 @@ export function imageHoverMagnifier() {
 
     // Counter-movers for the magnified layer. Same duration and ease as the lens,
     // which is what keeps the two registered mid-tween: the lens eases toward `m`
-    // while this eases toward `radius - m * zoom`, both linear in `m`, so the point
+    // while this eases toward `zoomOffset(m)`, both linear in `m`, so the point
     // under the cursor stays at the lens centre on every frame — not just at the
     // endpoints. Different easings here would make the image slide inside the lens.
+    // Maps a pointer coordinate to the zoomed layer's offset.
+    //
+    // The source point is clamped to keep the lens window inside the image. At the
+    // very edge there is simply no image beyond it to magnify, so an unclamped
+    // offset slides the zoomed layer past its own edge and the uncovered arc goes
+    // transparent — the un-magnified original then shows through beside the
+    // magnified part. Half a lens measured in source pixels is radius/zoom, so the
+    // centre has to stay that far in from each edge.
+    //
+    // Only the source is clamped, not the lens: the lens keeps following the raw
+    // cursor into the corners, it just stops finding new content there. On an image
+    // narrower than a full lens the range inverts, so clamp low against high last.
+    const zoomOffset = (m, extent) => {
+      const inset = radius / cfg.zoom;
+      const clamped = Math.min(Math.max(m, inset), Math.max(extent - inset, inset));
+      return radius - clamped * cfg.zoom;
+    };
+
     const setZoomX = gsap.quickTo(zoomed, "x", {
       duration: cfg.followDuration,
       ease: "expo",
@@ -206,8 +272,8 @@ export function imageHoverMagnifier() {
       const { mx, my } = pointerIn(evt);
       setLensX(mx);
       setLensY(my);
-      setZoomX(radius - mx * cfg.zoom);
-      setZoomY(radius - my * cfg.zoom);
+      setZoomX(zoomOffset(mx, boxW));
+      setZoomY(zoomOffset(my, boxH));
     };
 
     const onMouseEnter = (evt) => {
@@ -218,8 +284,8 @@ export function imageHoverMagnifier() {
       const { mx, my } = pointerIn(evt);
       gsap.set(lens, { x: mx, y: my });
       gsap.set(zoomed, {
-        x: radius - mx * cfg.zoom,
-        y: radius - my * cfg.zoom,
+        x: zoomOffset(mx, boxW),
+        y: zoomOffset(my, boxH),
       });
 
       target.addEventListener("mousemove", onMouseMove);
@@ -286,6 +352,8 @@ export function imageHoverMagnifier() {
       followDuration: toNumber(vars.followDuration, 0.4),
       revealDuration: toNumber(vars.revealDuration, 0.35),
       ringStyle,
+      // Optional override; empty means "match what is behind the image".
+      lensBackground: vars.lensBackground || "",
       zIndex: toNumber(vars.zIndex, 5),
     };
 
