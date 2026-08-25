@@ -90,11 +90,11 @@ if (!function_exists('motionkit_is_connected')) {
    */
   function motionkit_is_connected(): bool
   {
-    if (!class_exists('\MotionKit\Auth\OAuthHandler')) {
+    if (!class_exists('\MotionKitConnector\Auth\OAuthHandler')) {
       return false;
     }
 
-    return \MotionKit\Auth\OAuthHandler::is_connected();
+    return \MotionKitConnector\Auth\OAuthHandler::is_connected();
   }
 }
 
@@ -117,10 +117,33 @@ if (!function_exists('motionkit_has_active_license')) {
    */
   function motionkit_has_active_license(): bool
   {
-    if (!class_exists('\MotionKit\Auth\LicenseStatus')) {
+    if (!class_exists('\MotionKitConnector\Auth\LicenseStatus')) {
       return false;
     }
 
-    return \MotionKit\Auth\LicenseStatus::is_valid();
+    return \MotionKitConnector\Auth\LicenseStatus::is_valid();
+  }
+}
+
+if (!function_exists('motionkit_editor_session_token')) {
+  /**
+   * Generate a signed editor-session JWT for the given page URL.
+   *
+   * The token layer lives in the MotionKit Connector plugin; without it an
+   * empty string is returned (the editor can't run anything on the live
+   * site anyway, so callers simply produce a token-less launch URL).
+   *
+   * @since 1.0.0
+   *
+   * @param string $page_url The page URL being edited.
+   * @return string The JWT, or '' when the connector is not active.
+   */
+  function motionkit_editor_session_token(string $page_url): string
+  {
+    if (!class_exists('\MotionKitConnector\Auth\JwtTokenManager')) {
+      return '';
+    }
+
+    return \MotionKitConnector\Auth\JwtTokenManager::generate($page_url);
   }
 }

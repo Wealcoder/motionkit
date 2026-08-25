@@ -634,3 +634,157 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ─── Connector CTA ───────────────────────────── */
+
+.motionkit-connector-cta {
+  position: relative;
+  margin: 0 0 20px;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, #2f7bf6 0%, #7c5cff 50%, #1ea4c4 100%);
+  box-shadow: 0 10px 30px -12px rgba(47, 123, 246, 0.45);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.motionkit-connector-cta__glow {
+  position: absolute;
+  inset: -40%;
+  z-index: 0;
+  background: radial-gradient(closest-side, rgba(124, 92, 255, 0.35), transparent 70%);
+  filter: blur(20px);
+  animation: mkctaFloat 7s ease-in-out infinite;
+}
+
+@keyframes mkctaFloat {
+  0%,
+  100% {
+    transform: translate(-8%, -6%);
+  }
+
+  50% {
+    transform: translate(10%, 8%);
+  }
+}
+
+.motionkit-connector-cta__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 22px;
+  border-radius: 15px;
+  background: #0e1526;
+  color: #eaf0ff;
+}
+
+.motionkit-connector-cta__icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  color: #ffd873;
+  background: linear-gradient(135deg, rgba(255, 216, 115, 0.16), rgba(255, 216, 115, 0.04));
+  box-shadow: inset 0 0 0 1px rgba(255, 216, 115, 0.28);
+}
+
+.motionkit-connector-cta__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.motionkit-connector-cta__badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #9fc0ff;
+  background: rgba(47, 123, 246, 0.14);
+  border: 1px solid rgba(47, 123, 246, 0.3);
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.motionkit-connector-cta__title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #fff;
+}
+
+.motionkit-connector-cta__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #a9b6d4;
+  max-width: 62ch;
+}
+
+.motionkit-connector-cta__action {
+  flex: 0 0 auto;
+}
+
+.motionkit-connector-cta__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  padding: 11px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2f7bf6, #6a5cff);
+  box-shadow: 0 6px 16px -6px rgba(47, 123, 246, 0.7);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.motionkit-connector-cta__btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 22px -6px rgba(106, 92, 255, 0.8);
+  color: #fff;
+}
+
+.motionkit-connector-cta__btn:active {
+  transform: translateY(0);
+}
+
+.motionkit-connector-cta__btn svg {
+  transition: transform 0.18s ease;
+}
+
+.motionkit-connector-cta__btn:hover svg {
+  transform: translateY(2px);
+}
+
+@media (max-width: 640px) {
+  .motionkit-connector-cta__body {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .motionkit-connector-cta__action {
+    width: 100%;
+  }
+
+  .motionkit-connector-cta__btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motionkit-connector-cta__glow {
+    animation: none;
+  }
+}

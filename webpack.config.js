@@ -5,7 +5,7 @@ module.exports = {
   ...defaultConfig,
   name: "motionkit-admin-ui",
   entry: {
-    admin: "./src/css/admin.css",
+    admin: ["./src/modules/admin/connect.js", "./src/css/admin.css"],
     "admin-tools": [
       "./src/modules/admin/tools.js",
       "./src/css/admin-tools.css",

@@ -2,7 +2,7 @@
 
 namespace MotionKit\Includes;
 /**
- * Custom Autoloader for GSAP Animation Builder
+ * Custom Autoloader for MotionKit
  *
  * @package MotionKit
  * @since 1.0.0

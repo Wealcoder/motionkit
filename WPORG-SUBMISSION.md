@@ -114,6 +114,14 @@ References:
 
 ## MotionKit-specific audit findings (as of 2026-08-02)
 
+> **⚠️ Read the Sixth pass (2026-08-25) below before trusting any earlier
+> dated entry.** Several states recorded as fixed in earlier passes regressed
+> after they were written (version numbers, trademark name, Tested-up-to,
+> Screenshots section) and were re-fixed on 2026-08-25 — and the plugin's
+> architecture changed fundamentally that day (auth + data layers moved to the
+> connector). Earlier entries are kept as historical records per this doc's
+> convention; where one is now factually wrong, an **Update** note is attached.
+
 ### Confirmed blockers — must fix before submitting
 
 - [x] **readme.txt rewrite — VERIFIED CURRENT (2026-08-04).** No longer
@@ -126,7 +134,11 @@ References:
   exist (the section was removed entirely rather than left dangling). This
   checklist item was stale itself — the rewrite had already happened by the
   time of this verification pass.
-- [x] **Version mismatch — FIXED (2026-08-02).** All 4 sources now agree on
+- [x] **Version mismatch — FIXED (2026-08-02). Update (2026-08-25): regressed
+  to a 3-way mismatch (header 0.5.2 / constant 1.0.0 / `Plugin::VERSION`
+  1.1.7) and re-unified on `1.0.0`; `Plugin::VERSION` now references
+  `MOTIONKIT_VERSION` so there is a single source of truth going forward.**
+  Original entry: all 4 sources agreed on
   `1.5.1`: `readme.txt` Stable tag, `motionkit.php` header, `MOTIONKIT_VERSION`
   constant, `package.json`. Also synced the dev-only `phpstan-bootstrap.php`
   stub and bumped `readme.txt`'s stale `Tested up to: 6.8` → `6.9` to match
@@ -592,6 +604,183 @@ scan mode, not real defects):
   single-execution scope; local variable names there can't collide with
   anything.
 
+### Sixth pass — full-plugin review, regression re-fixes, and the connector architecture split (2026-08-25)
+
+A full three-track review (auth/security, core files, wp.org compliance) found
+that several earlier "fixed" states had regressed, plus real bugs. Everything
+below is applied and verified: `php -l` clean, `phpcs` exit 0, PHPStan **no
+errors with an empty baseline**, `npm run build` compiles.
+
+**Regressions re-fixed (states earlier passes had already fixed once):**
+
+- **Version 3-way mismatch** → unified on `1.0.0` (readme Stable tag, header,
+  `MOTIONKIT_VERSION`, package.json, changelog). `Plugin::VERSION` now
+  *references* `MOTIONKIT_VERSION` instead of holding its own literal, so this
+  class of regression can't recur.
+- **Trademark name** had reverted to "…for WordPress" → first restored
+  "Motionkit – Visual Animation with GSAP", then (same day, per developer
+  direction to remove ALL GSAP references and talk about MotionKit) settled
+  on **"MotionKit – Visual Animation Connector"** — the developer chose this
+  final name and the new short description ("Connect WordPress with MotionKit
+  to create, preview, publish, and manage visual website animations from the
+  MotionKit editor.") directly in readme.txt; plugin header synced to match.
+- **`Tested up to`** — briefly set to `7.0` during this pass on stale
+  information; corrected same day to **`7.1`** in both files (developer
+  confirmed 7.1 is the current WordPress release).
+- **`== Screenshots ==`** section claiming nonexistent files was back →
+  removed again. **Update (same day):** re-added at the developer's request
+  (the readme validator notices its absence) with 4 captions matching the
+  current feature set (editor, connect page, cloud preset library, Tools
+  tab). ⚠️ The matching `screenshot-1.png` … `screenshot-4.png` files must
+  be created and committed to the wp.org **SVN `assets/` directory** (not
+  the plugin zip) once the plugin is approved — until those exist, the
+  section renders numbered captions with no images.
+
+**Architecture split — the headline change.** The wp.org plugin is now a pure
+dashboard shell; the connector owns all logic:
+
+- `includes/Auth/` **deleted entirely** from this plugin. OAuthHandler,
+  JwtTokenManager, and the LicenseStatus bridge are gone — no bridges, no
+  copies. The connector's `MotionKitConnector\Auth\*` classes (which already
+  existed) are the single implementation. This also fixed a real pre-existing
+  bug: **both plugins were registering the same three `admin_init` OAuth
+  handlers** (callback/disconnect/verify) on the same option keys and the
+  same `motionkit-connect` page slug.
+- `ConnectPage.php` moved (`git mv`, history kept) to
+  `includes/Admin/ConnectPage.php`, namespace `MotionKit\Admin`. It reads
+  connection/license state through private `class_exists`-guarded accessors;
+  with the connector absent everything reads "not connected" and the page's
+  only action is the connector-required install/activate CTA (which correctly
+  stays here — it can't live in the plugin that's missing).
+- The **Tools tab data layer** (both AJAX hooks `wp_ajax_motionkit_tools_list`
+  / `wp_ajax_motionkit_tools_bulk_delete`, the `delete_one` POST handler, and
+  every wpdb scan/delete method) moved to the connector as
+  `MotionKitConnector\Admin\AnimationDataTools` (new `includes/Admin/` dir
+  there, wired via `Plugin::init_admin_tools()`). The dashboard keeps only
+  `render_tools_tab()` UI and **hides the Tools tab when that class is
+  absent** (a bookmarked `&tab=tools` URL falls back to Connect). AJAX action
+  names, nonce names, and response shapes unchanged — `admin-tools.js` needed
+  zero changes.
+- A single public helper `motionkit_editor_session_token()` in
+  `api-functions.php` is the one guarded gateway to the connector's token
+  generation, used by ConnectPage, Backend quick links, and the admin bar;
+  `motionkit_is_connected()`/`motionkit_has_active_license()` now point at
+  the connector classes directly.
+- **Uninstall ownership split**: this plugin's `uninstall.php` (previously
+  empty — a real blocker) now removes only its own four bookkeeping options +
+  the per-user permalink-notice meta. The auth options (access token, JWT
+  secret, jtis, legacy editor_url/api_key) are cleaned by the **connector's**
+  uninstall — deleting the dashboard plugin must not sever a connection a
+  still-active connector is using. The license cron is likewise
+  connector-owned (this plugin's `deactivate()` no longer unschedules it;
+  the connector re-ensures it on every `admin_init`).
+- `maybe_fix_autoload_flags()` (the one-shot wp_options autoload migration,
+  its `admin_init` hook, and the `motionkit_autoload_fixed_v1` sentinel —
+  including its uninstall cleanup) also moved to the connector's Plugin.php:
+  the hot option it flips (`motionkit_page_settings_updated_at`) is
+  connector-owned. This removes the last direct `$wpdb` query — and the last
+  `phpcs:ignore` for PreparedSQL sniffs — from this plugin.
+- Net effect for review: this plugin ships **no auth, no crypto, no
+  `wp_remote_*` calls, and no direct DB operations at all** — its uninstall
+  deletes three options and one user-meta key via core APIs; nothing else
+  touches the database.
+
+**Security fixes (dashboard side, all verified):**
+
+- **Bulk "Delete All" left ~half the data behind**: the batch loop advanced a
+  client offset over a list that shrank with every deletion. Rewritten (now
+  in the connector's `AnimationDataTools`) to always consume from the front
+  of a fresh scan and report `remaining`; `tools.js` updated to match, with
+  a `deleted === 0` full-pass guard preventing infinite client loops.
+- **Unbounded key deletion**: `delete_one` passed POSTed option/meta keys
+  straight to `delete_option()`/`delete_*_meta()` — nonce-gated but capable
+  of deleting `active_plugins`. Now whitelisted to the `motionkit_pg_*`
+  prefixes, the two global options, and the three known store types.
+- **Per-row remote token generation**: the tools list generated a JWT via
+  `wp_remote_post` (15s timeout) for every row — up to 20 serial HTTP calls
+  per page. Now one site-scoped token per AJAX response (safe: the editor
+  already reuses one token across page switches).
+- **Token-at-rest encryption upgraded to encrypt-then-MAC** (in the
+  connector's OAuthHandler): HMAC-SHA256 over IV+ciphertext, verified with
+  `hash_equals()`, `'v2:'`-prefixed format with a legacy-decrypt fallback so
+  existing connections survive; strict-mode base64 decoding (non-strict
+  `base64_decode` never returns false, so the old guards were dead code —
+  caught by PHPStan). The connector's OAuth callback also got the
+  sanitize-before-compare treatment on `$_GET['page']`.
+- The OAuth `state` CSRF defense was **adversarially verified as sound**
+  (256-bit CSPRNG, server-side transient, 600s expiry, single-use, timing-safe
+  compare, capability check first) — the remaining phpcs NonceVerification
+  warnings on the callback are now annotated with a targeted
+  `phpcs:disable/enable` pair, so `phpcs` runs fully clean (exit 0).
+
+**Smaller fixes:**
+
+- Double-load guard in `motionkit.php` moved **above** the `define()` calls
+  (a second active copy no longer emits five "already defined" warnings).
+- `do_action('MOTIONKIT_LOADED')` → `do_action('motionkit_loaded')` —
+  lowercase per WP hook convention; the uppercase name is the guard
+  *constant*, and no listeners existed anywhere. (Supersedes the phpcs-pass
+  note above that recorded the all-caps hook as a deliberate convention.)
+- All inline `onclick` handlers (notice dismiss ×12, disconnect confirm)
+  replaced with delegated listeners in a new `src/modules/admin/connect.js`,
+  bundled into `assets/build/admin.js` and enqueued — works under strict
+  admin CSP. `rel="noopener"` added to the launch button and both Backend
+  quick links. The `@` error-suppression on `file()` in `Helper.php` dropped
+  (redundant behind `is_readable()` + false-check).
+- The connector CTA's heredoc CSS (previously injected via
+  `wp_add_inline_style`) moved into the compiled `src/css/admin.css` →
+  `assets/build/admin.css`.
+- readme.txt `== External services ==` rewritten (iteratively, developer
+  request) to describe **only what this plugin itself does**: it makes no
+  remote requests — it renders links that open Motionkit in the browser.
+  Three bullets: the Launch/Build-Animation links (carry home URL, page URL,
+  session token), the Connect button (browser redirect with home URL +
+  one-time token; authorization and all server-side calls are the
+  Connector's), and the Connector download link (billing.motionkit.io, no
+  data sent). Plus the "your content is never sent" sentence and ToS/privacy
+  links. The server-side call-by-call list (token exchange, verify, revoke,
+  legacy `/connect/token-secret`) is now entirely the connector's disclosure
+  to carry in its own docs when distributed.
+- **ALL GSAP references removed everywhere** (same day, in two steps per
+  developer direction). Step 1: the loading/licensing elaboration — the
+  "Does this plugin load GSAP?" FAQ and the jsDelivr CDN sentence +
+  ToS/privacy links. Step 2 ("readme te gsap related kisu thakbe na — talk
+  about MotionKit"): every remaining mention — plugin name, short
+  description, description paragraphs, the "Built on GSAP" feature bullet
+  (now "High-performance animation engine … powered by the Motionkit
+  runtime"), how-it-works step, the "What is Motionkit?" FAQ, one
+  translatable admin string in ConnectPage.php, and a stale Autoloader
+  docblock. `grep -ri gsap` over readme.txt, motionkit.php, includes/, and
+  the regenerated .pot returns zero matches. Consistent with the
+  architecture split — this plugin enqueues no GSAP; that's connector
+  behavior, disclosed with the connector when it's distributed.
+- Stale PHPStan baseline entries for `includes/Frontend/Frontend.php` /
+  `includes/RestApi/RestApi.php` (files that live in the connector repo, not
+  here) removed; after the fixes above the baseline is now **empty**.
+
+**Known open items from this pass** (also in the checklist below):
+
+- **Connector zip served from billing.motionkit.io** (guideline 8/9 risk):
+  disclosed in readme.txt, but the safer path is hosting the connector on
+  wp.org and pointing the CTA at its slug. The date-stamped upload URL will
+  also go stale. Product decision pending.
+- **`languages/motionkit.pot` still not generated** — `npm run i18n` requires
+  wp-cli, which isn't installed on this machine.
+- **No dist/zip step actually runs `wp dist-archive`** — `.distignore` is
+  only enforced if the zip is built through it.
+- **No ESLint config exists** despite `package.json`'s lint scripts
+  referencing one (pre-existing; webpack's build is currently the only JS
+  syntax gate).
+- **Verify in the connector repo** that server-issued launch JWTs can be
+  validated locally — the shared `token_secret` has to reach the site during
+  OAuth connect; the legacy `/connect/token-secret` fetch is the only
+  delivery path found in the WP-side code.
+- **Re-run Plugin Check after this architecture split** — the Fifth-pass scan
+  predates it entirely.
+- Live-test the flows once: connector active → connect/verify/disconnect/
+  tools via the connector's handlers; connector deactivated → CTA fallback,
+  Tools tab hidden, Connect button disabled.
+
 ### Account/ownership — check before submitting
 
 - A separate `wealcoder`-account plugin ("bricksfly") received a real wp.org
@@ -615,7 +804,12 @@ scan mode, not real defects):
 - **External calls are all to `editor.motionkit.io`**, all part of the
   explicit OAuth connect/disconnect/JWT/session-verify flow the admin
   initiates — not silent phone-home. Still needs readme.txt disclosure (see
-  blocker above).
+  blocker above). **Update (2026-08-25): this plugin now makes ZERO remote
+  calls of its own — the entire auth/token layer moved to the connector
+  plugin (see Sixth pass). The readme's `== External services ==` section
+  says so explicitly and discloses the connector-performed calls, plus the
+  legacy `/connect/token-secret` fetch and the billing.motionkit.io
+  connector-zip download link.**
 - **ABSPATH guards**: present on every real PHP file. The only PHP files
   without a guard are auto-generated `assets/build/**/*.asset.php` webpack
   manifests (pure `return array(...)`, no side effects) — low risk, could add
@@ -665,29 +859,65 @@ scan mode, not real defects):
 
 ---
 
-## Pre-submission checklist
+## Pre-submission checklist (refreshed 2026-08-25)
 
-- [x] Run Plugin Check (PCP) locally — done (2026-08-06), see "Fifth pass"
-      above. Real findings fixed (trademark name, Tested-up-to granularity,
-      nonce unslash, stray file); dist-scope/NonceVerification/DirectQuery
-      findings investigated and confirmed false-positives for this scan mode.
-- [x] Sync version number across readme.txt / plugin header / `MOTIONKIT_VERSION` / package.json.
-- [x] Rewrite readme.txt — done, verified current (2026-08-04); still needs
-      the `== External services ==` section extended to cover the GSAP CDN
-      mechanism once its shape is decided (see GSAP item below — the
-      OAuth/connect/disconnect/session calls are already fully disclosed).
-- [x] Resolve the GSAP CDN-loading question — resolved 2026-08-05, CDN with
-      full disclosure (GSAP's license is non-GPL, can't be bundled; readme.txt
-      updated with accurate jsDelivr-CDN disclosure + licensing rationale).
-- [x] License tab — resolved, verified current (2026-08-05); real
-      billing.local-backed data embedded in the Connect tab, no fake
-      activation flow exists.
+- [x] Sync version number across readme.txt / plugin header /
+      `MOTIONKIT_VERSION` / package.json — **re-done 2026-08-25 on `1.0.0`**
+      after a regression; `Plugin::VERSION` now references the constant.
+- [x] Trademark-safe plugin name ("Motionkit – Visual Animation with GSAP") —
+      **re-fixed 2026-08-25** after a regression to "…for WordPress".
+- [x] `Tested up to: 7.1` (major.minor, current WP release per developer) in
+      readme + header — settled 2026-08-25.
+- [x] readme.txt `== External services ==` complete — extended 2026-08-25:
+      connector-performs-the-calls intro, token-secret legacy fetch,
+      billing.motionkit.io connector download, token-hash storage note.
+      Screenshots section (claiming missing files) removed again. GSAP/
+      jsDelivr elaboration removed entirely per developer direction (this
+      plugin loads no GSAP — that's connector behavior).
+- [x] uninstall.php actually cleans up — populated 2026-08-25; scoped to this
+      plugin's own options (auth cleanup is the connector's job, documented
+      in the file header).
+- [x] Security review — full three-track pass 2026-08-25 (see Sixth pass):
+      bulk-delete bug, delete-key whitelist, per-row token calls, crypto
+      hardening, inline-onclick removal all fixed. `phpcs` exit 0, PHPStan
+      clean with an **empty** baseline.
+- [x] Resolve the GSAP CDN-loading question — resolved 2026-08-05 as
+      CDN-with-disclosure; **superseded 2026-08-25**: GSAP loading is now
+      entirely the connector's behavior, so the disclosure moved out of this
+      plugin's readme (elaboration removed per developer direction). Carry
+      the jsDelivr/licensing disclosure into the connector's own docs when
+      that plugin is distributed.
 - [x] Replace placeholder Plugin URI / Author URI.
+- [ ] **Re-run Plugin Check (PCP)** — the Fifth-pass scan (2026-08-06)
+      predates the 2026-08-25 architecture split (auth + tools data layers
+      moved to the connector); scan the current tree before upload.
+- [x] Generate `languages/motionkit.pot` — done 2026-08-25 via a downloaded
+      `wp-cli.phar` (2.12.0) + a scratch php.ini enabling mbstring (Local's
+      CLI php loads no ini — see the environment quirk section):
+      `php -c <scratch.ini> wp-cli.phar i18n make-pot . languages/motionkit.pot
+      --domain=motionkit --exclude=assets,src,scripts`. 114 strings, headers
+      match the 1.0.0 identity, all source refs point at current file paths
+      (includes/Admin/ConnectPage.php etc.). **Regenerate after any future
+      string change** — the same command works; `npm run i18n` still assumes
+      a globally installed wp-cli.
+- [ ] Build the actual submission zip via `wp dist-archive` and inspect its
+      contents (`.distignore` is only enforced through it; verify `src/`,
+      `package.json`, `webpack.config.js` are IN, dev files are OUT).
+- [ ] Decide connector-zip hosting: billing.motionkit.io download is
+      disclosed but remains a guideline 8/9 rejection risk — wp.org-hosted
+      connector (CTA points at its slug) is the safe path.
+- [ ] Live-test both states once: connector active (connect/verify/
+      disconnect/Tools via connector handlers) and connector deactivated
+      (CTA fallback, Tools tab hidden, Connect disabled).
+- [ ] Verify in the connector repo that server-issued launch JWTs validate
+      locally (shared `token_secret` delivery during OAuth connect).
+- [ ] Prepare `screenshot-1.png` … `screenshot-4.png` (captions are in
+      readme.txt's `== Screenshots ==` section: editor, connect page, cloud
+      preset library, Tools tab) — these go in the wp.org SVN `assets/`
+      directory after approval, not in the plugin zip. Recommended: 1280×800
+      or larger, PNG.
 - [ ] Confirm the wp.org account used to submit has a `motionkit.io` email,
       not a personal/gmail address.
-- [x] Confirm `.distignore` output via `wp dist-archive` (or manual zip) contains
-      runtime files **plus** `src/`, `package.json`, and `webpack.config.js` for reviewer source verification.
-- [ ] Re-run full security/performance review after the above changes land.
 
 ---
 
@@ -704,12 +934,14 @@ scan mode, not real defects):
 - `phpstan-bootstrap.php`: defines the `MOTIONKIT_*` constants that normally
   come from `motionkit.php`'s own top-level code, so analyzing `includes/` in
   isolation doesn't false-positive on "constant not found."
-- `phpstan-baseline.neon`: captures the 7 pre-existing findings as of the
-  initial setup (unreachable ternary branches from PHPDoc-certain types, one
-  unused private method, one always-false strict comparison, one unreachable
-  statement after early return, one return-type mismatch in
-  `ConnectPage::collect_animation_records()`). None were fixed yet — chip away
-  over time per the skill's baseline workflow, don't add new errors to it.
+- `phpstan-baseline.neon`: **empty as of 2026-08-25** (`ignoreErrors: []`).
+  The original 7 findings are gone: two entries pointed at files that had
+  moved to the connector repo (Frontend.php, RestApi.php — removed as stale),
+  the always-false strict comparison was a real dead-code bug fixed by
+  switching to strict-mode `base64_decode`, and the
+  `collect_animation_records()` return-type entry left with that method when
+  the Tools data layer moved to the connector. Keep it empty — don't add new
+  errors to it.
 - Run via `composer run phpstan` (already aliased to `phpstan analyse --debug`).
 
 **Environment quirk on this machine**: PHPStan's parallel worker processes

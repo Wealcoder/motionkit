@@ -16,9 +16,7 @@ if (!defined('ABSPATH')) {
 
 use MotionKit\Backend\Backend;
 use MotionKit\Admin\PermalinkNotice;
-use MotionKit\Auth\OAuthHandler;
-use MotionKit\Auth\ConnectPage;
-use MotionKit\Auth\LicenseStatus;
+use MotionKit\Admin\ConnectPage;
 use MotionKit\Includes\Autoloader;
 use MotionKit\Factory\ComponentFactory;
 
@@ -31,9 +29,9 @@ use MotionKit\Factory\ComponentFactory;
 final class Plugin
 {
     /**
-     * Plugin version
+     * Plugin version — sourced from the plugin bootstrap constant so the header, constant, and class always agree on one number.
      */
-    public const VERSION = '1.1.7';
+    public const VERSION = MOTIONKIT_VERSION;
 
     /**
      * Plugin name
@@ -89,13 +87,6 @@ final class Plugin
     private ?Backend $backend = null;
 
     /**
-     * OAuth handler instance
-     *
-     * @var OAuthHandler|null
-     */
-    private ?OAuthHandler $oauth = null;
-
-    /**
      * Constructor
      *
      * @param string $plugin_file The main plugin file path
@@ -146,49 +137,9 @@ final class Plugin
     private function init_hooks(): void
     {
         add_action('plugins_loaded', [$this, 'init'], 10);
-        // One-shot autoload migration — flips legacy option rows that were
-        // saved with autoload=no but are read on every frontend request, so
-        // they join the alloptions cache instead of triggering a SELECT per
-        // page load. Sentinel-guarded to run exactly once per install.
-        add_action('admin_init', [$this, 'maybe_fix_autoload_flags'], 5);
 
         register_activation_hook($this->plugin_file, [$this, 'activate']);
         register_deactivation_hook($this->plugin_file, [$this, 'deactivate']);
-    }
-
-    /**
-     * Flip autoload=yes on hot-path options that were originally written with
-     * autoload=no. WP only honors the flag on first-create, so existing rows
-     * stay autoload=no forever unless we update wp_options.autoload directly.
-     *
-     * Cheap: one indexed UPDATE against wp_options, gated by a sentinel.
-     *
-     * @return void
-     */
-    public function maybe_fix_autoload_flags(): void
-    {
-        if (get_option('motionkit_autoload_fixed_v1') === '1') {
-            return;
-        }
-
-        global $wpdb;
-        $hot_options = ['motionkit_page_settings_updated_at'];
-        // Dynamic %s,%s,... placeholder list sized to $hot_options — this IS
-        // the prepare() placeholder syntax, not unescaped SQL; $hot_options is
-        // a hardcoded literal above, never external input. The sniff can't
-        // trace that {$placeholders} expands to valid %s placeholders before
-        // prepare() consumes them via the variadic ...$hot_options args below.
-        $placeholders = implode(',', array_fill(0, count($hot_options), '%s'));
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query(
-            $wpdb->prepare(
-                "UPDATE {$wpdb->options} SET autoload = 'yes'
-                 WHERE option_name IN ({$placeholders}) AND autoload != 'yes'", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-                ...$hot_options
-            )
-        );
-        wp_cache_delete('alloptions', 'options');
-        update_option('motionkit_autoload_fixed_v1', '1', true);
     }
 
     /**
@@ -211,7 +162,8 @@ final class Plugin
         add_action('admin_bar_menu', [$this, 'add_admin_bar_build_animation'], 100);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_admin_bar_css']);
 
-        do_action('MOTIONKIT_LOADED');
+        // Lowercase per WP hook conventions; the uppercase name is the double-load guard constant, not this hook.
+        do_action('motionkit_loaded');
     }
 
     
@@ -230,24 +182,17 @@ final class Plugin
     }
 
     /**
-     * Initialize authentication (OAuth + Connect page)
+     * Initialize the Connect dashboard page. Pure UI — the authentication
+     * layer (OAuth handlers, tokens, license state, cron) lives entirely in
+     * the MotionKit Connector plugin; the page reads it through guarded
+     * accessors and falls back to the connector-required CTA without it.
      *
      * @return void
      */
     private function init_auth(): void
     {
-        // Override connect URLs for local development      
-
-        $this->oauth = new OAuthHandler();
-        $this->oauth->init();
-
-        // Keeps the connected account's license / site-limit state mirrored
-        // locally. Registered outside the is_admin() branch below so the
-        // daily WP-Cron refresh still runs — cron is not admin context.
-        (new LicenseStatus())->init();
-
         if (is_admin()) {
-            $connect_page = new ConnectPage($this->oauth);
+            $connect_page = new ConnectPage();
             $connect_page->init();
         }
     }
@@ -301,8 +246,7 @@ final class Plugin
         // Flush rewrite rules
         flush_rewrite_rules();
 
-        // Don't leave the daily license refresh scheduled on a deactivated plugin.
-        LicenseStatus::unschedule_cron();
+        // The daily license-refresh cron is owned (scheduled, run, and unscheduled) by the connector plugin — deactivating this UI plugin must not stop the still-active connector's refresh.
 
         do_action('motionkit_deactivated');
     }
@@ -362,15 +306,11 @@ final class Plugin
             $page_url = home_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? '/')));
         }
 
-        // Always attach a session JWT — even before the site is connected,
-        // JwtTokenManager falls back to a local HMAC-signed token, so the
-        // editor preview never has to be reachable without one. This keeps
-        // is_editor_preview()'s token check unconditional (no anonymous
-        // fallback), instead of trusting ?action=motionkit-editor alone.
+        // Always attach a session JWT — even before the site is connected, the connector's JwtTokenManager falls back to a local HMAC-signed token, keeping is_editor_preview()'s token check unconditional instead of trusting ?action=motionkit-editor alone.
         $query_args = [
             'site'            => $page_url,
             'platform'        => 'wordpress',
-            'motionkit_token' => \MotionKit\Auth\JwtTokenManager::generate($page_url),
+            'motionkit_token' => motionkit_editor_session_token($page_url),
         ];
 
         $editor_url = apply_filters('motionkit/editor/url', add_query_arg($query_args, 'https://editor.motionkit.io/'));

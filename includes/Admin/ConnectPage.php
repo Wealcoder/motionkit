@@ -1,12 +1,17 @@
 <?php
 
-namespace MotionKit\Auth;
+namespace MotionKit\Admin;
 
 /**
  * Admin Dashboard Page
  *
  * WordPress admin page with tabbed layout: Connect, Tools. License status
  * renders inline inside the Connect tab.
+ *
+ * Pure dashboard UI — the authentication layer (OAuth, tokens, license)
+ * lives in the MotionKit Connector plugin, reached through the guarded
+ * helpers below. With the connector absent, everything reads as
+ * "not connected" and the page's only action is the connector-install CTA.
  *
  * Menu: MotionKit
  * URL:  /wp-admin/admin.php?page=motionkit-connect
@@ -22,14 +27,39 @@ if (!defined('ABSPATH')) {
 
 final class ConnectPage
 {
-  /**
-   * @var OAuthHandler
-   */
-  private OAuthHandler $oauth;
+  // ─── Connector auth accessors ────────────────────────────────
 
-  public function __construct(OAuthHandler $oauth)
+  private static function is_connected(): bool
   {
-    $this->oauth = $oauth;
+    return class_exists('\MotionKitConnector\Auth\OAuthHandler')
+      && \MotionKitConnector\Auth\OAuthHandler::is_connected();
+  }
+
+  private static function connection_info(): array
+  {
+    if (class_exists('\MotionKitConnector\Auth\OAuthHandler')) {
+      return \MotionKitConnector\Auth\OAuthHandler::get_connection_info();
+    }
+    return [
+      'connected'    => false,
+      'email'        => '',
+      'connected_at' => '',
+    ];
+  }
+
+  // Returns '#' without the connector; the Connect button is disabled in that state, so the URL is never followed.
+  private static function authorize_url(bool $switch_account = false): string
+  {
+    if (class_exists('\MotionKitConnector\Auth\OAuthHandler')) {
+      return (new \MotionKitConnector\Auth\OAuthHandler())->get_authorize_url($switch_account);
+    }
+    return '#';
+  }
+
+  // The Tools tab is UI-only here: its data layer (list/delete AJAX + delete_one POST) is registered by the connector's AnimationDataTools, so the tab only renders when that class is present.
+  private static function tools_available(): bool
+  {
+    return class_exists('\MotionKitConnector\Admin\AnimationDataTools');
   }
 
   public function init(): void
@@ -37,11 +67,8 @@ final class ConnectPage
     add_action('admin_menu', [$this, 'register_menu']);
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_styles']);
     add_action('admin_enqueue_scripts', [$this, 'enqueue_menu_icon_style']);
-    add_action('admin_init', [$this, 'handle_tools_actions']);
     add_action('admin_init', [$this, 'handle_connector_activate']);
     add_action('current_screen', [$this, 'suppress_foreign_admin_notices']);
-    add_action('wp_ajax_motionkit_tools_list', [$this, 'ajax_tools_list']);
-    add_action('wp_ajax_motionkit_tools_bulk_delete', [$this, 'ajax_tools_bulk_delete']);
   }
 
   /**
@@ -75,7 +102,14 @@ final class ConnectPage
       $version
     );
 
-    wp_add_inline_style('motionkit-admin', $this->connector_cta_css());
+    // Delegated notice-dismiss / confirm handlers (no inline onclick attributes).
+    wp_enqueue_script(
+      'motionkit-admin',
+      plugins_url('assets/build/admin.js', MOTIONKIT_PLUGIN_FILE),
+      [],
+      $version,
+      true
+    );
 
     // Same nonce as the sidebar tab links (see render_page()) — mirrors its
     // fallback-to-default behavior so the enqueued CSS always matches what
@@ -85,7 +119,7 @@ final class ConnectPage
     $active_tab = ($tab_nonce_valid && isset($_GET['tab']))
       ? sanitize_text_field(wp_unslash($_GET['tab']))
       : 'connect';
-    if ($active_tab === 'tools') {
+    if ($active_tab === 'tools' && self::tools_available()) {
       wp_enqueue_style(
         'motionkit-admin-tools',
         plugins_url('assets/build/admin-tools.css', MOTIONKIT_PLUGIN_FILE),
@@ -169,14 +203,11 @@ final class ConnectPage
   {
     $page_url = home_url('/');
 
-    // Always attach a session JWT — even before the site is connected,
-    // JwtTokenManager falls back to a local HMAC-signed token, so
-    // is_editor_preview() can require a valid token unconditionally
-    // instead of trusting ?action=motionkit-editor alone pre-connect.
+    // Always attach a session JWT — even before the site is connected, the connector's JwtTokenManager falls back to a local HMAC-signed token, so is_editor_preview() can require a valid token unconditionally instead of trusting ?action=motionkit-editor alone pre-connect.
     $query_args = [
       'site'            => $page_url,
       'platform'        => 'wordpress',
-      'motionkit_token' => JwtTokenManager::generate($page_url),
+      'motionkit_token' => motionkit_editor_session_token($page_url),
     ];
 
     $base_url = apply_filters('motionkit/editor/url', 'https://editor.motionkit.io/');
@@ -200,13 +231,18 @@ final class ConnectPage
       ? sanitize_text_field(wp_unslash($_GET['tab']))
       : 'connect';
     $current_user = wp_get_current_user();
-    $connection_info = OAuthHandler::get_connection_info();
+    $connection_info = self::connection_info();
     $user_email = !empty($connection_info['email']) ? $connection_info['email'] : $current_user->user_email;
 
     $tabs = [
       'connect' => ['label' => __('Connect', 'motionkit'), 'icon' => '&#128279;'],
-      'tools'   => ['label' => __('Tools', 'motionkit'),   'icon' => '&#128295;'],
     ];
+    if (self::tools_available()) {
+      $tabs['tools'] = ['label' => __('Tools', 'motionkit'), 'icon' => '&#128295;'];
+    } elseif ($active_tab === 'tools') {
+      // A bookmarked tools URL with no connector falls back to the Connect tab (where the connector-required CTA lives) instead of an empty tab.
+      $active_tab = 'connect';
+    }
 
     ?>
     <div class="motionkit-page">
@@ -222,7 +258,7 @@ final class ConnectPage
               <defs><radialGradient id="motionkit_hdr_g" cx="0" cy="0" r="1" gradientTransform="matrix(-62.2 127 -127 -62.2 122.2 122.2)" gradientUnits="userSpaceOnUse"><stop stop-color="#1C7E92"/><stop offset="1" stop-color="#599BFD"/></radialGradient></defs>
             </svg>
           </div>
-          <span class="motionkit-header-title"><?php echo esc_html__('MotionKit','motionkit') ?></span>
+          <span class="motionkit-header-title"><?php echo esc_html__('MotionKit', 'motionkit'); ?></span>
         </div>
         <div class="motionkit-header-right">
           <span class="motionkit-header-email"><?php echo esc_html($user_email); ?></span>
@@ -284,36 +320,6 @@ final class ConnectPage
   }
 
   // ─── Notices ─────────────────────────────────────────────────
-
-  /**
-   * Self-contained styling for the connector CTA. Kept inline (not in the
-   * compiled admin.css) so the prompt can ship without a rebuild; scoped under
-   * .motionkit-connector-cta so it can't leak into the rest of the page.
-   *
-   * @return string
-   */
-  private function connector_cta_css(): string
-  {
-    return <<<CSS
-.motionkit-connector-cta{position:relative;margin:0 0 20px;border-radius:16px;padding:1px;background:linear-gradient(135deg,#2f7bf6 0%,#7c5cff 50%,#1ea4c4 100%);box-shadow:0 10px 30px -12px rgba(47,123,246,.45);overflow:hidden;isolation:isolate}
-.motionkit-connector-cta__glow{position:absolute;inset:-40%;z-index:0;background:radial-gradient(closest-side,rgba(124,92,255,.35),transparent 70%);filter:blur(20px);animation:mkctaFloat 7s ease-in-out infinite}
-@keyframes mkctaFloat{0%,100%{transform:translate(-8%,-6%)}50%{transform:translate(10%,8%)}}
-.motionkit-connector-cta__body{position:relative;z-index:1;display:flex;align-items:center;gap:18px;padding:18px 22px;border-radius:15px;background:#0e1526;color:#eaf0ff}
-.motionkit-connector-cta__icon{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:12px;color:#ffd873;background:linear-gradient(135deg,rgba(255,216,115,.16),rgba(255,216,115,.04));box-shadow:inset 0 0 0 1px rgba(255,216,115,.28)}
-.motionkit-connector-cta__text{flex:1 1 auto;min-width:0}
-.motionkit-connector-cta__badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#9fc0ff;background:rgba(47,123,246,.14);border:1px solid rgba(47,123,246,.3);padding:3px 9px;border-radius:999px;margin-bottom:8px}
-.motionkit-connector-cta__title{margin:0 0 4px;font-size:16px;font-weight:700;line-height:1.25;color:#fff}
-.motionkit-connector-cta__desc{margin:0;font-size:13px;line-height:1.5;color:#a9b6d4;max-width:62ch}
-.motionkit-connector-cta__action{flex:0 0 auto}
-.motionkit-connector-cta__btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-size:13.5px;font-weight:600;color:#fff;padding:11px 18px;border-radius:10px;background:linear-gradient(135deg,#2f7bf6,#6a5cff);box-shadow:0 6px 16px -6px rgba(47,123,246,.7);transition:transform .18s ease,box-shadow .18s ease,filter .18s ease}
-.motionkit-connector-cta__btn:hover{transform:translateY(-1px);filter:brightness(1.08);box-shadow:0 10px 22px -6px rgba(106,92,255,.8);color:#fff}
-.motionkit-connector-cta__btn:active{transform:translateY(0)}
-.motionkit-connector-cta__btn svg{transition:transform .18s ease}
-.motionkit-connector-cta__btn:hover svg{transform:translateY(2px)}
-@media (max-width:640px){.motionkit-connector-cta__body{flex-direction:column;align-items:flex-start;gap:14px}.motionkit-connector-cta__action{width:100%}.motionkit-connector-cta__btn{width:100%;justify-content:center}}
-@media (prefers-reduced-motion:reduce){.motionkit-connector-cta__glow{animation:none}}
-CSS;
-  }
 
   /**
    * Whether the MotionKit Connector engine plugin is active.
@@ -576,10 +582,7 @@ CSS;
 
   private function render_notices(): void
   {
-    // These flags are appended by redirects this plugin controls (OAuth
-    // callback, handle_tools_actions(), the bulk-delete JS) and are now
-    // nonce-stamped via wp_nonce_url()/wp_create_nonce('motionkit_notice')
-    // at every one of those redirect sites. A missing/invalid nonce (e.g. a
+    // These flags are appended by redirects under MotionKit's control (the connector's OAuth callback and AnimationDataTools delete handler, plus the bulk-delete JS) and are nonce-stamped via wp_nonce_url()/wp_create_nonce('motionkit_notice') at every one of those redirect sites. A missing/invalid nonce (e.g. a
     // hand-crafted or stale URL) just shows no notice at all rather than
     // hard-failing — nothing here is destructive either way, so a silent
     // fallback is enough.
@@ -617,7 +620,7 @@ CSS;
       <div class="motionkit-notice motionkit-notice--error">
         <span class="motionkit-notice-icon">&#10060;</span>
         <?php echo esc_html($this->get_error_message($error)); ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php endif;
 
@@ -625,7 +628,7 @@ CSS;
       <div class="motionkit-notice motionkit-notice--success">
         <span class="motionkit-notice-icon">&#10004;</span>
         <?php esc_html_e('Connected Successfully', 'motionkit'); ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php endif;
 
@@ -633,7 +636,7 @@ CSS;
       <div class="motionkit-notice motionkit-notice--info">
         <span class="motionkit-notice-icon">&#8505;</span>
         <?php esc_html_e('Disconnected from MotionKit.', 'motionkit'); ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php endif;
 
@@ -641,13 +644,13 @@ CSS;
       <div class="motionkit-notice motionkit-notice--success">
         <span class="motionkit-notice-icon">&#10004;</span>
         <?php esc_html_e('License status updated from your MotionKit account.', 'motionkit'); ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php elseif ($license_refresh === 'error' && $refresh_reason === 'site_not_launched'): ?>
       <div class="motionkit-notice motionkit-notice--info">
         <span class="motionkit-notice-icon">&#8505;</span>
         <?php esc_html_e('This site has not launched the MotionKit editor yet, so there is no license to check yet. Open the editor once (via "Launch MotionKit" or "Edit with MotionKit" on any page) to finish connecting this site.', 'motionkit'); ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php elseif ($license_refresh === 'error'): ?>
       <div class="motionkit-notice motionkit-notice--error">
@@ -659,7 +662,7 @@ CSS;
           $refresh_reason ?: 'unknown error'
         ));
         ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php endif;
 
@@ -667,7 +670,7 @@ CSS;
       <div class="motionkit-notice motionkit-notice--success">
         <span class="motionkit-notice-icon">&#10004;</span>
         <?php esc_html_e('Animation data deleted.', 'motionkit'); ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php endif;
 
@@ -678,7 +681,7 @@ CSS;
         // translators: %d is the number of animation records deleted.
         echo esc_html(sprintf(_n('Deleted %d animation record.', 'Deleted %d animation records.', $tools_all_deleted, 'motionkit'), $tools_all_deleted));
         ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php endif;
 
@@ -686,13 +689,13 @@ CSS;
       <div class="motionkit-notice motionkit-notice--success">
         <span class="motionkit-notice-icon">&#10004;</span>
         <?php esc_html_e('Token verified — your local token matches the MotionKit server.', 'motionkit'); ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php elseif ($verify === 'invalid'): ?>
       <div class="motionkit-notice motionkit-notice--error">
         <span class="motionkit-notice-icon">&#10060;</span>
         <?php esc_html_e('Token mismatch — try disconnecting and reconnecting.', 'motionkit'); ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php elseif ($verify === 'error'): ?>
       <div class="motionkit-notice motionkit-notice--error">
@@ -701,7 +704,7 @@ CSS;
         // translators: %s is the reason the verification check failed.
         echo esc_html(sprintf(__('Verification failed: %s', 'motionkit'), $verify_reason ?: 'unknown error'));
         ?>
-        <button class="motionkit-notice-close" onclick="this.parentElement.remove()">&times;</button>
+        <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php endif;
   }
@@ -716,12 +719,13 @@ CSS;
    */
   private function render_license_tab(): void
   {
-    if (!OAuthHandler::is_connected()) {
+    // The explicit class_exists guard keeps the LicenseStatus calls below provably safe (and lets static analysis narrow the class) even though is_connected() is already false without the connector.
+    if (!class_exists('\MotionKitConnector\Auth\LicenseStatus') || !self::is_connected()) {
       return;
     }
 
-    $state = LicenseStatus::get_state();
-    $valid = LicenseStatus::is_valid();
+    $state = \MotionKitConnector\Auth\LicenseStatus::get_state();
+    $valid = \MotionKitConnector\Auth\LicenseStatus::is_valid();
 
     ?>
     <div class="motionkit-card">
@@ -731,7 +735,7 @@ CSS;
           <?php esc_html_e('License', 'motionkit'); ?>
         </h3>
 
-        <?php if (LicenseStatus::is_indeterminate()): ?>
+        <?php if (\MotionKitConnector\Auth\LicenseStatus::is_indeterminate()): ?>
           <p class="motionkit-card-desc">
             <?php esc_html_e('We could not reach the MotionKit server recently enough to confirm your license. Premium features stay available while we retry; use "Check again" to retry now.', 'motionkit'); ?>
           </p>
@@ -926,7 +930,7 @@ CSS;
 
   private function render_connect_tab(\WP_User $current_user): void
   {
-    $info = OAuthHandler::get_connection_info();
+    $info = self::connection_info();
 
     if ($info['connected']) {
       $this->render_connected_state($info, $current_user);
@@ -948,7 +952,7 @@ CSS;
       'motionkit_verify'
     );
 
-    $switch_account_url = $this->oauth->get_authorize_url(true);
+    $switch_account_url = self::authorize_url(true);
 
     $editor_url = $this->get_editor_url();
 
@@ -989,7 +993,7 @@ CSS;
           </div>
           <a href="<?php echo esc_url($disconnect_url); ?>"
              class="motionkit-btn motionkit-btn--outline motionkit-btn--danger"
-             onclick="return confirm('<?php echo esc_js(__('Are you sure you want to disconnect?', 'motionkit')); ?>');">
+             data-motionkit-confirm="<?php echo esc_attr__('Are you sure you want to disconnect?', 'motionkit'); ?>">
             <?php esc_html_e('Disconnect', 'motionkit'); ?>
           </a>
         </div>
@@ -1014,7 +1018,7 @@ CSS;
           </p>
           <a href="<?php echo esc_url($editor_url); ?>"
              class="motionkit-btn motionkit-btn--primary motionkit-btn--split"
-             target="_blank">
+             target="_blank" rel="noopener">
             <span class="motionkit-btn__text" data-text="<?php esc_attr_e('Launch Motionkit', 'motionkit'); ?>">
               <?php
                 $text = __('Launch Motionkit', 'motionkit');
@@ -1042,7 +1046,7 @@ CSS;
 
   private function render_disconnected_state(): void
   {
-    $authorize_url = $this->oauth->get_authorize_url();
+    $authorize_url = self::authorize_url();
 
     // Prompt to get the Connector engine in place BEFORE connecting, so the
     // site is ready to run animations the moment the account is linked. Prints
@@ -1064,7 +1068,7 @@ CSS;
       </div>
       <div class="motionkit-card-body">
         <p class="motionkit-card-desc">
-          <?php esc_html_e('Gain access to the visual GSAP animation editor and connect your site to your MotionKit dashboard to start building stunning animations.', 'motionkit'); ?>
+          <?php esc_html_e('Gain access to the MotionKit visual animation editor and connect your site to your MotionKit dashboard to start building stunning animations.', 'motionkit'); ?>
         </p>
         <?php if ($connector_ready): ?>
           <a href="<?php echo esc_url($authorize_url); ?>" class="motionkit-btn motionkit-btn--primary">
@@ -1131,323 +1135,6 @@ CSS;
   // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
   // ─── Tools Tab ───────────────────────────────────────────────
-
-  private const TOOLS_OPTION_PREFIX = 'motionkit_pg_animation_';
-  private const TOOLS_SETTINGS_PREFIX = 'motionkit_pg_settings_';
-  private const TOOLS_GLOBAL_SETTINGS_OPTION = 'motionkit_global_settings';
-  private const TOOLS_GLOBAL_ANIMATIONS_OPTION = 'motionkit_global_animations';
-
-  public function handle_tools_actions(): void
-  {
-    if (!isset($_POST['motionkit_tools_action'])) {
-      return;
-    }
-    if (!current_user_can('manage_options')) {
-      return;
-    }
-    $nonce = isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '';
-    if (!wp_verify_nonce($nonce, 'motionkit_tools_nonce')) {
-      wp_safe_redirect(wp_nonce_url(
-        admin_url('admin.php?page=motionkit-connect&tab=tools&error=nonce_failed'),
-        'motionkit_notice'
-      ));
-      exit;
-    }
-
-    $action = sanitize_text_field(wp_unslash($_POST['motionkit_tools_action']));
-
-    if ($action === 'delete_one') {
-      $store = sanitize_text_field(wp_unslash($_POST['store_type'] ?? ''));
-      $option = sanitize_text_field(wp_unslash($_POST['option_key'] ?? ''));
-      $id = isset($_POST['object_id']) ? (int) $_POST['object_id'] : 0;
-      $this->delete_animation_record($store, $option, $id);
-      wp_safe_redirect(wp_nonce_url(
-        admin_url('admin.php?page=motionkit-connect&tab=tools&tools_deleted=1'),
-        'motionkit_notice'
-      ));
-      exit;
-    }
-  }
-
-  public function ajax_tools_list(): void
-  {
-    if (!current_user_can('manage_options')) {
-      wp_send_json_error(['message' => 'unauthorized'], 403);
-    }
-    check_ajax_referer('motionkit_tools_ajax', 'nonce');
-
-    $search = isset($_POST['search']) ? sanitize_text_field(wp_unslash($_POST['search'])) : '';
-    $page = max(1, isset($_POST['page']) ? (int) $_POST['page'] : 1);
-    $per_page = 20;
-
-    $all = $this->collect_animation_records($search);
-    $total = count($all);
-    $total_pages = max(1, (int) ceil($total / $per_page));
-    $offset = ($page - 1) * $per_page;
-    $rows = array_slice($all, $offset, $per_page);
-
-    wp_send_json_success([
-      'rows'        => array_map([$this, 'decorate_record'], $rows),
-      'page'        => $page,
-      'per_page'    => $per_page,
-      'total'       => $total,
-      'total_pages' => $total_pages,
-    ]);
-  }
-
-  public function ajax_tools_bulk_delete(): void
-  {
-    if (!current_user_can('manage_options')) {
-      wp_send_json_error(['message' => 'unauthorized'], 403);
-    }
-    check_ajax_referer('motionkit_tools_ajax', 'nonce');
-
-    $offset = max(0, isset($_POST['offset']) ? (int) $_POST['offset'] : 0);
-    $batch_size = 25;
-
-    $all = $this->collect_animation_records('');
-    $total = count($all);
-    $slice = array_slice($all, $offset, $batch_size);
-
-    $deleted = 0;
-    foreach ($slice as $record) {
-      if ($this->delete_animation_record($record['store_type'], $record['option'], $record['id'])) {
-        $deleted++;
-      }
-    }
-
-    // First batch: clear global keys + sweep any orphan settings rows that
-    // have no matching animation record (so nothing is left behind).
-    if ($offset === 0) {
-      delete_option(self::TOOLS_GLOBAL_SETTINGS_OPTION);
-      delete_option(self::TOOLS_GLOBAL_ANIMATIONS_OPTION);
-      $this->delete_all_settings_records();
-    }
-
-    $processed = $offset + count($slice);
-    $done = $processed >= $total;
-
-    wp_send_json_success([
-      'processed' => $processed,
-      'deleted'   => $deleted,
-      'total'     => $total,
-      'done'      => $done,
-      'next_offset' => $done ? $processed : $offset + $batch_size,
-    ]);
-  }
-
-  // Defense-in-depth: both callers (handle_tools_actions, ajax_tools_bulk_delete)
-  // already gate on manage_options, but this re-checks so the destructive
-  // delete itself never fires without it, even if a future caller forgets.
-  private function delete_animation_record(string $store_type, string $option, int $id = 0): bool
-  {
-    if (!current_user_can('manage_options')) {
-      return false;
-    }
-
-    $deleted = $this->delete_keyed_record($store_type, $option, $id);
-
-    // Cascade: when we remove motionkit_pg_animation_<type>, also remove the
-    // matching motionkit_pg_settings_<type> on the same store/id. Settings are
-    // orphaned once the animation row is gone — no UI points at them.
-    if (strpos($option, self::TOOLS_OPTION_PREFIX) === 0) {
-      $settings_key = preg_replace(
-        '/^' . preg_quote(self::TOOLS_OPTION_PREFIX, '/') . '/',
-        self::TOOLS_SETTINGS_PREFIX,
-        $option
-      );
-      if ($settings_key !== null && $settings_key !== $option) {
-        $this->delete_keyed_record($store_type, $settings_key, $id);
-      }
-    }
-
-    return $deleted;
-  }
-
-  private function delete_keyed_record(string $store_type, string $option, int $id = 0): bool
-  {
-    switch ($store_type) {
-      case 'post_meta':
-        return (bool) delete_post_meta($id, $option);
-      case 'term_meta':
-        return (bool) delete_term_meta($id, $option);
-      case 'option':
-      default:
-        return (bool) delete_option($option);
-    }
-  }
-
-  // Wipe every motionkit_pg_settings_* row across post_meta/term_meta/options.
-  // Used by bulk delete to catch orphans whose animation row was already gone.
-  // Defense-in-depth: re-checks the capability here too, so this destructive,
-  // site-wide sweep stays safe even if a future caller forgets to gate it.
-  private function delete_all_settings_records(): void
-  {
-    if (!current_user_can('manage_options')) {
-      return;
-    }
-
-    global $wpdb;
-    $like = $wpdb->esc_like(self::TOOLS_SETTINGS_PREFIX) . '%';
-
-    $post_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT post_id AS id, meta_key AS `key` FROM {$wpdb->postmeta} WHERE meta_key LIKE %s",
-        $like
-      )
-    );
-    foreach ($post_rows as $r) {
-      delete_post_meta((int) $r->id, $r->key);
-    }
-
-    $term_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT term_id AS id, meta_key AS `key` FROM {$wpdb->termmeta} WHERE meta_key LIKE %s",
-        $like
-      )
-    );
-    foreach ($term_rows as $r) {
-      delete_term_meta((int) $r->id, $r->key);
-    }
-
-    $opt_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
-        $like
-      )
-    );
-    foreach ($opt_rows as $r) {
-      delete_option($r->option_name);
-    }
-  }
-
-  /**
-   * Scan post_meta, term_meta, options for animation configs.
-   *
-   * @return array<int,array{store_type:string,option:string,id:int,title:string,type_label:string,modified:string,edit_url:string|null,permalink:string|null}>
-   */
-  private function collect_animation_records(string $search = ''): array
-  {
-    global $wpdb;
-    $prefix = self::TOOLS_OPTION_PREFIX;
-    $like = $wpdb->esc_like($prefix) . '%';
-    $records = [];
-
-    // post_meta rows
-    $meta_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT pm.post_id AS id, pm.meta_key AS `key`, p.post_title AS title, p.post_type AS type, p.post_modified_gmt AS modified
-         FROM {$wpdb->postmeta} pm
-         INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-         WHERE pm.meta_key LIKE %s",
-        $like
-      )
-    );
-    foreach ($meta_rows as $r) {
-      $records[] = [
-        'store_type' => 'post_meta',
-        'option'     => $r->key,
-        'id'         => (int) $r->id,
-        'title'      => $r->title !== '' ? $r->title : '(no title)',
-        'type_label' => $r->type,
-        'modified'   => $r->modified,
-      ];
-    }
-
-    // term_meta rows
-    $term_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT tm.term_id AS id, tm.meta_key AS `key`, t.name AS title, tt.taxonomy AS type
-         FROM {$wpdb->termmeta} tm
-         INNER JOIN {$wpdb->terms} t ON t.term_id = tm.term_id
-         INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_id = tm.term_id
-         WHERE tm.meta_key LIKE %s",
-        $like
-      )
-    );
-    foreach ($term_rows as $r) {
-      $records[] = [
-        'store_type' => 'term_meta',
-        'option'     => $r->key,
-        'id'         => (int) $r->id,
-        'title'      => $r->title,
-        'type_label' => 'term:' . $r->type,
-        'modified'   => '',
-      ];
-    }
-
-    // options rows
-    $opt_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
-        $like
-      )
-    );
-    foreach ($opt_rows as $r) {
-      $records[] = [
-        'store_type' => 'option',
-        'option'     => $r->option_name,
-        'id'         => 0,
-        'title'      => $this->humanize_option_key($r->option_name),
-        'type_label' => 'option',
-        'modified'   => '',
-      ];
-    }
-
-    if ($search !== '') {
-      $needle = mb_strtolower($search);
-      $records = array_values(array_filter($records, function ($rec) use ($needle) {
-        return strpos(mb_strtolower($rec['title']), $needle) !== false
-          || strpos(mb_strtolower($rec['option']), $needle) !== false;
-      }));
-    }
-
-    usort($records, function ($a, $b) {
-      return strcmp($b['modified'] ?? '', $a['modified'] ?? '');
-    });
-
-    return $records;
-  }
-
-  private function humanize_option_key(string $key): string
-  {
-    $suffix = substr($key, strlen(self::TOOLS_OPTION_PREFIX));
-    return $suffix !== '' ? $suffix : $key;
-  }
-
-  /**
-   * Add edit_url (editor.motionkit.io with token) + permalink to each record.
-   */
-  private function decorate_record(array $rec): array
-  {
-    $permalink = null;
-
-    if ($rec['store_type'] === 'post_meta' && $rec['id']) {
-      $permalink = get_permalink($rec['id']) ?: null;
-    } elseif ($rec['store_type'] === 'term_meta' && $rec['id']) {
-      $link = get_term_link($rec['id']);
-      $permalink = is_wp_error($link) ? null : $link;
-    } elseif ($rec['store_type'] === 'option') {
-      $permalink = home_url('/');
-    }
-
-    $rec['permalink'] = $permalink;
-    $rec['edit_url']  = $permalink ? $this->build_editor_url($permalink) : null;
-
-    return $rec;
-  }
-
-  private function build_editor_url(string $page_url): string
-  {
-    // Always attach a session JWT — see get_editor_url() above.
-    $query_args = [
-      'site'            => $page_url,
-      'platform'        => 'wordpress',
-      'motionkit_token' => JwtTokenManager::generate($page_url),
-    ];
-    $base = apply_filters('motionkit/editor/url', 'https://editor.motionkit.io/');
-    return add_query_arg($query_args, $base);
-  }
 
   private function render_tools_tab(): void
   {

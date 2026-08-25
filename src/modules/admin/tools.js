@@ -216,14 +216,15 @@
       if (confirmBtn) confirmBtn.disabled = true;
       if (cancelBtn) cancelBtn.disabled = true;
       if (progress) progress.hidden = false;
-      let offset = 0;
+      // The server always deletes from the front of a fresh scan and reports how many records remain, so progress is grandTotal - remaining — no client-side offset (an offset would skip records as the list shrinks).
+      let first = true;
       let totalDeleted = 0;
-      let total = 0;
+      let grandTotal = 0;
       while (true) {
         const fd = new FormData();
         fd.append("action", "motionkit_tools_bulk_delete");
         fd.append("nonce", nonce);
-        fd.append("offset", offset);
+        if (first) fd.append("first", "1");
         const r = await fetch(ajaxUrl, {
           method: "POST",
           credentials: "same-origin",
@@ -234,15 +235,16 @@
           if (label) label.textContent = "Error";
           return;
         }
+        if (first) grandTotal = j.data.total;
+        first = false;
         totalDeleted += j.data.deleted;
-        total = j.data.total;
-        const pct = total
-          ? Math.min(100, Math.round((j.data.processed / total) * 100))
+        const doneCount = Math.max(0, grandTotal - j.data.remaining);
+        const pct = grandTotal
+          ? Math.min(100, Math.round((doneCount / grandTotal) * 100))
           : 100;
         if (fill) fill.style.width = pct + "%";
-        if (label) label.textContent = j.data.processed + " / " + total;
+        if (label) label.textContent = doneCount + " / " + grandTotal;
         if (j.data.done) break;
-        offset = j.data.next_offset;
       }
       if (label) label.textContent = (strings.done || "Done!") + " (" + totalDeleted + ")";
       setTimeout(() => {

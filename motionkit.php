@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Plugin Name: Motionkit – Visual GSAP Animation for WordPress
+ * Plugin Name: MotionKit – Visual Animation Connector
  * Plugin URI: https://motionkit.io
- * Description: Connects your site to the Motionkit visual editor so you can build GSAP-powered scroll, hover, and page-transition animations without writing code.
- * Version: 0.5.2
+ * Description: Connect WordPress with MotionKit to create, preview, publish, and manage visual website animations from the MotionKit editor.
+ * Version: 1.0.0
  * Author: wealcoder
  * Author URI: https://profiles.wordpress.org/wealcoder/
  * License: GPL v2 or later
@@ -24,17 +24,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Check if plugin is already loaded — must run before the define() calls so a second active copy bails out without emitting "already defined" warnings.
+if ( defined( 'MOTIONKIT_LOADED' ) ) {
+	return;
+}
+
 // Define plugin constants
 define( 'MOTIONKIT_VERSION', '1.0.0' );
 define( 'MOTIONKIT_PLUGIN_FILE', __FILE__ );
 define( 'MOTIONKIT_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MOTIONKIT_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'MOTIONKIT_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
-
-// Check if plugin is already loaded
-if ( defined( 'MOTIONKIT_LOADED' ) ) {
-	return;
-}
 
 define( 'MOTIONKIT_LOADED', true );
 

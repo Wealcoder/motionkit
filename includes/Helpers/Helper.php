@@ -120,7 +120,7 @@ final class Helper
             return [];
         }
 
-        $lines = @file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         if (false === $lines) {
             return [];
         }

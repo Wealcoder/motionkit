@@ -16,8 +16,6 @@ if (!defined('ABSPATH')) {
 
 use MotionKit\Common\Assets\AssetLoader;
 use MotionKit\Factory\ComponentFactory;
-use MotionKit\Auth\OAuthHandler;
-use MotionKit\Auth\JwtTokenManager;
 
 /**
  * Backend Class
@@ -101,12 +99,12 @@ final class Backend
     $query_args = [
       'site'            => $page_url,
       'platform'        => 'wordpress',
-      'motionkit_token' => JwtTokenManager::generate($page_url),
+      'motionkit_token' => motionkit_editor_session_token($page_url),
     ];
 
     $editor_url = apply_filters('motionkit/editor/url', add_query_arg($query_args, 'https://editor.motionkit.io/'));
 
-    $actions['motionkit_action'] = '<a target="_blank" href="' . esc_url($editor_url) . '">' . esc_html__('Build Animation', 'motionkit') . '</a>';
+    $actions['motionkit_action'] = '<a target="_blank" rel="noopener" href="' . esc_url($editor_url) . '">' . esc_html__('Build Animation', 'motionkit') . '</a>';
 
     return $actions;
   }
@@ -134,12 +132,12 @@ final class Backend
     $query_args = [
       'site'            => $page_url,
       'platform'        => 'wordpress',
-      'motionkit_token' => JwtTokenManager::generate($page_url),
+      'motionkit_token' => motionkit_editor_session_token($page_url),
     ];
 
     $editor_url = apply_filters('motionkit/editor/url', add_query_arg($query_args, 'https://editor.motionkit.io/'));
 
-    $actions['motionkit_action'] = '<a target="_blank" href="' . esc_url($editor_url) . '">' . esc_html__('Build Animation', 'motionkit') . '</a>';
+    $actions['motionkit_action'] = '<a target="_blank" rel="noopener" href="' . esc_url($editor_url) . '">' . esc_html__('Build Animation', 'motionkit') . '</a>';
 
     return $actions;
   }
