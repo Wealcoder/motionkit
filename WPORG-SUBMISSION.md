@@ -760,10 +760,13 @@ dashboard shell; the connector owns all logic:
 
 **Known open items from this pass** (also in the checklist below):
 
-- **Connector zip served from billing.motionkit.io** (guideline 8/9 risk):
+- **Connector zip served from my.motionkit.io** (guideline 8/9 risk):
   disclosed in readme.txt, but the safer path is hosting the connector on
   wp.org and pointing the CTA at its slug. The date-stamped upload URL will
-  also go stale. Product decision pending.
+  also go stale. Product decision pending. The billing site moved off
+  `billing.motionkit.io` on 2026-08-30, which is exactly the churn this item
+  warns about — the download URL had to be changed by hand in the editor and
+  the connector, so readme.txt must be re-checked whenever the host moves.
 - **`languages/motionkit.pot` still not generated** — `npm run i18n` requires
   wp-cli, which isn't installed on this machine.
 - **No dist/zip step actually runs `wp dist-archive`** — `.distignore` is
@@ -809,7 +812,9 @@ dashboard shell; the connector owns all logic:
   plugin (see Sixth pass). The readme's `== External services ==` section
   says so explicitly and discloses the connector-performed calls, plus the
   legacy `/connect/token-secret` fetch and the billing.motionkit.io
-  connector-zip download link.**
+  connector-zip download link.** That download host became
+  `my.motionkit.io` on 2026-08-30; the readme describes it generically as
+  "motionkit.io (a Motionkit-operated domain)", so it stayed accurate.
 - **ABSPATH guards**: present on every real PHP file. The only PHP files
   without a guard are auto-generated `assets/build/**/*.asset.php` webpack
   manifests (pure `return array(...)`, no side effects) — low risk, could add
@@ -870,7 +875,9 @@ dashboard shell; the connector owns all logic:
       readme + header — settled 2026-08-25.
 - [x] readme.txt `== External services ==` complete — extended 2026-08-25:
       connector-performs-the-calls intro, token-secret legacy fetch,
-      billing.motionkit.io connector download, token-hash storage note.
+      billing.motionkit.io connector download (host moved to
+      my.motionkit.io on 2026-08-30; readme wording is host-agnostic so it
+      needed no edit), token-hash storage note.
       Screenshots section (claiming missing files) removed again. GSAP/
       jsDelivr elaboration removed entirely per developer direction (this
       plugin loads no GSAP — that's connector behavior).
