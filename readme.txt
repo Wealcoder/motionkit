@@ -7,7 +7,6 @@ Requires PHP: 7.4
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Donate link: https://buy.stripe.com/3cs3dI7DQauI0py9AC
 
 Connect WordPress with MotionKit to create, preview, publish, and manage visual website animations from the MotionKit editor.
 
@@ -70,7 +69,7 @@ Yes. You connect your site to your Motionkit account once, then build animations
 
 = Is Motionkit free? =
 
-Yes — start on the free plan and build animations right away, no credit card needed. Premium presets and pro features are available on paid plans, and you can upgrade anytime from your Motionkit account.
+Yes — start on the free plan and build animations right away. Premium presets and pro features are available on paid plans, and you can upgrade anytime from your Motionkit account.
 
 = Do I need to know how to code? =
 
@@ -113,7 +112,7 @@ This plugin makes no remote requests of its own — it renders links that open M
 
 * **"Launch Motionkit" and "Build Animation" links** (admin page, admin bar, post/term rows) open editor.motionkit.io. These links include your site's home URL, the URL of the page being edited, and a short-lived signed session token, so the editor can load a live preview of that page.
 * **The "Connect" button** sends your browser to editor.motionkit.io to authorize the connection; the link includes your site's home URL and a one-time security token. The authorization itself, and every server-side call that follows, is handled by the Connector plugin.
-* **The Connector download link** points to billing.motionkit.io (a Motionkit-operated domain). Clicking it is a normal file download; no site data is sent.
+* **The Connector download link** points to motionkit.io (a Motionkit-operated domain). Clicking it is a normal web page visit to get the companion plugin; no site data is sent.
 
 Your posts, pages, and saved animation data are never sent to Motionkit — animations you build in the editor are saved back to your own site's database.
 

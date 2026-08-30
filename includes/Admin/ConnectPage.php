@@ -568,16 +568,13 @@ final class ConnectPage
   }
 
   /**
-   * The connector download URL. Defaults to our server; filterable so a
-   * distributor can pin a different build without touching this file.
+   * The connector download / landing page URL.
    *
    * @return string
    */
   private function connector_download_url(): string
   {
-    $default = 'https://billing.motionkit.io/wp-content/uploads/2026/08/motionkit-connector.zip';
-    $url = apply_filters('motionkit/connector_download_url', $default);
-    return is_string($url) && $url !== '' ? $url : '#';
+    return 'https://motionkit.io';
   }
 
   private function render_notices(): void

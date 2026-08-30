@@ -736,7 +736,7 @@ dashboard shell; the connector owns all logic:
   Three bullets: the Launch/Build-Animation links (carry home URL, page URL,
   session token), the Connect button (browser redirect with home URL +
   one-time token; authorization and all server-side calls are the
-  Connector's), and the Connector download link (billing.motionkit.io, no
+  Connector's), and the Connector download link (motionkit.io, no
   data sent). Plus the "your content is never sent" sentence and ToS/privacy
   links. The server-side call-by-call list (token exchange, verify, revoke,
   legacy `/connect/token-secret`) is now entirely the connector's disclosure
@@ -903,9 +903,9 @@ dashboard shell; the connector owns all logic:
 - [ ] Build the actual submission zip via `wp dist-archive` and inspect its
       contents (`.distignore` is only enforced through it; verify `src/`,
       `package.json`, `webpack.config.js` are IN, dev files are OUT).
-- [ ] Decide connector-zip hosting: billing.motionkit.io download is
-      disclosed but remains a guideline 8/9 rejection risk — wp.org-hosted
-      connector (CTA points at its slug) is the safe path.
+- [x] Decide connector download link hosting: points to permanent landing
+      page (`https://motionkit.io`) with instructions and download button,
+      avoiding direct zip installer link issues and date-stamped URL staleness.
 - [ ] Live-test both states once: connector active (connect/verify/
       disconnect/Tools via connector handlers) and connector deactivated
       (CTA fallback, Tools tab hidden, Connect disabled).
