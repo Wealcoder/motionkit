@@ -19,6 +19,7 @@ use MotionKit\Admin\PermalinkNotice;
 use MotionKit\Admin\ConnectPage;
 use MotionKit\Includes\Autoloader;
 use MotionKit\Factory\ComponentFactory;
+use MotionKit\Helpers\Helper;
 
 
 /**
@@ -306,14 +307,9 @@ final class Plugin
             $page_url = home_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? '/')));
         }
 
-        // Always attach a session JWT — even before the site is connected, the connector's JwtTokenManager falls back to a local HMAC-signed token, keeping is_editor_preview()'s token check unconditional instead of trusting ?action=motionkit-editor alone.
-        $query_args = [
-            'site'            => $page_url,
-            'platform'        => 'wordpress',
-            'motionkit_token' => motionkit_editor_session_token($page_url),
-        ];
-
-        $editor_url = apply_filters('motionkit/editor/url', add_query_arg($query_args, 'https://editor.motionkit.io/'));
+        // An unconnected site is sent to the Connect page instead of the editor, which is the step it is actually missing — see Helper::editor_launch_url().
+        $reachable = Helper::is_editor_reachable();
+        $editor_url = Helper::editor_launch_url($page_url);
 
         $icon = '<span class="motionkit-ab-icon"></span>';
         $title = $icon . '<span class="motionkit-ab-label">' . esc_html__('Build Animation', 'motionkit') . '</span>';
@@ -322,10 +318,14 @@ final class Plugin
             'id'    => 'motionkit-build-animation',
             'title' => $title,
             'href'  => esc_url($editor_url),
-            'meta'  => array(
-                'target' => '_blank',
-                'title'  => esc_html__('Motionkit Editor', 'motionkit'),
-            ),
+            'meta'  => $reachable
+                ? array(
+                    'target' => '_blank',
+                    'title'  => esc_html__('Motionkit Editor', 'motionkit'),
+                )
+                : array(
+                    'title'  => esc_html__('Connect this site to MotionKit first', 'motionkit'),
+                ),
         ));
     }
 

@@ -16,6 +16,7 @@ if (!defined('ABSPATH')) {
 
 use MotionKit\Common\Assets\AssetLoader;
 use MotionKit\Factory\ComponentFactory;
+use MotionKit\Helpers\Helper;
 
 /**
  * Backend Class
@@ -92,21 +93,34 @@ final class Backend
 
     $page_url = get_the_permalink($post->ID);
 
-    // Always attach a session JWT — even before the site is connected,
-    // JwtTokenManager falls back to a local HMAC-signed token, so
-    // Frontend::is_editor_preview() can require a valid token
-    // unconditionally instead of trusting ?action=motionkit-editor alone.
-    $query_args = [
-      'site'            => $page_url,
-      'platform'        => 'wordpress',
-      'motionkit_token' => motionkit_editor_session_token($page_url),
-    ];
-
-    $editor_url = apply_filters('motionkit/editor/url', add_query_arg($query_args, 'https://editor.motionkit.io/'));
-
-    $actions['motionkit_action'] = '<a target="_blank" rel="noopener" href="' . esc_url($editor_url) . '">' . esc_html__('Build Animation', 'motionkit') . '</a>';
+    $actions['motionkit_action'] = self::build_animation_link($page_url);
 
     return $actions;
+  }
+
+  /**
+   * The "Build Animation" anchor for one row.
+   *
+   * An unconnected site goes to the Connect page rather than the editor, and in
+   * the same tab — a new window for an internal admin screen reads as a
+   * mis-click. The title attribute is what stops that landing looking like a
+   * broken link.
+   *
+   * @param string $page_url Permalink of the row's page.
+   * @return string
+   */
+  private static function build_animation_link(string $page_url): string
+  {
+    $url = Helper::editor_launch_url($page_url);
+
+    if (!Helper::is_editor_reachable()) {
+      return '<a href="' . esc_url($url) . '" title="'
+        . esc_attr__('Connect this site to MotionKit first', 'motionkit') . '">'
+        . esc_html__('Build Animation', 'motionkit') . '</a>';
+    }
+
+    return '<a target="_blank" rel="noopener" href="' . esc_url($url) . '">'
+      . esc_html__('Build Animation', 'motionkit') . '</a>';
   }
 
   /**
@@ -128,16 +142,7 @@ final class Backend
       return $actions;
     }
 
-    // Always attach a session JWT — see add_custom_quick_link() above.
-    $query_args = [
-      'site'            => $page_url,
-      'platform'        => 'wordpress',
-      'motionkit_token' => motionkit_editor_session_token($page_url),
-    ];
-
-    $editor_url = apply_filters('motionkit/editor/url', add_query_arg($query_args, 'https://editor.motionkit.io/'));
-
-    $actions['motionkit_action'] = '<a target="_blank" rel="noopener" href="' . esc_url($editor_url) . '">' . esc_html__('Build Animation', 'motionkit') . '</a>';
+    $actions['motionkit_action'] = self::build_animation_link($page_url);
 
     return $actions;
   }
