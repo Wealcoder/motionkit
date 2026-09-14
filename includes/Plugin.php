@@ -153,6 +153,10 @@ final class Plugin
         // Send platform identification header for MotionKit detect-platform
         add_action('send_headers', [$this, 'send_platform_header']);
 
+        // Initialize REST API & Editor Bridge
+        (new \MotionKit\RestApi\RestApi())->init();
+        (new \MotionKit\Frontend\EditorBridge())->init();
+
         // Initialize components (lazy loading)
         $this->init_auth();
         $this->init_backend();
@@ -162,12 +166,11 @@ final class Plugin
         // bails on is_admin()), so its CSS only needs to load there too.
         add_action('admin_bar_menu', [$this, 'add_admin_bar_build_animation'], 100);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_admin_bar_css']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_waapi_runtime']);
 
         // Lowercase per WP hook conventions; the uppercase name is the double-load guard constant, not this hook.
         do_action('motionkit_loaded');
     }
-
-    
 
     /**
      * Initialize backend functionality
@@ -183,18 +186,19 @@ final class Plugin
     }
 
     /**
-     * Initialize the Connect dashboard page. Pure UI — the authentication
-     * layer (OAuth handlers, tokens, license state, cron) lives entirely in
-     * the MotionKit Connector plugin; the page reads it through guarded
-     * accessors and falls back to the connector-required CTA without it.
+     * Initialize the Connect dashboard page and authentication handler.
      *
      * @return void
      */
     private function init_auth(): void
     {
         if (is_admin()) {
+            (new \MotionKit\Auth\OAuthHandler())->init();
+
             $connect_page = new ConnectPage();
             $connect_page->init();
+
+            (new \MotionKit\Admin\AnimationsDataHandler())->init();
         }
     }
 
@@ -354,6 +358,117 @@ final class Plugin
             'motionkit-admin-bar',
             ':root{--motionkit-ab-icon-url:url(' . esc_url(MOTIONKIT_PLUGIN_URL . 'assets/images/Logo.png') . ');}'
         );
+    }
+
+    /**
+     * Enqueue the lightweight native WAAPI runtime for Free animations on the frontend.
+     *
+     * Adheres to WordPress.org standards:
+     * - Unique prefix for script handle: 'motionkit-waapi'
+     * - Unique prefix for localized object: 'motionkitWaapiData'
+     * - Unique prefix for filters: 'motionkit_waapi_animations'
+     * - Zero external CDN dependencies, 100% native Web Animations API.
+     *
+     * @return void
+     */
+    public function enqueue_waapi_runtime(): void
+    {
+        if (is_admin()) {
+            return;
+        }
+
+        $file_path = $this->plugin_dir . 'assets/build/motionkit-waapi.js';
+        if (!file_exists($file_path)) {
+            return;
+        }
+
+        // Only the free animations reach this runtime. A page whose animations are all GSAP would otherwise enqueue the bundle and localize every record for it, and the browser would then filter them all away and play nothing — a script and a payload for no work.
+        $animations = \MotionKit\Common\AnimationEngine::filter_waapi(
+            $this->get_frontend_animations()
+        );
+
+        /**
+         * Filter frontend animations to be handled by the MotionKit WAAPI engine.
+         *
+         * @param array $animations Resolved list of animations.
+         */
+        $animations = apply_filters('motionkit_waapi_animations', $animations);
+
+        // Read-only query flags for frontend preview detection.
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $is_preview = isset($_GET['motionkit_preview']) || isset($_GET['motionkit_editor']) || isset($_GET['aae_preview']);
+        if (empty($animations) && !$is_preview) {
+            return;
+        }
+
+        $version = defined('MOTIONKIT_VERSION') ? MOTIONKIT_VERSION : '1.0.0';
+
+        wp_register_script(
+            'motionkit-waapi',
+            plugins_url('assets/build/motionkit-waapi.js', $this->plugin_file),
+            [],
+            $version,
+            true
+        );
+
+        $payload = [
+            'animations' => $animations,
+            'isRtl'      => is_rtl(),
+            'debug'      => defined('WP_DEBUG') && WP_DEBUG,
+        ];
+
+        wp_localize_script('motionkit-waapi', 'motionkitWaapiData', $payload);
+        wp_enqueue_script('motionkit-waapi');
+    }
+
+    /**
+     * Retrieve published animations for the current frontend request.
+     *
+     * Reads from standard MotionKit option and post meta records:
+     * - Option: 'motionkit_global_animations'
+     * - Post Meta: 'motionkit_pg_animation_<post_type>', '_motionkit_pg_animation'
+     *
+     * @return array List of animation objects.
+     */
+    public function get_frontend_animations(): array
+    {
+        $all_animations = [];
+
+        // 1. Global animations
+        $global = get_option('motionkit_global_animations', []);
+        if (is_string($global)) {
+            $global = json_decode($global, true) ?: [];
+        }
+        if (is_array($global)) {
+            if (isset($global['published']) && is_array($global['published'])) {
+                $global = $global['published'];
+            }
+            foreach ($global as $anim) {
+                if (is_array($anim)) {
+                    $all_animations[] = $anim;
+                }
+            }
+        }
+
+        // 2. Current page animations, read from the same slot the editor saved them to. Resolving by post type instead found nothing on the front page, archives, search and 404: the front page is a post of type "page" but is stored under "front_page", and the rest have no post at all.
+        $page_anims = \MotionKit\Common\PageType::current_animations();
+
+        if (is_string($page_anims)) {
+            $page_anims = json_decode($page_anims, true) ?: [];
+        }
+        if (is_array($page_anims)) {
+            // A draft/published split stores both halves; the frontend only ever plays what was published.
+            if (isset($page_anims['published']) && is_array($page_anims['published'])) {
+                $page_anims = $page_anims['published'];
+            }
+            foreach ($page_anims as $anim) {
+                if (is_array($anim)) {
+                    $all_animations[] = $anim;
+                }
+            }
+        }
+
+        return $all_animations;
     }
 
     /**

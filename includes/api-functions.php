@@ -90,11 +90,15 @@ if (!function_exists('motionkit_is_connected')) {
    */
   function motionkit_is_connected(): bool
   {
-    if (!class_exists('\MotionKitConnector\Auth\OAuthHandler')) {
-      return false;
+    if (class_exists('\MotionKit\Auth\OAuthHandler')) {
+      return \MotionKit\Auth\OAuthHandler::is_connected();
     }
 
-    return \MotionKitConnector\Auth\OAuthHandler::is_connected();
+    if (class_exists('\MotionKitConnector\Auth\OAuthHandler')) {
+      return \MotionKitConnector\Auth\OAuthHandler::is_connected();
+    }
+
+    return false;
   }
 }
 
@@ -140,10 +144,14 @@ if (!function_exists('motionkit_editor_session_token')) {
    */
   function motionkit_editor_session_token(string $page_url): string
   {
-    if (!class_exists('\MotionKitConnector\Auth\JwtTokenManager')) {
-      return '';
+    if (class_exists('\MotionKit\Auth\JwtTokenManager')) {
+      return \MotionKit\Auth\JwtTokenManager::generate($page_url);
     }
 
-    return \MotionKitConnector\Auth\JwtTokenManager::generate($page_url);
+    if (class_exists('\MotionKitConnector\Auth\JwtTokenManager')) {
+      return \MotionKitConnector\Auth\JwtTokenManager::generate($page_url);
+    }
+
+    return '';
   }
 }

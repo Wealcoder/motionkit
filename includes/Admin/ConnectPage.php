@@ -27,19 +27,31 @@ if (!defined('ABSPATH')) {
 
 final class ConnectPage
 {
-  // ─── Connector auth accessors ────────────────────────────────
+  // ─── Auth accessors ──────────────────────────────────────────
 
   private static function is_connected(): bool
   {
+    if (class_exists('\MotionKit\Auth\OAuthHandler') && \MotionKit\Auth\OAuthHandler::is_connected()) {
+      return true;
+    }
+
     return class_exists('\MotionKitConnector\Auth\OAuthHandler')
       && \MotionKitConnector\Auth\OAuthHandler::is_connected();
   }
 
   private static function connection_info(): array
   {
+    if (class_exists('\MotionKit\Auth\OAuthHandler')) {
+      $info = \MotionKit\Auth\OAuthHandler::get_connection_info();
+      if ($info['connected']) {
+        return $info;
+      }
+    }
+
     if (class_exists('\MotionKitConnector\Auth\OAuthHandler')) {
       return \MotionKitConnector\Auth\OAuthHandler::get_connection_info();
     }
+
     return [
       'connected'    => false,
       'email'        => '',
@@ -47,12 +59,16 @@ final class ConnectPage
     ];
   }
 
-  // Returns '#' without the connector; the Connect button is disabled in that state, so the URL is never followed.
   private static function authorize_url(bool $switch_account = false): string
   {
+    if (class_exists('\MotionKit\Auth\OAuthHandler')) {
+      return \MotionKit\Auth\OAuthHandler::get_authorize_url($switch_account);
+    }
+
     if (class_exists('\MotionKitConnector\Auth\OAuthHandler')) {
       return (new \MotionKitConnector\Auth\OAuthHandler())->get_authorize_url($switch_account);
     }
+
     return '#';
   }
 
@@ -87,6 +103,41 @@ final class ConnectPage
     remove_all_actions('all_admin_notices');
   }
 
+  /**
+   * Which tab this request draws.
+   *
+   * Both render_page() and enqueue_admin_styles() need the answer, and they
+   * must agree — they used to compute it separately, so the page could enqueue
+   * one tab's assets while drawing another. Connecting is the only useful
+   * action on a disconnected site, so that is the default until a token is
+   * stored, and the animations tab is unreachable until then.
+   *
+   * @return string One of 'animations', 'connect', 'tools'.
+   */
+  private static function resolve_active_tab(): string
+  {
+    $connected = !empty(self::connection_info()['connected']);
+    $default_tab = $connected ? 'animations' : 'connect';
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only tab selection; an invalid nonce falls back to the default tab rather than failing.
+    $tab_nonce_valid = isset($_GET['_wpnonce'])
+      && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'motionkit_tab_nav');
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Guarded by $tab_nonce_valid above.
+    $tab = ($tab_nonce_valid && isset($_GET['tab']))
+      ? sanitize_text_field(wp_unslash($_GET['tab']))
+      : $default_tab;
+
+    if ($tab === 'animations' && !$connected) {
+      return $default_tab;
+    }
+    if ($tab === 'tools' && !self::tools_available()) {
+      return $default_tab;
+    }
+
+    return in_array($tab, ['animations', 'connect', 'tools'], true) ? $tab : $default_tab;
+  }
+
   public function enqueue_admin_styles(string $hook): void
   {
     if ($hook !== 'toplevel_page_motionkit-connect') {
@@ -111,14 +162,41 @@ final class ConnectPage
       true
     );
 
-    // Same nonce as the sidebar tab links (see render_page()) — mirrors its
-    // fallback-to-default behavior so the enqueued CSS always matches what
-    // render_page() actually draws.
-    $tab_nonce_valid = isset($_GET['_wpnonce'])
-      && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'motionkit_tab_nav');
-    $active_tab = ($tab_nonce_valid && isset($_GET['tab']))
-      ? sanitize_text_field(wp_unslash($_GET['tab']))
-      : 'connect';
+    $active_tab = self::resolve_active_tab();
+
+    if ($active_tab === 'animations') {
+      wp_enqueue_style(
+        'motionkit-admin-animations',
+        plugins_url('assets/build/admin-animations.css', MOTIONKIT_PLUGIN_FILE),
+        ['motionkit-admin'],
+        $version
+      );
+
+      wp_enqueue_script(
+        'motionkit-admin-animations',
+        plugins_url('assets/build/admin-animations.js', MOTIONKIT_PLUGIN_FILE),
+        [],
+        $version,
+        true
+      );
+
+      wp_localize_script('motionkit-admin-animations', 'motionkitAnimationsData', [
+        'ajaxUrl'         => admin_url('admin-ajax.php'),
+        'nonce'           => wp_create_nonce('motionkit_animations_ajax'),
+        'editorUrl'       => $this->get_editor_url(),
+        'connectorActive' => AnimationsDataHandler::is_connector_active(),
+        'strings'         => [
+          'noAnimations'  => __('No animations found on this site. Open MotionKit Editor to create your first animation.', 'motionkit'),
+          'edit'          => __('Edit', 'motionkit'),
+          'preview'       => __('Preview', 'motionkit'),
+          'delete'        => __('Delete', 'motionkit'),
+          'confirmDelete' => __('Are you sure you want to delete this animation?', 'motionkit'),
+          'done'          => __('Done!', 'motionkit'),
+          'failed'        => __('Action failed. Please try again.', 'motionkit'),
+        ],
+      ]);
+    }
+
     if ($active_tab === 'tools' && self::tools_available()) {
       wp_enqueue_style(
         'motionkit-admin-tools',
@@ -210,7 +288,10 @@ final class ConnectPage
       'motionkit_token' => motionkit_editor_session_token($page_url),
     ];
 
-    $base_url = apply_filters('motionkit/editor/url', 'https://editor.motionkit.io/');
+    $default_editor_url = class_exists('\MotionKit\Common\EditorEndpoint')
+      ? \MotionKit\Common\EditorEndpoint::url()
+      : 'https://editor.motionkit.io/';
+    $base_url = apply_filters('motionkit/editor/url', $default_editor_url);
     return add_query_arg($query_args, $base_url);
   }
 
@@ -222,26 +303,22 @@ final class ConnectPage
       wp_die(esc_html__('You do not have permission to access this page.', 'motionkit'));
     }
 
-    // The sidebar nonces this URL (see the tab loop below); a missing/expired
-    // nonce (e.g. an old bookmark) just falls back to the default tab rather
-    // than hard-failing, since nothing here changes state either way.
-    $tab_nonce_valid = isset($_GET['_wpnonce'])
-      && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'motionkit_tab_nav');
-    $active_tab = ($tab_nonce_valid && isset($_GET['tab']))
-      ? sanitize_text_field(wp_unslash($_GET['tab']))
-      : 'connect';
     $current_user = wp_get_current_user();
     $connection_info = self::connection_info();
+    $connected = !empty($connection_info['connected']);
     $user_email = !empty($connection_info['email']) ? $connection_info['email'] : $current_user->user_email;
 
-    $tabs = [
-      'connect' => ['label' => __('Connect', 'motionkit'), 'icon' => '&#128279;'],
-    ];
+    // Shared with enqueue_admin_styles() so the assets loaded always match the tab drawn.
+    $active_tab = self::resolve_active_tab();
+
+    $tabs = [];
+    // Animations is hidden rather than disabled while disconnected — there is no partial state worth showing, and the tab reappears the moment the OAuth callback stores a token.
+    if ($connected) {
+      $tabs['animations'] = ['label' => __('Animations', 'motionkit'), 'icon' => '&#10024;'];
+    }
+    $tabs['connect'] = ['label' => __('Connected Site', 'motionkit'), 'icon' => '&#128279;'];
     if (self::tools_available()) {
       $tabs['tools'] = ['label' => __('Tools', 'motionkit'), 'icon' => '&#128295;'];
-    } elseif ($active_tab === 'tools') {
-      // A bookmarked tools URL with no connector falls back to the Connect tab (where the connector-required CTA lives) instead of an empty tab.
-      $active_tab = 'connect';
     }
 
     ?>
@@ -306,6 +383,12 @@ final class ConnectPage
               $this->render_tools_tab();
               break;
             case 'connect':
+              $this->render_connect_tab($current_user);
+              break;
+            case 'animations':
+              $this->render_animations_tab();
+              break;
+            // $active_tab is already validated against $tabs above, so anything reaching here is a tab that was removed from the list — render the connect step rather than the animations list, which is the one tab a disconnected site must never be shown.
             default:
               $this->render_connect_tab($current_user);
               break;
@@ -1009,51 +1092,38 @@ final class ConnectPage
         </h3>
       </div>
       <div class="motionkit-card-body">
-        <?php if ($connector_state === 'active'): ?>
-          <p class="motionkit-card-desc">
-            <?php esc_html_e('Your site is connected. Open any post or page and click "Edit with MotionKit" - or use the button below to launch the editor directly.', 'motionkit'); ?>
-          </p>
-          <a href="<?php echo esc_url($editor_url); ?>"
-             class="motionkit-btn motionkit-btn--primary motionkit-btn--split"
-             target="_blank" rel="noopener">
-            <span class="motionkit-btn__text" data-text="<?php esc_attr_e('Launch Motionkit', 'motionkit'); ?>">
-              <?php
-                $text = __('Launch Motionkit', 'motionkit');
-                $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
-                foreach ($chars as $i => $char) {
-                  printf(
-                    '<span class="motionkit-btn__char" style="transition-delay:%ss">%s</span>',
-                    esc_attr(sprintf('%.2f', $i * 0.02)),
-                    $char === ' ' ? '&nbsp;' : esc_html($char)
-                  );
-                }
-              ?>
-            </span>
-          </a>
-        <?php else:
-          // Connected, but the engine plugin isn't running — launching the editor
-          // would produce nothing on the live site without it. The shared CTA
-          // offers Activate (installed-inactive) or Download (missing).
-          $this->render_connector_cta('connected');
-        endif; ?>
+        <p class="motionkit-card-desc">
+          <?php esc_html_e('Your site is connected. Open any post or page and click "Edit with MotionKit" - or use the button below to launch the editor directly.', 'motionkit'); ?>
+        </p>
+        <a href="<?php echo esc_url($editor_url); ?>"
+           class="motionkit-btn motionkit-btn--primary motionkit-btn--split"
+           target="_blank" rel="noopener">
+          <span class="motionkit-btn__text" data-text="<?php esc_attr_e('Launch Motionkit', 'motionkit'); ?>">
+            <?php
+              $text = __('Launch Motionkit', 'motionkit');
+              $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
+              foreach ($chars as $i => $char) {
+                printf(
+                  '<span class="motionkit-btn__char" style="transition-delay:%ss">%s</span>',
+                  esc_attr(sprintf('%.2f', $i * 0.02)),
+                  $char === ' ' ? '&nbsp;' : esc_html($char)
+                );
+              }
+            ?>
+          </span>
+        </a>
       </div>
     </div>
     <?php
+    if ($connector_state !== 'active') {
+      $this->render_connector_cta('connected');
+    }
   }
 
   private function render_disconnected_state(): void
   {
     $authorize_url = self::authorize_url();
-
-    // Prompt to get the Connector engine in place BEFORE connecting, so the
-    // site is ready to run animations the moment the account is linked. Prints
-    // nothing when the connector is already active.
-    $this->render_connector_cta('disconnected');
-
-    // Connecting is only useful once the engine is present — so the Connect
-    // button is gated on the connector being active. Until then the CTA above
-    // is the action, and here we show why Connect is held back.
-    $connector_ready = ($this->connector_install_state() === 'active');
+    $connector_state = $this->connector_install_state();
     ?>
     <div class="motionkit-card">
       <div class="motionkit-card-header">
@@ -1063,35 +1133,53 @@ final class ConnectPage
         </div>
         <span class="motionkit-badge motionkit-badge--error">&#9679; <?php esc_html_e('Not Connected', 'motionkit'); ?></span>
       </div>
+
       <div class="motionkit-card-body">
         <p class="motionkit-card-desc">
-          <?php esc_html_e('Gain access to the MotionKit visual animation editor and connect your site to your MotionKit dashboard to start building stunning animations.', 'motionkit'); ?>
+          <?php esc_html_e('Connect this WordPress site with the MotionKit visual editor to create, customize, and manage high-performance animations.', 'motionkit'); ?>
         </p>
-        <?php if ($connector_ready): ?>
-          <a href="<?php echo esc_url($authorize_url); ?>" class="motionkit-btn motionkit-btn--primary">
+
+        <!-- User Awareness & Consent Card -->
+        <div class="motionkit-awareness-card" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin:20px 0;">
+          <h4 style="margin:0 0 10px 0;font-size:14px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:8px;">
+            <span>ℹ️</span> <?php esc_html_e('What happens when you connect?', 'motionkit'); ?>
+          </h4>
+          <ul style="margin:0 0 12px 20px;padding:0;font-size:13px;color:#475569;line-height:1.6;">
+            <li><strong><?php esc_html_e('Animation JSON definitions:', 'motionkit'); ?></strong> <?php esc_html_e('Animations and keyframe configs created in the visual editor will be saved directly to your WordPress database (options & post meta).', 'motionkit'); ?></li>
+            <li><strong><?php esc_html_e('Page settings & preferences:', 'motionkit'); ?></strong> <?php esc_html_e('Page-specific animation triggers and configuration will sync directly with this site.', 'motionkit'); ?></li>
+            <li><strong><?php esc_html_e('Secure live preview:', 'motionkit'); ?></strong> <?php esc_html_e('A secure JWT token enables live preview in the visual editor. No admin passwords or sensitive user credentials are ever shared.', 'motionkit'); ?></li>
+          </ul>
+
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;font-weight:500;color:#1e293b;margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;">
+            <input type="checkbox" id="motionkit-connect-consent" style="margin-top:2px;">
+            <span><?php esc_html_e('I understand and authorize MotionKit to save animation JSON data and page settings to this site.', 'motionkit'); ?></span>
+          </label>
+        </div>
+
+        <div class="motionkit-form-actions" style="margin-top:16px;">
+          <a href="<?php echo esc_url($authorize_url); ?>"
+             id="motionkit-connect-btn"
+             class="motionkit-btn motionkit-btn--primary motionkit-btn--disabled"
+             aria-disabled="true"
+             style="opacity:0.5;pointer-events:none;">
             <span>&#128279;</span>
             <?php esc_html_e('Connect To MotionKit', 'motionkit'); ?>
           </a>
-        <?php else: ?>
-          <span class="motionkit-btn motionkit-btn--primary" aria-disabled="true"
-                style="opacity:.55;pointer-events:none;cursor:not-allowed;">
-            <span>&#128279;</span>
-            <?php esc_html_e('Connect To MotionKit', 'motionkit'); ?>
-          </span>
-          <p class="motionkit-card-desc" style="margin-top:10px;font-size:13px;">
-            <?php esc_html_e('Install and activate the MotionKit Connector above first — then you can connect your account.', 'motionkit'); ?>
-          </p>
-        <?php endif; ?>
+        </div>
       </div>
 
       <div class="motionkit-card-footer">
-        <h4 class="motionkit-footer-title"><?php esc_html_e('How It Works', 'motionkit'); ?></h4>
+        <h4 class="motionkit-footer-title"><?php esc_html_e('Safe & Private', 'motionkit'); ?></h4>
         <p class="motionkit-footer-desc">
-          <?php esc_html_e('Clicking "Connect" will redirect you to motionkit.io to authorize this site. A secure token will be stored both in your WordPress database and our Supabase cloud - no passwords shared.', 'motionkit'); ?>
+          <?php esc_html_e('Authorization uses an encrypted token handshake. You can disconnect at any time from this dashboard or from your MotionKit account.', 'motionkit'); ?>
         </p>
       </div>
     </div>
+
     <?php
+    if ($connector_state !== 'active') {
+      $this->render_connector_cta('disconnected');
+    }
   }
 
   // ─── Helpers ─────────────────────────────────────────────────
@@ -1130,6 +1218,97 @@ final class ConnectPage
     return $messages[$error] ?? __('An unknown error occurred. Please try again.', 'motionkit');
   }
   // phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+  // ─── Animations Tab ─────────────────────────────────────────
+
+  private function render_animations_tab(): void
+  {
+    $editor_url = $this->get_editor_url();
+    $connector_active = AnimationsDataHandler::is_connector_active();
+    ?>
+    <div class="motionkit-animations-wrap">
+      <!-- Top Action Bar -->
+      <div class="motionkit-card motionkit-animations-header-card">
+        <div class="motionkit-animations-header-content">
+          <div>
+            <h2 class="motionkit-animations-title">
+              <span style="color:#f59e0b;">✨</span>
+              <?php esc_html_e('Active Animations', 'motionkit'); ?>
+            </h2>
+            <p class="motionkit-card-desc" id="motionkit-animations-stat-summary">
+              <?php esc_html_e('Scan and manage all native WAAPI and GSAP Pro animations running on your WordPress site.', 'motionkit'); ?>
+            </p>
+          </div>
+          <div class="motionkit-animations-top-actions">
+            <?php if ($connector_active): ?>
+              <button type="button" class="motionkit-btn motionkit-btn--outline motionkit-btn--upgrade-all" id="motionkit-upgrade-all-btn" style="display:none;">
+                <span class="motionkit-upgrade-icon">⚡</span>
+                <span class="motionkit-upgrade-text"><?php esc_html_e('Upgrade All to GSAP', 'motionkit'); ?></span>
+              </button>
+            <?php endif; ?>
+            <a href="<?php echo esc_url($editor_url); ?>" target="_blank" rel="noopener" class="motionkit-btn motionkit-btn--primary">
+              <span class="motionkit-btn-plus">+</span>
+              <?php esc_html_e('Open MotionKit Editor', 'motionkit'); ?>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls & Table Card -->
+      <div class="motionkit-card">
+        <div class="motionkit-card-header motionkit-animations-controls-header">
+          <div class="motionkit-bulk-actions-wrap">
+            <select id="motionkit-bulk-action-select" class="motionkit-select">
+              <option value=""><?php esc_html_e('Bulk Actions', 'motionkit'); ?></option>
+              <?php if ($connector_active): ?>
+                <option value="upgrade_gsap"><?php esc_html_e('⚡ Upgrade to GSAP', 'motionkit'); ?></option>
+                <option value="revert_waapi"><?php esc_html_e('↺ Revert to WAAPI', 'motionkit'); ?></option>
+              <?php endif; ?>
+              <option value="toggle_status"><?php esc_html_e('⏻ Toggle Status (Active/Draft)', 'motionkit'); ?></option>
+              <option value="delete"><?php esc_html_e('🗑️ Delete', 'motionkit'); ?></option>
+            </select>
+            <button type="button" id="motionkit-bulk-apply-btn" class="motionkit-btn motionkit-btn--outline motionkit-btn--sm" disabled>
+              <?php esc_html_e('Apply', 'motionkit'); ?>
+            </button>
+          </div>
+
+          <div class="motionkit-filter-search-wrap">
+            <select id="motionkit-engine-filter" class="motionkit-select">
+              <option value=""><?php esc_html_e('All Engines', 'motionkit'); ?></option>
+              <option value="waapi"><?php esc_html_e('Native WAAPI', 'motionkit'); ?></option>
+              <option value="gsap"><?php esc_html_e('GSAP Pro', 'motionkit'); ?></option>
+            </select>
+            <input type="search" id="motionkit-animations-search" class="motionkit-input"
+                   placeholder="<?php esc_attr_e('Search animations...', 'motionkit'); ?>">
+          </div>
+        </div>
+
+        <div class="motionkit-card-body motionkit-card-body--flush">
+          <div class="motionkit-tools-table-wrap">
+            <table class="motionkit-tools-table motionkit-animations-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px;"><input type="checkbox" id="motionkit-select-all" aria-label="<?php esc_attr_e('Select All', 'motionkit'); ?>"></th>
+                  <th><?php esc_html_e('Title', 'motionkit'); ?></th>
+                  <th><?php esc_html_e('Target Element', 'motionkit'); ?></th>
+                  <th><?php esc_html_e('Location', 'motionkit'); ?></th>
+                  <th><?php esc_html_e('Engine', 'motionkit'); ?></th>
+                  <th><?php esc_html_e('Status', 'motionkit'); ?></th>
+                  <th style="text-align:right;"><?php esc_html_e('Actions', 'motionkit'); ?></th>
+                </tr>
+              </thead>
+              <tbody id="motionkit-animations-tbody">
+                <tr>
+                  <td colspan="7" class="motionkit-tools-empty"><?php esc_html_e('Loading animations...', 'motionkit'); ?></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <?php
+  }
 
   // ─── Tools Tab ───────────────────────────────────────────────
 

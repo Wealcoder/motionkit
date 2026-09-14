@@ -15,4 +15,23 @@
       }
     }
   });
+
+  document.addEventListener("change", function (e) {
+    if (e.target && e.target.id === "motionkit-connect-consent") {
+      const btn = document.getElementById("motionkit-connect-btn");
+      if (btn) {
+        if (e.target.checked) {
+          btn.removeAttribute("aria-disabled");
+          btn.classList.remove("motionkit-btn--disabled");
+          btn.style.opacity = "1";
+          btn.style.pointerEvents = "auto";
+        } else {
+          btn.setAttribute("aria-disabled", "true");
+          btn.classList.add("motionkit-btn--disabled");
+          btn.style.opacity = "0.5";
+          btn.style.pointerEvents = "none";
+        }
+      }
+    }
+  });
 })();

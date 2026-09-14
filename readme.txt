@@ -4,7 +4,7 @@ Tags: animation, scroll animation, visual editor
 Requires at least: 6.7
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,6 +19,7 @@ This plugin is the WordPress-side connector: it authenticates your site with the
 = Key Features =
 
 * **Visual animation editor** – Build scroll-triggered, hover, and load-in animations on a live preview of your site, no code required
+* **Zero-dependency Free Animation Engine** – Free animations run on a lightweight (<6KB), native Web Animations API (WAAPI) engine with 0 external libraries and 100% GPLv2 compliance
 * **High-performance animation engine** – Smooth, performant motion powered by the Motionkit runtime
 * **Per-page and global animations** – Apply animations to a single post/page, a whole post type, or site-wide
 * **Preloaders and page transitions** – Greet visitors with an animated preloader and glide between pages with smooth transitions
@@ -118,8 +119,8 @@ Your posts, pages, and saved animation data are never sent to Motionkit — anim
 
 By connecting your site to Motionkit, you agree to Motionkit's Terms of Service and Privacy Policy, linked below.
 
-* Motionkit Terms of Service: https://motionkit.io/terms-condition/
-* Motionkit Privacy Policy: https://motionkit.io/privacy-policy/
+* Motionkit Terms of Service: https://stg.motionkit.io/terms-of-use/
+* Motionkit Privacy Policy: https://stg.motionkit.io/privacy/
 
 == Source Code ==
 
@@ -135,6 +136,13 @@ https://github.com/Wealcoder/motionkit
 
 == Changelog ==
 
+= 1.0.1 =
+* Fix: Free animations now play on the front page, archives, search and 404 — these are stored under their own page type, and the frontend was looking them up by post type.
+* Fix: Scroll animations follow scroll position smoothly instead of stepping.
+* Fix: A scroll trigger's own element is honoured when one is set.
+* Fix: Editing a scroll trigger's Start, End, Play Once or Scrub now takes effect.
+* Improve: Free animations start at the viewport centre by default.
+
 = 1.0.0 =
 * Initial release
 
@@ -143,6 +151,9 @@ https://github.com/Wealcoder/motionkit
 For support, feature requests, or bug reports, please visit https://motionkit.io or the plugin's support forum on WordPress.org.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+* Fixes free animations not playing on the front page and other non-singular pages.
 
 = 1.0.0 =
 * Initial release. No upgrade needed.
