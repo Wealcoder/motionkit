@@ -144,6 +144,45 @@ export function compileStateToKeyframe(stateProps = {}) {
     keyframe.height = withUnit(stateProps.height, 'px');
   if (stateProps.backgroundSize)
     keyframe.backgroundSize = stateProps.backgroundSize;
+
+  // Typography and box metrics, all verified to interpolate in Chromium. Numbers take the unit the property implies so a user types 24 rather than '24px'; fontWeight and lineHeight are unitless and pass through as-is.
+  if (stateProps.fontSize !== undefined && stateProps.fontSize !== '')
+    keyframe.fontSize = withUnit(stateProps.fontSize, 'px');
+  if (stateProps.fontWeight !== undefined && stateProps.fontWeight !== '')
+    keyframe.fontWeight = stateProps.fontWeight;
+  if (stateProps.lineHeight !== undefined && stateProps.lineHeight !== '')
+    keyframe.lineHeight = stateProps.lineHeight;
+  if (stateProps.padding !== undefined && stateProps.padding !== '')
+    keyframe.padding = withUnit(stateProps.padding, 'px');
+  if (stateProps.margin !== undefined && stateProps.margin !== '')
+    keyframe.margin = withUnit(stateProps.margin, 'px');
+  if (stateProps.borderWidth !== undefined && stateProps.borderWidth !== '')
+    keyframe.borderWidth = withUnit(stateProps.borderWidth, 'px');
+  if (stateProps.textShadow) keyframe.textShadow = stateProps.textShadow;
+
+  /* text-decoration-line is NOT interpolable — 'none' to 'underline' snaps at the midpoint the way clip-path's keyword does, so an underline that grows has to be drawn as a background gradient instead and swept with backgroundSize. Colour and thickness DO interpolate, so they are emitted for presets that underline an already-underlined element. */
+  if (stateProps.textDecorationColor)
+    keyframe.textDecorationColor = stateProps.textDecorationColor;
+  if (
+    stateProps.textDecorationThickness !== undefined &&
+    stateProps.textDecorationThickness !== ''
+  )
+    keyframe.textDecorationThickness = withUnit(
+      stateProps.textDecorationThickness,
+      'px',
+    );
+
+  // The underline-sweep seed: a preset sets these once so backgroundSize has a gradient to reveal. They are not animated themselves, they just have to be present on the element.
+  if (stateProps.backgroundImage)
+    keyframe.backgroundImage = stateProps.backgroundImage;
+  if (stateProps.backgroundRepeat)
+    keyframe.backgroundRepeat = stateProps.backgroundRepeat;
+
+  if (stateProps.outlineWidth !== undefined && stateProps.outlineWidth !== '')
+    keyframe.outlineWidth = withUnit(stateProps.outlineWidth, 'px');
+  if (stateProps.outlineOffset !== undefined && stateProps.outlineOffset !== '')
+    keyframe.outlineOffset = withUnit(stateProps.outlineOffset, 'px');
+  if (stateProps.outlineColor) keyframe.outlineColor = stateProps.outlineColor;
   if (stateProps.backgroundPosition)
     keyframe.backgroundPosition = stateProps.backgroundPosition;
 
@@ -276,6 +315,11 @@ const RESTING_VALUES = {
   borderRadius: 0,
   letterSpacing: 0,
   wordSpacing: 0,
+  // No resting value for fontSize, padding, margin or borderWidth: unlike a transform, their neutral state is whatever the stylesheet already says, and guessing 0 would make a baked ease collapse the element to nothing on the first frame.
+  fontWeight: 400,
+  outlineWidth: 0,
+  outlineOffset: 0,
+  textDecorationThickness: 0,
 };
 
 // Numeric channels are interpolated per sample; everything else (transform strings, clip-path, colours) is carried as-is because it cannot be numerically blended here.

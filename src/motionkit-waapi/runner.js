@@ -196,6 +196,9 @@ export function runWaapiAnimation(anim, contextDoc = document) {
 
     const { keyframes, options } = compileEffectToWaapi(effect, device);
 
+    // Read at the effect root beside splitText and stagger, not inside a device bag: a hover style either reverts or it does not, and having that differ per breakpoint would only produce elements that stay recoloured on one screen size.
+    const reverseOnLeave = effect.reverseOnLeave === true;
+
     // Stagger handling (default 0 or from effect/stagger)
     const staggerMs = effect.stagger
       ? effect.stagger <= 20
@@ -244,6 +247,37 @@ export function runWaapiAnimation(anim, contextDoc = document) {
         };
 
         triggerEl.addEventListener('mouseenter', onEnter);
+
+        /* A hover STYLE preset is the opposite of an entrance: it recolours or respaces an element that is already there, so the change has to come back when the pointer leaves. That is the only case where playing backwards is right, and the record opts into it explicitly — an entrance carries no flag and keeps holding its end state.
+
+           The return trip is the same keyframes reversed rather than Animation.reverse(), so it works whether or not the forward run ever finished. */
+        if (reverseOnLeave) {
+          const reversed = [...keyframes].reverse();
+
+          const onLeave = () => {
+            elements.forEach((targetEl, i) => {
+              const prev = activeAnims[i];
+              if (prev && prev.playState === 'running') {
+                cancelTracked(targetEl, [prev]);
+              }
+            });
+            activeAnims = elements.map((targetEl) => {
+              try {
+                return track(
+                  targetEl,
+                  targetEl.animate(reversed, { ...options, fill: 'forwards' }),
+                );
+              } catch {
+                return null;
+              }
+            });
+          };
+
+          triggerEl.addEventListener('mouseleave', onLeave);
+          listenerCleanups.push(() =>
+            triggerEl.removeEventListener('mouseleave', onLeave),
+          );
+        }
 
         listenerCleanups.push(() => {
           elements.forEach((targetEl, i) =>
