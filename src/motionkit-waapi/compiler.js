@@ -74,6 +74,39 @@ export function compileTransformString(props = {}) {
   return parts.length > 0 ? parts.join(' ') : 'none';
 }
 
+// A bare number carries the unit the property implies; a string is already authored and passes through untouched.
+function withUnit(value, unit) {
+  return typeof value === 'number' ? `${value}${unit}` : value;
+}
+
+/* Every filter effect is a value of the SINGLE `filter` property, so they compose into one space-separated string rather than separate keyframe keys — writing them separately meant the last assignment won and the rest vanished with no error.
+
+   An explicit `filter` string wins outright: it is the escape hatch for anything this list does not name. */
+const FILTER_UNITS = {
+  blur: 'px',
+  grayscale: '%',
+  brightness: '%',
+  contrast: '%',
+  saturate: '%',
+  sepia: '%',
+  invert: '%',
+  hueRotate: 'deg',
+};
+
+const FILTER_NAMES = { hueRotate: 'hue-rotate' };
+
+function compileFilterString(props = {}) {
+  if (props.filter !== undefined && props.filter !== '') return props.filter;
+
+  const parts = [];
+  for (const [key, unit] of Object.entries(FILTER_UNITS)) {
+    const value = props[key];
+    if (value === undefined || value === '') continue;
+    parts.push(`${FILTER_NAMES[key] || key}(${withUnit(value, unit)})`);
+  }
+  return parts.length > 0 ? parts.join(' ') : '';
+}
+
 export function compileStateToKeyframe(stateProps = {}) {
   const keyframe = {};
   const transform = compileTransformString(stateProps);
@@ -86,15 +119,8 @@ export function compileStateToKeyframe(stateProps = {}) {
     keyframe.opacity = Number(stateProps.opacity);
   }
 
-  if (stateProps.blur !== undefined && stateProps.blur !== '') {
-    const blurVal =
-      typeof stateProps.blur === 'number'
-        ? `${stateProps.blur}px`
-        : stateProps.blur;
-    keyframe.filter = `blur(${blurVal})`;
-  } else if (stateProps.filter !== undefined) {
-    keyframe.filter = stateProps.filter;
-  }
+  const filter = compileFilterString(stateProps);
+  if (filter) keyframe.filter = filter;
 
   if (stateProps.transformOrigin)
     keyframe.transformOrigin = stateProps.transformOrigin;
@@ -102,6 +128,24 @@ export function compileStateToKeyframe(stateProps = {}) {
   if (stateProps.color) keyframe.color = stateProps.color;
   if (stateProps.backgroundColor)
     keyframe.backgroundColor = stateProps.backgroundColor;
+
+  // Plain animatable CSS the browser interpolates on its own — they only needed emitting. A bare number takes the unit the user meant rather than making them type it; a string passes through, so '50%' and 'center' still work.
+  if (stateProps.boxShadow) keyframe.boxShadow = stateProps.boxShadow;
+  if (stateProps.borderColor) keyframe.borderColor = stateProps.borderColor;
+  if (stateProps.borderRadius !== undefined && stateProps.borderRadius !== '')
+    keyframe.borderRadius = withUnit(stateProps.borderRadius, 'px');
+  if (stateProps.letterSpacing !== undefined && stateProps.letterSpacing !== '')
+    keyframe.letterSpacing = withUnit(stateProps.letterSpacing, 'px');
+  if (stateProps.wordSpacing !== undefined && stateProps.wordSpacing !== '')
+    keyframe.wordSpacing = withUnit(stateProps.wordSpacing, 'px');
+  if (stateProps.width !== undefined && stateProps.width !== '')
+    keyframe.width = withUnit(stateProps.width, 'px');
+  if (stateProps.height !== undefined && stateProps.height !== '')
+    keyframe.height = withUnit(stateProps.height, 'px');
+  if (stateProps.backgroundSize)
+    keyframe.backgroundSize = stateProps.backgroundSize;
+  if (stateProps.backgroundPosition)
+    keyframe.backgroundPosition = stateProps.backgroundPosition;
 
   return keyframe;
 }
@@ -221,6 +265,17 @@ const RESTING_VALUES = {
   skewY: 0,
   opacity: 1,
   blur: 0,
+  // Filter percentages rest at their identity, which is 100% for the ones that scale an existing quality and 0% for the ones that add an effect — brightness(100%) is the untouched image, grayscale(0%) likewise.
+  grayscale: 0,
+  sepia: 0,
+  invert: 0,
+  hueRotate: 0,
+  brightness: 100,
+  contrast: 100,
+  saturate: 100,
+  borderRadius: 0,
+  letterSpacing: 0,
+  wordSpacing: 0,
 };
 
 // Numeric channels are interpolated per sample; everything else (transform strings, clip-path, colours) is carried as-is because it cannot be numerically blended here.
@@ -278,6 +333,22 @@ function toMs(value, fallback) {
   return n <= SECONDS_MAX || n < MIN_SANE_MS ? n * 1000 : n;
 }
 
+/* WAAPI's own looping, off the timing object. `repeat` follows GSAP's counting — replays AFTER the first pass, with -1 meaning forever — while WAAPI counts total runs, hence the +1.
+
+   `yoyo` maps to direction 'alternate', which is what makes a loop read as motion: without it the element springs back to its opening state at the end of every pass instead of easing back. */
+function compileLoopOptions(fromRaw = {}, toRaw = {}) {
+  const repeat = fromRaw.repeat ?? toRaw.repeat;
+  const yoyo = fromRaw.yoyo ?? toRaw.yoyo;
+  if (repeat === undefined || repeat === '' || Number(repeat) === 0) return {};
+
+  const count = Number(repeat);
+  const options = {
+    iterations: count < 0 ? Infinity : count + 1,
+  };
+  if (yoyo === true || yoyo === 'true') options.direction = 'alternate';
+  return options;
+}
+
 export function compileEffectToWaapi(effect = {}, device = 'desktop') {
   const method = effect.method || 'from';
   // Two callers, two shapes. The editor and connector dispatch through resolveAnimations, which flattens the per-device bag into `vars` for the active device and deletes `devices`. The WordPress plugin localizes the stored record as-is, so `devices` is still there and the runtime picks the device itself. Reading `vars` first keeps both paths on one compiler.
@@ -294,7 +365,8 @@ export function compileEffectToWaapi(effect = {}, device = 'desktop') {
     fromKeyframe = compileStateToKeyframe(fromRaw);
     toKeyframe = { transform: 'none', opacity: 1 };
     if (fromKeyframe.filter) toKeyframe.filter = 'none';
-    if (fromKeyframe.clipPath) toKeyframe.clipPath = 'none';
+    // inset(0%), not 'none': the keyword is not an interpolable clip-path value, so a wipe held its opening shape to the halfway point and then snapped open. A fully-open inset is the same visible result and the browser can tween to it.
+    if (fromKeyframe.clipPath) toKeyframe.clipPath = 'inset(0%)';
   } else if (method === 'to') {
     fromKeyframe = { transform: 'none', opacity: 1 };
     toKeyframe = compileStateToKeyframe(toRaw);
@@ -309,6 +381,7 @@ export function compileEffectToWaapi(effect = {}, device = 'desktop') {
 
   const durationMs = toMs(rawDuration, 800);
   const delayMs = toMs(rawDelay, 0);
+  const loop = compileLoopOptions(fromRaw, toRaw);
 
   // Bounce and elastic are sampled into many keyframes rather than expressed as a timing function, so the browser must interpolate them linearly — any easing on top would re-shape a curve that already carries its own shape.
   if (needsKeyframeEase(rawEase)) {
@@ -323,6 +396,7 @@ export function compileEffectToWaapi(effect = {}, device = 'desktop') {
           delay: delayMs,
           easing: 'linear',
           fill: 'both',
+          ...loop,
         },
       };
     }
@@ -335,6 +409,7 @@ export function compileEffectToWaapi(effect = {}, device = 'desktop') {
       delay: delayMs,
       easing: compileEaseToCss(rawEase),
       fill: 'both',
+      ...loop,
     },
   };
 }

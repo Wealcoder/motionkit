@@ -189,12 +189,13 @@ export function calculateProgress(
  * @param {string} [options.start='top 80%']
  * @param {string} [options.end='bottom top']
  * @param {number|boolean|string} [options.scrub=true]
+ * @param {boolean} [options.once=false]
  * @returns {Function} cleanup function
  */
 export function observeScrollScrub(
   element,
   animation,
-  { start = 'top center', end = 'bottom top', scrub = true },
+  { start = 'top center', end = 'bottom top', scrub = true, once = false },
 ) {
   if (!element || !animation) return () => {};
 
@@ -241,17 +242,22 @@ export function observeScrollScrub(
       currentProgress = targetProgress;
     }
 
+    const clamped = Math.min(Math.max(currentProgress, 0), 1);
+
     try {
-      animation.currentTime =
-        Math.min(Math.max(currentProgress, 0), 1) * duration;
+      animation.currentTime = clamped * duration;
     } catch {
       /* ignore */
     }
 
+    // `once` means the animation plays a single time, so at the end line the scrub hands the element its finished state and lets go: the loop stops and scrolling back up no longer rewinds it. Without this the switch was accepted in the UI and ignored here, since only the IntersectionObserver path ever read it.
+    if (once && clamped >= 1) {
+      cleanup();
+      return;
+    }
+
     rafId = requestAnimationFrame(tick);
   }
-
-  rafId = requestAnimationFrame(tick);
 
   const cleanup = () => {
     isRunning = false;
@@ -261,6 +267,7 @@ export function observeScrollScrub(
   };
 
   activeScrubCleanups.add(cleanup);
+  rafId = requestAnimationFrame(tick);
   return cleanup;
 }
 

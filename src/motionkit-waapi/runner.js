@@ -345,6 +345,7 @@ export function runWaapiAnimation(anim, contextDoc = document) {
                 start,
                 end,
                 scrub: scrubVal,
+                once,
               },
             );
 
