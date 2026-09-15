@@ -1,6 +1,6 @@
 {
   "name": "motionkit",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "MotionKit WordPress Connector",
   "main": "echo \"Nothing much here.\" && exit 1",
   "devDependencies": {

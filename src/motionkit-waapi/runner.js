@@ -137,12 +137,10 @@ export function playWaapiAnimation(
 
   try {
     const animation = track(element, element.animate(keyframes, animOptions));
-    const set = runningAnimations.get(element);
 
-    animation.onfinish = () => {
-      set.delete(animation);
-      if (set.size === 0) runningAnimations.delete(element);
-    };
+    /* Deliberately NOT untracked on finish. Every free animation compiles with fill 'both' or 'forwards', so a finished Animation is still painting its end state on the element — dropping it from the registry left teardown holding nothing to cancel, and a deleted animation went on showing until the page was reloaded.
+
+       The registry is keyed by element and cleared wholesale by teardownWaapi, so holding finished entries costs one Set entry per element per run and never unbounded growth. */
 
     return animation;
   } catch (err) {
@@ -223,20 +221,21 @@ export function runWaapiAnimation(anim, contextDoc = document) {
       finalTriggerElements.forEach((triggerEl) => {
         let activeAnims = [];
 
-        // Replays the gesture on every enter/leave, so the previous batch is cancelled and untracked first rather than left running underneath.
-        const gesture = (kf, durationScale) => {
-          elements.forEach((targetEl, i) =>
-            cancelTracked(targetEl, [activeAnims[i]]),
-          );
+        /* A free preset is an ENTRANCE: it brings an element in. Playing it backwards therefore lands on its opening keyframe — opacity 0 for a fade — so the element disappeared the moment the pointer left. It plays forwards only, and the state it finishes in is the state that stays.
+
+           Only a still-running batch is cancelled, so re-hovering mid-animation restarts cleanly while a completed one keeps its fill. */
+        const onEnter = () => {
+          elements.forEach((targetEl, i) => {
+            const prev = activeAnims[i];
+            if (prev && prev.playState === 'running') {
+              cancelTracked(targetEl, [prev]);
+            }
+          });
           activeAnims = elements.map((targetEl) => {
             try {
               return track(
                 targetEl,
-                targetEl.animate(kf, {
-                  ...options,
-                  duration: (options.duration || 800) * durationScale,
-                  fill: 'forwards',
-                }),
+                targetEl.animate(keyframes, { ...options, fill: 'forwards' }),
               );
             } catch {
               return null;
@@ -244,37 +243,32 @@ export function runWaapiAnimation(anim, contextDoc = document) {
           });
         };
 
-        const onEnter = () => gesture(keyframes, 1);
-        // The return trip is quicker than the entrance, which is what makes a hover feel responsive rather than sluggish.
-        const onLeave = () => gesture([...keyframes].reverse(), 0.75);
-
         triggerEl.addEventListener('mouseenter', onEnter);
-        triggerEl.addEventListener('mouseleave', onLeave);
 
         listenerCleanups.push(() => {
           elements.forEach((targetEl, i) =>
             cancelTracked(targetEl, [activeAnims[i]]),
           );
           triggerEl.removeEventListener('mouseenter', onEnter);
-          triggerEl.removeEventListener('mouseleave', onLeave);
         });
       });
     } else if (triggerType === 'click') {
       finalTriggerElements.forEach((triggerEl) => {
-        let toggled = false;
         let activeAnims = [];
 
+        // No toggle: the second click replayed the entrance backwards and hid the element. Every click plays it forwards, so the animation can be re-run as often as the user likes and the element stays where it landed.
         const onClick = () => {
-          elements.forEach((targetEl, i) =>
-            cancelTracked(targetEl, [activeAnims[i]]),
-          );
-          const kf = toggled ? [...keyframes].reverse() : keyframes;
-          toggled = !toggled;
+          elements.forEach((targetEl, i) => {
+            const prev = activeAnims[i];
+            if (prev && prev.playState === 'running') {
+              cancelTracked(targetEl, [prev]);
+            }
+          });
           activeAnims = elements.map((targetEl) => {
             try {
               return track(
                 targetEl,
-                targetEl.animate(kf, { ...options, fill: 'forwards' }),
+                targetEl.animate(keyframes, { ...options, fill: 'forwards' }),
               );
             } catch {
               return null;
