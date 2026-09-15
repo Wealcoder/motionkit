@@ -68,6 +68,17 @@ export const MotionKitWaapi = {
 if (typeof window !== 'undefined') {
   window.MotionKitWaapi = MotionKitWaapi;
 
+  /* Deleting an animation in the editor has to stop it playing on the page. The editor fires this before every push; the router bundle answers it wherever the editor's own engine is loaded, but a WordPress page carries THIS bundle alone and answered nothing — so a deleted hover animation kept its listeners and went on running until the next reload.
+
+     Teardown is idempotent, so a host that also runs the router's fan-out simply tears down twice. */
+  document.addEventListener('aae-reset-animation', function () {
+    try {
+      teardownWaapi();
+    } catch (err) {
+      console.warn('[motionkit:waapi] teardown error:', err);
+    }
+  });
+
   // Guarded so a page that somehow loads the bundle twice does not run every animation twice over.
   if (!window[INSTALLED_KEY]) {
     window[INSTALLED_KEY] = true;

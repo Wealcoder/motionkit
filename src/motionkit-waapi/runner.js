@@ -37,6 +37,11 @@ function hold(element, keyframes) {
   if (isReducedMotion()) return null;
   const first = keyframes && keyframes[0];
   if (!first || Object.keys(first).length === 0) return null;
+
+  /* A clip-path opening state is never held. An element clipped to nothing is removed from IntersectionObserver's geometry — verified in Chromium, where a clip-path-held element reports isIntersecting false forever while an opacity-held one reports true on scroll — so holding it hides the element from the very observer that exists to reveal it, and a wipe stays clipped for the life of the page.
+
+     The cost is one frame of un-clipped paint before the observer fires, which is the same trade the whole hold exists to avoid. Staying visible is strictly better than never animating. */
+  if (first.clipPath) return null;
   try {
     const holder = track(
       element,
@@ -196,8 +201,20 @@ export function runWaapiAnimation(anim, contextDoc = document) {
 
     const { keyframes, options } = compileEffectToWaapi(effect, device);
 
-    // Read at the effect root beside splitText and stagger, not inside a device bag: a hover style either reverts or it does not, and having that differ per breakpoint would only produce elements that stay recoloured on one screen size.
-    const reverseOnLeave = effect.reverseOnLeave === true;
+    /* Read at the effect root beside splitText and stagger, not inside a device bag: a hover style either reverts or it does not, and having that differ per breakpoint would only produce elements that stay recoloured on one screen size.
+
+       Defaults to ON for a 'to' effect on hover or click, matching the control's own default so the editor never shows a switch the engine disagrees with. Only an explicit false turns it off.
+
+       The METHOD is what makes that default safe, not the trigger. A 'to' effect starts from the element's own styling, so playing it backwards restores exactly what the stylesheet says. A 'from' effect is an entrance — Fade In assigned to a hover trigger — whose opening keyframe is opacity 0, so defaulting it ON would hide the element the moment the pointer left. Those opt in explicitly or not at all. */
+    const method =
+      effect?.method === 'to' || effect?.method === 'fromTo'
+        ? effect.method
+        : 'from';
+    const reverseOnLeave =
+      effect.reverseOnLeave === undefined
+        ? method === 'to' &&
+          (triggerType === 'hover' || triggerType === 'click')
+        : effect.reverseOnLeave === true;
 
     // Stagger handling (default 0 or from effect/stagger)
     const staggerMs = effect.stagger
@@ -255,18 +272,45 @@ export function runWaapiAnimation(anim, contextDoc = document) {
           const reversed = [...keyframes].reverse();
 
           const onLeave = () => {
+            /* How far the forward run actually got, per element, read BEFORE anything is cancelled. Leaving mid-hover used to restart the revert from the reversed keyframes' first frame — the full hover state — so the element flashed the colour the pointer was moving away from and then crawled back over ground it had never covered.
+
+               Seeking the revert to the mirrored position makes it pick up exactly where the entrance stopped, and a half-played entrance reverts in half the time. */
+            const progress = elements.map((targetEl, i) => {
+              const prev = activeAnims[i];
+              if (!prev) return 1;
+              const total = Number(options.duration) || 0;
+              if (!total) return 1;
+              const played = Number(prev.currentTime) || 0;
+              const delayMs = Number(options.delay) || 0;
+              return Math.min(Math.max((played - delayMs) / total, 0), 1);
+            });
+
+            /* Unconditionally, unlike on re-enter: the forward run holds fill:'forwards', so a FINISHED one goes on painting the hover state, and as the later animation in the cascade it wins over the revert underneath — the element stayed at full hover colour and then snapped at the end. On re-enter a finished run is deliberately left alone, because there it is the thing holding the element in place. */
             elements.forEach((targetEl, i) => {
               const prev = activeAnims[i];
-              if (prev && prev.playState === 'running') {
-                cancelTracked(targetEl, [prev]);
-              }
+              if (prev) cancelTracked(targetEl, [prev]);
             });
-            activeAnims = elements.map((targetEl) => {
+
+            activeAnims = elements.map((targetEl, i) => {
               try {
-                return track(
+                // No delay on the way out: a delay on the way in is deliberate pacing, the same delay on the way out just leaves the element looking stuck before it snaps back.
+                const anim = track(
                   targetEl,
-                  targetEl.animate(reversed, { ...options, fill: 'forwards' }),
+                  targetEl.animate(reversed, {
+                    ...options,
+                    delay: 0,
+                    fill: 'forwards',
+                  }),
                 );
+                const total = Number(options.duration) || 0;
+                if (total && progress[i] < 1) {
+                  try {
+                    anim.currentTime = (1 - progress[i]) * total;
+                  } catch {
+                    /* ignore */
+                  }
+                }
+                return anim;
               } catch {
                 return null;
               }
@@ -335,13 +379,15 @@ export function runWaapiAnimation(anim, contextDoc = document) {
       const scrollRootFor = (el) =>
         scrollTriggerEls.length > 0 ? scrollTriggerEls[0] : el;
 
+      /* customScrub is NOT part of this decision. It is the value the Scrub control falls back on when it is set to 'custom', and it carries a default of 0.5 so the field is never blank — so treating a non-zero customScrub as "the user wants scrubbing" made isScrub true on every free preset ever built.
+
+         Every scroll animation therefore took the scrub path: created paused and seeked by scroll position, so it froze wherever the page happened to sit instead of playing. A looping preset showed it worst — an infinite loop that never ran a frame. */
       const rawScrub = devSt.scrub;
       const isScrub =
         rawScrub === true ||
         rawScrub === 'true' ||
         rawScrub === 'custom' ||
-        (typeof rawScrub === 'number' && rawScrub > 0) ||
-        (typeof devSt.customScrub === 'number' && devSt.customScrub > 0);
+        (typeof rawScrub === 'number' && rawScrub > 0);
 
       const scrubVal =
         rawScrub === 'custom' && typeof devSt.customScrub === 'number'

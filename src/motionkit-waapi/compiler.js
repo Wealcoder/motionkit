@@ -156,8 +156,15 @@ export function compileStateToKeyframe(stateProps = {}) {
     keyframe.padding = withUnit(stateProps.padding, 'px');
   if (stateProps.margin !== undefined && stateProps.margin !== '')
     keyframe.margin = withUnit(stateProps.margin, 'px');
-  if (stateProps.borderWidth !== undefined && stateProps.borderWidth !== '')
+  /* A width needs a style to paint. Most elements compute border-style 'none', and the browser then clamps border-width to 0 whatever the keyframes say — so a Hover Border preset animated a width that never appeared. border-style is a keyword and cannot be interpolated, so it is emitted on every keyframe as a constant rather than animated, the same way Animated Underline carries its gradient.
+
+     Only when a WIDTH is animated: a colour change alone means the element either already has a border, whose style stands, or has none, and conjuring one would paint a border the preset never asked for. */
+  if (stateProps.borderWidth !== undefined && stateProps.borderWidth !== '') {
     keyframe.borderWidth = withUnit(stateProps.borderWidth, 'px');
+    keyframe.borderStyle = stateProps.borderStyle || 'solid';
+  } else if (stateProps.borderStyle) {
+    keyframe.borderStyle = stateProps.borderStyle;
+  }
   if (stateProps.textShadow) keyframe.textShadow = stateProps.textShadow;
 
   /* text-decoration-line is NOT interpolable — 'none' to 'underline' snaps at the midpoint the way clip-path's keyword does, so an underline that grows has to be drawn as a background gradient instead and swept with backgroundSize. Colour and thickness DO interpolate, so they are emitted for presets that underline an already-underlined element. */
@@ -178,8 +185,13 @@ export function compileStateToKeyframe(stateProps = {}) {
   if (stateProps.backgroundRepeat)
     keyframe.backgroundRepeat = stateProps.backgroundRepeat;
 
-  if (stateProps.outlineWidth !== undefined && stateProps.outlineWidth !== '')
+  // Same clamp, same fix: an outline with no style paints nothing either.
+  if (stateProps.outlineWidth !== undefined && stateProps.outlineWidth !== '') {
     keyframe.outlineWidth = withUnit(stateProps.outlineWidth, 'px');
+    keyframe.outlineStyle = stateProps.outlineStyle || 'solid';
+  } else if (stateProps.outlineStyle) {
+    keyframe.outlineStyle = stateProps.outlineStyle;
+  }
   if (stateProps.outlineOffset !== undefined && stateProps.outlineOffset !== '')
     keyframe.outlineOffset = withUnit(stateProps.outlineOffset, 'px');
   if (stateProps.outlineColor) keyframe.outlineColor = stateProps.outlineColor;
@@ -405,15 +417,40 @@ export function compileEffectToWaapi(effect = {}, device = 'desktop') {
   let fromKeyframe = {};
   let toKeyframe = {};
 
+  /* Keyword constants the animated side needs but the synthetic side would not carry. They are not interpolable, so they have to be present on BOTH keyframes or the browser drops the property for the whole animation — border-style is what makes an animated border-width paint at all. */
+  const carryKeywords = (target, source) => {
+    if (source.borderStyle) target.borderStyle = source.borderStyle;
+    if (source.outlineStyle) target.outlineStyle = source.outlineStyle;
+    return target;
+  };
+
+  /* Forward, a property the synthetic keyframe does not name is filled from the element's own computed style — which is the resting look, exactly right. Reversed, that same frame is the ENDPOINT, and the browser resolves it against what the element computes mid-animation: its own fill. A reverted border width climbed 1px → 2px → 3px over successive hovers because of it.
+
+     Only properties with a resting value that is universally true get one. An element's padding is whatever its stylesheet says, so naming 0 there would collapse it on the way in instead of growing from where it sits. */
+  const REST_ON_SYNTHETIC = { borderWidth: '0px', outlineWidth: '0px' };
+
+  const carryRestingValues = (target, source) => {
+    for (const [prop, rest] of Object.entries(REST_ON_SYNTHETIC)) {
+      if (source[prop] !== undefined) target[prop] = rest;
+    }
+    return target;
+  };
+
   if (method === 'from') {
     fromKeyframe = compileStateToKeyframe(fromRaw);
-    toKeyframe = { transform: 'none', opacity: 1 };
+    toKeyframe = carryRestingValues(
+      carryKeywords({ transform: 'none', opacity: 1 }, fromKeyframe),
+      fromKeyframe,
+    );
     if (fromKeyframe.filter) toKeyframe.filter = 'none';
     // inset(0%), not 'none': the keyword is not an interpolable clip-path value, so a wipe held its opening shape to the halfway point and then snapped open. A fully-open inset is the same visible result and the browser can tween to it.
     if (fromKeyframe.clipPath) toKeyframe.clipPath = 'inset(0%)';
   } else if (method === 'to') {
-    fromKeyframe = { transform: 'none', opacity: 1 };
     toKeyframe = compileStateToKeyframe(toRaw);
+    fromKeyframe = carryRestingValues(
+      carryKeywords({ transform: 'none', opacity: 1 }, toKeyframe),
+      toKeyframe,
+    );
   } else {
     fromKeyframe = compileStateToKeyframe(fromRaw);
     toKeyframe = compileStateToKeyframe(toRaw);
