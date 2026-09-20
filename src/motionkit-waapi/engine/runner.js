@@ -1,13 +1,14 @@
-// GENERATED FILE — do not edit here.
-// Source of truth: motionkit-editor/src/lib/motionkit-engine/waapiEngine/
-// Re-sync with `npm run copy:wporg` in the editor repo.
-
 /**
  * WAAPI Animation Runner
  * Pure Web Animations API execution layer with trigger dispatch, stagger, and lifecycle management.
+ *
+ * Authored here (not generated) — this repo is the WAAPI engine's source of truth. A copy of
+ * shared/catalogue.js is synced out to motionkit-editor by scripts/copy-to-editor.js, for the
+ * editor's "Add Property" UI to import statically; the compiled engine bundle is copied out
+ * the same way, for the editor's preview iframe to load and read window.MotionKitWaapi from.
  */
 
-import { compileEffectToWaapi } from './compiler.js';
+import { compileEffectToWaapi } from './compiler/index.js';
 import {
   observeViewport,
   observeScrollScrub,

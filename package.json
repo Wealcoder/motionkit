@@ -14,6 +14,7 @@
     "cli": "^1.0.1",
     "eslint": "^8.22.0",
     "glob": "^11.0.3",
+    "jsdom": "^29.1.1",
     "po-csv": "github:marek-saji/po-csv",
     "postcss": "^8.4.49",
     "sass": "^1.36.0",
@@ -65,8 +66,9 @@
   },
   "scripts": {
     "test-old": "eslint --quiet . && stylelint --syntax scss -q **/*.scss && composer run-script phpcs",
-    "test": "eslint --quiet .",
+    "test": "eslint --quiet . && npm run test-unit",
     "test-js": "eslint --quiet .",
+    "test-unit": "node --test \"src/motionkit-waapi/**/*.test.js\"",
     "test-scss": "stylelint --syntax scss -q **/*.scss",
     "test-php": "composer run-script phpcs",
     "style-fix": "stylelint --syntax scss **/*.scss --fix",
@@ -74,7 +76,8 @@
     "i18n": "wp i18n make-pot .",
     "build": "wp-scripts build",
     "build:wp": "wp-scripts build",
-    "start": "wp-scripts start"
+    "start": "wp-scripts start",
+    "copy:to-editor": "node scripts/copy-to-editor.js"
   },
   "author": "wealcoder",
   "license": "GPL-2.0-or-later",

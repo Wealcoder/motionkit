@@ -1,7 +1,3 @@
-// GENERATED FILE — do not edit here.
-// Source of truth: motionkit-editor/src/lib/motionkit-engine/waapiEngine/
-// Re-sync with `npm run copy:wporg` in the editor repo.
-
 /**
  * Pure-DOM text splitting for the free engine.
  *

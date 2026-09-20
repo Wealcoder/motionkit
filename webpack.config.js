@@ -17,8 +17,10 @@ module.exports = {
     "admin-bar": "./src/css/admin-bar.css",
     "admin-menu-icon": "./src/css/admin-menu-icon.css",
     "modules/editor-bridge": "./src/modules/editor-bridge.js",
-    // The free WAAPI runtime. Source is generated from the MotionKit editor repo (see src/motionkit-waapi/), built here so the plugin ships both the readable source wp.org requires and its own bundle.
-    "motionkit-waapi": "./src/motionkit-waapi/standalone.js",
+    // The free WAAPI runtime — authored in this repo (src/motionkit-waapi/), which wp.org requires as readable source alongside the built bundle.
+    "motionkit-waapi": "./src/motionkit-waapi/wrapper.js",
+    // Same engine, no WordPress-data-reading or self-boot — copied by scripts/copy-to-editor.js into motionkit-editor's preview iframe, where animations arrive via the editor's own router instead.
+    "motionkit-waapi-engine": "./src/motionkit-waapi/engine/index.js",
   },
   output: {
     path: path.resolve(__dirname, "assets/build"),

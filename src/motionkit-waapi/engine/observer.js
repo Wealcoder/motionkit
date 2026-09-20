@@ -1,7 +1,3 @@
-// GENERATED FILE — do not edit here.
-// Source of truth: motionkit-editor/src/lib/motionkit-engine/waapiEngine/
-// Re-sync with `npm run copy:wporg` in the editor repo.
-
 /**
  * WAAPI Viewport Observer Manager
  * Pure browser native IntersectionObserver handling for Scroll Triggers.
