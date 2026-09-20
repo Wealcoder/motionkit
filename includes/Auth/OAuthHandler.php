@@ -114,10 +114,21 @@ final class OAuthHandler
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Validated via hash_equals against saved state token
     $state = sanitize_text_field(wp_unslash($_GET['state']));
-    $saved_state = (string) get_option(self::OPT_STATE_TOKEN, '');
+    $stored = get_option(self::OPT_STATE_TOKEN, '');
 
-    // Nothing stored means this connect was not started here — with both plugins active the connector's callback fires on the same page+code+state, and it keeps its own state in a transient. Stand down rather than answering for it; the state is deliberately left in place so the handler that owns it can still match.
+    // Both plugins share this key but not its shape: this plugin writes a bare string, the connector an array carrying its own expiry. Only a string is ours — casting unconditionally would turn the connector's array into the literal "Array", which matches no state and never reads as empty.
+    $saved_state = is_string($stored) ? $stored : '';
+
+    // Nothing stored means this connect was not started here — with both plugins active the connector's callback fires on the same page+code+state. Stand down rather than answering for it; the state is deliberately left in place so the handler that owns it can still match.
     if ($saved_state === '') {
+      // A live array value is the connector's, so its own callback will answer.
+      if (is_array($stored) && !empty($stored['state'])
+        && (empty($stored['expires_at']) || time() <= (int) $stored['expires_at'])) {
+        return;
+      }
+
+      // Neither store holds a state, so no handler owns this callback. Both used to return here and the request fell through to a bare page render, which WordPress answers with "The link you followed has expired." — unrecoverable-looking for what is really an expired connector transient or a plugin activated mid-flow. Say so instead, so the Connect tab renders its invalid_state error and the user can retry.
+      $this->redirect_with_notice(['error' => 'invalid_state']);
       return;
     }
 
