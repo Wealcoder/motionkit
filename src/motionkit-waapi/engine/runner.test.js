@@ -52,11 +52,13 @@ function installDom() {
   // A real stub rather than `undefined`: observeViewport treats a missing IntersectionObserver as "ancient browser" and fires onEnter immediately, which would mask the start-state hold this file exists to verify. Nothing here auto-fires, so the element stays out of view until a test says otherwise.
   observed = [];
   globalThis.IntersectionObserver = class {
-    constructor(cb) {
+    constructor(cb, options) {
       this.cb = cb;
+      // Recorded so a test can read the rootMargin the runner derived from its start position.
+      this.options = options;
     }
     observe(el) {
-      observed.push({ el, cb: this.cb, observer: this });
+      observed.push({ el, cb: this.cb, observer: this, options: this.options });
     }
     unobserve() {}
     disconnect() {}
@@ -1276,5 +1278,112 @@ describe('WAAPI runner target tagging', () => {
     const el = document.querySelector('.target');
     assert.equal(el.getAttribute('data-motionkit-anim-id'), 'anim-7');
     assert.equal(el.getAttribute('data-motionkit-step-id'), null);
+  });
+});
+
+// Start and End can be set to 'custom', with the typed position kept in customStart / customEnd — the same shape Scrub already uses. The engine used to read `start` alone, so a custom position arrived at the parser as the word 'custom' and silently fell back to the default.
+describe('WAAPI runner custom scroll positions', () => {
+  let resolveScrollPosition;
+
+  beforeEach(async () => {
+    installDom();
+    const mod = await import(`./runner.js?t=${Date.now()}${Math.random()}`);
+    runWaapiAnimation = mod.runWaapiAnimation;
+    teardownWaapi = mod.teardownWaapi;
+    resolveScrollPosition = mod.resolveScrollPosition;
+  });
+
+  afterEach(() => {
+    teardownDom();
+  });
+
+  // Seeded for every bucket: the runner reads the bucket the current window width falls into, and jsdom's 1024px window is 'tab_land', not 'desktop'.
+  const everyDevice = (values) =>
+    ['desktop', 'laptop', 'tab_land', 'tab', 'mobile'].reduce(
+      (acc, d) => ({ ...acc, [d]: { ...values } }),
+      {},
+    );
+
+  function scrollRecord(devices) {
+    return {
+      id: 'anim-9',
+      group: 'free_animation',
+      engine: 'waapi',
+      trigger: {
+        type: 'on_scroll',
+        selector: '.target',
+        scrollTrigger: [{ id: 'st1', devices: everyDevice(devices) }],
+      },
+      timeline: {
+        animations: [
+          {
+            id: 's1',
+            itemClass: '.target',
+            method: 'from',
+            devices: { desktop: { from: { opacity: 0, duration: 0.4 } } },
+          },
+        ],
+      },
+    };
+  }
+
+  test('should_pass_a_named_position_straight_through', () => {
+    assert.equal(resolveScrollPosition('top center', ''), 'top center');
+  });
+
+  test('should_swap_in_the_custom_value_when_the_select_says_custom', () => {
+    assert.equal(resolveScrollPosition('custom', 'top 25%'), 'top 25%');
+  });
+
+  test('should_trim_the_custom_value', () => {
+    assert.equal(resolveScrollPosition('custom', '  top 25%  '), 'top 25%');
+  });
+
+  // Empty rather than 'custom', so the caller's own default takes over instead of the parser being handed a word it cannot read.
+  test('should_resolve_a_blank_custom_value_to_nothing', () => {
+    assert.equal(resolveScrollPosition('custom', ''), '');
+    assert.equal(resolveScrollPosition('custom', undefined), '');
+  });
+
+  test('should_observe_with_the_custom_start_rather_than_the_default', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(
+      scrollRecord({ start: 'custom', customStart: 'top 25%', scrub: 'false' }),
+      document,
+    );
+    const withCustom = observed.at(-1)?.options?.rootMargin;
+
+    teardownWaapi();
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(
+      scrollRecord({ start: 'top 25%', scrub: 'false' }),
+      document,
+    );
+    const withNamed = observed.at(-1)?.options?.rootMargin;
+
+    teardownWaapi();
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(scrollRecord({ scrub: 'false' }), document);
+    const withDefault = observed.at(-1)?.options?.rootMargin;
+
+    assert.ok(withCustom, 'nothing was observed for the custom start');
+    assert.equal(withCustom, withNamed, 'custom start did not reach the observer');
+    assert.notEqual(withCustom, withDefault, 'custom start matched the default');
+  });
+
+  test('should_fall_back_to_the_default_start_when_the_custom_value_is_blank', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(
+      scrollRecord({ start: 'custom', customStart: '', scrub: 'false' }),
+      document,
+    );
+    const blankCustom = observed.at(-1)?.options?.rootMargin;
+
+    teardownWaapi();
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(scrollRecord({ scrub: 'false' }), document);
+    const defaulted = observed.at(-1)?.options?.rootMargin;
+
+    assert.equal(blankCustom, defaulted);
   });
 });

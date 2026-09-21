@@ -124,6 +124,14 @@ function cancelTracked(element, animations) {
   });
 }
 
+// The Start and End controls store the literal 'custom' and keep the typed position in a sibling key, the same shape the Scrub control already uses below: reading only `start` left a custom position arriving as the word 'custom', which parseTriggerPosition cannot read, so it fell back to the default and the control looked applied while changing nothing.
+
+// A blank custom value resolves to '' so the caller's own default takes over, rather than handing the parser an empty string to fail on.
+export function resolveScrollPosition(value, custom) {
+  if (value !== 'custom') return value;
+  return typeof custom === 'string' ? custom.trim() : '';
+}
+
 /**
  * Detects the current device bucket from viewport width.
  * @returns {string}
@@ -421,8 +429,8 @@ export function runWaapiAnimation(anim, contextDoc = document) {
       const seedSt = stList[0] || {};
       const devSt = seedSt.devices?.[device] || seedSt;
 
-      const start = devSt.start || 'top center';
-      const end = devSt.end || 'bottom top';
+      const start = resolveScrollPosition(devSt.start, devSt.customStart) || 'top center';
+      const end = resolveScrollPosition(devSt.end, devSt.customEnd) || 'bottom top';
       const once = devSt.once !== false; // default true
 
       // A scroll trigger may name its own element — "start when THAT enters view, animate THIS". Left blank, the animated element is its own trigger, which is the default a user gets and the behaviour they expect. A named trigger that matches nothing falls back the same way rather than never firing.
