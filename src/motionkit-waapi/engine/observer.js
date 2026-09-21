@@ -4,37 +4,16 @@
  */
 
 // Active observers registry for teardown
+import {
+  elementEdgeOffset,
+  parseStartToRootMargin,
+  parseTriggerPosition,
+  viewportEdgeOffset,
+} from '../shared/scrollPositions.js';
+
 const activeObservers = new Set();
 
-/**
- * Parses a start string (e.g. 'top 80%', 'top center', 'top 50%') into a CSS rootMargin.
- * @param {string} startStr
- * @returns {string}
- */
-export function parseStartToRootMargin(startStr = 'top 80%') {
-  if (!startStr || typeof startStr !== 'string') return '0px 0px -15% 0px';
-
-  const lower = startStr.toLowerCase().trim();
-
-  if (lower.includes('center') || lower.includes('50%')) {
-    return '0px 0px -50% 0px';
-  }
-
-  // Parse percentages like 'top 80%', 'top 70%'
-  const percentMatch = lower.match(/(\d+)%/);
-  if (percentMatch) {
-    const p = parseInt(percentMatch[1], 10);
-    const bottomInset = 100 - p;
-    return `0px 0px -${bottomInset}% 0px`;
-  }
-
-  if (lower.includes('top') && lower.includes('bottom')) {
-    return '0px 0px 0% 0px';
-  }
-
-  return '0px 0px -20% 0px';
-}
-
+export { parseStartToRootMargin };
 /**
  * Observes an element and triggers the callback when it enters the viewport.
  *
@@ -104,36 +83,6 @@ const activeScrubCleanups = new Set();
    "top 80%"     -> element's TOP    meets a line 80% down the viewport
    "bottom top"  -> element's BOTTOM meets the viewport's TOP
    Reading only one word cannot tell "bottom top" from "bottom bottom", which is how the default range ended up spanning a negative distance and pinning every scrubbed animation at progress 0. */
-
-// How far down the viewport a named edge sits, in px from the viewport top.
-function viewportEdgeOffset(word, winH, fallback) {
-  if (!word) return fallback;
-  if (word === 'top') return 0;
-  if (word === 'center') return winH * 0.5;
-  if (word === 'bottom') return winH;
-  const pct = word.match(/^(\d+(?:\.\d+)?)%$/);
-  if (pct) return (parseFloat(pct[1]) / 100) * winH;
-  return fallback;
-}
-
-// Offset from the element's own top to the named edge — what has to line up with the viewport edge.
-function elementEdgeOffset(word, height) {
-  if (word === 'bottom') return height;
-  if (word === 'center') return height * 0.5;
-  return 0;
-}
-
-// Splits "bottom top" into its element half and viewport half. A single word names the VIEWPORT edge, with the element's top implied, matching how GSAP reads a bare value.
-function parseTriggerPosition(value, fallback) {
-  const words = String(value ?? '')
-    .toLowerCase()
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-  if (words.length === 0) return fallback;
-  if (words.length === 1) return { element: 'top', viewport: words[0] };
-  return { element: words[0], viewport: words[1] };
-}
 
 /**
  * Scroll progress of an element between a start and an end trigger position.
