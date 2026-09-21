@@ -15,6 +15,10 @@ if (!defined('ABSPATH')) {
 }
 
 use MotionKit\Backend\Backend;
+use MotionKit\Common\AnimationResolver;
+use MotionKit\Common\PageType;
+use MotionKit\Common\ShareContext;
+use MotionKit\Common\ShareLinks;
 use MotionKit\Admin\PermalinkNotice;
 use MotionKit\Admin\ConnectPage;
 use MotionKit\Includes\Autoloader;
@@ -58,6 +62,15 @@ final class Plugin
      * @var string
      */
     private string $plugin_file;
+
+    /**
+     * Per-request memo for the resolved share link.
+     *
+     * `false` means not resolved yet; null means resolved to no valid link.
+     *
+     * @var ShareContext|null|false
+     */
+    private $share_context_cache = false;
 
     /**
      * Plugin directory path
@@ -167,6 +180,9 @@ final class Plugin
         add_action('admin_bar_menu', [$this, 'add_admin_bar_build_animation'], 100);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_admin_bar_css']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_waapi_runtime']);
+
+        // Cache bypass is decided from the query string alone, before anything is resolved — a full-page cache writes its entry long before wp_enqueue_scripts runs, so deciding later would let a share response be stored and then served to ordinary visitors.
+        $this->block_page_cache_for_share();
 
         // Lowercase per WP hook conventions; the uppercase name is the double-load guard constant, not this hook.
         do_action('motionkit_loaded');
@@ -422,53 +438,102 @@ final class Plugin
     }
 
     /**
-     * Retrieve published animations for the current frontend request.
+     * Retrieve the animations the current frontend request renders.
      *
-     * Reads from standard MotionKit option and post meta records:
-     * - Option: 'motionkit_global_animations'
-     * - Post Meta: 'motionkit_pg_animation_<post_type>', '_motionkit_pg_animation'
+     * Published only — the draft half of each bucket never reaches a visitor.
+     * A valid share token swaps in the link's own copies of saved records;
+     * everything else on the page stays exactly what a visitor sees, and an
+     * absent or dead token falls through to published.
      *
      * @return array List of animation objects.
      */
     public function get_frontend_animations(): array
     {
-        $all_animations = [];
+        // Read from the same slot the editor saved to: the front page is a post of type "page" but is stored under "front_page", and archives, search and 404 have no post at all.
+        $page_type_config = PageType::current();
 
-        // 1. Global animations
-        $global = get_option('motionkit_global_animations', []);
-        if (is_string($global)) {
-            $global = json_decode($global, true) ?: [];
-        }
-        if (is_array($global)) {
-            if (isset($global['published']) && is_array($global['published'])) {
-                $global = $global['published'];
-            }
-            foreach ($global as $anim) {
-                if (is_array($anim)) {
-                    $all_animations[] = $anim;
-                }
-            }
+        $share = $this->share_context($page_type_config);
+
+        return $share === null
+            ? AnimationResolver::published($page_type_config)
+            : AnimationResolver::for_share($page_type_config, $share);
+    }
+
+    /**
+     * Whether this request carries a share token, valid or not.
+     *
+     * Deliberately shape-blind — cache decisions are made from this, and a bad
+     * token skipping the cache costs one uncached response while a good token
+     * landing in the cache would leak a draft to everyone.
+     *
+     * @return bool
+     */
+    private function is_share_preview(): bool
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        return isset($_GET[ShareLinks::QUERY_PARAM])
+            && is_string($_GET[ShareLinks::QUERY_PARAM])
+            && $_GET[ShareLinks::QUERY_PARAM] !== '';
+    }
+
+    /**
+     * Keep share responses out of every cache layer we can reach.
+     *
+     * The connector blocks the same way on a site running both plugins; the
+     * constant and the headers are idempotent, so doing it twice costs nothing.
+     *
+     * @return void
+     */
+    private function block_page_cache_for_share(): void
+    {
+        if (!$this->is_share_preview()) {
+            return;
         }
 
-        // 2. Current page animations, read from the same slot the editor saved them to. Resolving by post type instead found nothing on the front page, archives, search and 404: the front page is a post of type "page" but is stored under "front_page", and the rest have no post at all.
-        $page_anims = \MotionKit\Common\PageType::current_animations();
-
-        if (is_string($page_anims)) {
-            $page_anims = json_decode($page_anims, true) ?: [];
-        }
-        if (is_array($page_anims)) {
-            // A draft/published split stores both halves; the frontend only ever plays what was published.
-            if (isset($page_anims['published']) && is_array($page_anims['published'])) {
-                $page_anims = $page_anims['published'];
-            }
-            foreach ($page_anims as $anim) {
-                if (is_array($anim)) {
-                    $all_animations[] = $anim;
-                }
-            }
+        // The constant is what LiteSpeed, WP Rocket, W3TC and friends look for; it has to be set before they decide to buffer the response.
+        if (!defined('DONOTCACHEPAGE')) {
+            define('DONOTCACHEPAGE', true);
         }
 
-        return $all_animations;
+        add_action('send_headers', [$this, 'send_share_nocache_headers']);
+    }
+
+    /**
+     * No-store headers for a share response.
+     *
+     * @return void
+     */
+    public function send_share_nocache_headers(): void
+    {
+        if (!$this->is_share_preview() || headers_sent()) {
+            return;
+        }
+
+        nocache_headers();
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+    }
+
+    /**
+     * Resolve the share token against this page's rows, memoized per request.
+     *
+     * @param array $page_type_config Descriptor from PageType::current().
+     * @return ShareContext|null
+     */
+    private function share_context(array $page_type_config): ?ShareContext
+    {
+        if ($this->share_context_cache !== false) {
+            return $this->share_context_cache;
+        }
+
+        if (!$this->is_share_preview()) {
+            return $this->share_context_cache = null;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $token = sanitize_text_field(wp_unslash($_GET[ShareLinks::QUERY_PARAM]));
+
+        return $this->share_context_cache = ShareLinks::resolve($page_type_config, $token);
     }
 
     /**

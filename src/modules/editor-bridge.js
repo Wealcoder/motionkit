@@ -129,6 +129,10 @@ const ENDPOINT_TO_ACTION = {
  * ENDPOINT_TO_ACTION because these return a body the editor reads, rather
  * than a fire-and-forget save ack.
  */
+const SHARE_OP_TO_ACTION = {
+  create: "create_share_link",
+};
+
 /**
  * No-op retained for call-site compatibility — we no longer use custom
  * auth headers (they'd trigger a CORS preflight).
@@ -444,6 +448,7 @@ function receivePageConfig() {
       // result message rather than a save ack. `requestId` lets the editor
       // pair a result with the call that asked for it.
       if (event.data?.type === "motionkit-share-link") {
+        const { op, sharedVersion } = event.data.data || {};
         const requestId = event.data.requestId || null;
         // Reply to whoever asked, not to the remembered parent origin — the iframe is same-origin under proxy-snapshot but loads directly on some setups, and a mismatched target silently drops the reply.
         const replyOrigin = event.origin || parentOrigin || "*";
@@ -454,8 +459,33 @@ function receivePageConfig() {
             replyOrigin,
           );
 
-        // Share links are a Connector feature: minting one needs the token store and the draft/published split, neither of which this plugin has. Answering here — rather than posting a /save that comes back `unknown_action` — is what turns a 15-second spinner into a straight "not supported here".
-        reply(null, "share_links_unsupported");
+        const action = SHARE_OP_TO_ACTION[op];
+        if (!action) {
+          reply(null, "unknown_share_op");
+          return;
+        }
+
+        // Same request shape as the connector's bridge: the plugin reads what to share from storage, so the page descriptor is the only thing the request has to name.
+        fetch(restUrl("save"), {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=UTF-8" },
+          body: JSON.stringify({
+            token: getMotionKitToken(),
+            action,
+            payload: {
+              pageTypeConfigs: motionkitData.pageTypeConfigs,
+              sharedVersion,
+            },
+          }),
+        })
+          .then((r) => r.json().catch(() => null))
+          .then((res) => {
+            if (res?.success) reply(res.data || {}, null);
+            else reply(null, res?.error || "share_link_failed");
+          })
+          .catch((err) => {
+            reply(null, String(err?.message || err || "network_error"));
+          });
       }
 
       // Respond to data requests from the SaaS editor

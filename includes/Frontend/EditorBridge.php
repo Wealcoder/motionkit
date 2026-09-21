@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MotionKit\Frontend;
 
 use MotionKit\Auth\JwtTokenManager;
+use MotionKit\Common\AnimationResolver;
 
 /**
  * MotionKit WordPress Plugin — Editor Bridge & Preview Loader.
@@ -111,8 +112,10 @@ final class EditorBridge
     // Shared with the frontend reader: a save under one key and a read under another is invisible data loss, so both sides resolve the slot in one place.
     $page_type_config = \MotionKit\Common\PageType::current();
     $page_settings = $this->get_current_page_settings($page_type_config);
-    $page_animation = $this->get_current_page_animations($page_type_config);
-    $global_animation = get_option('motionkit_global_animations', []);
+    // The editor works with one list per bucket, working copies stitched back onto their published records — the same shape it sent on save. A visitor only ever gets the published half.
+    $editor_buckets = AnimationResolver::for_editor($page_type_config);
+    $page_animation = $editor_buckets['page'];
+    $global_animation = $editor_buckets['global'];
     $global_settings = get_option('motionkit_global_settings', []);
 
     $runtime_data = [
@@ -127,8 +130,8 @@ final class EditorBridge
       'currentPageSettings'       => $page_settings,
       'globalSettings'            => is_array($global_settings) ? $global_settings : [],
       'global_settings'           => is_array($global_settings) ? $global_settings : [],
-      'globalAnimation'           => is_array($global_animation) ? $global_animation : [],
-      'global_animation'          => is_array($global_animation) ? $global_animation : [],
+      'globalAnimation'           => $global_animation,
+      'global_animation'          => $global_animation,
       'pageAnimation'             => $page_animation,
       'page_animation'            => $page_animation,
       'device_config'             => ['desktop', 'tablet', 'mobile'],
@@ -166,36 +169,6 @@ final class EditorBridge
     }
 
     $option = get_option($settings_key, []);
-    return is_array($option) ? $option : [];
-  }
-
-  /**
-   * Retrieve page animations for current page.
-   *
-   * @param array $config Page type configuration.
-   * @return array
-   */
-  private function get_current_page_animations(array $config): array
-  {
-    $type = $config['type'] ?? 'page';
-    $id = (int) ($config['id'] ?? 0);
-    $store_type = $config['store_type'] ?? 'post_meta';
-    $anim_key = 'motionkit_pg_animation_' . $type;
-
-    if ($store_type === 'post_meta' && $id > 0) {
-      $meta = get_post_meta($id, $anim_key, true);
-      if (empty($meta)) {
-        $meta = get_post_meta($id, '_motionkit_pg_animation', true);
-      }
-      return is_array($meta) ? $meta : [];
-    }
-
-    if ($store_type === 'term_meta' && $id > 0) {
-      $meta = get_term_meta($id, $anim_key, true);
-      return is_array($meta) ? $meta : [];
-    }
-
-    $option = get_option($anim_key, []);
     return is_array($option) ? $option : [];
   }
 }

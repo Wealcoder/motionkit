@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace MotionKit\RestApi;
 
 use MotionKit\Auth\JwtTokenManager;
+use MotionKit\Common\AnimationResolver;
+use MotionKit\Common\PageType;
+use MotionKit\Common\ShareLinks;
 
 /**
  * MotionKit WordPress Plugin — Minimal REST API for Editor Sync.
@@ -168,7 +171,10 @@ final class RestApi
         if (!$this->is_valid_page_type_config($configs)) {
           return new \WP_REST_Response(['success' => false, 'error' => 'invalid_page_type_config'], 400);
         }
-        $this->persist_record($store_type, $option_key, $target_id, $data);
+        // The editor sends one list; storage keeps published and draft apart so only the published half ever reaches a visitor's HTML.
+        $parts = AnimationResolver::partition_for_storage(is_array($data) ? $data : []);
+        $this->persist_record($store_type, $option_key, $target_id, $parts['published']);
+        $this->write_page_drafts($this->page_config($store_type, $option_key, $target_id), $parts['drafts']);
         $saved = true;
         break;
 
@@ -181,7 +187,18 @@ final class RestApi
         break;
 
       case 'save_global_animation':
-        update_option('motionkit_global_animations', $data);
+        $parts = AnimationResolver::partition_for_storage(is_array($data) ? $data : []);
+        update_option(AnimationResolver::GLOBAL_PUBLISHED_OPTION, $parts['published']);
+        if (empty($parts['drafts'])) {
+          delete_option(AnimationResolver::GLOBAL_DRAFT_OPTION);
+        } else {
+          update_option(AnimationResolver::GLOBAL_DRAFT_OPTION, $parts['drafts']);
+        }
+        AnimationResolver::forget_globals();
+        // A global animation's link lives on the page it was created for, so its copy can only be refreshed while the editor is still saying which page that is.
+        if ($this->is_valid_page_type_config($configs)) {
+          $this->sync_share_links($this->page_config($store_type, $option_key, $target_id));
+        }
         $saved = true;
         break;
 
@@ -215,8 +232,29 @@ final class RestApi
           'success' => true,
           'data'    => [
             'global_settings'   => get_option('motionkit_global_settings', []),
-            'global_animation'  => get_option('motionkit_global_animations', []),
+            // Stitched so the editor gets one list with working copies re-attached, the same shape it sent.
+            'global_animation'  => AnimationResolver::global_for_editor(),
           ],
+        ], 200);
+
+      case 'create_share_link':
+        if (!$this->is_valid_page_type_config($configs)) {
+          return new \WP_REST_Response(['success' => false, 'error' => 'invalid_page_type_config'], 400);
+        }
+        $page_config = $this->page_config($store_type, $option_key, $target_id);
+        // The records come from storage, never from the request — that is what keeps a share link unable to reveal anything the last save did not already write. A link covers the whole page, so the request names no ids either.
+        $token = ShareLinks::create(
+          $page_config,
+          AnimationResolver::drafts_by_id($page_config),
+          isset($payload['sharedVersion']) && is_string($payload['sharedVersion']) ? $payload['sharedVersion'] : ''
+        );
+        if ($token === null) {
+          return new \WP_REST_Response(['success' => false, 'error' => 'share_link_failed'], 500);
+        }
+        // Only the token goes back; the editor already knows the page URL it is editing and builds the link itself.
+        return new \WP_REST_Response([
+          'success' => true,
+          'data'    => ['token' => $token, 'param' => ShareLinks::QUERY_PARAM],
         ], 200);
 
       default:
@@ -268,12 +306,21 @@ final class RestApi
     $saved = false;
 
     if ($page_animation !== null) {
-      $this->persist_record($store_type, $option_key, $target_id, $page_animation);
+      $parts = AnimationResolver::partition_for_storage(is_array($page_animation) ? $page_animation : []);
+      $this->persist_record($store_type, $option_key, $target_id, $parts['published']);
+      $this->write_page_drafts($this->page_config($store_type, $option_key, $target_id), $parts['drafts']);
       $saved = true;
     }
 
     if ($global_animation !== null) {
-      update_option('motionkit_global_animations', $global_animation);
+      $parts = AnimationResolver::partition_for_storage(is_array($global_animation) ? $global_animation : []);
+      update_option(AnimationResolver::GLOBAL_PUBLISHED_OPTION, $parts['published']);
+      if (empty($parts['drafts'])) {
+        delete_option(AnimationResolver::GLOBAL_DRAFT_OPTION);
+      } else {
+        update_option(AnimationResolver::GLOBAL_DRAFT_OPTION, $parts['drafts']);
+      }
+      AnimationResolver::forget_globals();
       $saved = true;
     }
 
@@ -396,20 +443,57 @@ final class RestApi
 
   private function persist_record(string $store_type, string $key, int $id, $data): void
   {
-    switch ($store_type) {
-      case 'post_meta':
-        if ($id > 0) {
-          update_post_meta($id, $key, $data);
-        }
-        break;
-      case 'term_meta':
-        if ($id > 0) {
-          update_term_meta($id, $key, $data);
-        }
-        break;
-      default:
-        update_option($key, $data);
-        break;
+    PageType::write($this->page_config($store_type, $key, $id), $data);
+  }
+
+  /**
+   * The request's storage target as the descriptor PageType and the resolver read.
+   *
+   * @param string $store_type
+   * @param string $key
+   * @param int    $id
+   * @return array{store_type: string, option: string, id: int}
+   */
+  private function page_config(string $store_type, string $key, int $id): array
+  {
+    return ['store_type' => $store_type, 'option' => $key, 'id' => $id];
+  }
+
+  /**
+   * Write the page's draft bucket, then bring its share link back in step.
+   *
+   * A save is the only moment the shared copy changes: it refreshes the records
+   * of animations still under review, and drops the ones that just left it —
+   * published or deleted, both look the same from here.
+   *
+   * @param array $page_config Descriptor for the page's animation key.
+   * @param array $drafts      Draft entries to store.
+   * @return void
+   */
+  private function write_page_drafts(array $page_config, array $drafts): void
+  {
+    $draft_config = AnimationResolver::draft_config($page_config);
+
+    if (empty($drafts)) {
+      PageType::delete($draft_config);
+    } else {
+      PageType::write($draft_config, $drafts);
     }
+
+    $this->sync_share_links($page_config);
+  }
+
+  /**
+   * Re-copy this page's share link from what storage now holds.
+   *
+   * Reads back rather than reusing the list just written, so page and global
+   * working copies are reconciled together.
+   *
+   * @param array $page_config Descriptor for the page's animation key.
+   * @return void
+   */
+  private function sync_share_links(array $page_config): void
+  {
+    ShareLinks::reconcile($page_config, AnimationResolver::drafts_by_id($page_config));
   }
 }
