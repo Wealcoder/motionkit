@@ -28,6 +28,12 @@ function installDom() {
       currentTime: 0,
       // Real animations report this, and the runner reads it to decide whether a previous gesture is still mid-flight. Without it on the stub the guard was never exercised at all.
       playState: 'running',
+      // The revert reverses the forward run in place rather than building a second animation, so the stub has to model direction. Without these the engine's reverse() call threw and was swallowed, and every revert silently did nothing.
+      playbackRate: 1,
+      reverse() {
+        this.playbackRate = -this.playbackRate;
+        this.playState = 'running';
+      },
       effect: { getTiming: () => ({ duration: options?.duration ?? 0 }) },
       cancel() {
         this.cancelled = true;
@@ -715,34 +721,38 @@ describe('WAAPI runner reverseOnLeave', () => {
 
     const el = document.querySelector('.target');
     el.dispatchEvent(new window.Event('mouseenter'));
+    const forward = created[0];
     const afterEnter = created.length;
 
     el.dispatchEvent(new window.Event('mouseleave'));
 
-    assert.ok(
-      created.length > afterEnter,
-      'leaving started no animation, so the hover style never reverts',
+    assert.equal(
+      forward.playbackRate,
+      -1,
+      'leaving did not turn the run around, so the hover style never reverts',
+    );
+    assert.equal(
+      created.length,
+      afterEnter,
+      'the revert built a second animation instead of reversing the one on screen',
     );
   });
 
-  // The revert has to END on the resting look. Comparing the last frame keeps this independent of whether the engine reverses the keyframes or calls reverse() on the Animation.
+  // The revert has to END on the resting look. Running the same effect backwards lands on its own opening keyframe, which for a 'to' method is exactly that.
   test('should_end_the_leave_animation_on_the_opening_keyframe', () => {
     document.body.innerHTML = '<div class="target"></div>';
     runWaapiAnimation(styleRecord(), document);
 
     const el = document.querySelector('.target');
     el.dispatchEvent(new window.Event('mouseenter'));
-    const opening = created[0].keyframes[0];
-    const afterEnter = created.length;
+    const forward = created[0];
 
     el.dispatchEvent(new window.Event('mouseleave'));
-    const leaveAnim = created[afterEnter];
 
-    assert.deepEqual(
-      leaveAnim.keyframes[leaveAnim.keyframes.length - 1],
-      opening,
-      'the leave animation does not land on the resting state',
-    );
+    assert.equal(forward.playbackRate, -1, 'the run is not playing backwards');
+    // A 'to' effect compiles its opening frame as the element's resting look, which is where playing backwards lands.
+    assert.deepEqual(forward.keyframes[0], { transform: 'none', opacity: 1 });
+    assert.deepEqual(forward.keyframes[1], { color: 'rgb(255,0,0)' });
   });
 
   // The guard that protects the entrance fix: without the flag nothing may happen on leave.
@@ -761,6 +771,11 @@ describe('WAAPI runner reverseOnLeave', () => {
       afterEnter,
       'leaving animated despite reverseOnLeave being off',
     );
+    assert.equal(
+      created[0].playbackRate,
+      1,
+      'leaving turned the run around despite reverseOnLeave being off',
+    );
   });
 
   // An entrance record carries no flag at all, so the default must stay "hold the end state".
@@ -777,20 +792,39 @@ describe('WAAPI runner reverseOnLeave', () => {
     assert.equal(created.length, afterEnter, 'the entrance fix regressed');
   });
 
-  // Re-entering mid-revert must not leave the revert running underneath the new hover.
-  test('should_cancel_a_running_revert_when_the_pointer_returns', () => {
+  // Re-entering mid-revert turns the SAME run forwards again, so the element carries on from where it actually is instead of restarting from the resting look.
+  test('should_turn_a_running_revert_around_when_the_pointer_returns', () => {
     document.body.innerHTML = '<div class="target"></div>';
     runWaapiAnimation(styleRecord(), document);
 
     const el = document.querySelector('.target');
     el.dispatchEvent(new window.Event('mouseenter'));
+    const forward = created[0];
     const afterEnter = created.length;
     el.dispatchEvent(new window.Event('mouseleave'));
-    const revert = created[afterEnter];
 
     el.dispatchEvent(new window.Event('mouseenter'));
 
-    assert.equal(revert.cancelled, true, 'the revert kept running');
+    assert.equal(forward.playbackRate, 1, 'the revert kept running backwards');
+    assert.equal(forward.cancelled, false, 'the run on screen was thrown away');
+    assert.equal(
+      created.length,
+      afterEnter,
+      're-entering built a second animation on top of the revert',
+    );
+  });
+
+  // Two mouseleaves in a row must not flip it forwards again.
+  test('should_ignore_a_second_leave_while_already_reverting', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(styleRecord(), document);
+
+    const el = document.querySelector('.target');
+    el.dispatchEvent(new window.Event('mouseenter'));
+    el.dispatchEvent(new window.Event('mouseleave'));
+    el.dispatchEvent(new window.Event('mouseleave'));
+
+    assert.equal(created[0].playbackRate, -1, 'the second leave sent it forwards again');
   });
 });
 
@@ -828,23 +862,8 @@ describe('WAAPI runner revert is smooth', () => {
     },
   });
 
-  // A delay on the way in is deliberate pacing; the same delay on the way out is just the element sitting there looking stuck before it finally snaps back.
-  test('should_not_reuse_the_forward_delay_on_the_revert', () => {
-    document.body.innerHTML = '<div class="target"></div>';
-    runWaapiAnimation(styleRecord({ delay: 0.4 }), document);
-
-    const el = document.querySelector('.target');
-    el.dispatchEvent(new window.Event('mouseenter'));
-    const afterEnter = created.length;
-
-    el.dispatchEvent(new window.Event('mouseleave'));
-    const revert = created[afterEnter];
-
-    assert.equal(revert.options.delay, 0, 'the revert waits before starting');
-  });
-
-  /* Leaving mid-hover must continue from where the forward run got to, not restart from its end. Cancelling the forward animation drops its fill, so the element paints its full hover state for one frame before the revert takes over — a flash of exactly the colour the user is moving away from. */
-  test('should_start_the_revert_from_the_current_progress', () => {
+  /* Leaving mid-hover must continue from where the forward run actually got to. Rebuilding the revert from reversed keyframes could not do that: the position was mirrored in TIME and the same easing was then applied on top, so a power2.out entrance that was 97% of the way there by a third of its duration handed the revert a mirrored time of 0.5 and the ease read that back as 97% reverted — the element snapped home. Reversing the run in place keeps its position and unwinds the curve it was already on. */
+  test('should_keep_the_position_the_forward_run_reached', () => {
     document.body.innerHTML = '<div class="target"></div>';
     runWaapiAnimation(styleRecord(), document);
 
@@ -856,36 +875,42 @@ describe('WAAPI runner revert is smooth', () => {
     // Half way through the 400ms entrance.
     forward.currentTime = 200;
     el.dispatchEvent(new window.Event('mouseleave'));
-    const revert = created[afterEnter];
 
-    assert.ok(
-      revert.currentTime > 0,
-      'the revert starts from zero, so the element jumps to its full hover state first',
+    assert.equal(forward.playbackRate, -1, 'the run is not reverting');
+    assert.equal(
+      forward.currentTime,
+      200,
+      'the revert moved the playhead instead of unwinding from where it stood',
+    );
+    assert.equal(
+      created.length,
+      afterEnter,
+      'a second animation was built, which is what dropped the fill and flashed the hover state',
     );
   });
 
-  // Reverting from half way should take half the time, or the element crawls back from a position it never reached.
-  test('should_shorten_the_revert_to_the_progress_actually_made', () => {
+  // Reverting from half way takes half the time on its own: the playhead simply runs back down to zero.
+  test('should_take_only_as_long_as_the_forward_run_had_played', () => {
     document.body.innerHTML = '<div class="target"></div>';
     runWaapiAnimation(styleRecord(), document);
 
     const el = document.querySelector('.target');
     el.dispatchEvent(new window.Event('mouseenter'));
     const forward = created[0];
-    const afterEnter = created.length;
 
     forward.currentTime = 100;
     el.dispatchEvent(new window.Event('mouseleave'));
-    const revert = created[afterEnter];
 
-    assert.ok(
-      revert.currentTime >= 290,
-      'the revert replays ground the forward run never covered',
+    assert.equal(forward.playbackRate, -1);
+    assert.equal(
+      forward.currentTime,
+      100,
+      'the remaining distance is the playhead itself, so it must not be rewritten',
     );
   });
 
-  /* The forward run has to GO, finished or not. It holds fill:'forwards', so a finished one keeps painting the hover state; being the later animation in the cascade it wins over the revert underneath, and the element sat at full hover colour until the revert ended and then snapped. On leave the forward run is always cancelled — unlike on re-enter, where a finished one is left alone precisely so it keeps holding that fill. */
-  test('should_cancel_a_finished_forward_run_when_the_pointer_leaves', () => {
+  /* The ordinary case: the pointer leaves after the entrance is over. A finished run is reversed, not cancelled — cancelling dropped its fill, so the element repainted its resting look for a frame before the revert took over, which read as a flash of the state it was about to animate back to anyway. */
+  test('should_reverse_a_finished_forward_run_when_the_pointer_leaves', () => {
     document.body.innerHTML = '<div class="target"></div>';
     runWaapiAnimation(styleRecord(), document);
 
@@ -896,10 +921,11 @@ describe('WAAPI runner revert is smooth', () => {
 
     el.dispatchEvent(new window.Event('mouseleave'));
 
+    assert.equal(forward.playbackRate, -1, 'a finished run was not reverted');
     assert.equal(
       forward.cancelled,
-      true,
-      'the finished entrance keeps painting over the revert',
+      false,
+      'cancelling drops the fill, so the element flashes before the revert takes over',
     );
   });
 });

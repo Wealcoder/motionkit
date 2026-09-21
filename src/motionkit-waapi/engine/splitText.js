@@ -104,6 +104,27 @@ export function splitText(element, kind = 'chars') {
 }
 
 /**
+ * What an element is currently split into, or null when it is not split.
+ *
+ * The runner needs this to tell a split it can reuse from one it has to undo. Without it, changing
+ * Characters to Words kept the characters — `splitText` sees the element is already split and hands
+ * back the parts it finds — and turning splitting off left the spans in the page until teardown.
+ *
+ * @param {HTMLElement} element
+ * @returns {'chars'|'words'|null}
+ */
+export function splitKindOf(element) {
+  if (!element || !isSplit(element)) return null;
+
+  const first = element.querySelector(`[${PART_ATTR}]`);
+  const kind = first && first.getAttribute(PART_ATTR);
+  if (kind === 'word') return 'words';
+  if (kind === 'char') return 'chars';
+  // Parked markup with no parts left in it — a host re-render, say. Treated as split so the caller puts it back rather than splitting on top of it.
+  return 'chars';
+}
+
+/**
  * Puts a split element back exactly as it was. Safe to call on an element that
  * was never split, and safe to call twice.
  *

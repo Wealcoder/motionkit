@@ -14,7 +14,12 @@ import {
   observeScrollScrub,
   disconnectAllObservers,
 } from './observer.js';
-import { splitText, revertSplit, isSplitKind } from './splitText.js';
+import {
+  splitText,
+  revertSplit,
+  isSplitKind,
+  splitKindOf,
+} from './splitText.js';
 
 // Tracks running Animation instances: Map<HTMLElement, Set<Animation>>
 const runningAnimations = new Map();
@@ -248,17 +253,30 @@ export function runWaapiAnimation(anim, contextDoc = document) {
 
     // Splitting retargets the effect onto the generated parts, so the stagger below runs over characters or words instead of over whole elements. The matched elements stay the trigger surface.
     let elements = matched;
-    if (isSplitKind(effect.splitText)) {
-      const parts = [];
-      matched.forEach((el) => {
-        const made = splitText(el, effect.splitText);
-        if (made.length > 0) {
-          splitElements.add(el);
-          parts.push(...made);
-        }
-      });
-      if (parts.length > 0) elements = parts;
-    }
+    // Which animated parts came out of which matched element. A gesture on one heading has to animate that heading's characters, not every character the selector produced.
+    const partsOf = new Map(matched.map((el) => [el, [el]]));
+    const wantedSplit = isSplitKind(effect.splitText) ? effect.splitText : null;
+    const parts = [];
+
+    matched.forEach((el) => {
+      /* A run is not always the first one on this element: the editor re-dispatches the whole page on every field edit, and teardown does not necessarily come first. Only a split of the SAME kind can be reused — `splitText` returns the parts it finds when the element is already split, so without putting the old one back, changing Characters to Words kept the characters and turning splitting off left the spans in the markup until something else tore the engine down. */
+      const currentSplit = splitKindOf(el);
+      if (currentSplit && currentSplit !== wantedSplit) {
+        revertSplit(el);
+        splitElements.delete(el);
+      }
+
+      if (!wantedSplit) return;
+
+      const made = splitText(el, wantedSplit);
+      if (made.length > 0) {
+        splitElements.add(el);
+        partsOf.set(el, made);
+        parts.push(...made);
+      }
+    });
+
+    if (parts.length > 0) elements = parts;
 
     const { keyframes, options } = compileEffectToWaapi(effect, device);
 
@@ -293,6 +311,9 @@ export function runWaapiAnimation(anim, contextDoc = document) {
     const finalTriggerElements =
       triggerElements.length > 0 ? triggerElements : matched;
 
+    /* What one trigger surface drives. An element that triggers ITSELF drives only its own parts: with several headings on one class, hovering the first animated all of them, and with split text it animated every character of every heading at once. A separate trigger selector — hover the button, animate the heading — is a different relationship and drives the whole set, which is the reason to name one. */
+    const targetsFor = (triggerEl) => partsOf.get(triggerEl) ?? elements;
+
     // Trigger Execution
     if (triggerType === 'page_load') {
       elements.forEach((el, index) => {
@@ -300,27 +321,38 @@ export function runWaapiAnimation(anim, contextDoc = document) {
       });
     } else if (triggerType === 'hover') {
       finalTriggerElements.forEach((triggerEl) => {
+        const targets = targetsFor(triggerEl);
         let activeAnims = [];
 
         /* A free preset is an ENTRANCE: it brings an element in. Playing it backwards therefore lands on its opening keyframe — opacity 0 for a fade — so the element disappeared the moment the pointer left. It plays forwards only, and the state it finishes in is the state that stays.
 
            Only a still-running batch is cancelled, so re-hovering mid-animation restarts cleanly while a completed one keeps its fill. */
         const onEnter = () => {
-          elements.forEach((targetEl, i) => {
+          targets.forEach((targetEl, i) => {
             const prev = activeAnims[i];
-            if (prev && prev.playState === 'running') {
+            // A run being reverted is resumed below, not cancelled — only a forward one still in flight is replaced.
+            if (
+              prev &&
+              prev.playState === 'running' &&
+              !(prev.playbackRate < 0)
+            ) {
               cancelTracked(targetEl, [prev]);
             }
           });
-          activeAnims = elements.map((targetEl) => {
-            try {
-              return track(
-                targetEl,
-                targetEl.animate(keyframes, { ...options, fill: 'forwards' }),
-              );
-            } catch {
-              return null;
+          // Through playWaapiAnimation, like page load and scroll: it is what applies the stagger and what honours prefers-reduced-motion. Animating directly here meant a split heading played every character at once — which is the whole of what splitting is for — and reduced motion was ignored on the two triggers a visitor sets off by hand.
+          // The compiled `fill` is kept rather than forced to 'forwards'. With a stagger the two differ: 'forwards' leaves a character painted normally through its delay and then snaps it to the opening keyframe when its turn comes, so a split entrance flickered its way across the line. 'both' holds the opening state from the start, which is also what lets a reverted run hold where it lands.
+          activeAnims = targets.map((targetEl, i) => {
+            const prev = activeAnims[i];
+            // Mid-revert: turn the run around instead of replacing it, so a pointer that comes back finds the element where it actually is rather than back at the opening keyframe.
+            if (prev && prev.playbackRate < 0 && prev.playState !== 'idle') {
+              try {
+                prev.reverse();
+                return prev;
+              } catch {
+                /* Not reversible — fall through and start a fresh run. */
+              }
             }
+            return playWaapiAnimation(targetEl, keyframes, options, i * staggerMs);
           });
         };
 
@@ -330,50 +362,19 @@ export function runWaapiAnimation(anim, contextDoc = document) {
 
            The return trip is the same keyframes reversed rather than Animation.reverse(), so it works whether or not the forward run ever finished. */
         if (reverseOnLeave) {
-          const reversed = [...keyframes].reverse();
+          /* Reversed by the browser rather than rebuilt from reversed keyframes, because the position has to be mirrored in PROGRESS, not in time. Rebuilding applied the same easing to the way back, so a power2.out entrance — which is already 97% of the way there a third of the way through — handed the revert a mirrored time of 0.5 and the ease turned that back into 97% reverted: the element snapped home instead of easing back, and the harder the ease the worse it read.
 
+             Animation.reverse() keeps the effect's own position and plays its curve out backwards from exactly where it stopped, which is what picking up where the entrance left off actually means, and it needs no inverse of the easing function to do it. It is also right for a run that already finished, which is the ordinary case: the pointer usually leaves after the entrance is over. */
           const onLeave = () => {
-            /* How far the forward run actually got, per element, read BEFORE anything is cancelled. Leaving mid-hover used to restart the revert from the reversed keyframes' first frame — the full hover state — so the element flashed the colour the pointer was moving away from and then crawled back over ground it had never covered.
-
-               Seeking the revert to the mirrored position makes it pick up exactly where the entrance stopped, and a half-played entrance reverts in half the time. */
-            const progress = elements.map((targetEl, i) => {
+            targets.forEach((targetEl, i) => {
               const prev = activeAnims[i];
-              if (!prev) return 1;
-              const total = Number(options.duration) || 0;
-              if (!total) return 1;
-              const played = Number(prev.currentTime) || 0;
-              const delayMs = Number(options.delay) || 0;
-              return Math.min(Math.max((played - delayMs) / total, 0), 1);
-            });
-
-            /* Unconditionally, unlike on re-enter: the forward run holds fill:'forwards', so a FINISHED one goes on painting the hover state, and as the later animation in the cascade it wins over the revert underneath — the element stayed at full hover colour and then snapped at the end. On re-enter a finished run is deliberately left alone, because there it is the thing holding the element in place. */
-            elements.forEach((targetEl, i) => {
-              const prev = activeAnims[i];
-              if (prev) cancelTracked(targetEl, [prev]);
-            });
-
-            activeAnims = elements.map((targetEl, i) => {
+              if (!prev || prev.playState === 'idle') return;
+              // Already on its way back — a second mouseleave must not turn it forwards again.
+              if (prev.playbackRate < 0) return;
               try {
-                // No delay on the way out: a delay on the way in is deliberate pacing, the same delay on the way out just leaves the element looking stuck before it snaps back.
-                const anim = track(
-                  targetEl,
-                  targetEl.animate(reversed, {
-                    ...options,
-                    delay: 0,
-                    fill: 'forwards',
-                  }),
-                );
-                const total = Number(options.duration) || 0;
-                if (total && progress[i] < 1) {
-                  try {
-                    anim.currentTime = (1 - progress[i]) * total;
-                  } catch {
-                    /* ignore */
-                  }
-                }
-                return anim;
+                prev.reverse();
               } catch {
-                return null;
+                /* No active timeline to reverse against; the element is where it started. */
               }
             });
           };
@@ -385,7 +386,7 @@ export function runWaapiAnimation(anim, contextDoc = document) {
         }
 
         listenerCleanups.push(() => {
-          elements.forEach((targetEl, i) =>
+          targets.forEach((targetEl, i) =>
             cancelTracked(targetEl, [activeAnims[i]]),
           );
           triggerEl.removeEventListener('mouseenter', onEnter);
@@ -393,31 +394,26 @@ export function runWaapiAnimation(anim, contextDoc = document) {
       });
     } else if (triggerType === 'click') {
       finalTriggerElements.forEach((triggerEl) => {
+        const targets = targetsFor(triggerEl);
         let activeAnims = [];
 
         // No toggle: the second click replayed the entrance backwards and hid the element. Every click plays it forwards, so the animation can be re-run as often as the user likes and the element stays where it landed.
         const onClick = () => {
-          elements.forEach((targetEl, i) => {
+          targets.forEach((targetEl, i) => {
             const prev = activeAnims[i];
             if (prev && prev.playState === 'running') {
               cancelTracked(targetEl, [prev]);
             }
           });
-          activeAnims = elements.map((targetEl) => {
-            try {
-              return track(
-                targetEl,
-                targetEl.animate(keyframes, { ...options, fill: 'forwards' }),
-              );
-            } catch {
-              return null;
-            }
-          });
+          // Same reasons as hover: the stagger a split heading needs, reduced motion, and the compiled fill that keeps a staggered character hidden through its delay instead of flashing.
+          activeAnims = targets.map((targetEl, i) =>
+            playWaapiAnimation(targetEl, keyframes, options, i * staggerMs),
+          );
         };
 
         triggerEl.addEventListener('click', onClick);
         listenerCleanups.push(() => {
-          elements.forEach((targetEl, i) =>
+          targets.forEach((targetEl, i) =>
             cancelTracked(targetEl, [activeAnims[i]]),
           );
           triggerEl.removeEventListener('click', onClick);
