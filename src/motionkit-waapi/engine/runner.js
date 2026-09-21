@@ -22,6 +22,55 @@ const runningAnimations = new Map();
 const listenerCleanups = [];
 // Elements whose text this run split, so teardown can put their markup back. A split rewrites innerHTML, so leaving one behind means the page keeps the generated spans after the engine has stopped.
 const splitElements = new Set();
+// What this engine tagged, so teardown removes its own marks and not another engine's: Map<HTMLElement, { animIds: Set<string>, stepIds: Set<string> }>
+const taggedTargets = new Map();
+
+const ANIM_ID_ATTR = 'data-motionkit-anim-id';
+const STEP_ID_ATTR = 'data-motionkit-step-id';
+
+// Marks an animated element the way the GSAP engine's tagAllTargets does, because the editor identifies an animated element by these attributes alone: the inspector's markers and the preview context menu scan for ANIM_ID_ATTR, the Structure list resolves an element through it, the global reset sweeps it, and copy-one-effect reads the comma-separated STEP_ID_ATTR beside it — a free animation that leaves no mark is invisible to all of them.
+
+// __wcfOrigCss is part of the same contract, not an extra: the editor's global reset runs clearProps over every tagged element, which wipes the whole inline style attribute, and restores the author's own styles from this snapshot, so taking the mark without the snapshot would make a reset delete inline styles the page author wrote.
+function tagTarget(el, animId, stepId) {
+  if (!el || !el.setAttribute || !animId) return;
+
+  if (el.__wcfOrigCss === undefined) el.__wcfOrigCss = el.style.cssText;
+
+  el.setAttribute(ANIM_ID_ATTR, animId);
+
+  // One element can be the target of several effects, so the step list appends rather than replaces — paste-one-effect narrows by the whole list.
+  if (stepId) {
+    const existing = el.getAttribute(STEP_ID_ATTR);
+    const ids = existing ? existing.split(',') : [];
+    if (!ids.includes(stepId)) {
+      ids.push(stepId);
+      el.setAttribute(STEP_ID_ATTR, ids.join(','));
+    }
+  }
+
+  if (!taggedTargets.has(el))
+    taggedTargets.set(el, { animIds: new Set(), stepIds: new Set() });
+  const marks = taggedTargets.get(el);
+  marks.animIds.add(animId);
+  if (stepId) marks.stepIds.add(stepId);
+}
+
+// Removes only the marks this engine wrote. The GSAP engine tags the same elements with the same attributes, so clearing a value it owns would drop a live custom animation out of the inspector and out of the reset sweep. __wcfOrigCss stays — it is the author's baseline, not an ownership claim.
+function untagTargets() {
+  taggedTargets.forEach((marks, el) => {
+    if (!el.getAttribute) return;
+
+    if (marks.animIds.has(el.getAttribute(ANIM_ID_ATTR)))
+      el.removeAttribute(ANIM_ID_ATTR);
+
+    const remaining = (el.getAttribute(STEP_ID_ATTR) || '')
+      .split(',')
+      .filter((id) => id && !marks.stepIds.has(id));
+    if (remaining.length) el.setAttribute(STEP_ID_ATTR, remaining.join(','));
+    else el.removeAttribute(STEP_ID_ATTR);
+  });
+  taggedTargets.clear();
+}
 
 // Every Animation the engine starts must land here, or teardown cannot cancel it. Hover and click animations use fill:'forwards', so an untracked one stays pinned to its end state for the life of the page.
 function track(element, animation) {
@@ -185,6 +234,9 @@ export function runWaapiAnimation(anim, contextDoc = document) {
 
     const matched = queryElements(selector, contextDoc);
     if (matched.length === 0) return;
+
+    // Tagged here rather than where the animation starts, so a scroll effect carries its marks while it waits out of view — the editor's inspector has to find it before it has played.
+    matched.forEach((el) => tagTarget(el, anim.id, effect.id));
 
     // Splitting retargets the effect onto the generated parts, so the stagger below runs over characters or words instead of over whole elements. The matched elements stay the trigger surface.
     let elements = matched;
@@ -514,4 +566,7 @@ export function teardownWaapi() {
       /* ignore */
     }
   }
+
+  // 5. Drop this engine's element marks last, so anything above that looks an element up by them still finds it.
+  untagTargets();
 }

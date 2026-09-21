@@ -1131,3 +1131,150 @@ describe('teardownWaapi cancels everything the engine is running', () => {
     );
   });
 });
+
+// The editor identifies an animated element by the attributes the engine leaves on it: the inspector's markers, the preview context menu, the Structure list and the global reset sweep all read data-motionkit-anim-id, and copy/paste-one-effect reads the comma-separated data-motionkit-step-id beside it. The GSAP engine writes both (see motionkit-editor animationEngine/custom/helper/tagTargets.js) and is copied into this repo too, so the free engine has to write them in the same shape or every one of those features is blind to a free animation.
+describe('WAAPI runner target tagging', () => {
+  beforeEach(async () => {
+    installDom();
+    const mod = await import(`./runner.js?t=${Date.now()}${Math.random()}`);
+    runWaapiAnimation = mod.runWaapiAnimation;
+    teardownWaapi = mod.teardownWaapi;
+  });
+
+  afterEach(() => {
+    teardownDom();
+  });
+
+  // Two effects over one selector, each with its own id, in the shape the editor mints at preset-select time.
+  function tagRecord(steps, triggerType = 'page_load') {
+    return {
+      id: 'anim-7',
+      group: 'free_animation',
+      engine: 'waapi',
+      trigger: { type: triggerType, selector: '.target' },
+      timeline: { animations: steps },
+    };
+  }
+
+  const step = (id, selector = '.target') => ({
+    id,
+    itemClass: selector,
+    method: 'from',
+    devices: { desktop: { from: { opacity: 0, duration: 0.4 } } },
+  });
+
+  test('should_tag_a_target_with_the_animation_id', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(tagRecord([step('s1')]), document);
+
+    assert.equal(
+      document.querySelector('.target').getAttribute('data-motionkit-anim-id'),
+      'anim-7',
+    );
+  });
+
+  test('should_tag_a_target_with_its_step_id', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(tagRecord([step('s1')]), document);
+
+    assert.equal(
+      document.querySelector('.target').getAttribute('data-motionkit-step-id'),
+      's1',
+    );
+  });
+
+  // One element can be the target of several effects, so the step list appends rather than overwrites — paste-one-effect reads the whole list.
+  test('should_append_a_second_steps_id_to_the_same_element', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(tagRecord([step('s1'), step('s2')]), document);
+
+    assert.equal(
+      document.querySelector('.target').getAttribute('data-motionkit-step-id'),
+      's1,s2',
+    );
+  });
+
+  test('should_not_repeat_a_step_id_already_on_the_element', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(tagRecord([step('s1'), step('s1')]), document);
+
+    assert.equal(
+      document.querySelector('.target').getAttribute('data-motionkit-step-id'),
+      's1',
+    );
+  });
+
+  // The editor's global reset runs gsap.set(clearProps:'all') over every tagged element, which wipes the ENTIRE inline style attribute — author-set styles included — and then restores this snapshot. A tag without a snapshot means a reset silently deletes the author's own inline styles.
+  test('should_snapshot_the_authors_inline_styles_before_animating', () => {
+    document.body.innerHTML =
+      '<div class="target" style="color: red;"></div>';
+    runWaapiAnimation(tagRecord([step('s1')]), document);
+
+    assert.equal(
+      document.querySelector('.target').__wcfOrigCss,
+      'color: red;',
+    );
+  });
+
+  test('should_tag_a_scroll_target_before_it_enters_the_viewport', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(tagRecord([step('s1')], 'on_scroll'), document);
+
+    assert.equal(
+      document.querySelector('.target').getAttribute('data-motionkit-anim-id'),
+      'anim-7',
+    );
+  });
+
+  test('should_remove_its_own_tags_on_teardown', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(tagRecord([step('s1')]), document);
+
+    teardownWaapi();
+
+    const el = document.querySelector('.target');
+    assert.equal(el.getAttribute('data-motionkit-anim-id'), null);
+    assert.equal(el.getAttribute('data-motionkit-step-id'), null);
+  });
+
+  // Teardown is engine-wide and the GSAP engine marks the same elements with the same attributes, so this engine clears only the values it wrote.
+
+  // The step list is per-effect, so another engine's ids survive being filtered out of it; the anim id is single-valued and last-writer-wins (the GSAP engine's own untagAllTargets has exactly this property), so a foreign id this run overwrote is not put back and the global reset sweep is what re-establishes the truth.
+  test('should_only_clear_step_ids_it_wrote', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    const el = document.querySelector('.target');
+    el.setAttribute('data-motionkit-step-id', 'gsap-step');
+
+    runWaapiAnimation(tagRecord([step('s1')]), document);
+    assert.equal(el.getAttribute('data-motionkit-step-id'), 'gsap-step,s1');
+
+    teardownWaapi();
+
+    assert.equal(el.getAttribute('data-motionkit-step-id'), 'gsap-step');
+  });
+
+  // An element this run never touched keeps its marks — teardown walks what this engine tagged, not the whole document.
+  test('should_not_touch_an_element_it_never_tagged', () => {
+    document.body.innerHTML =
+      '<div class="target"></div><div class="other"></div>';
+    const other = document.querySelector('.other');
+    other.setAttribute('data-motionkit-anim-id', 'gsap-anim');
+
+    runWaapiAnimation(tagRecord([step('s1')]), document);
+    teardownWaapi();
+
+    assert.equal(other.getAttribute('data-motionkit-anim-id'), 'gsap-anim');
+  });
+
+  // An effect the editor never minted an id for still animates, so the anim id has to land even when there is no step id to record.
+  test('should_still_tag_the_animation_id_when_a_step_has_no_id', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    const steps = [step('s1')];
+    delete steps[0].id;
+    runWaapiAnimation(tagRecord(steps), document);
+
+    const el = document.querySelector('.target');
+    assert.equal(el.getAttribute('data-motionkit-anim-id'), 'anim-7');
+    assert.equal(el.getAttribute('data-motionkit-step-id'), null);
+  });
+});
