@@ -1061,10 +1061,8 @@ describe('WAAPI runner scroll trigger honours the scrub choice', () => {
   });
 });
 
-/* An element clipped to nothing is invisible to IntersectionObserver — clip-path removes it from the intersection geometry, so the observer that exists to reveal it never fires and the element stays clipped for the life of the page. Verified in Chromium: a clip-path-held element reports isIntersecting false forever, while an opacity-held one reports true on scroll.
-
-   So the opening state is held for everything EXCEPT clip-path, whose presets accept one frame of un-clipped paint rather than never animating at all. */
-describe('WAAPI runner does not clip an element out of its own observer', () => {
+/* A wipe's opening state is held like any other. It was the one exception while the scroll trigger was an IntersectionObserver, which dropped a clipped-to-nothing element from its geometry — verified in Chromium — so holding the clip hid the element from the observer meant to reveal it, and wipes paid with one frame of un-clipped paint instead. The trigger now measures a rect, which a clipped element still has, so that frame is gone and the hold is back. */
+describe('WAAPI runner holds a clip-path opening state', () => {
   beforeEach(async () => {
     installDom();
     const mod = await import(`./runner.js?t=${Date.now()}${Math.random()}`);
@@ -1112,17 +1110,31 @@ describe('WAAPI runner does not clip an element out of its own observer', () => 
   // hold() creates a paused duration-1 animation. For a wipe that placeholder is the thing that breaks it.
   const holders = () => created.filter((a) => a.options?.duration === 1);
 
-  test('should_not_hold_a_clip_path_opening_state', () => {
+  test('should_hold_a_clip_path_opening_state', () => {
     document.body.innerHTML = '<div class="target"></div>';
     runWaapiAnimation(
       scrollRecord({ clipPath: 'inset(0 100% 0 0)' }),
       document,
     );
 
-    assert.equal(
-      holders().length,
-      0,
-      'the element is clipped away before the observer can see it',
+    assert.equal(holders().length, 1, 'the wipe shows un-clipped until it enters view');
+    assert.equal(holders()[0].keyframes[0].clipPath, 'inset(0 100% 0 0)');
+  });
+
+  // Held or not, the trigger still has to fire: the hold must not keep the element from reaching its start line.
+  test('should_still_fire_the_trigger_while_the_clip_is_held', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(
+      scrollRecord({ clipPath: 'inset(0 100% 0 0)' }),
+      document,
+    );
+    place(document.querySelector('.target'), 0);
+    flushFrames();
+
+    assert.equal(holders()[0].cancelled, true, 'the hold should be released');
+    assert.ok(
+      created.some((a) => a.options?.duration === 600),
+      'the wipe should be playing',
     );
   });
 
@@ -1134,15 +1146,16 @@ describe('WAAPI runner does not clip an element out of its own observer', () => 
     assert.equal(holders().length, 1, 'the fade lost its start state');
   });
 
-  // A preset that animates both still must not be clipped out of view; the rest of its opening state goes unheld with it.
-  test('should_not_hold_when_clip_path_is_combined_with_opacity', () => {
+  test('should_hold_clip_path_and_opacity_together', () => {
     document.body.innerHTML = '<div class="target"></div>';
     runWaapiAnimation(
       scrollRecord({ clipPath: 'inset(0 0 100% 0)', opacity: 0 }),
       document,
     );
 
-    assert.equal(holders().length, 0);
+    assert.equal(holders().length, 1);
+    assert.equal(holders()[0].keyframes[0].opacity, 0);
+    assert.equal(holders()[0].keyframes[0].clipPath, 'inset(0 0 100% 0)');
   });
 });
 
@@ -1445,5 +1458,250 @@ describe('WAAPI runner custom scroll positions', () => {
       true,
       'a blank custom start should behave like the default centre line',
     );
+  });
+});
+
+/* The device bag the runner reads has to be the one the editor showed the user. The runner carried its own breakpoints (480/768/1024/1366) while the platform's are 767/1023/1199/1440, so nine of sixteen sampled widths read a neighbouring bag — a 600px phone played the Tab values, a 1400px laptop the Desktop ones. Each bag here carries its own duration so the animation names the bag it came from. */
+describe('WAAPI runner device buckets', () => {
+  beforeEach(async () => {
+    installDom();
+    const mod = await import(`./runner.js?t=${Date.now()}${Math.random()}`);
+    runWaapiAnimation = mod.runWaapiAnimation;
+    teardownWaapi = mod.teardownWaapi;
+  });
+
+  afterEach(() => {
+    teardownDom();
+  });
+
+  const DURATION_OF = { desktop: 1, laptop: 2, tab_land: 3, tab: 4, mobile: 5 };
+  const bagRecord = () => ({
+    id: 'a1',
+    group: 'free_animation',
+    engine: 'waapi',
+    trigger: { type: 'page_load', selector: '.target' },
+    timeline: {
+      animations: [
+        {
+          itemClass: '.target',
+          method: 'from',
+          devices: Object.fromEntries(
+            Object.entries(DURATION_OF).map(([d, s]) => [
+              d,
+              { from: { opacity: 0, duration: s } },
+            ]),
+          ),
+        },
+      ],
+    },
+  });
+  const bagPlayed = () =>
+    Object.keys(DURATION_OF).find(
+      (d) => DURATION_OF[d] * 1000 === created.at(-1)?.options?.duration,
+    );
+
+  // The platform's five ranges, sampled at both edges of each.
+  const EXPECTED = [
+    [375, 'mobile'], [767, 'mobile'],
+    [768, 'tab'], [1023, 'tab'],
+    [1024, 'tab_land'], [1199, 'tab_land'],
+    [1200, 'laptop'], [1440, 'laptop'],
+    [1441, 'desktop'], [1920, 'desktop'],
+  ];
+
+  for (const [width, device] of EXPECTED) {
+    test(`should_read_the_${device}_bag_at_${width}px`, () => {
+      dom.window.innerWidth = width;
+      document.body.innerHTML = '<div class="target"></div>';
+      runWaapiAnimation(bagRecord(), document);
+      assert.equal(bagPlayed(), device);
+    });
+  }
+
+  // A record is compiled for the device the viewport had when it ran. Nothing re-read it, so a laptop bag stayed live after the window narrowed to a phone — and inside the editor, switching the preview to Mobile resized the iframe without a single free animation following.
+  test('should_rebuild_on_the_new_device_when_the_viewport_crosses_a_breakpoint', () => {
+    dom.window.innerWidth = 1920;
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(bagRecord(), document);
+    assert.equal(bagPlayed(), 'desktop');
+
+    dom.window.innerWidth = 375;
+    dom.window.dispatchEvent(new dom.window.Event('resize'));
+    flushFrames();
+    assert.equal(bagPlayed(), 'mobile');
+  });
+
+  // A resize inside one bucket is not a breakpoint crossing and must not restart anything.
+  test('should_not_rebuild_on_a_resize_within_the_same_bucket', () => {
+    dom.window.innerWidth = 1920;
+    document.body.innerHTML = '<div class="target"></div>';
+    runWaapiAnimation(bagRecord(), document);
+    const before = created.length;
+
+    dom.window.innerWidth = 1600;
+    dom.window.dispatchEvent(new dom.window.Event('resize'));
+    flushFrames();
+    assert.equal(created.length, before);
+  });
+});
+
+/* Revert On Leave was wired into the hover branch alone. A click preset offered the switch, the runner defaulted it on for a 'to' effect, and nothing ever reverted — the control and the engine disagreed. */
+describe('WAAPI runner click reverts on leave', () => {
+  beforeEach(async () => {
+    installDom();
+    const mod = await import(`./runner.js?t=${Date.now()}${Math.random()}`);
+    runWaapiAnimation = mod.runWaapiAnimation;
+    teardownWaapi = mod.teardownWaapi;
+  });
+
+  afterEach(() => {
+    teardownDom();
+  });
+
+  const clickStyle = (reverseOnLeave) => ({
+    id: 'a1',
+    group: 'free_animation',
+    engine: 'waapi',
+    trigger: { type: 'click', selector: '.target' },
+    timeline: {
+      animations: [
+        {
+          itemClass: '.target',
+          method: 'to',
+          ...(reverseOnLeave !== undefined && { reverseOnLeave }),
+          devices: { desktop: { to: { scale: 1.1, duration: 0.3 } } },
+        },
+      ],
+    },
+  });
+
+  test('should_reverse_the_clicked_run_when_the_pointer_leaves', () => {
+    document.body.innerHTML = '<button class="target"></button>';
+    runWaapiAnimation(clickStyle(true), document);
+    const el = document.querySelector('.target');
+
+    el.dispatchEvent(new window.Event('click'));
+    const run = created.at(-1);
+    assert.equal(run.playbackRate, 1);
+
+    el.dispatchEvent(new window.Event('mouseleave'));
+    assert.equal(run.playbackRate, -1, 'the run should be playing backwards');
+  });
+
+  test('should_keep_the_state_when_reverting_is_switched_off', () => {
+    document.body.innerHTML = '<button class="target"></button>';
+    runWaapiAnimation(clickStyle(false), document);
+    const el = document.querySelector('.target');
+
+    el.dispatchEvent(new window.Event('click'));
+    el.dispatchEvent(new window.Event('mouseleave'));
+    assert.equal(created.at(-1).playbackRate, 1);
+  });
+});
+
+/* A stagger's index counts inside the group an element belongs to. With split text every heading's characters sat in one flat list, so the second heading's first character inherited the first heading's whole stagger and waited it out. Under scrub the stagger was dropped outright: the card showed the control, the record kept the value, nothing happened. */
+describe('WAAPI runner stagger groups', () => {
+  beforeEach(async () => {
+    installDom();
+    const mod = await import(`./runner.js?t=${Date.now()}${Math.random()}`);
+    runWaapiAnimation = mod.runWaapiAnimation;
+    teardownWaapi = mod.teardownWaapi;
+  });
+
+  afterEach(() => {
+    teardownDom();
+  });
+
+  const delaysOf = () =>
+    created.filter((a) => a.options?.duration === 500).map((a) => a.options.delay);
+
+  test('should_restart_the_stagger_for_each_split_heading', () => {
+    document.body.innerHTML = '<h2 class="target">abc</h2><h2 class="target">xyz</h2>';
+    runWaapiAnimation(
+      {
+        id: 'a1',
+        group: 'free_animation',
+        engine: 'waapi',
+        trigger: { type: 'page_load', selector: '.target' },
+        timeline: {
+          animations: [
+            {
+              itemClass: '.target',
+              method: 'from',
+              splitText: 'chars',
+              stagger: 0.1,
+              devices: { desktop: { from: { opacity: 0, duration: 0.5 } } },
+            },
+          ],
+        },
+      },
+      document,
+    );
+    assert.deepEqual(delaysOf(), [0, 100, 200, 0, 100, 200]);
+  });
+
+  test('should_stagger_a_plain_match_in_document_order', () => {
+    document.body.innerHTML = '<div class="target"></div><div class="target"></div><div class="target"></div>';
+    runWaapiAnimation(
+      {
+        id: 'a1',
+        group: 'free_animation',
+        engine: 'waapi',
+        trigger: { type: 'page_load', selector: '.target' },
+        timeline: {
+          animations: [
+            {
+              itemClass: '.target',
+              method: 'from',
+              stagger: 0.1,
+              devices: { desktop: { from: { opacity: 0, duration: 0.5 } } },
+            },
+          ],
+        },
+      },
+      document,
+    );
+    assert.deepEqual(delaysOf(), [0, 100, 200]);
+  });
+
+  test('should_carry_the_stagger_into_a_scrubbed_animation_as_a_delay', () => {
+    document.body.innerHTML = '<div class="target"></div><div class="target"></div><div class="target"></div>';
+    runWaapiAnimation(
+      {
+        id: 'a1',
+        group: 'free_animation',
+        engine: 'waapi',
+        trigger: {
+          type: 'on_scroll',
+          selector: '.target',
+          scrollTrigger: [
+            {
+              devices: ['desktop', 'laptop', 'tab_land', 'tab', 'mobile'].reduce(
+                (acc, d) => ({
+                  ...acc,
+                  [d]: { start: 'top center', end: 'bottom top', scrub: 'true', once: false },
+                }),
+                {},
+              ),
+            },
+          ],
+        },
+        timeline: {
+          animations: [
+            {
+              itemClass: '.target',
+              method: 'from',
+              stagger: 0.2,
+              devices: ['desktop', 'laptop', 'tab_land', 'tab', 'mobile'].reduce(
+                (acc, d) => ({ ...acc, [d]: { from: { opacity: 0, duration: 0.5 } } }),
+                {},
+              ),
+            },
+          ],
+        },
+      },
+      document,
+    );
+    assert.deepEqual(delaysOf(), [0, 200, 400]);
   });
 });

@@ -93,10 +93,7 @@ function hold(element, keyframes) {
   const first = keyframes && keyframes[0];
   if (!first || Object.keys(first).length === 0) return null;
 
-  /* A clip-path opening state is never held. The reason was the IntersectionObserver this engine no longer uses: an element clipped to nothing was removed from its geometry — verified in Chromium, where a clip-path-held element reported isIntersecting false forever — so holding it hid the element from the very observer that existed to reveal it. The scroll trigger now measures a rect, which a clipped element still has, so the hazard is gone and this exception is worth revisiting; until then a wipe is simply unheld and shows its natural state until it enters view.
-
-     The cost is one frame of un-clipped paint before the observer fires, which is the same trade the whole hold exists to avoid. Staying visible is strictly better than never animating. */
-  if (first.clipPath) return null;
+  /* clip-path is held like everything else. It used to be the one exception, because the IntersectionObserver this engine no longer uses dropped a clipped-to-nothing element from its geometry — verified in Chromium, where a clip-path-held element reported isIntersecting false forever — so holding a wipe hid it from the very observer meant to reveal it, and the presets paid with one frame of un-clipped paint instead. The scroll trigger now measures a rect, which a clipped element still has, so the wipe keeps its opening state until it is in view. */
   try {
     const holder = track(
       element,
@@ -137,6 +134,19 @@ export function resolveScrollPosition(value, custom) {
   return typeof custom === 'string' ? custom.trim() : '';
 }
 
+/* The platform's five breakpoints, as the connector's animation-builder-device.php and the editor's
+   device switcher declare them: mobile to 767, tab 768-1023, tab_land 1024-1199, laptop 1200-1440,
+   desktop from 1441. The runner used to carry its own set (480/768/1024/1366), which put nine of
+   sixteen sampled widths in the wrong bag — a 600px phone read the Tab values, a 1400px laptop the
+   Desktop ones — so what the user edited under one device played under another. Widths rather than
+   media queries so the pick needs no matchMedia, which the test DOM does not implement. */
+const DEVICE_MAX_WIDTHS = [
+  ['mobile', 767],
+  ['tab', 1023],
+  ['tab_land', 1199],
+  ['laptop', 1440],
+];
+
 /**
  * Detects the current device bucket from viewport width.
  * @returns {string}
@@ -144,11 +154,58 @@ export function resolveScrollPosition(value, custom) {
 function getCurrentDevice() {
   if (typeof window === 'undefined') return 'desktop';
   const width = window.innerWidth;
-  if (width <= 480) return 'mobile';
-  if (width <= 768) return 'tab';
-  if (width <= 1024) return 'tab_land';
-  if (width <= 1366) return 'laptop';
+  for (const [device, maxWidth] of DEVICE_MAX_WIDTHS) {
+    if (width <= maxWidth) return device;
+  }
   return 'desktop';
+}
+
+// Every record this engine is running, keyed by id so the editor's re-dispatch of an edited record replaces its earlier registration rather than doubling it. Held so a breakpoint crossing can rebuild the page on the new device's values.
+const activeRecords = new Map();
+let deviceInUse = null;
+let resizeBound = false;
+let resizeFrame = null;
+
+/* A record is compiled for the device the viewport had when it ran, and nothing re-read it: a laptop
+   bag stayed live after the window narrowed to a phone, and inside the editor switching the preview
+   to Mobile resized the iframe without a single free animation following. The GSAP engine gets this
+   from gsap.matchMedia, which reverts and rebuilds on every breakpoint crossing; this is the same
+   contract by hand. Only a crossing triggers it — a resize that stays inside one bucket does nothing
+   — and the rebuild is one frame behind the event so a drag-resize costs one pass, not one per
+   pixel. */
+function rebuildOnDeviceChange() {
+  resizeFrame = null;
+  if (getCurrentDevice() === deviceInUse) return;
+  const records = [...activeRecords.values()];
+  stopEverything();
+  records.forEach(({ anim, contextDoc }) =>
+    runWaapiAnimation(anim, contextDoc),
+  );
+}
+
+function onViewportResize() {
+  if (resizeFrame !== null) return;
+  if (typeof requestAnimationFrame !== 'function') {
+    rebuildOnDeviceChange();
+    return;
+  }
+  resizeFrame = requestAnimationFrame(rebuildOnDeviceChange);
+}
+
+function watchViewport() {
+  if (resizeBound || typeof window === 'undefined') return;
+  resizeBound = true;
+  window.addEventListener('resize', onViewportResize, { passive: true });
+}
+
+function unwatchViewport() {
+  if (!resizeBound) return;
+  resizeBound = false;
+  window.removeEventListener('resize', onViewportResize);
+  if (resizeFrame !== null && typeof cancelAnimationFrame === 'function') {
+    cancelAnimationFrame(resizeFrame);
+  }
+  resizeFrame = null;
 }
 
 /**
@@ -227,6 +284,10 @@ export function runWaapiAnimation(anim, contextDoc = document) {
   if (!anim || typeof anim !== 'object') return;
 
   const device = getCurrentDevice();
+  deviceInUse = device;
+  // Registered ahead of the responsive gate: a record switched off for this device still has to come back when the viewport crosses into one it is on for.
+  activeRecords.set(anim.id ?? anim, { anim, contextDoc });
+  watchViewport();
 
   // Check responsive toggle
   if (anim.responsive && anim.responsive[device] === false) {
@@ -302,6 +363,17 @@ export function runWaapiAnimation(anim, contextDoc = document) {
         : effect.stagger
       : 0;
 
+    /* The stagger's index counts inside the group an element belongs to. With split text every heading's characters sat in one flat list, so the second heading's first character inherited the first heading's whole stagger and waited it out — three 25-character headings on one class started 0s, 0.75s and 1.5s late, whenever each scrolled into view. Hover and click already scope to the gestured element's own parts; this gives page load and scroll the same rule. Without a split the group is the whole match, which is the four-cards-in-a-row case the control exists for. */
+    const staggerIndexOf = new Map();
+    if (parts.length > 0) {
+      partsOf.forEach((group) =>
+        group.forEach((el, i) => staggerIndexOf.set(el, i)),
+      );
+    } else {
+      elements.forEach((el, i) => staggerIndexOf.set(el, i));
+    }
+    const staggerDelayFor = (el) => (staggerIndexOf.get(el) ?? 0) * staggerMs;
+
     // Trigger Elements (for click/hover, can be different from animated elements)
     // Falls back to `matched`, never to `elements`: with split text the latter is the generated per-character spans, so hovering one letter would bind the gesture to that letter alone instead of to the whole heading.
     const triggerElements =
@@ -316,17 +388,23 @@ export function runWaapiAnimation(anim, contextDoc = document) {
 
     // Trigger Execution
     if (triggerType === 'page_load') {
-      elements.forEach((el, index) => {
-        playWaapiAnimation(el, keyframes, options, index * staggerMs);
+      elements.forEach((el) => {
+        playWaapiAnimation(el, keyframes, options, staggerDelayFor(el));
       });
-    } else if (triggerType === 'hover') {
+    } else if (triggerType === 'hover' || triggerType === 'click') {
+      /* One gesture path for both. They differ only in what starts the run — a pointer arriving or a
+         click — and everything after that is shared, including the return trip: Revert On Leave was
+         wired into the hover branch alone, so a click preset offered the switch, defaulted it on,
+         and never reverted. */
+      const enterEvent = triggerType === 'hover' ? 'mouseenter' : 'click';
+
       finalTriggerElements.forEach((triggerEl) => {
         const targets = targetsFor(triggerEl);
         let activeAnims = [];
 
-        /* A free preset is an ENTRANCE: it brings an element in. Playing it backwards therefore lands on its opening keyframe — opacity 0 for a fade — so the element disappeared the moment the pointer left. It plays forwards only, and the state it finishes in is the state that stays.
+        /* A free preset is an ENTRANCE: it brings an element in. Playing it backwards therefore lands on its opening keyframe — opacity 0 for a fade — so the element disappeared the moment the pointer left. It plays forwards only, and the state it finishes in is the state that stays. A click never toggles for the same reason: every click plays forwards, so the animation can be re-run as often as the user likes and the element stays where it landed.
 
-           Only a still-running batch is cancelled, so re-hovering mid-animation restarts cleanly while a completed one keeps its fill. */
+           Only a still-running batch is cancelled, so re-triggering mid-animation restarts cleanly while a completed one keeps its fill. */
         const onEnter = () => {
           targets.forEach((targetEl, i) => {
             const prev = activeAnims[i];
@@ -356,15 +434,14 @@ export function runWaapiAnimation(anim, contextDoc = document) {
           });
         };
 
-        triggerEl.addEventListener('mouseenter', onEnter);
+        triggerEl.addEventListener(enterEvent, onEnter);
 
-        /* A hover STYLE preset is the opposite of an entrance: it recolours or respaces an element that is already there, so the change has to come back when the pointer leaves. That is the only case where playing backwards is right, and the record opts into it explicitly — an entrance carries no flag and keeps holding its end state.
+        /* A hover STYLE preset is the opposite of an entrance: it recolours or respaces an element that is already there, so the change has to come back when the pointer leaves. That is the only case where playing backwards is right, and the record opts into it explicitly — an entrance carries no flag and keeps holding its end state. On a click trigger the leave gesture is the same pointer leaving the element it clicked.
 
-           The return trip is the same keyframes reversed rather than Animation.reverse(), so it works whether or not the forward run ever finished. */
+           Reversed by the browser rather than rebuilt from reversed keyframes, because the position has to be mirrored in PROGRESS, not in time. Rebuilding applied the same easing to the way back, so a power2.out entrance — which is already 97% of the way there a third of the way through — handed the revert a mirrored time of 0.5 and the ease turned that back into 97% reverted: the element snapped home instead of easing back, and the harder the ease the worse it read.
+
+           Animation.reverse() keeps the effect's own position and plays its curve out backwards from exactly where it stopped, which is what picking up where the entrance left off actually means, and it needs no inverse of the easing function to do it. It is also right for a run that already finished, which is the ordinary case: the pointer usually leaves after the entrance is over. */
         if (reverseOnLeave) {
-          /* Reversed by the browser rather than rebuilt from reversed keyframes, because the position has to be mirrored in PROGRESS, not in time. Rebuilding applied the same easing to the way back, so a power2.out entrance — which is already 97% of the way there a third of the way through — handed the revert a mirrored time of 0.5 and the ease turned that back into 97% reverted: the element snapped home instead of easing back, and the harder the ease the worse it read.
-
-             Animation.reverse() keeps the effect's own position and plays its curve out backwards from exactly where it stopped, which is what picking up where the entrance left off actually means, and it needs no inverse of the easing function to do it. It is also right for a run that already finished, which is the ordinary case: the pointer usually leaves after the entrance is over. */
           const onLeave = () => {
             targets.forEach((targetEl, i) => {
               const prev = activeAnims[i];
@@ -389,34 +466,7 @@ export function runWaapiAnimation(anim, contextDoc = document) {
           targets.forEach((targetEl, i) =>
             cancelTracked(targetEl, [activeAnims[i]]),
           );
-          triggerEl.removeEventListener('mouseenter', onEnter);
-        });
-      });
-    } else if (triggerType === 'click') {
-      finalTriggerElements.forEach((triggerEl) => {
-        const targets = targetsFor(triggerEl);
-        let activeAnims = [];
-
-        // No toggle: the second click replayed the entrance backwards and hid the element. Every click plays it forwards, so the animation can be re-run as often as the user likes and the element stays where it landed.
-        const onClick = () => {
-          targets.forEach((targetEl, i) => {
-            const prev = activeAnims[i];
-            if (prev && prev.playState === 'running') {
-              cancelTracked(targetEl, [prev]);
-            }
-          });
-          // Same reasons as hover: the stagger a split heading needs, reduced motion, and the compiled fill that keeps a staggered character hidden through its delay instead of flashing.
-          activeAnims = targets.map((targetEl, i) =>
-            playWaapiAnimation(targetEl, keyframes, options, i * staggerMs),
-          );
-        };
-
-        triggerEl.addEventListener('click', onClick);
-        listenerCleanups.push(() => {
-          targets.forEach((targetEl, i) =>
-            cancelTracked(targetEl, [activeAnims[i]]),
-          );
-          triggerEl.removeEventListener('click', onClick);
+          triggerEl.removeEventListener(enterEvent, onEnter);
         });
       });
     } else {
@@ -455,16 +505,21 @@ export function runWaapiAnimation(anim, contextDoc = document) {
 
       // Editor preview short-circuits BOTH scroll paths. Checked ahead of isScrub because a scrubbed animation is created paused and driven by scroll position, and nothing scrolls the preview iframe on the user's behalf — Play would leave it frozen on its first frame.
       if (isEditorPreviewMode()) {
-        elements.forEach((el, index) => {
-          playWaapiAnimation(el, keyframes, options, index * staggerMs);
+        elements.forEach((el) => {
+          playWaapiAnimation(el, keyframes, options, staggerDelayFor(el));
         });
       } else if (isScrub) {
         // Native WAAPI Scrub: animation progresses proportionally with user scroll
         elements.forEach((el) => {
           try {
+            // The stagger rides as a delay: the scrub drives the scroll range over delay + duration, so a staggered element's motion takes a later slice of that range instead of a later moment in time. It used to be dropped here outright.
             const animInstance = track(
               el,
-              el.animate(keyframes, { ...options, fill: 'both' }),
+              el.animate(keyframes, {
+                ...options,
+                delay: (options.delay || 0) + staggerDelayFor(el),
+                fill: 'both',
+              }),
             );
             animInstance.pause();
 
@@ -487,7 +542,7 @@ export function runWaapiAnimation(anim, contextDoc = document) {
         });
       } else {
         // Standard viewport trigger: fire once the element reaches its start line.
-        elements.forEach((el, index) => {
+        elements.forEach((el) => {
           let animInstance = null;
 
           // Pin the element to its opening keyframe now, before it is ever painted. Without this it renders in its natural state until the observer fires, so a Fade In element is fully visible on the way down the page and then snaps to opacity 0 — the flash GSAP avoids by setting the start state at build time. The holder is tracked, so teardown releases it.
@@ -510,7 +565,7 @@ export function runWaapiAnimation(anim, contextDoc = document) {
                 el,
                 keyframes,
                 options,
-                index * staggerMs,
+                staggerDelayFor(el),
               );
             },
             onLeave: () => {
@@ -537,6 +592,15 @@ export function runWaapiAnimation(anim, contextDoc = document) {
  * Tears down all running WAAPI animations, observers, and listeners.
  */
 export function teardownWaapi() {
+  stopEverything();
+  // The host is done with these records; a rebuild keeps them, a teardown forgets them.
+  activeRecords.clear();
+  deviceInUse = null;
+  unwatchViewport();
+}
+
+// Everything teardown does except forgetting which records were running — the breakpoint rebuild stops the page this way and plays the same records again.
+function stopEverything() {
   // 1. Cancel all active animations
   runningAnimations.forEach((set) => {
     set.forEach((anim) => {
