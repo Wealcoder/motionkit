@@ -93,7 +93,7 @@ function hold(element, keyframes) {
   const first = keyframes && keyframes[0];
   if (!first || Object.keys(first).length === 0) return null;
 
-  /* A clip-path opening state is never held. An element clipped to nothing is removed from IntersectionObserver's geometry — verified in Chromium, where a clip-path-held element reports isIntersecting false forever while an opacity-held one reports true on scroll — so holding it hides the element from the very observer that exists to reveal it, and a wipe stays clipped for the life of the page.
+  /* A clip-path opening state is never held. The reason was the IntersectionObserver this engine no longer uses: an element clipped to nothing was removed from its geometry — verified in Chromium, where a clip-path-held element reported isIntersecting false forever — so holding it hid the element from the very observer that existed to reveal it. The scroll trigger now measures a rect, which a clipped element still has, so the hazard is gone and this exception is worth revisiting; until then a wipe is simply unheld and shows its natural state until it enters view.
 
      The cost is one frame of un-clipped paint before the observer fires, which is the same trade the whole hold exists to avoid. Staying visible is strictly better than never animating. */
   if (first.clipPath) return null;
@@ -420,7 +420,7 @@ export function runWaapiAnimation(anim, contextDoc = document) {
         });
       });
     } else {
-      // Default: 'on_scroll' (Viewport trigger via IntersectionObserver or Scrub)
+      // Default: 'on_scroll' — the element is measured against its start line, or scrubbed between start and end.
       const stList = trigger.scrollTrigger || [];
       const seedSt = stList[0] || {};
       const devSt = seedSt.devices?.[device] || seedSt;
@@ -486,7 +486,7 @@ export function runWaapiAnimation(anim, contextDoc = document) {
           }
         });
       } else {
-        // Standard Viewport Trigger via IntersectionObserver
+        // Standard viewport trigger: fire once the element reaches its start line.
         elements.forEach((el, index) => {
           let animInstance = null;
 
@@ -502,6 +502,7 @@ export function runWaapiAnimation(anim, contextDoc = document) {
           // Observe the trigger, animate the element: with no trigger class these are the same node.
           const unobserve = observeViewport(scrollRootFor(el), {
             start,
+            end,
             once,
             onEnter: () => {
               release();

@@ -1,63 +1,55 @@
-// The editor draws its scroll-trigger markers from these functions and the engine fires from them, so a drift here shows up as a marker line that lies about where the animation starts. The geometry cases below pin both paths, and the rootMargin cases pin the strings the observer has always produced.
+// The editor draws its scroll-trigger markers from these functions and the engine fires from them, so a drift here shows up as a marker line that lies about where the animation starts. Both paths read triggerLines, and the cases below pin it against GSAP's own reading of a two-word position.
 
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   elementEdgeOffset,
-  parseStartToRootMargin,
   parseTriggerPosition,
   scrollMarkerGeometry,
-  startInsetRatio,
+  triggerLines,
   viewportEdgeOffset,
 } from './scrollPositions.js';
 
 const rect = { top: 200, height: 300 };
 const WIN_H = 1000;
 
-describe('startInsetRatio', () => {
-  test('should_read_centre_as_half_the_viewport', () => {
-    assert.equal(startInsetRatio('top center'), 0.5);
+/* A trigger position names an ELEMENT edge and a VIEWPORT edge, and both halves matter. The engine
+   used to read only the viewport half on the non-scrub path, so "bottom center" waited for the
+   element's TOP to reach the middle of the screen — 95px early on a 100px element and 380px early
+   on a 400px one. These pin the element half in place. */
+describe('triggerLines', () => {
+  const linesFor = (height, start, end) =>
+    triggerLines({ rect: { top: 0, height }, winH: WIN_H, start, end });
+
+  test('should_place_a_top_edge_start_on_the_viewport_line_itself', () => {
+    assert.equal(linesFor(300, 'top center', 'bottom top').startY, 500);
+    assert.equal(linesFor(300, 'top bottom', 'bottom top').startY, 1000);
+    assert.equal(linesFor(300, 'top top', 'bottom top').startY, 0);
   });
 
-  test('should_read_a_percentage_as_the_remainder', () => {
-    assert.equal(startInsetRatio('top 80%'), 0.2);
-    assert.equal(startInsetRatio('top 25%'), 0.75);
+  // The element's own height is what separates these from the 'top ...' cases — reading the viewport half alone cannot tell them apart.
+  test('should_lift_a_bottom_edge_start_by_the_element_height', () => {
+    assert.equal(linesFor(300, 'bottom center', 'bottom top').startY, 200);
+    assert.equal(linesFor(600, 'bottom center', 'bottom top').startY, -100);
+    assert.equal(linesFor(300, 'bottom bottom', 'bottom top').startY, 700);
   });
 
-  test('should_read_top_bottom_as_no_inset', () => {
-    assert.equal(startInsetRatio('top bottom'), 0);
+  test('should_read_a_percentage_viewport_edge', () => {
+    assert.equal(linesFor(300, 'top 80%', 'bottom top').startY, 800);
+    assert.equal(linesFor(300, 'top 25%', 'bottom top').startY, 250);
   });
 
-  // Two different fallbacks, and the difference is deliberate: an omitted value takes the documented 'top 80%' default, while a present-but-unusable one (empty string, a number) is treated as broken input and gets the conservative 15%.
-  test('should_fall_back_on_an_unusable_value', () => {
-    assert.equal(startInsetRatio(''), 0.15);
-    assert.equal(startInsetRatio(42), 0.15);
+  test('should_place_the_end_the_same_way', () => {
+    assert.equal(linesFor(300, 'top center', 'bottom top').endY, -300);
+    assert.equal(linesFor(300, 'top center', 'top top').endY, 0);
   });
 
-  test('should_use_the_documented_default_when_omitted', () => {
-    assert.equal(startInsetRatio(undefined), startInsetRatio('top 80%'));
-  });
-});
-
-// The refactor that moved these out of observer.js must not have changed a single string — the observer has always emitted these exact values.
-describe('parseStartToRootMargin', () => {
-  test('should_keep_the_strings_the_observer_has_always_produced', () => {
-    assert.equal(parseStartToRootMargin('top center'), '0px 0px -50% 0px');
-    assert.equal(parseStartToRootMargin('top 80%'), '0px 0px -20% 0px');
-    assert.equal(parseStartToRootMargin('top bottom'), '0px 0px 0% 0px');
-    assert.equal(parseStartToRootMargin(''), '0px 0px -15% 0px');
-  });
-
-  // One representation, two readings: the marker line is placed from the ratio, the observer from the string, so they have to describe the same line.
-  test('should_agree_with_the_inset_ratio', () => {
-    for (const start of ['top center', 'top 80%', 'top 25%', 'top bottom']) {
-      const fromString = parseStartToRootMargin(start).match(/(-?\d+(?:\.\d+)?)%/);
-      const pct = Math.abs(parseFloat(fromString[1]));
-      assert.equal(pct / 100, startInsetRatio(start), start);
-    }
+  // Scrolling down lowers rect.top, so an end that is not below the start spans nothing and the scrub path holds at 0 rather than dividing by it.
+  test('should_leave_an_inverted_range_detectable', () => {
+    const { startY, endY } = linesFor(300, 'bottom top', 'bottom top');
+    assert.ok(endY >= startY, 'this pair spans nothing and must be visible as such');
   });
 });
-
 describe('edge helpers', () => {
   test('should_place_named_viewport_edges', () => {
     assert.equal(viewportEdgeOffset('top', WIN_H, 0), 0);
@@ -81,7 +73,7 @@ describe('edge helpers', () => {
 });
 
 describe('scrollMarkerGeometry', () => {
-  // Scrub off is an IntersectionObserver: a start line and nothing else. A drawn end there would be fiction, so both end values are null and the caller can tell the difference.
+  // Scrub off has a start line and nothing running after it, so a drawn end would be fiction: both end values are null and the caller can tell the difference.
   test('should_give_the_observer_path_a_start_and_no_end', () => {
     const g = scrollMarkerGeometry({
       rect,

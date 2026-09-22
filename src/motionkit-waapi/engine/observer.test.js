@@ -181,7 +181,7 @@ describe('observeScrollScrub update cadence', () => {
   });
 });
 
-// `once` is the user-facing promise that an animation plays a single time. On the non-scrub path the IntersectionObserver honours it; on the scrub path the frame loop runs forever, so scrolling back up rewinds the animation and the switch does nothing. These pin the completed state down.
+// `once` is the user-facing promise that an animation plays a single time. On the non-scrub path the watcher honours it by dropping the element after it fires; on the scrub path the frame loop runs forever, so scrolling back up rewinds the animation and the switch does nothing. These pin the completed state down.
 describe('observeScrollScrub with once', () => {
   let observeScrollScrub;
   let rafQueue;

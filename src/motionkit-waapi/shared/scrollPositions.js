@@ -11,11 +11,16 @@
 // There are two trigger paths and they do NOT share a model, which is the whole reason this file exists rather than a single formula — anything drawing markers has to ask which path is live and use that path's geometry.
 
 /*
-  scrub off   IntersectionObserver with a rootMargin. Only a start exists, expressed as an inset
-              from the viewport BOTTOM: the element enters when its top crosses that line, and
-              nothing ends it.
-  scrub on    The element's own edge is matched against a viewport edge, at both ends, and
-              progress runs between them.
+  scrub off   The element's start edge is matched against a viewport edge, and the animation fires
+              when it arrives. An end exists too, but only to decide when a replaying trigger
+              re-arms; nothing runs between the two.
+  scrub on    The same two lines, with progress running between them.
+
+  Both paths ask triggerLines() for those positions. They did not always: the observer path used to
+  sniff the start string for the words 'center', 'top' and 'bottom' and turn it into a percentage
+  rootMargin, which threw the ELEMENT half of the position away. Four of the six named starts landed
+  on the wrong line — 'top top' fired 635px early on an 800px viewport, and 'bottom top' was off by
+  895px — and every start drifted further the taller the element got.
 */
 
 // How far down the viewport a named edge sits, in px from the viewport top.
@@ -48,32 +53,45 @@ export function parseTriggerPosition(value, fallback) {
   return { element: words[0], viewport: words[1] };
 }
 
-// The observer path's start, as a fraction of the viewport inset from its BOTTOM edge: 0.5 means the element enters when its top reaches the middle of the screen. Split out from the rootMargin string so a marker can be placed at the same line without re-parsing CSS.
-export function startInsetRatio(startStr = 'top 80%') {
-  if (!startStr || typeof startStr !== 'string') return 0.15;
-
-  const lower = startStr.toLowerCase().trim();
-
-  if (lower.includes('center') || lower.includes('50%')) return 0.5;
-
-  const percentMatch = lower.match(/(\d+)%/);
-  if (percentMatch) return (100 - parseInt(percentMatch[1], 10)) / 100;
-
-  if (lower.includes('top') && lower.includes('bottom')) return 0;
-
-  return 0.2;
-}
-
 /**
- * Parses a start string (e.g. 'top 80%', 'top center', 'top 50%') into a CSS rootMargin.
- * @param {string} startStr
- * @returns {string}
+ * Where a trigger's start and end sit, as the element-top positions at which each condition holds.
+ *
+ * One function for all three consumers — the observer path, the scrub path and the editor's markers
+ * — so none of them can describe a line the others do not use. Expressed against the element's TOP
+ * because that is what a rect gives directly, which makes the two comparable: the element is past
+ * the start once `rect.top <= startY`, and past the end once `rect.top <= endY`.
+ *
+ * @param {Object} args
+ * @param {{ top: number, height: number }} args.rect
+ * @param {number} args.winH - viewport height
+ * @param {string} args.start
+ * @param {string} args.end
+ * @returns {{ startY: number, endY: number }}
  */
-export function parseStartToRootMargin(startStr = 'top 80%') {
-  const ratio = startInsetRatio(startStr);
-  // A zero inset is written without the sign, the way it always has been — the observer treats them alike, but the string is what tests and debuggers read.
-  if (ratio === 0) return '0px 0px 0% 0px';
-  return `0px 0px -${ratio * 100}% 0px`;
+export function triggerLines({
+  rect,
+  winH,
+  start = 'top center',
+  end = 'bottom top',
+}) {
+  const height = rect?.height ?? 0;
+  const startPos = parseTriggerPosition(start, {
+    element: 'top',
+    viewport: '80%',
+  });
+  const endPos = parseTriggerPosition(end, {
+    element: 'bottom',
+    viewport: 'top',
+  });
+
+  return {
+    startY:
+      viewportEdgeOffset(startPos.viewport, winH, winH * 0.8) -
+      elementEdgeOffset(startPos.element, height),
+    endY:
+      viewportEdgeOffset(endPos.viewport, winH, 0) -
+      elementEdgeOffset(endPos.element, height),
+  };
 }
 
 /**
@@ -99,16 +117,6 @@ export function scrollMarkerGeometry({
 }) {
   if (!rect || !winH) return null;
 
-  if (!isScrub) {
-    return {
-      isScrub: false,
-      scrollerStart: winH - startInsetRatio(start) * winH,
-      scrollerEnd: null,
-      elementStart: rect.top,
-      elementEnd: null,
-    };
-  }
-
   const startPos = parseTriggerPosition(start, {
     element: 'top',
     viewport: '80%',
@@ -118,11 +126,25 @@ export function scrollMarkerGeometry({
     viewport: 'top',
   });
 
+  const scrollerStart = viewportEdgeOffset(startPos.viewport, winH, winH * 0.8);
+  const elementStart = rect.top + elementEdgeOffset(startPos.element, rect.height);
+
+  // Nothing runs between the lines without scrub, so drawing an end there would be fiction.
+  if (!isScrub) {
+    return {
+      isScrub: false,
+      scrollerStart,
+      scrollerEnd: null,
+      elementStart,
+      elementEnd: null,
+    };
+  }
+
   return {
     isScrub: true,
-    scrollerStart: viewportEdgeOffset(startPos.viewport, winH, winH * 0.8),
+    scrollerStart,
     scrollerEnd: viewportEdgeOffset(endPos.viewport, winH, 0),
-    elementStart: rect.top + elementEdgeOffset(startPos.element, rect.height),
+    elementStart,
     elementEnd: rect.top + elementEdgeOffset(endPos.element, rect.height),
   };
 }

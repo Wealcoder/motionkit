@@ -8,9 +8,28 @@ import { JSDOM } from 'jsdom';
 
 let dom;
 let created;
-let observed;
+let measured;
+let rafQueue;
+let elementTops;
 let runWaapiAnimation;
 let teardownWaapi;
+
+const VIEW_H = 800;
+const EL_H = 100;
+// Far below the fold, so nothing reaches its start line until a test scrolls it.
+const OFF_SCREEN = VIEW_H * 2;
+
+// Puts an element's top this many px below the viewport top.
+const place = (el, top) => elementTops.set(el, top);
+
+// Runs the watcher's pending frame and reports which elements it measured.
+function flushFrames() {
+  measured = [];
+  const queue = rafQueue;
+  rafQueue = [];
+  queue.forEach((cb) => cb());
+  return [...new Set(measured)];
+}
 
 function installDom() {
   dom = new JSDOM('<!doctype html><html><body></body></html>', {
@@ -55,29 +74,36 @@ function installDom() {
   globalThis.window = dom.window;
   globalThis.document = dom.window.document;
 
-  // A real stub rather than `undefined`: observeViewport treats a missing IntersectionObserver as "ancient browser" and fires onEnter immediately, which would mask the start-state hold this file exists to verify. Nothing here auto-fires, so the element stays out of view until a test says otherwise.
-  observed = [];
-  globalThis.IntersectionObserver = class {
-    constructor(cb, options) {
-      this.cb = cb;
-      // Recorded so a test can read the rootMargin the runner derived from its start position.
-      this.options = options;
-    }
-    observe(el) {
-      observed.push({ el, cb: this.cb, observer: this, options: this.options });
-    }
-    unobserve() {}
-    disconnect() {}
+  /* The scroll trigger measures rects against the viewport rather than waiting on an
+     IntersectionObserver, so a test scrolls the page by placing an element and draining a frame.
+     Everything starts below the fold, so nothing fires until a test says so. */
+  measured = [];
+  rafQueue = [];
+  elementTops = new WeakMap();
+  dom.window.innerHeight = VIEW_H;
+  dom.window.Element.prototype.getBoundingClientRect = function () {
+    const top = elementTops.has(this) ? elementTops.get(this) : OFF_SCREEN;
+    measured.push(this);
+    return {
+      top,
+      bottom: top + EL_H,
+      height: EL_H,
+      left: 0,
+      right: 100,
+      width: 100,
+      x: 0,
+      y: top,
+    };
   };
-  dom.window.IntersectionObserver = globalThis.IntersectionObserver;
-  globalThis.requestAnimationFrame = (cb) => dom.window.setTimeout(cb, 0);
-  globalThis.cancelAnimationFrame = (id) => dom.window.clearTimeout(id);
+  globalThis.requestAnimationFrame = (cb) => rafQueue.push(cb);
+  globalThis.cancelAnimationFrame = () => {};
 }
 
 function teardownDom() {
+  // The engine's watcher list and its pending frame live in module state that outlives one jsdom, so a test that leaves a trigger armed would be measured again by the next one.
+  teardownWaapi?.();
   delete globalThis.window;
   delete globalThis.document;
-  delete globalThis.IntersectionObserver;
   delete globalThis.requestAnimationFrame;
   delete globalThis.cancelAnimationFrame;
   dom?.window?.close();
@@ -199,8 +225,9 @@ describe('WAAPI runner lifecycle', () => {
     runWaapiAnimation(record('on_scroll'), document);
 
     const holder = created[0];
-    // Drive the observer the way the browser would when the element scrolls in.
-    observed[0].cb([{ isIntersecting: true, target: observed[0].el }]);
+    // Scroll the element up to its start line the way the browser would.
+    place(document.querySelector('.target'), 0);
+    flushFrames();
 
     assert.equal(holder.cancelled, true, 'the hold should be released');
     assert.equal(created.length, 2, 'the real animation should now be running');
@@ -312,7 +339,7 @@ describe('WAAPI runner split text', () => {
   });
 });
 
-// On a live page a scroll animation must wait for the viewport. Inside the editor it must not: DevTools owns playback there, and the element being animated is usually already on screen, so an IntersectionObserver that has already fired never fires again and Play does nothing at all. The GSAP engine solves this with isEditorPreviewMode(); the free engine needs the same seam.
+// On a live page a scroll animation must wait for the viewport. Inside the editor it must not: DevTools owns playback there, and the element being animated is usually already on screen, so a trigger that has already fired never fires again and Play does nothing at all. The GSAP engine solves this with isEditorPreviewMode(); the free engine needs the same seam.
 describe('WAAPI runner editor preview mode', () => {
   beforeEach(async () => {
     installDom();
@@ -350,7 +377,7 @@ describe('WAAPI runner editor preview mode', () => {
     runWaapiAnimation(scrollRecord(), document);
 
     // Only the start-state hold, not the real animation.
-    assert.equal(observed.length, 1, 'element should be observed');
+    assert.equal(flushFrames().length, 1, 'element should be watched');
     assert.ok(
       created.every((a) => a.options?.duration === 1),
       'nothing but the hold should have started',
@@ -477,9 +504,10 @@ describe('WAAPI runner scroll trigger element', () => {
   test('should_observe_the_animated_element_when_no_trigger_class_is_set', () => {
     document.body.innerHTML = '<div class="target"></div>';
     runWaapiAnimation(scrollRecord(''), document);
-    assert.equal(observed.length, 1);
+    const watched = flushFrames();
+    assert.equal(watched.length, 1);
     assert.ok(
-      observed[0].el.classList.contains('target'),
+      watched[0].classList.contains('target'),
       'the animated element should be its own trigger',
     );
   });
@@ -489,9 +517,10 @@ describe('WAAPI runner scroll trigger element', () => {
     document.body.innerHTML =
       '<div class="starter"></div><div class="target"></div>';
     runWaapiAnimation(scrollRecord('.starter'), document);
-    assert.equal(observed.length, 1);
+    const watched = flushFrames();
+    assert.equal(watched.length, 1);
     assert.ok(
-      observed[0].el.classList.contains('starter'),
+      watched[0].classList.contains('starter'),
       'the named trigger element should be observed, not the animated one',
     );
   });
@@ -499,8 +528,9 @@ describe('WAAPI runner scroll trigger element', () => {
   test('should_fall_back_to_the_animated_element_when_the_trigger_matches_nothing', () => {
     document.body.innerHTML = '<div class="target"></div>';
     runWaapiAnimation(scrollRecord('.does-not-exist'), document);
-    assert.equal(observed.length, 1);
-    assert.ok(observed[0].el.classList.contains('target'));
+    const watched = flushFrames();
+    assert.equal(watched.length, 1);
+    assert.ok(watched[0].classList.contains('target'));
   });
 });
 
@@ -1371,45 +1401,49 @@ describe('WAAPI runner custom scroll positions', () => {
     assert.equal(resolveScrollPosition('custom', undefined), '');
   });
 
-  test('should_observe_with_the_custom_start_rather_than_the_default', () => {
-    document.body.innerHTML = '<div class="target"></div>';
-    runWaapiAnimation(
-      scrollRecord({ start: 'custom', customStart: 'top 25%', scrub: 'false' }),
-      document,
-    );
-    const withCustom = observed.at(-1)?.options?.rootMargin;
-
+  /* The start position has to reach the geometry, not just the record. Asserted by where the
+     animation actually fires rather than by an observer option, because the trigger now measures
+     the element against a line: 'top 25%' sits 200px higher up the viewport than the default centre
+     line, so an element whose top is at 300px is past the default and not yet past the custom one. */
+  const firesWithTopAt = (cfg, top) => {
     teardownWaapi();
     document.body.innerHTML = '<div class="target"></div>';
-    runWaapiAnimation(
-      scrollRecord({ start: 'top 25%', scrub: 'false' }),
-      document,
+    created.length = 0;
+    runWaapiAnimation(scrollRecord(cfg), document);
+    place(document.querySelector('.target'), top);
+    flushFrames();
+    // created[0] is the hold that pins the opening keyframe; anything after it is the real run.
+    return created.length > 1;
+  };
+
+  test('should_fire_on_the_custom_start_rather_than_the_default', () => {
+    assert.equal(
+      firesWithTopAt({ scrub: 'false' }, 300),
+      true,
+      'the default centre line should have fired',
     );
-    const withNamed = observed.at(-1)?.options?.rootMargin;
-
-    teardownWaapi();
-    document.body.innerHTML = '<div class="target"></div>';
-    runWaapiAnimation(scrollRecord({ scrub: 'false' }), document);
-    const withDefault = observed.at(-1)?.options?.rootMargin;
-
-    assert.ok(withCustom, 'nothing was observed for the custom start');
-    assert.equal(withCustom, withNamed, 'custom start did not reach the observer');
-    assert.notEqual(withCustom, withDefault, 'custom start matched the default');
+    assert.equal(
+      firesWithTopAt({ start: 'top 25%', scrub: 'false' }, 300),
+      false,
+      'a named top 25% start should not have fired yet',
+    );
+    assert.equal(
+      firesWithTopAt({ start: 'custom', customStart: 'top 25%', scrub: 'false' }, 300),
+      false,
+      'the custom start never reached the geometry',
+    );
+    assert.equal(
+      firesWithTopAt({ start: 'custom', customStart: 'top 25%', scrub: 'false' }, 150),
+      true,
+      'the custom start should fire once the element passes its own line',
+    );
   });
 
   test('should_fall_back_to_the_default_start_when_the_custom_value_is_blank', () => {
-    document.body.innerHTML = '<div class="target"></div>';
-    runWaapiAnimation(
-      scrollRecord({ start: 'custom', customStart: '', scrub: 'false' }),
-      document,
+    assert.equal(
+      firesWithTopAt({ start: 'custom', customStart: '', scrub: 'false' }, 300),
+      true,
+      'a blank custom start should behave like the default centre line',
     );
-    const blankCustom = observed.at(-1)?.options?.rootMargin;
-
-    teardownWaapi();
-    document.body.innerHTML = '<div class="target"></div>';
-    runWaapiAnimation(scrollRecord({ scrub: 'false' }), document);
-    const defaulted = observed.at(-1)?.options?.rootMargin;
-
-    assert.equal(blankCustom, defaulted);
   });
 });

@@ -1,78 +1,134 @@
 /**
  * WAAPI Viewport Observer Manager
- * Pure browser native IntersectionObserver handling for Scroll Triggers.
+ * Scroll trigger geometry: when an element reaches its start line, and how far it has travelled
+ * between start and end. Both read the same lines out of shared/scrollPositions.js.
  */
 
-// Active observers registry for teardown
-import {
-  elementEdgeOffset,
-  parseStartToRootMargin,
-  parseTriggerPosition,
-  viewportEdgeOffset,
-} from '../shared/scrollPositions.js';
+import { triggerLines } from '../shared/scrollPositions.js';
 
-const activeObservers = new Set();
+/* One watcher list for every waiting trigger, measured on scroll and resize rather than from a
+   permanent frame loop: a trigger only has to be right by the time the user can see it, so at rest
+   this costs nothing at all. Reads are batched into a single animation frame, so a burst of scroll
+   events still measures once.
 
-export { parseStartToRootMargin };
+   This replaced an IntersectionObserver per element. The observer could only express its start as a
+   percentage rootMargin, which cannot say WHICH edge of the element is meant — and its 5% threshold
+   silently never fired for an element more than twenty times the trigger region, so a very long
+   section simply never animated. */
+const viewportWatchers = new Set();
+let watcherFrame = null;
+let watcherListening = false;
+
+function measureWatchers() {
+  watcherFrame = null;
+  // Copied first: a watcher that fires with `once` removes itself from the set while this runs.
+  for (const measure of [...viewportWatchers]) measure();
+}
+
+function scheduleWatchers() {
+  if (watcherFrame !== null || typeof requestAnimationFrame !== 'function') return;
+  watcherFrame = requestAnimationFrame(measureWatchers);
+}
+
+function startWatching() {
+  if (watcherListening || typeof window === 'undefined') return;
+  watcherListening = true;
+  // Capture, because a scroll inside a nested scrolling container does not bubble to the window.
+  window.addEventListener('scroll', scheduleWatchers, {
+    passive: true,
+    capture: true,
+  });
+  window.addEventListener('resize', scheduleWatchers, { passive: true });
+}
+
+function stopWatching() {
+  // The pending frame goes with the listeners: leaving it scheduled makes the next scheduleWatchers see a frame already in flight and never ask for one of its own.
+  if (watcherFrame !== null) {
+    if (typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(watcherFrame);
+    }
+    watcherFrame = null;
+  }
+  if (!watcherListening || typeof window === 'undefined') return;
+  watcherListening = false;
+  window.removeEventListener('scroll', scheduleWatchers, { capture: true });
+  window.removeEventListener('resize', scheduleWatchers);
+}
+
+const viewportHeight = () =>
+  (typeof window !== 'undefined' && window.innerHeight) ||
+  (typeof document !== 'undefined' &&
+    document.documentElement?.clientHeight) ||
+  800;
+
 /**
- * Observes an element and triggers the callback when it enters the viewport.
+ * Watches an element and calls back when it reaches its start line.
+ *
+ * The line is the one triggerLines() gives, so it is the same position the scrub path and the
+ * editor's markers use — "bottom center" really does wait for the element's BOTTOM to reach the
+ * middle of the screen, on an element of any height.
+ *
+ * `end` only matters when the trigger replays: a `once: false` animation is re-armed once the
+ * element has travelled past it, so the End control finally does something on this path. An end
+ * that does not sit after the start is ignored rather than obeyed, since obeying it would mean an
+ * animation that can never run.
  *
  * @param {HTMLElement} element
  * @param {Object} options
- * @param {string} [options.start='top 80%']
+ * @param {string} [options.start='top center']
+ * @param {string} [options.end='bottom top']
  * @param {boolean} [options.once=true]
  * @param {Function} options.onEnter
  * @param {Function} [options.onLeave]
- * @returns {Function} cleanup function to unobserve
+ * @returns {Function} cleanup function
  */
 export function observeViewport(
   element,
-  { start = 'top 80%', once = true, onEnter, onLeave },
+  { start = 'top center', end = 'bottom top', once = true, onEnter, onLeave },
 ) {
   if (!element || typeof onEnter !== 'function') return () => {};
 
-  // If IntersectionObserver is not supported (ancient browsers), trigger immediately
-  if (typeof IntersectionObserver === 'undefined') {
+  let inside = false;
+  let finished = false;
+
+  const measure = () => {
+    if (finished) return;
+
+    const rect = element.getBoundingClientRect();
+    const { startY, endY } = triggerLines({
+      rect,
+      winH: viewportHeight(),
+      start,
+      end,
+    });
+
+    const hasRange = endY < startY;
+    const active = rect.top <= startY && (!hasRange || rect.top > endY);
+    if (active === inside) return;
+    inside = active;
+
+    if (!active) {
+      if (typeof onLeave === 'function') onLeave(element);
+      return;
+    }
+
     onEnter(element);
-    return () => {};
-  }
+    if (once) {
+      finished = true;
+      viewportWatchers.delete(measure);
+      if (viewportWatchers.size === 0) stopWatching();
+    }
+  };
 
-  const rootMargin = parseStartToRootMargin(start);
-
-  let hasTriggered = false;
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          hasTriggered = true;
-          onEnter(element);
-          if (once) {
-            observer.unobserve(element);
-            activeObservers.delete(observer);
-          }
-        } else {
-          if (!once && hasTriggered) {
-            if (typeof onLeave === 'function') {
-              onLeave(element);
-            }
-          }
-        }
-      });
-    },
-    {
-      root: null,
-      rootMargin,
-      threshold: 0.05,
-    },
-  );
-
-  observer.observe(element);
-  activeObservers.add(observer);
+  viewportWatchers.add(measure);
+  startWatching();
+  // An element already past its start line on load has no scroll event coming, so the first measure is scheduled rather than waited for.
+  scheduleWatchers();
 
   return () => {
-    observer.unobserve(element);
-    activeObservers.delete(observer);
+    finished = true;
+    viewportWatchers.delete(measure);
+    if (viewportWatchers.size === 0) stopWatching();
   };
 }
 
@@ -98,25 +154,12 @@ export function calculateProgress(
   endStr = 'bottom top',
 ) {
   const rect = element.getBoundingClientRect();
-  const winH =
-    window.innerHeight || document.documentElement.clientHeight || 800;
-
-  const startPos = parseTriggerPosition(startStr, {
-    element: 'top',
-    viewport: '80%',
+  const { startY, endY } = triggerLines({
+    rect,
+    winH: viewportHeight(),
+    start: startStr,
+    end: endStr,
   });
-  const endPos = parseTriggerPosition(endStr, {
-    element: 'bottom',
-    viewport: 'top',
-  });
-
-  // Both expressed as the element's TOP position at which the condition holds, so the two are directly comparable.
-  const startY =
-    viewportEdgeOffset(startPos.viewport, winH, winH * 0.8) -
-    elementEdgeOffset(startPos.element, rect.height);
-  const endY =
-    viewportEdgeOffset(endPos.viewport, winH, 0) -
-    elementEdgeOffset(endPos.element, rect.height);
 
   const totalSpan = startY - endY;
   if (totalSpan <= 0) return 0;
@@ -220,14 +263,8 @@ export function observeScrollScrub(
  * Disconnects and cleans up all active viewport observers and scrub listeners.
  */
 export function disconnectAllObservers() {
-  activeObservers.forEach((obs) => {
-    try {
-      obs.disconnect();
-    } catch {
-      /* ignore */
-    }
-  });
-  activeObservers.clear();
+  viewportWatchers.clear();
+  stopWatching();
 
   activeScrubCleanups.forEach((cleanup) => {
     try {
