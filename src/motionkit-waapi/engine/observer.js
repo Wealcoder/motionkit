@@ -190,18 +190,32 @@ export function observeScrollScrub(
   animation,
   { start = 'top center', end = 'bottom top', scrub = true, once = false },
 ) {
-  if (!element || !animation) return () => {};
+  // One trigger may drive several animations — a split heading's characters share the heading's progress — so a single one is treated as a list of one.
+  const animations = (Array.isArray(animation) ? animation : [animation]).filter(Boolean);
+  if (!element || animations.length === 0) return () => {};
 
-  animation.pause();
+  animations.forEach((a) => a.pause());
   /* The scroll range maps onto delay + duration, not duration alone. currentTime counts from the
      start of the delay, so driving it only as far as the duration left the effect short of its end
      by exactly the delay: with the presets' 0.2s delay on a 1.2s tween every scrubbed animation
      stopped at 83% and never arrived. A staggered element carries its offset in the same delay, so
      this is also what gives it a later slice of the range rather than no stagger at all. */
-  const timing = animation.effect?.getTiming?.() ?? {};
-  const duration = typeof timing.duration === 'number' ? timing.duration : 1000;
-  const delay = typeof timing.delay === 'number' ? timing.delay : 0;
-  const span = delay + duration;
+  const spanOf = (a) => {
+    const timing = a.effect?.getTiming?.() ?? {};
+    const duration = typeof timing.duration === 'number' ? timing.duration : 1000;
+    const delay = typeof timing.delay === 'number' ? timing.delay : 0;
+    return delay + duration;
+  };
+  const spans = animations.map(spanOf);
+  const seek = (progress) => {
+    animations.forEach((a, i) => {
+      try {
+        a.currentTime = progress * spans[i];
+      } catch {
+        /* ignore */
+      }
+    });
+  };
 
   // A numeric scrub is a smoothing time in seconds; `true` means track scroll exactly. parseFloat('true') is NaN, which falls through to 1 — no smoothing — and that is the intended reading rather than an accident.
   const scrubNum = typeof scrub === 'string' ? parseFloat(scrub) : scrub;
@@ -212,7 +226,7 @@ export function observeScrollScrub(
 
   let currentProgress = calculateProgress(element, start, end);
   let targetProgress = currentProgress;
-  animation.currentTime = currentProgress * span;
+  seek(currentProgress);
 
   let rafId = null;
   let isRunning = true;
@@ -241,12 +255,7 @@ export function observeScrollScrub(
     }
 
     const clamped = Math.min(Math.max(currentProgress, 0), 1);
-
-    try {
-      animation.currentTime = clamped * span;
-    } catch {
-      /* ignore */
-    }
+    seek(clamped);
 
     // `once` means the animation plays a single time, so at the end line the scrub hands the element its finished state and lets go: the loop stops and scrolling back up no longer rewinds it. Without this the switch was accepted in the UI and ignored here, since only the IntersectionObserver path ever read it.
     if (once && clamped >= 1) {

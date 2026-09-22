@@ -509,31 +509,36 @@ export function runWaapiAnimation(anim, contextDoc = document) {
           playWaapiAnimation(el, keyframes, options, staggerDelayFor(el));
         });
       } else if (isScrub) {
-        // Native WAAPI Scrub: animation progresses proportionally with user scroll
-        elements.forEach((el) => {
+        /* The trigger surface is the MATCHED element, and its parts are what animate. Iterating the
+           parts made every character of a split heading its own scroll trigger, each scrubbed by its
+           own position — and observed one by one below, each character waited for its own line to
+           reach the start, so a four-line heading came in line by line as the user scrolled: a scrub
+           the user never switched on. Hover and click already drive a heading's own parts from the
+           heading; scroll now does the same. */
+        matched.forEach((source) => {
+          const targets = partsOf.get(source) ?? [source];
           try {
             // The stagger rides as a delay: the scrub drives the scroll range over delay + duration, so a staggered element's motion takes a later slice of that range instead of a later moment in time. It used to be dropped here outright.
-            const animInstance = track(
-              el,
-              el.animate(keyframes, {
-                ...options,
-                delay: (options.delay || 0) + staggerDelayFor(el),
-                fill: 'both',
-              }),
-            );
-            animInstance.pause();
+            const anims = targets.map((el) => {
+              const a = track(
+                el,
+                el.animate(keyframes, {
+                  ...options,
+                  delay: (options.delay || 0) + staggerDelayFor(el),
+                  fill: 'both',
+                }),
+              );
+              a.pause();
+              return a;
+            });
 
-            // Progress is measured against the TRIGGER's position, the same node the non-scrub path observes.
-            const unscrub = observeScrollScrub(
-              scrollRootFor(el),
-              animInstance,
-              {
-                start,
-                end,
-                scrub: scrubVal,
-                once,
-              },
-            );
+            // One progress read per trigger, applied to every part: a split heading's characters share the heading's position rather than each measuring their own.
+            const unscrub = observeScrollScrub(scrollRootFor(source), anims, {
+              start,
+              end,
+              scrub: scrubVal,
+              once,
+            });
 
             listenerCleanups.push(unscrub);
           } catch (err) {
@@ -541,40 +546,38 @@ export function runWaapiAnimation(anim, contextDoc = document) {
           }
         });
       } else {
-        // Standard viewport trigger: fire once the element reaches its start line.
-        elements.forEach((el) => {
-          let animInstance = null;
+        // Standard viewport trigger: fire once the trigger reaches its start line, then play every part it drives.
+        matched.forEach((source) => {
+          const targets = partsOf.get(source) ?? [source];
+          let anims = [];
 
-          // Pin the element to its opening keyframe now, before it is ever painted. Without this it renders in its natural state until the observer fires, so a Fade In element is fully visible on the way down the page and then snaps to opacity 0 — the flash GSAP avoids by setting the start state at build time. The holder is tracked, so teardown releases it.
-          let holder = hold(el, keyframes);
+          // Pin each part to its opening keyframe now, before it is ever painted. Without this it renders in its natural state until the trigger fires, so a Fade In element is fully visible on the way down the page and then snaps to opacity 0 — the flash GSAP avoids by setting the start state at build time. The holders are tracked, so teardown releases them.
+          let holders = targets.map((el) => hold(el, keyframes));
 
           const release = () => {
-            if (!holder) return;
-            cancelTracked(el, [holder]);
-            holder = null;
+            targets.forEach((el, i) => {
+              if (holders[i]) cancelTracked(el, [holders[i]]);
+            });
+            holders = [];
           };
 
-          // Observe the trigger, animate the element: with no trigger class these are the same node.
-          const unobserve = observeViewport(scrollRootFor(el), {
+          // Observe the trigger, animate its parts: with no trigger class and no split these are the same node.
+          const unobserve = observeViewport(scrollRootFor(source), {
             start,
             end,
             once,
             onEnter: () => {
               release();
-              animInstance = playWaapiAnimation(
-                el,
-                keyframes,
-                options,
-                staggerDelayFor(el),
+              anims = targets.map((el) =>
+                playWaapiAnimation(el, keyframes, options, staggerDelayFor(el)),
               );
             },
             onLeave: () => {
-              if (!once && animInstance) {
-                cancelTracked(el, [animInstance]);
-                animInstance = null;
-                // Re-arm the start state so the next entry fades in again instead of popping.
-                holder = hold(el, keyframes);
-              }
+              if (once || anims.length === 0) return;
+              targets.forEach((el, i) => cancelTracked(el, [anims[i]]));
+              anims = [];
+              // Re-arm the start state so the next entry fades in again instead of popping.
+              holders = targets.map((el) => hold(el, keyframes));
             },
           });
 
