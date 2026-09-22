@@ -81,10 +81,23 @@ export function compileEffectToWaapi(effect = {}, device = 'desktop') {
   const delayMs = toMs(rawDelay, 0);
   const loop = compileLoopOptions(fromRaw, toRaw);
 
+  /* The synthetic side of a one-ended tween, in RAW terms — the sampler interpolates raw state, so
+     the rules the two keyframes above get through carryKeywords/carryRestingValues have to reach it
+     in that vocabulary or a sampled ease quietly behaves differently from every other ease.
+     Properties with a catalogue resting value need nothing here; the sampler already fills those. */
+  const syntheticRaw = (source) => {
+    const out = carryRestingValues(carryKeywords({}, source), source);
+    // inset(0%), not 'none', for the same reason as above: a wipe under a sampled ease resolved its
+    // far end from the element's computed clip-path, which is the non-interpolable keyword, so the
+    // browser flipped it halfway instead of wiping.
+    if (source.clipPath) out.clipPath = 'inset(0%)';
+    return out;
+  };
+
   // Bounce and elastic are sampled into many keyframes rather than expressed as a timing function, so the browser must interpolate them linearly — any easing on top would re-shape a curve that already carries its own shape.
   if (needsKeyframeEase(rawEase)) {
-    const fromState = method === 'to' ? {} : fromRaw;
-    const toState = method === 'from' ? {} : toRaw;
+    const fromState = method === 'to' ? syntheticRaw(toRaw) : fromRaw;
+    const toState = method === 'from' ? syntheticRaw(fromRaw) : toRaw;
     const baked = bakeEaseToKeyframes(fromState, toState, rawEase);
     if (baked) {
       return {

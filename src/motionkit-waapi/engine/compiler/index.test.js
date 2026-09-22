@@ -109,17 +109,97 @@ describe('compileStateToKeyframe', () => {
   });
 });
 
+// The curve families, each of which ships an .in, an .out and an .inOut.
+const FITTED_FAMILIES = [
+  'power1',
+  'power2',
+  'power3',
+  'power4',
+  'back',
+  'circ',
+  'expo',
+  'sine',
+];
+
 describe('compileEaseToCss', () => {
   // The presets author eases in GSAP's camelCase (power1.inOut) while the lookup table is lowercase, so the match has to be case-insensitive or every inOut ease silently falls back.
+  // The record stores GSAP's camelCase spelling; the table is keyed lowercase. Asserted as "the two spellings agree" rather than against a literal curve, so re-fitting a curve cannot fail a test about case.
   test('should_resolve_camelCase_gsap_ease_names', () => {
-    assert.equal(
-      compileEaseToCss('power1.inOut'),
-      'cubic-bezier(0.455, 0.03, 0.515, 0.955)',
-    );
-    assert.equal(
-      compileEaseToCss('power2.inOut'),
-      'cubic-bezier(0.77, 0, 0.175, 1)',
-    );
+    for (const name of ['power1', 'power2', 'power3', 'power4']) {
+      assert.equal(
+        compileEaseToCss(`${name}.inOut`),
+        compileEaseToCss(`${name}.inout`),
+      );
+      assert.match(compileEaseToCss(`${name}.inOut`), /^cubic-bezier\(/);
+    }
+  });
+
+  /* Every value the editor's dropdown offers must resolve to a curve of its own. Two ways this
+     broke before: a name missing from the table falls back to power2.out rather than erroring, and
+     two names can be given the same string by copy-paste — Power4.inOut was a duplicate of
+     Power2.inOut, and Power2.out was the expo curve, so three of the thirty-one choices did nothing
+     the user could see. */
+  test('should_give_every_dropdown_ease_a_curve_of_its_own', () => {
+    const CURVE_EASES = [
+      'none',
+      'power1.in', 'power1.out', 'power1.inOut',
+      'power2.in', 'power2.out', 'power2.inOut',
+      'power3.in', 'power3.out', 'power3.inOut',
+      'power4.in', 'power4.out', 'power4.inOut',
+      'back.in', 'back.out', 'back.inOut',
+      'circ.in', 'circ.out', 'circ.inOut',
+      'expo.in', 'expo.out', 'expo.inOut',
+      'sine.in', 'sine.out', 'sine.inOut',
+    ];
+    const byCurve = new Map();
+    for (const name of CURVE_EASES) {
+      assert.ok(isKnownEase(name), `${name} is not in the ease table`);
+      const css = compileEaseToCss(name);
+      byCurve.set(css, [...(byCurve.get(css) || []), name]);
+    }
+    const shared = [...byCurve.values()].filter((names) => names.length > 1);
+    assert.deepEqual(shared, [], 'these eases resolve to the same curve');
+  });
+
+  // Bounce and elastic are the sampled ones; they must NOT be in the cubic-bezier table, or they would resolve to a curve instead of being baked.
+  test('should_route_bounce_and_elastic_to_the_sampled_path', () => {
+    for (const name of [
+      'bounce.in', 'bounce.out', 'bounce.inOut',
+      'elastic.in', 'elastic.out', 'elastic.inOut',
+    ]) {
+      assert.equal(needsKeyframeEase(name), true, `${name} should be baked`);
+      assert.equal(isKnownEase(name), false, `${name} should not be in the curve table`);
+    }
+  });
+
+  /* GSAP's curves are symmetric and the table has to keep it: an .out is its .in reflected through
+     the centre, and an .inOut is point-symmetric about (0.5, 0.5) so its second half mirrors its
+     first. Sine.out was the one that drifted — it came from a different table than Sine.in and sat
+     three times further from GSAP's curve, which reads as an ease-out that decelerates on the wrong
+     side of the tween. Checked as a property of the numbers, so re-fitting a curve is free as long
+     as its partner moves with it. */
+  test('should_mirror_every_out_curve_onto_its_in_curve', () => {
+    const points = (name) =>
+      compileEaseToCss(name)
+        .match(/cubic-bezier\(([^)]+)\)/)[1]
+        .split(',')
+        .map(Number);
+    const close = (a, b) => Math.abs(a - b) <= 2e-3;
+
+    for (const family of FITTED_FAMILIES) {
+      const [x1, y1, x2, y2] = points(`${family}.in`);
+      const out = points(`${family}.out`);
+      assert.ok(
+        [1 - x2, 1 - y2, 1 - x1, 1 - y1].every((v, i) => close(v, out[i])),
+        `${family}.out is not the mirror of ${family}.in`,
+      );
+
+      const [ix, iy, jx, jy] = points(`${family}.inOut`);
+      assert.ok(
+        close(jx, 1 - ix) && close(jy, 1 - iy),
+        `${family}.inOut is not point-symmetric about its middle`,
+      );
+    }
   });
 
   test('should_resolve_a_plain_ease_name', () => {
@@ -311,7 +391,9 @@ describe('compileEffectToWaapi easing', () => {
       effect({ opacity: 0, y: 40, duration: 0.8, ease: 'power2.out' }),
     );
     assert.equal(out.keyframes.length, 2);
-    assert.equal(out.options.easing, 'cubic-bezier(0.16, 1, 0.3, 1)');
+    // The point is the two-keyframe form and a real curve, not which curve — pinning the string here made a corrected power2.out read as a regression.
+    assert.equal(out.options.easing, compileEaseToCss('power2.out'));
+    assert.match(out.options.easing, /^cubic-bezier\(/);
   });
 
   // A fromTo tween declares BOTH ends, so neither may be replaced by a resting value: the baked path has to carry the authored to-state through to the last frame.
@@ -329,6 +411,32 @@ describe('compileEffectToWaapi easing', () => {
     assert.equal(
       out.keyframes[out.keyframes.length - 1].transform,
       'scale(1.5)',
+    );
+  });
+
+  /* A property the sampler cannot blend numerically — a colour, a clip-path, a length with a unit —
+     belongs on the two end frames and nowhere else, so the browser interpolates it itself. Choosing
+     per sample instead read as a discrete switch against the eased progress, and elastic crosses 1
+     seven times on the way out: a red-to-blue background flipped back and forth seven times before
+     settling. */
+  test('should_name_an_unblendable_property_only_at_its_two_ends', () => {
+    const { keyframes } = compileEffectToWaapi({
+      method: 'fromTo',
+      devices: {
+        desktop: {
+          from: { backgroundColor: '#ff0000', duration: 1, ease: 'elastic.out' },
+          to: { backgroundColor: '#0000ff' },
+        },
+      },
+    });
+
+    const carrying = keyframes.filter((f) => f.backgroundColor !== undefined);
+    assert.deepEqual(
+      carrying.map((f) => [f.offset, f.backgroundColor]),
+      [
+        [0, '#ff0000'],
+        [1, '#0000ff'],
+      ],
     );
   });
 
@@ -372,6 +480,20 @@ describe('clip path resting state', () => {
     );
     const last = keyframes[keyframes.length - 1];
     assert.equal(last.clipPath, 'inset(0%)');
+  });
+
+  /* The sampled path has to land on the same open shape. It builds its far end from raw state, not
+     from the keyframe above, so it resolved the clip-path from the element's computed style instead
+     — the `none` keyword — and a wipe under a bounce or elastic ease flipped at the halfway point
+     rather than wiping. */
+  test('should_rest_a_sampled_clip_path_on_the_same_open_shape', () => {
+    const { keyframes } = compileEffectToWaapi(
+      effectWith({ clipPath: 'inset(0 100% 0 0)', ease: 'elastic.out' }),
+      'desktop',
+    );
+    const carrying = keyframes.filter((f) => f.clipPath !== undefined);
+    assert.equal(carrying[0].clipPath, 'inset(0 100% 0 0)');
+    assert.equal(carrying[carrying.length - 1].clipPath, 'inset(0%)');
   });
 
   // Only when the tween actually declares one: an ordinary fade must not acquire a clip-path it never asked for, since that creates a new stacking/clipping context on every animated element.
@@ -591,6 +713,21 @@ describe('border width implies a border style', () => {
     );
     assert.equal(keyframes[0].borderStyle, 'solid');
     assert.equal(keyframes[1].borderStyle, 'solid');
+  });
+
+  // Same for a sampled ease, which builds its own keyframes: without the style carried onto both ends a bounced border simply never painted.
+  test('should_emit_a_border_style_under_a_sampled_ease', () => {
+    const { keyframes } = compileEffectToWaapi(
+      {
+        method: 'to',
+        devices: {
+          desktop: { to: { borderWidth: 3, duration: 0.3, ease: 'bounce.out' } },
+        },
+      },
+      'desktop',
+    );
+    assert.equal(keyframes[0].borderStyle, 'solid');
+    assert.equal(keyframes[keyframes.length - 1].borderStyle, 'solid');
   });
 
   // An author who names a style keeps it — the default only fills a gap.
