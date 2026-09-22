@@ -188,7 +188,13 @@ export function calculateProgress(
 export function observeScrollScrub(
   element,
   animation,
-  { start = 'top center', end = 'bottom top', scrub = true, once = false },
+  {
+    start = 'top center',
+    end = 'bottom top',
+    scrub = true,
+    once = false,
+    onActive = null,
+  },
 ) {
   // One trigger may drive several animations — a split heading's characters share the heading's progress — so a single one is treated as a list of one.
   const animations = (Array.isArray(animation) ? animation : [animation]).filter(Boolean);
@@ -230,6 +236,7 @@ export function observeScrollScrub(
 
   let rafId = null;
   let isRunning = true;
+  let hasBeenActive = false;
 
   /* The loop runs every frame for as long as the scrub is alive, rather than
      being started by each scroll event and stopping once it catches up.
@@ -256,6 +263,16 @@ export function observeScrollScrub(
 
     const clamped = Math.min(Math.max(currentProgress, 0), 1);
     seek(clamped);
+
+    // The first frame carrying any progress at all is the scrub's equivalent of an onEnter — the element has crossed the start line and this animation is now the one painting it. Reported once so a caller can take element ownership there rather than at build time, where every scrub on the page would claim before the visitor had scrolled.
+    if (!hasBeenActive && clamped > 0) {
+      hasBeenActive = true;
+      try {
+        onActive?.();
+      } catch (err) {
+        console.warn('[motionkit:waapi] scrub onActive error:', err);
+      }
+    }
 
     // `once` means the animation plays a single time, so at the end line the scrub hands the element its finished state and lets go: the loop stops and scrolling back up no longer rewinds it. Without this the switch was accepted in the UI and ignored here, since only the IntersectionObserver path ever read it.
     if (once && clamped >= 1) {

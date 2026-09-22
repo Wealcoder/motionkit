@@ -20,6 +20,14 @@ import {
   isSplitKind,
   splitKindOf,
 } from './splitText.js';
+import {
+  claimTargets,
+  claimIfUnowned,
+  ownerOf,
+  releaseAnim,
+  setAnims,
+  setReset,
+} from './ownership.js';
 
 // Tracks running Animation instances: Map<HTMLElement, Set<Animation>>
 const runningAnimations = new Map();
@@ -41,7 +49,15 @@ function tagTarget(el, animId, stepId) {
 
   if (el.__wcfOrigCss === undefined) el.__wcfOrigCss = el.style.cssText;
 
-  el.setAttribute(ANIM_ID_ATTR, animId);
+  /* The attribute is single-valued and means "the animation currently applied here", so tagging
+     must not overwrite a record that already owns the element — the ownership claim paths are what
+     re-stamp it when a trigger actually fires. Writing it unconditionally made the LAST record
+     dispatched the one the inspector named, so with a page-load, a scroll and a click on one
+     heading the editor pointed at the click before anybody had clicked. An unowned element still
+     gets a mark here, because every animated element must carry one for the inspector, the
+     Structure list and the reset sweep to find it at all. */
+  const owner = ownerOf(el);
+  if (!owner || owner === animId) el.setAttribute(ANIM_ID_ATTR, animId);
 
   // One element can be the target of several effects, so the step list appends rather than replaces — paste-one-effect narrows by the whole list.
   if (stepId) {
@@ -77,27 +93,110 @@ function untagTargets() {
   taggedTargets.clear();
 }
 
+/* Per-record bookkeeping, beside the per-element `runningAnimations` map above. Teardown needs
+   every animation this engine started; displacement needs the subset ONE record started on ONE
+   element, so a record that loses a heading to a click stops painting that heading without
+   disturbing the three cards it still owns. Two views of the same Animation objects.
+
+   `list` is handed to the ownership registry by reference, never copied: a gesture animation is
+   built on every click, long after the record ran, and a snapshot would never see it. */
+const recordAnims = new Map();
+
+function recordEntry(animId) {
+  let entry = recordAnims.get(animId);
+  if (!entry) {
+    entry = { list: [], byEl: new Map() };
+    recordAnims.set(animId, entry);
+  }
+  return entry;
+}
+
+// How this engine undoes itself when another animation takes an element: cancel what it started THERE and forget it. Cancelling a WAAPI animation stops it painting altogether, which hands the element back to its own stylesheet — exactly the ground the incoming animation expects to start from.
+function releaseRecordOn(animId, els) {
+  const entry = recordAnims.get(animId);
+  if (!entry || !els) return;
+  els.forEach((el) => {
+    const set = entry.byEl.get(el);
+    if (!set) return;
+    set.forEach((a) => {
+      try {
+        a.cancel();
+      } catch {
+        /* ignore */
+      }
+      runningAnimations.get(el)?.delete(a);
+      const i = entry.list.indexOf(a);
+      if (i !== -1) entry.list.splice(i, 1);
+    });
+    entry.byEl.delete(el);
+  });
+}
+
+/* A claim means one record is applied here, so every OTHER record of this engine stops painting the
+   same element.
+
+   The shared registry knows a single owner per element, which is enough to displace whoever claimed
+   last — but a record that ran while someone else already owned the element never became that owner
+   and so was never anyone's `prev`. A page-load entrance dispatched AFTER a scroll reveal had armed
+   is exactly that case: the reveal owned the heading, the entrance played anyway, and when the
+   reveal finally fired it displaced nobody and the entrance kept painting underneath it. */
+function standDownOthers(animId, els) {
+  recordAnims.forEach((entry, otherId) => {
+    if (otherId === animId) return;
+    const shared = els.filter((el) => entry.byEl.has(el));
+    if (shared.length > 0) releaseRecordOn(otherId, shared);
+  });
+}
+
+// One record takes these elements over: the shared registry displaces the previous owner (which may be a GSAP animation), and every other free record painting the same elements stands down.
+function takeOver(els, animId) {
+  if (!animId || !els || els.length === 0) return;
+  claimTargets(els, animId);
+  standDownOthers(animId, els);
+}
+
 // Every Animation the engine starts must land here, or teardown cannot cancel it. Hover and click animations use fill:'forwards', so an untracked one stays pinned to its end state for the life of the page.
-function track(element, animation) {
+function track(element, animation, animId) {
   if (!animation) return animation;
   if (!runningAnimations.has(element))
     runningAnimations.set(element, new Set());
   runningAnimations.get(element).add(animation);
+
+  if (animId) {
+    const entry = recordEntry(animId);
+    entry.list.push(animation);
+    let set = entry.byEl.get(element);
+    if (!set) {
+      set = new Set();
+      entry.byEl.set(element, set);
+    }
+    set.add(animation);
+  }
   return animation;
 }
 
 // Paints an element's opening keyframe and holds it there, as a paused zero-duration animation with fill:'both'. Used to establish a scroll animation's start state before the element scrolls into view.
-function hold(element, keyframes) {
+function hold(element, keyframes, animId) {
   if (!element || typeof element.animate !== 'function') return null;
   if (isReducedMotion()) return null;
   const first = keyframes && keyframes[0];
   if (!first || Object.keys(first).length === 0) return null;
+
+  /* Nothing is pinned on an element another record already holds. A holder is built at BUILD time
+     and paints its opening keyframe with fill 'both', so being constructed last it wins the Web
+     Animations cascade outright — a scroll reveal registered after a page-load entrance snapped
+     the element back to opacity 0 the moment the entrance finished, and the page looked like its
+     page-load animations had never run. The reveal still arms itself when it enters view; it just
+     does not get to repaint someone else's element while it waits. */
+  const owner = ownerOf(element);
+  if (owner && owner !== animId) return null;
 
   /* clip-path is held like everything else. It used to be the one exception, because the IntersectionObserver this engine no longer uses dropped a clipped-to-nothing element from its geometry — verified in Chromium, where a clip-path-held element reported isIntersecting false forever — so holding a wipe hid it from the very observer meant to reveal it, and the presets paid with one frame of un-clipped paint instead. The scroll trigger now measures a rect, which a clipped element still has, so the wipe keeps its opening state until it is in view. */
   try {
     const holder = track(
       element,
       element.animate([first, first], { duration: 1, fill: 'both' }),
+      animId,
     );
     holder.pause();
     return holder;
@@ -246,6 +345,7 @@ export function playWaapiAnimation(
   keyframes,
   options,
   extraDelay = 0,
+  animId,
 ) {
   if (!element || typeof element.animate !== 'function') return null;
 
@@ -261,7 +361,11 @@ export function playWaapiAnimation(
   }
 
   try {
-    const animation = track(element, element.animate(keyframes, animOptions));
+    const animation = track(
+      element,
+      element.animate(keyframes, animOptions),
+      animId,
+    );
 
     /* Deliberately NOT untracked on finish. Every free animation compiles with fill 'both' or 'forwards', so a finished Animation is still painting its end state on the element — dropping it from the registry left teardown holding nothing to cancel, and a deleted animation went on showing until the page was reloaded.
 
@@ -299,6 +403,16 @@ export function runWaapiAnimation(anim, contextDoc = document) {
   const effects = anim.timeline?.animations || [];
 
   if (effects.length === 0) return;
+
+  /* One record, one ownership identity. Several records can target the same element with different
+     triggers — a page-load entrance, a scroll reveal and a click on one heading — and the registry
+     is what makes them take turns instead of all painting at once. Registered before any effect
+     runs so a record that is displaced before its own first frame still knows how to stand down. */
+  const animId = anim.id;
+  if (animId) {
+    setAnims(animId, recordEntry(animId).list);
+    setReset(animId, (takenEls) => releaseRecordOn(animId, takenEls));
+  }
 
   effects.forEach((effect) => {
     if (effect.disabled) return;
@@ -388,8 +502,10 @@ export function runWaapiAnimation(anim, contextDoc = document) {
 
     // Trigger Execution
     if (triggerType === 'page_load') {
+      // claimIfUnowned, not claimTargets: a page-load animation has no trigger to be "last" with, and several page-load animations legitimately share an element. Registering without displacing is still what gives a later scroll or click someone to displace.
+      claimIfUnowned(elements, animId);
       elements.forEach((el) => {
-        playWaapiAnimation(el, keyframes, options, staggerDelayFor(el));
+        playWaapiAnimation(el, keyframes, options, staggerDelayFor(el), animId);
       });
     } else if (triggerType === 'hover' || triggerType === 'click') {
       /* One gesture path for both. They differ only in what starts the run — a pointer arriving or a
@@ -406,6 +522,8 @@ export function runWaapiAnimation(anim, contextDoc = document) {
 
            Only a still-running batch is cancelled, so re-triggering mid-animation restarts cleanly while a completed one keeps its fill. */
         const onEnter = () => {
+          // The gesture IS the trigger firing, so this is where the record takes the element over from whatever was applied — a page-load entrance or a scroll reveal — and that one's reset cancels its own animations before these start. Claiming at bind time instead would displace them the moment the page loaded, before anyone had clicked anything.
+          takeOver(targets, animId);
           targets.forEach((targetEl, i) => {
             const prev = activeAnims[i];
             // A run being reverted is resumed below, not cancelled — only a forward one still in flight is replaced.
@@ -430,7 +548,13 @@ export function runWaapiAnimation(anim, contextDoc = document) {
                 /* Not reversible — fall through and start a fresh run. */
               }
             }
-            return playWaapiAnimation(targetEl, keyframes, options, i * staggerMs);
+            return playWaapiAnimation(
+              targetEl,
+              keyframes,
+              options,
+              i * staggerMs,
+              animId,
+            );
           });
         };
 
@@ -505,8 +629,10 @@ export function runWaapiAnimation(anim, contextDoc = document) {
 
       // Editor preview short-circuits BOTH scroll paths. Checked ahead of isScrub because a scrubbed animation is created paused and driven by scroll position, and nothing scrolls the preview iframe on the user's behalf — Play would leave it frozen on its first frame.
       if (isEditorPreviewMode()) {
+        // Play here stands in for the trigger firing, so it claims outright — otherwise previewing a scroll animation on an element a page-load one owns would paint under it.
+        takeOver(elements, animId);
         elements.forEach((el) => {
-          playWaapiAnimation(el, keyframes, options, staggerDelayFor(el));
+          playWaapiAnimation(el, keyframes, options, staggerDelayFor(el), animId);
         });
       } else if (isScrub) {
         /* The trigger surface is the MATCHED element, and its parts are what animate. Iterating the
@@ -518,6 +644,9 @@ export function runWaapiAnimation(anim, contextDoc = document) {
         matched.forEach((source) => {
           const targets = partsOf.get(source) ?? [source];
           try {
+            // Registered but not displacing, the same way a page-load animation does: a scrub sitting at progress 0 has not fired yet, and onActive below is where it takes the element over.
+            claimIfUnowned(targets, animId);
+
             // The stagger rides as a delay: the scrub drives the scroll range over delay + duration, so a staggered element's motion takes a later slice of that range instead of a later moment in time. It used to be dropped here outright.
             const anims = targets.map((el) => {
               const a = track(
@@ -527,6 +656,7 @@ export function runWaapiAnimation(anim, contextDoc = document) {
                   delay: (options.delay || 0) + staggerDelayFor(el),
                   fill: 'both',
                 }),
+                animId,
               );
               a.pause();
               return a;
@@ -538,6 +668,8 @@ export function runWaapiAnimation(anim, contextDoc = document) {
               end,
               scrub: scrubVal,
               once,
+              // The first frame with any progress at all is this trigger firing — from there the scrub owns the element and whatever was applied before stands down.
+              onActive: () => takeOver(targets, animId),
             });
 
             listenerCleanups.push(unscrub);
@@ -551,8 +683,11 @@ export function runWaapiAnimation(anim, contextDoc = document) {
           const targets = partsOf.get(source) ?? [source];
           let anims = [];
 
-          // Pin each part to its opening keyframe now, before it is ever painted. Without this it renders in its natural state until the trigger fires, so a Fade In element is fully visible on the way down the page and then snaps to opacity 0 — the flash GSAP avoids by setting the start state at build time. The holders are tracked, so teardown releases them.
-          let holders = targets.map((el) => hold(el, keyframes));
+          // Registered without displacing at build time; onEnter below is where the trigger actually fires and the element changes hands.
+          claimIfUnowned(targets, animId);
+
+          // Pin each part to its opening keyframe now, before it is ever painted. Without this it renders in its natural state until the trigger fires, so a Fade In element is fully visible on the way down the page and then snaps to opacity 0 — the flash GSAP avoids by setting the start state at build time. The holders are tracked, so teardown releases them, and hold() declines outright on an element another record already owns.
+          let holders = targets.map((el) => hold(el, keyframes, animId));
 
           const release = () => {
             targets.forEach((el, i) => {
@@ -568,8 +703,16 @@ export function runWaapiAnimation(anim, contextDoc = document) {
             once,
             onEnter: () => {
               release();
+              // Reaching the start line is this trigger firing, so the reveal takes the element over here — including back from a click that displaced it earlier, which is what makes scrolling out and in again replay it.
+              takeOver(targets, animId);
               anims = targets.map((el) =>
-                playWaapiAnimation(el, keyframes, options, staggerDelayFor(el)),
+                playWaapiAnimation(
+                  el,
+                  keyframes,
+                  options,
+                  staggerDelayFor(el),
+                  animId,
+                ),
               );
             },
             onLeave: () => {
@@ -577,7 +720,7 @@ export function runWaapiAnimation(anim, contextDoc = document) {
               targets.forEach((el, i) => cancelTracked(el, [anims[i]]));
               anims = [];
               // Re-arm the start state so the next entry fades in again instead of popping.
-              holders = targets.map((el) => hold(el, keyframes));
+              holders = targets.map((el) => hold(el, keyframes, animId));
             },
           });
 
@@ -639,6 +782,14 @@ function stopEverything() {
     }
   }
 
-  // 5. Drop this engine's element marks last, so anything above that looks an element up by them still finds it.
+  // 5. Hand every element back. Only this engine's own records are released — the registry is shared with the GSAP engine on a page carrying both plugins, so clearing it wholesale would drop a live pro animation's claim along with ours. Without this a rebuilt record found itself still listed as the owner and its own hold() declined to arm, so a breakpoint change left every scroll reveal unpinned.
+  recordAnims.forEach((entry, animId) => {
+    entry.byEl.clear();
+    entry.list.length = 0;
+    releaseAnim(animId);
+  });
+  recordAnims.clear();
+
+  // 6. Drop this engine's element marks last, so anything above that looks an element up by them still finds it.
   untagTargets();
 }
