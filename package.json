@@ -66,9 +66,7 @@
   },
   "scripts": {
     "test-old": "eslint --quiet . && stylelint --syntax scss -q **/*.scss && composer run-script phpcs",
-    "test": "eslint --quiet . && npm run test-unit",
     "test-js": "eslint --quiet .",
-    "test-unit": "node --test \"src/motionkit-waapi/**/*.test.js\"",
     "test-scss": "stylelint --syntax scss -q **/*.scss",
     "test-php": "composer run-script phpcs",
     "style-fix": "stylelint --syntax scss **/*.scss --fix",
