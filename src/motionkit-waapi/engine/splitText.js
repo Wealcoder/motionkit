@@ -12,6 +12,8 @@ const ORIGINAL_HTML = '__mkSplitOriginalHtml';
 const HAD_OWN_LABEL = '__mkSplitHadOwnLabel';
 
 const PART_ATTR = 'data-mk-split';
+// Marks the word wrapper a character split puts around each word. Not a part — it carries no PART_ATTR, so the runner never staggers over it and a re-split never counts it — and it exists only so the word cannot break across a line.
+const WORD_WRAP_ATTR = 'data-mk-split-word';
 
 const isSplit = (element) => ORIGINAL_HTML in element;
 
@@ -25,6 +27,21 @@ function makePart(text, kind) {
   span.style.display = 'inline-block';
   // Keeps the split from changing how the text wraps, which would otherwise reflow the page the moment an animation is attached.
   span.style.whiteSpace = 'pre';
+  return span;
+}
+
+/* A character split wraps each word before splitting it. Every character is an inline-block, and a
+   browser treats two adjacent inline-blocks as a place it may break the line — so "AGENCY" came
+   apart as "A" at the end of one line and "GENCY" at the start of the next, and the heading's own
+   wrapping changed the moment an animation was attached. The wrapper is one atomic box around the
+   word, kept from wrapping inside itself, which is how GSAP's SplitText holds a word together too.
+   Whitespace stays outside it as plain text, so the line still breaks where it always did. */
+function makeWordWrap() {
+  const span = document.createElement('span');
+  span.setAttribute(WORD_WRAP_ATTR, '');
+  span.setAttribute('aria-hidden', 'true');
+  span.style.display = 'inline-block';
+  span.style.whiteSpace = 'nowrap';
   return span;
 }
 
@@ -58,12 +75,14 @@ function splitTextNodes(root, kind, collected) {
         collected.push(part);
         fragment.appendChild(part);
       } else {
+        const wrap = makeWordWrap();
         // Array.from rather than split(''), so an emoji or accented character stays one part instead of being cut into surrogate halves.
         for (const char of Array.from(token)) {
           const part = makePart(char, 'char');
           collected.push(part);
-          fragment.appendChild(part);
+          wrap.appendChild(part);
         }
+        fragment.appendChild(wrap);
       }
     }
 
