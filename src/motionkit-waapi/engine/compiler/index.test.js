@@ -214,6 +214,55 @@ describe('compileEaseToCss', () => {
   });
 });
 
+/* Timing is read from the half the card writes it to. The card puts Duration/Delay/Ease on the
+   method's leading half — `to` for a 'to' effect — while the compiler read `from` first for every
+   method, so a 'to' preset carrying a timing-only `from` bag (the Button presets, Hover Style) played
+   that bag's values no matter what the user typed. */
+describe('compileEffectToWaapi timing follows the leading half', () => {
+  const toEffect = (to, from) => ({
+    method: 'to',
+    devices: { desktop: { to: { scale: 0.94, ...to }, ...(from && { from }) } },
+  });
+
+  test('should_read_timing_from_the_to_half_of_a_to_effect', () => {
+    const { options } = compileEffectToWaapi(
+      toEffect(
+        { duration: 3, delay: 0, ease: 'sine.out' },
+        { duration: 1.2, delay: 0.2, ease: 'power2.inOut' },
+      ),
+    );
+    assert.equal(options.duration, 3000);
+    assert.equal(options.delay, 0);
+    assert.equal(options.easing, compileEaseToCss('sine.out'));
+  });
+
+  // The other half still fills a gap, so an older record that only ever stored timing under `from` keeps playing.
+  test('should_fall_back_to_the_from_half_when_the_to_half_names_nothing', () => {
+    const { options } = compileEffectToWaapi(
+      toEffect({}, { duration: 0.6, delay: 0.1 }),
+    );
+    assert.equal(options.duration, 600);
+    assert.equal(options.delay, 100);
+  });
+
+  test('should_read_loop_options_from_the_to_half_too', () => {
+    const { options } = compileEffectToWaapi(
+      toEffect({ repeat: 2, yoyo: true }, { repeat: 0 }),
+    );
+    assert.equal(options.iterations, 3);
+    assert.equal(options.direction, 'alternate');
+  });
+
+  // Unchanged for the other methods: `from` leads a 'from' and a 'fromTo' effect.
+  test('should_keep_reading_from_first_on_a_fromTo_effect', () => {
+    const { options } = compileEffectToWaapi({
+      method: 'fromTo',
+      devices: { desktop: { from: { y: 0, duration: 2 }, to: { y: 10, duration: 5 } } },
+    });
+    assert.equal(options.duration, 2000);
+  });
+});
+
 describe('compileEffectToWaapi timing', () => {
   test('should_read_ordinary_gsap_seconds_as_seconds', () => {
     assert.equal(

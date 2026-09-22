@@ -73,13 +73,22 @@ export function compileEffectToWaapi(effect = {}, device = 'desktop') {
     toKeyframe = compileStateToKeyframe(toRaw);
   }
 
-  const rawDuration = fromRaw.duration ?? toRaw.duration ?? 0.8;
-  const rawDelay = fromRaw.delay ?? toRaw.delay ?? 0;
-  const rawEase = fromRaw.ease ?? toRaw.ease ?? 'power2.out';
+  /* Timing and loop come from the method's LEADING half first — `to` for a 'to' effect, `from`
+     otherwise — because that is the half the editor's card writes them to (halvesOf(method)[0] in
+     the components library). Reading `from` first for every method meant a 'to' preset that
+     happened to carry a timing-only `from` bag, which the five Button presets and Hover Style did,
+     shadowed every edit: the user set Duration to 3s on the card, the record held it under `to`,
+     and the compiler went on playing the 1.2s under `from`. */
+  const lead = method === 'to' ? toRaw : fromRaw;
+  const trail = method === 'to' ? fromRaw : toRaw;
+
+  const rawDuration = lead.duration ?? trail.duration ?? 0.8;
+  const rawDelay = lead.delay ?? trail.delay ?? 0;
+  const rawEase = lead.ease ?? trail.ease ?? 'power2.out';
 
   const durationMs = toMs(rawDuration, 800);
   const delayMs = toMs(rawDelay, 0);
-  const loop = compileLoopOptions(fromRaw, toRaw);
+  const loop = compileLoopOptions(lead, trail);
 
   /* The synthetic side of a one-ended tween, in RAW terms — the sampler interpolates raw state, so
      the rules the two keyframes above get through carryKeywords/carryRestingValues have to reach it
