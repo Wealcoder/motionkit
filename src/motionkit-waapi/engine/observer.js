@@ -162,7 +162,12 @@ export function calculateProgress(
   });
 
   const totalSpan = startY - endY;
-  if (totalSpan <= 0) return 0;
+  /* An end at or before the start spans nothing to scrub across, so the range becomes an instant
+     switch at the start line — the same reading GSAP's ScrollTrigger gives a zero-length range.
+     Returning 0 here instead held the animation at its opening frame for the life of the page,
+     which reads as an element that never animates: twenty-one of the thirty-six start/end pairs the
+     editor offers did exactly that. */
+  if (totalSpan <= 0) return rect.top <= startY ? 1 : 0;
 
   const progress = (startY - rect.top) / totalSpan;
   return Math.min(Math.max(progress, 0), 1);
@@ -188,10 +193,15 @@ export function observeScrollScrub(
   if (!element || !animation) return () => {};
 
   animation.pause();
-  const duration =
-    typeof animation.effect?.getTiming?.()?.duration === 'number'
-      ? animation.effect.getTiming().duration
-      : 1000;
+  /* The scroll range maps onto delay + duration, not duration alone. currentTime counts from the
+     start of the delay, so driving it only as far as the duration left the effect short of its end
+     by exactly the delay: with the presets' 0.2s delay on a 1.2s tween every scrubbed animation
+     stopped at 83% and never arrived. A staggered element carries its offset in the same delay, so
+     this is also what gives it a later slice of the range rather than no stagger at all. */
+  const timing = animation.effect?.getTiming?.() ?? {};
+  const duration = typeof timing.duration === 'number' ? timing.duration : 1000;
+  const delay = typeof timing.delay === 'number' ? timing.delay : 0;
+  const span = delay + duration;
 
   // A numeric scrub is a smoothing time in seconds; `true` means track scroll exactly. parseFloat('true') is NaN, which falls through to 1 — no smoothing — and that is the intended reading rather than an accident.
   const scrubNum = typeof scrub === 'string' ? parseFloat(scrub) : scrub;
@@ -202,7 +212,7 @@ export function observeScrollScrub(
 
   let currentProgress = calculateProgress(element, start, end);
   let targetProgress = currentProgress;
-  animation.currentTime = currentProgress * duration;
+  animation.currentTime = currentProgress * span;
 
   let rafId = null;
   let isRunning = true;
@@ -233,7 +243,7 @@ export function observeScrollScrub(
     const clamped = Math.min(Math.max(currentProgress, 0), 1);
 
     try {
-      animation.currentTime = clamped * duration;
+      animation.currentTime = clamped * span;
     } catch {
       /* ignore */
     }

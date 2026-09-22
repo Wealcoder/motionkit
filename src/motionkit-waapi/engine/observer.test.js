@@ -304,3 +304,52 @@ describe('observeScrollScrub with once', () => {
     );
   });
 });
+
+/* The scroll range maps onto delay + duration. currentTime counts from the start of the delay, so driving it only as far as the duration left the effect short of its end by exactly the delay — with the presets' 0.2s delay on a 1.2s tween every scrubbed animation stopped at 83% and never arrived. */
+describe('observeScrollScrub covers the delay', () => {
+  let observeScrollScrub;
+  let rafQueue;
+
+  beforeEach(async () => {
+    rafQueue = [];
+    globalThis.requestAnimationFrame = (cb) => {
+      rafQueue.push(cb);
+      return rafQueue.length;
+    };
+    globalThis.cancelAnimationFrame = () => {};
+    ({ observeScrollScrub } = await import(
+      `./observer.js?t=${Date.now()}${Math.random()}`
+    ));
+  });
+
+  test('should_drive_current_time_to_the_end_of_the_active_interval', () => {
+    const anim = {
+      currentTime: 0,
+      pause() {},
+      effect: { getTiming: () => ({ duration: 1200, delay: 200 }) },
+    };
+    // Far past the end line: progress 1.
+    observeScrollScrub(elementAt(-(EL_H + WIN_H)), anim, {
+      start: 'top center',
+      end: 'bottom top',
+      scrub: 'true',
+    });
+    rafQueue.shift()();
+    assert.equal(anim.currentTime, 1400, 'the delay must be part of the range');
+  });
+});
+
+/* An end at or before the start spans nothing to scrub across. Holding progress at 0 there kept the element on its opening frame for the life of the page — twenty-one of the thirty-six start/end pairs the editor offers did exactly that. GSAP reads a zero-length range as an instant switch at the start line, and so does this. */
+describe('calculateProgress with a degenerate range', () => {
+  test('should_switch_at_the_start_line_when_the_end_is_not_after_it', () => {
+    // 'bottom top' as a start puts the line at -EL_H; the same end puts it there too.
+    assert.equal(calculateProgress(elementAt(-EL_H + 1), 'bottom top', 'bottom top'), 0);
+    assert.equal(calculateProgress(elementAt(-EL_H), 'bottom top', 'bottom top'), 1);
+  });
+
+  test('should_switch_when_the_end_sits_before_the_start', () => {
+    // start 'top top' is the viewport top (0); end 'top center' is below it, so the range runs backwards.
+    assert.equal(calculateProgress(elementAt(10), 'top top', 'top center'), 0);
+    assert.equal(calculateProgress(elementAt(0), 'top top', 'top center'), 1);
+  });
+});
