@@ -24,12 +24,7 @@ final class PluginStatus
   public const ACTIVE = 'active';
 
   /**
-   * Installed, but not activated.
-   */
-  public const DEACTIVATED = 'deactivated';
-
-  /**
-   * Not installed.
+   * Not running — either not installed, or installed and not activated.
    */
   public const INACTIVE = 'inactive';
 
@@ -91,10 +86,10 @@ final class PluginStatus
   }
 
   /**
-   * One plugin's install status.
+   * One plugin's status.
    *
    * @param string $key One of the CORE / CONNECTOR constants.
-   * @return string One of the ACTIVE / DEACTIVATED / INACTIVE constants.
+   * @return string One of the ACTIVE / INACTIVE constants.
    */
   public static function status(string $key): string
   {
@@ -114,7 +109,23 @@ final class PluginStatus
 
     self::load_plugin_api();
 
-    return is_plugin_active($basename) ? self::ACTIVE : self::DEACTIVATED;
+    return is_plugin_active($basename) ? self::ACTIVE : self::INACTIVE;
+  }
+
+  /**
+   * Whether one plugin's files are on disk, activated or not.
+   *
+   * @param string $key One of the CORE / CONNECTOR constants.
+   * @return bool
+   */
+  public static function is_installed(string $key): bool
+  {
+    $plugin = self::PLUGINS[$key] ?? null;
+    if ($plugin === null) {
+      return false;
+    }
+
+    return defined($plugin['loaded']) || self::basename($key) !== '';
   }
 
   /**

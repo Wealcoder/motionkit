@@ -442,7 +442,12 @@ final class ConnectPage
    */
   private function connector_install_state(): string
   {
-    return PluginStatus::status(PluginStatus::CONNECTOR);
+    if (PluginStatus::connector_is_active()) {
+      return 'active';
+    }
+
+    // The editor is only told active/inactive; this page needs the middle case too, because "installed but off" is an Activate button and "not there" is a Download one.
+    return PluginStatus::is_installed(PluginStatus::CONNECTOR) ? 'deactivated' : 'inactive';
   }
 
   /**
@@ -533,7 +538,7 @@ final class ConnectPage
       return;
     }
 
-    $is_deactivated = ($state === PluginStatus::DEACTIVATED);
+    $is_deactivated = ($state === 'deactivated');
 
     if ($is_deactivated) {
       $cta_title = __('Activate the MotionKit Connector', 'motionkit');
