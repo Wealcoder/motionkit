@@ -143,14 +143,16 @@ final class OAuthHandler
     $code = sanitize_text_field(wp_unslash($_GET['code']));
     $response = wp_remote_post(EditorEndpoint::url('connect/token'), [
       'timeout' => 15,
+      // JSON, not an array body: WordPress form-encodes an array, and an editor build without a urlencoded parser answered that with a 500, leaving every site Not Connected. The connector already sends JSON.
+      'headers' => ['Content-Type' => 'application/json'],
       // grant_type and redirect_uri are required by the editor's /connect/token — it 400s on anything but 'authorization_code', and the redirect_uri must be the same one the authorize step was given.
-      'body'    => [
+      'body'    => wp_json_encode([
         'grant_type'   => 'authorization_code',
         'code'         => $code,
         'site'         => home_url('/'),
         'platform'     => 'wordpress',
         'redirect_uri' => self::callback_url(),
-      ],
+      ]),
     ]);
 
     if (is_wp_error($response)) {
@@ -208,10 +210,12 @@ final class OAuthHandler
     if ($token !== '') {
       wp_remote_post(EditorEndpoint::url('connect/revoke'), [
         'timeout' => 5,
-        'body'    => [
-          'token' => $token,
-          'site'  => home_url('/'),
-        ],
+        'headers' => ['Content-Type' => 'application/json'],
+        // The editor's /connect/revoke reads access_token; the old `token` key was ignored, so the server-side row stayed active after a disconnect.
+        'body'    => wp_json_encode([
+          'access_token' => $token,
+          'site'         => home_url('/'),
+        ]),
       ]);
     }
 
