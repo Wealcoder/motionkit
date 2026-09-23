@@ -6,6 +6,7 @@ namespace MotionKit\Frontend;
 
 use MotionKit\Auth\JwtTokenManager;
 use MotionKit\Common\AnimationResolver;
+use MotionKit\Common\PluginStatus;
 
 /**
  * MotionKit WordPress Plugin — Editor Bridge & Preview Loader.
@@ -120,6 +121,7 @@ final class EditorBridge
 
     $runtime_data = [
       'platform'                  => 'wordpress',
+      'plugins'                   => PluginStatus::snapshot(),
       'ajax_url'                  => admin_url('admin-ajax.php'),
       'nonce'                     => wp_create_nonce('motionkit_frontend_nonce'),
       'rest_url'                  => rest_url('motionkit/v1/'),

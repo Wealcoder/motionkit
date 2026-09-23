@@ -2,6 +2,8 @@
 
 namespace MotionKit\Admin;
 
+use MotionKit\Common\PluginStatus;
+
 /**
  * Admin Dashboard Page
  *
@@ -412,88 +414,35 @@ final class ConnectPage
    * "Launch MotionKit" button for a "Download Connector" prompt until it's
    * installed.
    *
-   * The constant is the reliable signal (connector defines it on load). Fall
-   * back to is_plugin_active() only after ensuring it's loaded — it lives in
-   * wp-admin/includes/plugin.php and isn't always in scope on custom pages.
-   *
    * @return bool
    */
   private function is_connector_active(): bool
   {
-    if (defined('MOTIONKIT_CONNECTOR_LOADED')) {
-      return true;
-    }
-
-    if (!function_exists('is_plugin_active')) {
-      require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-
-    return is_plugin_active($this->connector_basename());
+    return PluginStatus::connector_is_active();
   }
 
   /**
-   * The connector's plugin basename among installed plugins. Matches the
-   * expected basename first, then any plugin whose folder is the connector
-   * slug (in case it was packaged under a differently-named top-level folder).
+   * The connector's plugin basename among installed plugins.
    *
-   * @return string Basename like "motionkit-connector/motionkit-connector.php",
-   *                or '' if the connector is not installed.
+   * @return string Basename like "motionkit-connector/motionkit-connector.php".
    */
   private function connector_basename(): string
   {
-    $expected = 'motionkit-connector/motionkit-connector.php';
-
-    if (!function_exists('get_plugins')) {
-      require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-
-    $all = get_plugins();
-
-    if (isset($all[$expected])) {
-      return $expected;
-    }
-
-    foreach (array_keys($all) as $basename) {
-      if (strpos($basename, 'motionkit-connector/') === 0) {
-        return $basename;
-      }
-    }
-
-    return $expected;
+    return PluginStatus::connector_basename();
   }
 
   /**
-   * Connector install state: 'active' | 'inactive' | 'missing'.
+   * Connector install state: 'active' | 'deactivated' | 'inactive'.
    *
-   *  - active:   plugin is running (nothing to prompt).
-   *  - inactive: installed on disk but not activated → offer Activate.
-   *  - missing:  not on disk → offer Download.
+   *  - active:      plugin is running (nothing to prompt).
+   *  - deactivated: installed on disk but not activated → offer Activate.
+   *  - inactive:    not on disk → offer Download.
    *
    * @return string
    */
   private function connector_install_state(): string
   {
-    if ($this->is_connector_active()) {
-      return 'active';
-    }
-
-    if (!function_exists('get_plugins')) {
-      require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-
-    $all = get_plugins();
-
-    $installed = isset($all['motionkit-connector/motionkit-connector.php']);
-    if (!$installed) {
-      foreach (array_keys($all) as $basename) {
-        if (strpos($basename, 'motionkit-connector/') === 0) {
-          $installed = true;
-          break;
-        }
-      }
-    }
-
-    return $installed ? 'inactive' : 'missing';
+    return PluginStatus::status(PluginStatus::CONNECTOR);
   }
 
   /**
@@ -584,9 +533,9 @@ final class ConnectPage
       return;
     }
 
-    $is_inactive = ($state === 'inactive');
+    $is_deactivated = ($state === PluginStatus::DEACTIVATED);
 
-    if ($is_inactive) {
+    if ($is_deactivated) {
       $cta_title = __('Activate the MotionKit Connector', 'motionkit');
       $cta_desc  = ($context === 'disconnected')
         ? __('The MotionKit Connector is installed but not active. Activate it to get the animation engine ready, then connect your account.', 'motionkit')
@@ -632,7 +581,7 @@ final class ConnectPage
              href="<?php echo esc_url($cta_href); ?>"
              <?php echo $cta_new_tab ? 'target="_blank" rel="noopener"' : ''; ?>>
             <?php echo esc_html($cta_label); ?>
-            <?php if ($is_inactive): ?>
+            <?php if ($is_deactivated): ?>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M5 12l5 5L20 6" stroke="currentColor"
                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
