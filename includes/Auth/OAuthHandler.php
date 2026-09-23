@@ -34,9 +34,10 @@ final class OAuthHandler
 
   public function init(): void
   {
-    // Priority 5, ahead of the connector's default-10 callback. ConnectPage::authorize_url() prefers this handler, so the state token for any connect started from that page lives in OUR option — but the connector's callback also fires on this page+code+state and, finding nothing in ITS transient, redirects with error=invalid_state and exits before we ever run. Going first means the handler that owns the state is the one that gets to answer.
-    add_action('admin_init', [$this, 'handle_oauth_callback'], 5);
+    // This plugin owns the whole connect flow; the connector only reads the token. Priority 1 because other plugins treat any wp-admin URL carrying code + state as their own OAuth callback and wp_die() on it (CrawlWP SEO's Yandex handler at priority 10), so this one must consume the callback and exit first.
+    add_action('admin_init', [$this, 'handle_oauth_callback'], 1);
     add_action('admin_init', [$this, 'handle_oauth_disconnect'], 5);
+    add_action('admin_init', [$this, 'handle_verify'], 5);
   }
 
   public static function is_connected(): bool
@@ -74,10 +75,12 @@ final class OAuthHandler
 
     // Parameter names are the editor's contract, not ours: src/pages/connect/AuthorizePage.jsx reads state, site, redirect_uri and response_type, and refuses to mint a code if any of the first three is missing. This used to send `return_url` with no `response_type`, so the authorize page showed its missing-parameters state and never redirected back with ?code — the plugin then stayed "Not Connected" forever with nothing logged.
     // rawurlencode because add_query_arg does NOT encode the values it is handed, and this one contains its own `&`. Unencoded, the `&tab=connect` split off as a top-level param of the authorize URL and redirect_uri arrived truncated to `...?page=motionkit-connect` — the editor then posted that truncated value to /connect/authorize, and the callback never carried the code back here.
+    // motionkit_state asks the editor to answer with motionkit_code / motionkit_state, which no other plugin claims; the bare `state` beside it is what an editor build without the rename still reads.
     $query_args = [
-      'site'          => home_url('/'),
-      'platform'      => 'wordpress',
-      'state'         => $state,
+      'site'            => home_url('/'),
+      'platform'        => 'wordpress',
+      'state'           => $state,
+      'motionkit_state' => $state,
       'response_type' => 'code',
       'redirect_uri'  => rawurlencode(self::callback_url()),
     ];
@@ -104,43 +107,24 @@ final class OAuthHandler
     if (!isset($_GET['page']) || $_GET['page'] !== 'motionkit-connect') {
       return;
     }
-    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- External OAuth callback verified via state token below
-    if (!isset($_GET['code']) || !isset($_GET['state'])) {
+    $code = self::read_callback_param('code');
+    $state = self::read_callback_param('state');
+    if ($code === '' || $state === '') {
       return;
     }
     if (!current_user_can('manage_options')) {
       return;
     }
 
-    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Validated via hash_equals against saved state token
-    $state = sanitize_text_field(wp_unslash($_GET['state']));
-    $stored = get_option(self::OPT_STATE_TOKEN, '');
+    $saved_state = self::stored_state();
 
-    // Both plugins share this key but not its shape: this plugin writes a bare string, the connector an array carrying its own expiry. Only a string is ours — casting unconditionally would turn the connector's array into the literal "Array", which matches no state and never reads as empty.
-    $saved_state = is_string($stored) ? $stored : '';
-
-    // Nothing stored means this connect was not started here — with both plugins active the connector's callback fires on the same page+code+state. Stand down rather than answering for it; the state is deliberately left in place so the handler that owns it can still match.
-    if ($saved_state === '') {
-      // A live array value is the connector's, so its own callback will answer.
-      if (is_array($stored) && !empty($stored['state'])
-        && (empty($stored['expires_at']) || time() <= (int) $stored['expires_at'])) {
-        return;
-      }
-
-      // Neither store holds a state, so no handler owns this callback. Both used to return here and the request fell through to a bare page render, which WordPress answers with "The link you followed has expired." — unrecoverable-looking for what is really an expired connector transient or a plugin activated mid-flow. Say so instead, so the Connect tab renders its invalid_state error and the user can retry.
+    // No usable state: it expired or the connect was started before an update. Falling through here let WordPress answer with "The link you followed has expired."; the Connect tab's invalid_state error tells the user to retry instead.
+    if ($saved_state === '' || !hash_equals($saved_state, $state)) {
       $this->redirect_with_notice(['error' => 'invalid_state']);
       return;
     }
 
-    // Consumed only once we know the callback is ours: deleting before the compare meant a connector-started connect burned this plugin's unrelated state on its way past, so the next genuine connect from here failed with invalid_state.
-    if ($state === '' || !hash_equals($saved_state, $state)) {
-      return;
-    }
-
     delete_option(self::OPT_STATE_TOKEN);
-
-    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth authorization code exchanged with SaaS token endpoint
-    $code = sanitize_text_field(wp_unslash($_GET['code']));
     $response = wp_remote_post(EditorEndpoint::url('connect/token'), [
       'timeout' => 15,
       // JSON, not an array body: WordPress form-encodes an array, and an editor build without a urlencoded parser answered that with a 500, leaving every site Not Connected. The connector already sends JSON.
@@ -185,7 +169,93 @@ final class OAuthHandler
       update_option(self::OPT_CONNECTED_EMAIL, sanitize_email((string) $body['email']));
     }
 
+    // The connector refreshes the license (and with it the update key) on this, instead of waiting up to 12 hours for its next scheduled check.
+    do_action('motionkit/oauth/connected');
+
     $this->redirect_with_notice(['connected' => '1']);
+  }
+
+  // "My Account": asks the editor whether this site's token is still live and reports it on the Connect tab (?verify=valid|invalid|error).
+  public function handle_verify(): void
+  {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- nonce verified below
+    if (!isset($_GET['page'], $_GET['motionkit_verify']) || $_GET['page'] !== 'motionkit-connect') {
+      return;
+    }
+    if (!current_user_can('manage_options')) {
+      return;
+    }
+
+    $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+    if (!wp_verify_nonce($nonce, 'motionkit_verify')) {
+      $this->redirect_with_notice(['error' => 'nonce_failed']);
+      return;
+    }
+
+    $token = self::readable_token();
+    if ($token === '') {
+      $this->redirect_with_notice(['verify' => 'error', 'reason' => 'no_token']);
+      return;
+    }
+
+    $response = wp_remote_post(EditorEndpoint::url('connect/validate'), [
+      'timeout' => 15,
+      'headers' => ['Content-Type' => 'application/json'],
+      'body'    => wp_json_encode([
+        'site'       => home_url(),
+        'token_hash' => hash('sha256', $token),
+      ]),
+    ]);
+
+    if (is_wp_error($response)) {
+      $this->redirect_with_notice(['verify' => 'error', 'reason' => 'server_unreachable']);
+      return;
+    }
+
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+    $this->redirect_with_notice(['verify' => !empty($body['valid']) ? 'valid' : 'invalid']);
+  }
+
+  // Namespaced spelling first, bare as the fallback an editor build without the rename still sends. CSRF for this callback is the server-issued state compared with hash_equals(), not a nonce.
+  private static function read_callback_param(string $name): string
+  {
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended
+    foreach (['motionkit_' . $name, $name] as $key) {
+      if (isset($_GET[$key]) && is_string($_GET[$key])) {
+        return sanitize_text_field(wp_unslash($_GET[$key]));
+      }
+    }
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+    return '';
+  }
+
+  // This plugin stores a bare string; an older connector build that ran the flow itself stored an array with an expiry, so a connect it started before the update still completes here.
+  private static function stored_state(): string
+  {
+    $stored = get_option(self::OPT_STATE_TOKEN, '');
+
+    if (is_string($stored)) {
+      return $stored;
+    }
+
+    if (is_array($stored) && !empty($stored['state'])
+      && (empty($stored['expires_at']) || time() <= (int) $stored['expires_at'])) {
+      return (string) $stored['state'];
+    }
+
+    return '';
+  }
+
+  // A token written by an older connector build is in its own cipher format, which only the connector can read; its reader tries this plugin's format first, so asking it covers both.
+  private static function readable_token(): string
+  {
+    if (class_exists('\MotionKitConnector\Auth\OAuthHandler')) {
+      $token = \MotionKitConnector\Auth\OAuthHandler::get_access_token();
+      return is_string($token) ? $token : '';
+    }
+
+    return self::get_access_token();
   }
 
   public function handle_oauth_disconnect(): void
@@ -206,7 +276,7 @@ final class OAuthHandler
       return;
     }
 
-    $token = self::get_access_token();
+    $token = self::readable_token();
     if ($token !== '') {
       wp_remote_post(EditorEndpoint::url('connect/revoke'), [
         'timeout' => 5,
@@ -222,6 +292,9 @@ final class OAuthHandler
     delete_option(self::OPT_ACCESS_TOKEN);
     delete_option(self::OPT_CONNECTED_AT);
     delete_option(self::OPT_CONNECTED_EMAIL);
+
+    // The connector clears its license state, update key and launch-token secrets on this.
+    do_action('motionkit/oauth/disconnected');
 
     $this->redirect_with_notice(['disconnected' => '1']);
   }

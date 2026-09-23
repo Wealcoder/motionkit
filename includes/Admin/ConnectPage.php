@@ -31,47 +31,20 @@ final class ConnectPage
 {
   // ─── Auth accessors ──────────────────────────────────────────
 
+  // The connect flow is this plugin's own (MotionKit\Auth\OAuthHandler); the connector only reads the token it stores.
   private static function is_connected(): bool
   {
-    if (class_exists('\MotionKit\Auth\OAuthHandler') && \MotionKit\Auth\OAuthHandler::is_connected()) {
-      return true;
-    }
-
-    return class_exists('\MotionKitConnector\Auth\OAuthHandler')
-      && \MotionKitConnector\Auth\OAuthHandler::is_connected();
+    return \MotionKit\Auth\OAuthHandler::is_connected();
   }
 
   private static function connection_info(): array
   {
-    if (class_exists('\MotionKit\Auth\OAuthHandler')) {
-      $info = \MotionKit\Auth\OAuthHandler::get_connection_info();
-      if ($info['connected']) {
-        return $info;
-      }
-    }
-
-    if (class_exists('\MotionKitConnector\Auth\OAuthHandler')) {
-      return \MotionKitConnector\Auth\OAuthHandler::get_connection_info();
-    }
-
-    return [
-      'connected'    => false,
-      'email'        => '',
-      'connected_at' => '',
-    ];
+    return \MotionKit\Auth\OAuthHandler::get_connection_info();
   }
 
   private static function authorize_url(bool $switch_account = false): string
   {
-    if (class_exists('\MotionKit\Auth\OAuthHandler')) {
-      return \MotionKit\Auth\OAuthHandler::get_authorize_url($switch_account);
-    }
-
-    if (class_exists('\MotionKitConnector\Auth\OAuthHandler')) {
-      return (new \MotionKitConnector\Auth\OAuthHandler())->get_authorize_url($switch_account);
-    }
-
-    return '#';
+    return \MotionKit\Auth\OAuthHandler::get_authorize_url($switch_account);
   }
 
   // The Tools tab is UI-only here: its data layer (list/delete AJAX + delete_one POST) is registered by the connector's AnimationDataTools, so the tab only renders when that class is present.
