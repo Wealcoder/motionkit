@@ -6,7 +6,7 @@
   "devDependencies": {
     "@babel/core": "^7.28.4",
     "@babel/preset-env": "^7.28.3",
-    "@wordpress/browserslist-config": "^2.7.0",
+    "@wordpress/browserslist-config": "^6.55.0",
     "@wordpress/scripts": "^27.9.0",
     "@wordpress/stylelint-config": "^20.0.2",
     "autoprefixer": "^10.4.20",
