@@ -107,20 +107,22 @@ Nothing is deleted. Your saved animations stay on your site and keep running —
 
 == External services ==
 
-This plugin connects your WordPress site to **MotionKit** (editor.motionkit.io), a hosted service that provides the visual animation editor. Creating and editing animations requires a free MotionKit account.
+All JavaScript, CSS, animations runtime (native WAAPI engine), icons, and styles are bundled 100% locally within this plugin. This plugin does NOT offload or load any scripts, stylesheets, fonts, or media files from remote CDNs or third-party servers.
 
-This plugin makes no automatic background requests of its own — it renders links and authorization redirects when initiated by an administrator:
+This plugin interfaces with **MotionKit** (editor.motionkit.io), a hosted Software-as-a-Service (SaaS) that provides the visual drag-and-drop animation editor. Creating and editing animations requires an account at MotionKit (https://motionkit.io).
 
-* **"Launch MotionKit" and "Build Animation" links** (admin page, admin bar, post/term rows) open editor.motionkit.io. These links include your site's home URL, the URL of the page being edited, and a short-lived signed session token, so the editor can load a live preview of that page.
-* **The "Connect" button** sends your browser to editor.motionkit.io to authorize the connection; the link includes your site's home URL and a one-time security token.
-* **External Extension link** (optional) points to motionkit.io for users who choose to install the optional MotionKit Pro extension; no site data is sent.
+= What external requests are made and when? =
 
-Your posts, pages, and saved animation data are never sent to Motionkit — animations you build in the editor are saved back to your own site's database.
+1. **OAuth Authentication (Admin-only):** When an administrator clicks "Connect" on the MotionKit admin settings screen, the plugin performs an OAuth handshake with `https://editor.motionkit.io/connect/token` to exchange an authorization code for a session token. It sends the site's home URL and temporary authorization code. When manually checking connection or disconnecting, it calls `https://editor.motionkit.io/connect/validate` or `https://editor.motionkit.io/connect/revoke`.
+2. **Visual Editor Launch (Browser Redirect):** When an administrator clicks "Launch MotionKit" or "Build Animation", the browser opens `https://editor.motionkit.io/` carrying the site URL and a signed, short-lived session token so the editor can load a live preview of the page inside an iframe.
+3. **Optional Extension Link:** If the administrator clicks the extension CTA, it navigates to the landing page at `https://motionkit.io`. No site data is sent.
 
-By connecting your site to Motionkit, you agree to Motionkit's Terms of Service and Privacy Policy, linked below.
+No user tracking, telemetry, or visitor requests are made. Your posts, pages, and saved animation data are stored entirely on your own site's local WordPress database.
 
-* Motionkit Terms of Service: https://motionkit.io/terms-of-use/
-* Motionkit Privacy Policy: https://motionkit.io/privacy/
+By connecting your site to MotionKit, you agree to MotionKit's Terms of Service and Privacy Policy:
+
+* MotionKit Terms of Service: https://motionkit.io/terms-of-use/
+* MotionKit Privacy Policy: https://motionkit.io/privacy/
 
 == Source Code ==
 
