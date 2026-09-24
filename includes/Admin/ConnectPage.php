@@ -323,7 +323,7 @@ final class ConnectPage
               );
               ?>
               <a href="<?php echo esc_url($tab_url); ?>"
-                 class="motionkit-sidebar-link <?php echo $active_tab === $tab_key ? 'motionkit-sidebar-link--active' : ''; ?>">
+                 class="motionkit-sidebar-link <?php echo esc_attr($active_tab === $tab_key ? 'motionkit-sidebar-link--active' : ''); ?>">
                 <span class="motionkit-sidebar-icon"><?php echo wp_kses($tab['icon'], []); ?></span>
                 <?php echo esc_html($tab['label']); ?>
               </a>
@@ -540,7 +540,7 @@ final class ConnectPage
         <div class="motionkit-connector-cta__action">
           <a class="motionkit-connector-cta__btn"
              href="<?php echo esc_url($cta_href); ?>"
-             <?php echo $cta_new_tab ? 'target="_blank" rel="noopener"' : ''; ?>>
+             <?php if ($cta_new_tab): ?>target="_blank" rel="noopener"<?php endif; ?>>
             <?php echo esc_html($cta_label); ?>
             <?php if ($is_deactivated): ?>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
