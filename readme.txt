@@ -124,10 +124,22 @@ By connecting your site to MotionKit, you agree to MotionKit's Terms of Service 
 * MotionKit Terms of Service: https://motionkit.io/terms-of-use/
 * MotionKit Privacy Policy: https://motionkit.io/privacy/
 
-== Source Code ==
+== Source Code and Build Process ==
 
-The source code and development repository for this plugin is available on GitHub:
+The unminified source files for all compiled JavaScript and CSS assets located in `assets/build/` are included directly in the plugin package inside the `src/` directory.
+
+The development repository is available on GitHub:
 https://github.com/Wealcoder/motionkit
+
+= How to build from source =
+
+1. Ensure Node.js (version 18 or greater) and npm are installed.
+2. In the plugin root directory, install dependencies:
+   `npm install`
+3. Run the build script:
+   `npm run build:wp`
+
+This uses standard `@wordpress/scripts` and `webpack.config.js` to compile the source code from `src/` into the production bundles in `assets/build/`.
 
 == Screenshots ==
 
