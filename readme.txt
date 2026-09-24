@@ -107,20 +107,20 @@ Nothing is deleted. Your saved animations stay on your site and keep running —
 
 == External services ==
 
-This plugin is the WordPress dashboard for **Motionkit** (editor.motionkit.io), a hosted service that provides the visual animation editor. Using it requires a Motionkit account and the free Motionkit Connector companion plugin.
+This plugin connects your WordPress site to **MotionKit** (editor.motionkit.io), a hosted service that provides the visual animation editor. Creating and editing animations requires a free MotionKit account.
 
-This plugin makes no remote requests of its own — it renders links that open Motionkit in your browser:
+This plugin makes no automatic background requests of its own — it renders links and authorization redirects when initiated by an administrator:
 
-* **"Launch Motionkit" and "Build Animation" links** (admin page, admin bar, post/term rows) open editor.motionkit.io. These links include your site's home URL, the URL of the page being edited, and a short-lived signed session token, so the editor can load a live preview of that page.
-* **The "Connect" button** sends your browser to editor.motionkit.io to authorize the connection; the link includes your site's home URL and a one-time security token. The authorization itself, and every server-side call that follows, is handled by the Connector plugin.
-* **The Connector download link** points to motionkit.io (a Motionkit-operated domain). Clicking it is a normal web page visit to get the companion plugin; no site data is sent.
+* **"Launch MotionKit" and "Build Animation" links** (admin page, admin bar, post/term rows) open editor.motionkit.io. These links include your site's home URL, the URL of the page being edited, and a short-lived signed session token, so the editor can load a live preview of that page.
+* **The "Connect" button** sends your browser to editor.motionkit.io to authorize the connection; the link includes your site's home URL and a one-time security token.
+* **External Extension link** (optional) points to motionkit.io for users who choose to install the optional MotionKit Pro extension; no site data is sent.
 
 Your posts, pages, and saved animation data are never sent to Motionkit — animations you build in the editor are saved back to your own site's database.
 
 By connecting your site to Motionkit, you agree to Motionkit's Terms of Service and Privacy Policy, linked below.
 
-* Motionkit Terms of Service: https://stg.motionkit.io/terms-of-use/
-* Motionkit Privacy Policy: https://stg.motionkit.io/privacy/
+* Motionkit Terms of Service: https://motionkit.io/terms-of-use/
+* Motionkit Privacy Policy: https://motionkit.io/privacy/
 
 == Source Code ==
 
@@ -135,6 +135,15 @@ https://github.com/Wealcoder/motionkit
 4. The Tools tab — review and manage the animation data saved on your site
 
 == Changelog ==
+
+= 1.0.3 =
+* Improve: Native WAAPI engine performance optimizations and compatibility with WordPress 7.1.
+* Improve: Cleaned admin notice handling to respect WordPress core notifications.
+* Fix: Updated external service documentation and live legal terms URLs.
+
+= 1.0.2 =
+* Fix: Active animations table data handling and search filtering.
+* Improve: Hardened authorization token security and sanitization.
 
 = 1.0.1 =
 * Fix: Free animations now play on the front page, archives, search and 404 — these are stored under their own page type, and the frontend was looking them up by post type.
@@ -151,6 +160,9 @@ https://github.com/Wealcoder/motionkit
 For support, feature requests, or bug reports, please visit https://motionkit.io or the plugin's support forum on WordPress.org.
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+* Performance improvements, security hardening, and compatibility updates for WordPress 7.1.
 
 = 1.0.1 =
 * Fixes free animations not playing on the front page and other non-singular pages.

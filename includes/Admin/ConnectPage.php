@@ -57,23 +57,6 @@ final class ConnectPage
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_styles']);
     add_action('admin_enqueue_scripts', [$this, 'enqueue_menu_icon_style']);
     add_action('admin_init', [$this, 'handle_connector_activate']);
-    add_action('current_screen', [$this, 'suppress_foreign_admin_notices']);
-  }
-
-  /**
-   * Keep the MotionKit admin page free of unrelated core/theme/plugin
-   * notices (update nags, theme recommendations, survey banners, etc.)
-   * so it never looks broken or cluttered to a first-time connector.
-   */
-  public function suppress_foreign_admin_notices(): void
-  {
-    $screen = get_current_screen();
-    if (!$screen || $screen->id !== 'toplevel_page_motionkit-connect') {
-      return;
-    }
-
-    remove_all_actions('admin_notices');
-    remove_all_actions('all_admin_notices');
   }
 
   /**
@@ -562,24 +545,24 @@ final class ConnectPage
     if ($is_inactive) {
       $cta_title = __('Activate the MotionKit Connector', 'motionkit');
       $cta_desc  = ($context === 'disconnected')
-        ? __('The MotionKit Connector is installed but not active. Activate it to get the animation engine ready, then connect your account.', 'motionkit')
-        : __('Your account is connected and the MotionKit Connector is installed — just activate it to run your animations, page transitions, and smooth scroll on the live site.', 'motionkit');
+        ? __('The MotionKit Connector is installed but not active. Activate it to get the hybrid animation engine ready, then connect your account.', 'motionkit')
+        : __('Your account is connected and the MotionKit Connector is installed — activate it to enable hybrid GSAP animations, page transitions, and smooth scroll.', 'motionkit');
       $cta_label   = __('Activate Connector', 'motionkit');
       $cta_href    = $this->connector_activate_url();
       $cta_new_tab = false;
     } else {
-      $cta_title = __('Install the MotionKit Connector', 'motionkit');
+      $cta_title = __('Enhance with the MotionKit Extension', 'motionkit');
       $cta_desc  = ($context === 'disconnected')
-        ? __('MotionKit needs its Connector engine to run animations, page transitions, and smooth scroll on your live site. Install it now, then connect your account below.', 'motionkit')
-        : __('Your account is connected. Install the MotionKit Connector engine to run your animations, page transitions, and smooth scroll on the live site — then the editor launches from here.', 'motionkit');
-      $cta_label   = __('Download Connector', 'motionkit');
+        ? __('Install the optional MotionKit Extension to unlock Pro features like smooth scroll, page transitions, and the hybrid GSAP engine.', 'motionkit')
+        : __('Unlock Pro features like smooth scroll, page transitions, and the hybrid GSAP engine on your live site.', 'motionkit');
+      $cta_label   = __('Get Extension', 'motionkit');
       $cta_href    = $this->connector_download_url();
       $cta_new_tab = ('#' !== $cta_href);
     }
 
     $badge = ($context === 'disconnected')
-      ? __('Recommended first step', 'motionkit')
-      : __('One step left', 'motionkit');
+      ? __('Pro Extension', 'motionkit')
+      : __('Pro Extension', 'motionkit');
     ?>
     <div class="motionkit-connector-cta">
       <div class="motionkit-connector-cta__glow" aria-hidden="true"></div>
@@ -660,12 +643,12 @@ final class ConnectPage
     // Every flag below asserts that an action succeeded, so all of them stay
     // behind the nonce — reaching this point with an invalid nonce means we
     // are here solely to render $error above.
-    $just_connected = $notice_nonce_valid && isset($_GET['connected']) && is_string(sanitize_text_field(wp_unslash($_GET['connected'])));
-    $just_disconnected = $notice_nonce_valid && isset($_GET['disconnected']) && is_string(sanitize_text_field(wp_unslash($_GET['disconnected'])));
+    $just_connected = $notice_nonce_valid && !empty($_GET['connected']);
+    $just_disconnected = $notice_nonce_valid && !empty($_GET['disconnected']);
     $license_refresh = $notice_nonce_valid && isset($_GET['license_refresh']) ? sanitize_key(wp_unslash($_GET['license_refresh'])) : '';
     $refresh_reason = $notice_nonce_valid && isset($_GET['reason']) ? sanitize_text_field(wp_unslash($_GET['reason'])) : '';
-    $tools_deleted = $notice_nonce_valid && isset($_GET['tools_deleted']) ? (int) $_GET['tools_deleted'] : 0;
-    $tools_all_deleted = $notice_nonce_valid && isset($_GET['tools_all_deleted']) ? (int) $_GET['tools_all_deleted'] : 0;
+    $tools_deleted = $notice_nonce_valid && isset($_GET['tools_deleted']) ? absint(wp_unslash($_GET['tools_deleted'])) : 0;
+    $tools_all_deleted = $notice_nonce_valid && isset($_GET['tools_all_deleted']) ? absint(wp_unslash($_GET['tools_all_deleted'])) : 0;
     $verify = $notice_nonce_valid && isset($_GET['verify']) ? sanitize_text_field(wp_unslash($_GET['verify'])) : '';
     $verify_reason = $notice_nonce_valid && isset($_GET['reason']) ? sanitize_text_field(wp_unslash($_GET['reason'])) : '';
 

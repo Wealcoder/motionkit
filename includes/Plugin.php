@@ -471,9 +471,10 @@ final class Plugin
     private function is_share_preview(): bool
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        return isset($_GET[ShareLinks::QUERY_PARAM])
-            && is_string($_GET[ShareLinks::QUERY_PARAM])
-            && $_GET[ShareLinks::QUERY_PARAM] !== '';
+        $key = isset($_GET['motionkit_share']) ? 'motionkit_share' : ShareLinks::QUERY_PARAM;
+        return isset($_GET[$key])
+            && is_string($_GET[$key])
+            && $_GET[$key] !== '';
     }
 
     /**
@@ -531,7 +532,8 @@ final class Plugin
         }
 
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        $token = sanitize_text_field(wp_unslash($_GET[ShareLinks::QUERY_PARAM]));
+        $key = isset($_GET['motionkit_share']) ? 'motionkit_share' : ShareLinks::QUERY_PARAM;
+        $token = isset($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : '';
 
         return $this->share_context_cache = ShareLinks::resolve($page_type_config, $token);
     }
