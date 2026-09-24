@@ -16,7 +16,7 @@
     "glob": "^11.0.3",
     "jsdom": "^29.1.1",
     "po-csv": "github:marek-saji/po-csv",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.28",
     "sass": "^1.36.0",
     "shelljs": ">=0.8.5",
     "tailwindcss": "^3.4.15"
