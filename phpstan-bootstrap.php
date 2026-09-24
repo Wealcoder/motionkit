@@ -1,4 +1,8 @@
 <?php
+// Prevent direct access.
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 define('MOTIONKIT_VERSION', '1.0.0');
 define('MOTIONKIT_PLUGIN_FILE', __DIR__ . '/motionkit.php');

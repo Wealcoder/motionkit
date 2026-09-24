@@ -141,8 +141,6 @@
 		-->
 		<exclude name="WordPress.PHP.NoSilencedErrors"/>
 
-		<!-- Helper::log() is already gated behind a WP_DEBUG check — the standard WP debug-log pattern. -->
-		<exclude name="WordPress.PHP.DevelopmentFunctions.error_log_error_log"/>
 
 		<!--
 		base64_encode/decode usage here is all verified benign, not

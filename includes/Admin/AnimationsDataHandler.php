@@ -255,6 +255,7 @@ final class AnimationsDataHandler
    *
    * @return array<int, array>
    */
+  // phpcs:disable WordPress.DB.DirectDatabaseQuery -- admin animations tool queries require wildcard postmeta/termmeta search
   public function collect_all_animations(): array
   {
     global $wpdb;
@@ -675,6 +676,7 @@ final class AnimationsDataHandler
 
     return false;
   }
+  // phpcs:enable WordPress.DB.DirectDatabaseQuery
 
   private function remove_item_from_envelope(array &$envelope, string $target_id): bool
   {

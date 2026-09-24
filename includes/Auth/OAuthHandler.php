@@ -140,10 +140,6 @@ final class OAuthHandler
     ]);
 
     if (is_wp_error($response)) {
-      // The transport reason (DNS, refused connection, TLS) is the whole diagnosis and is otherwise thrown away — 'token_exchange_failed' alone cannot distinguish "could not reach the editor" from "the editor said no".
-      if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log('[motionkit] token exchange transport error: ' . $response->get_error_message());
-      }
       $this->redirect_with_notice(['error' => 'token_exchange_failed']);
       return;
     }
@@ -153,9 +149,6 @@ final class OAuthHandler
     $body = json_decode($raw_body, true);
 
     if ($code_res !== 200 || !is_array($body) || empty($body['access_token'])) {
-      if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log('[motionkit] token exchange HTTP ' . $code_res . ': ' . substr((string) $raw_body, 0, 500));
-      }
       $err = is_array($body) && !empty($body['error']) ? $body['error'] : 'token_exchange_failed';
       $this->redirect_with_notice(['error' => sanitize_key((string) $err)]);
       return;

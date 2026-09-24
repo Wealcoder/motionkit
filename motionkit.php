@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Plugin Name: Motionkit
+ * Plugin Name: MotionKit
  * Plugin URI: https://motionkit.io
  * Description: Connect WordPress with MotionKit to create, preview, publish, and manage visual website animations from the MotionKit editor.
  * Version: 1.0.0

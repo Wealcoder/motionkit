@@ -1,4 +1,4 @@
-=== MotionKit – Visual Animation Connector ===
+=== MotionKit ===
 Contributors: wealcoder
 Tags: animation, scroll animation, visual editor
 Requires at least: 6.8

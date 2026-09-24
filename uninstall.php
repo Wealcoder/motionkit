@@ -16,15 +16,3 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
   exit;
 }
 
-$motionkit_options = [
-  'motionkit_options',
-  'motionkit_version',
-  'motionkit_creation_date',
-];
-
-foreach ($motionkit_options as $motionkit_option) {
-  delete_option($motionkit_option);
-}
-
-// Per-user "dismissed the permalink notice" flag, across all users.
-delete_metadata('user', 0, 'motionkit_dismissed_permalink_notice', '', true);

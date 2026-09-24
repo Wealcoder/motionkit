@@ -470,11 +470,13 @@ final class Plugin
      */
     private function is_share_preview(): bool
     {
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- public share link read-only query param
         $key = isset($_GET['motionkit_share']) ? 'motionkit_share' : ShareLinks::QUERY_PARAM;
-        return isset($_GET[$key])
+        $is_preview = isset($_GET[$key])
             && is_string($_GET[$key])
             && $_GET[$key] !== '';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
+        return $is_preview;
     }
 
     /**
@@ -492,9 +494,11 @@ final class Plugin
         }
 
         // The constant is what LiteSpeed, WP Rocket, W3TC and friends look for; it has to be set before they decide to buffer the response.
+        // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- standard WordPress core caching constant
         if (!defined('DONOTCACHEPAGE')) {
             define('DONOTCACHEPAGE', true);
         }
+        // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound
 
         add_action('send_headers', [$this, 'send_share_nocache_headers']);
     }
@@ -531,9 +535,10 @@ final class Plugin
             return $this->share_context_cache = null;
         }
 
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- public share link read-only token
         $key = isset($_GET['motionkit_share']) ? 'motionkit_share' : ShareLinks::QUERY_PARAM;
         $token = isset($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
         return $this->share_context_cache = ShareLinks::resolve($page_type_config, $token);
     }
