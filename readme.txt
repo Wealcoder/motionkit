@@ -1,10 +1,10 @@
 === MotionKit – Visual Animation Connector ===
 Contributors: wealcoder
 Tags: animation, scroll animation, visual editor
-Requires at least: 6.7
+Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -136,24 +136,18 @@ https://github.com/Wealcoder/motionkit
 
 == Changelog ==
 
-= 1.0.1 =
+= 1.0.0 =
 * Fix: Free animations now play on the front page, archives, search and 404 — these are stored under their own page type, and the frontend was looking them up by post type.
 * Fix: Scroll animations follow scroll position smoothly instead of stepping.
 * Fix: A scroll trigger's own element is honoured when one is set.
 * Fix: Editing a scroll trigger's Start, End, Play Once or Scrub now takes effect.
 * Improve: Free animations start at the viewport centre by default.
 
-= 1.0.0 =
-* Initial release
-
 == Support ==
 
 For support, feature requests, or bug reports, please visit https://motionkit.io or the plugin's support forum on WordPress.org.
 
 == Upgrade Notice ==
-
-= 1.0.1 =
-* Fixes free animations not playing on the front page and other non-singular pages.
 
 = 1.0.0 =
 * Initial release. No upgrade needed.
