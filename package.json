@@ -13,7 +13,7 @@
     "browserslist": "^4.13.0",
     "cli": "^1.0.1",
     "eslint": "^8.22.0",
-    "glob": "^11.0.3",
+    "glob": "^13.0.6",
     "jsdom": "^29.1.1",
     "po-csv": "github:marek-saji/po-csv",
     "postcss": "^8.4.49",
