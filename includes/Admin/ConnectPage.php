@@ -102,7 +102,7 @@ final class ConnectPage
       return;
     }
 
-    $version = defined('MOTIONKIT_VERSION') ? MOTIONKIT_VERSION : '1.0.0';
+    $version = time();
 
     wp_enqueue_style(
       'motionkit-admin',
@@ -167,7 +167,7 @@ final class ConnectPage
         'motionkit-admin-tools',
         plugins_url('assets/build/admin-tools.js', MOTIONKIT_PLUGIN_FILE),
         [],
-        $version,
+        time(),
         true
       );
 
@@ -220,7 +220,7 @@ final class ConnectPage
    */
   public function enqueue_menu_icon_style(): void
   {
-    $version = defined('MOTIONKIT_VERSION') ? MOTIONKIT_VERSION : '1.0.0';
+    $version = time();
 
     wp_enqueue_style(
       'motionkit-admin-menu-icon',
@@ -380,7 +380,7 @@ final class ConnectPage
   /**
    * The connector's plugin basename among installed plugins.
    *
-   * @return string Basename like "motionkit-connector/motionkit-connector.php".
+   * @return string Basename like "motionkit-with-gsap/motionkit-with-gsap.php".
    */
   private function connector_basename(): string
   {
@@ -505,18 +505,18 @@ final class ConnectPage
       $cta_href    = $this->connector_activate_url();
       $cta_new_tab = false;
     } else {
-      $cta_title = __('Enhance with the MotionKit Extension', 'motionkit');
+      $cta_title = __('Enhance with the MotionKit Connector', 'motionkit');
       $cta_desc  = ($context === 'disconnected')
-        ? __('Install the optional MotionKit Extension to unlock Pro features like smooth scroll, page transitions, and the hybrid GSAP engine.', 'motionkit')
+        ? __('Install the optional MotionKit Connector to unlock Pro features like smooth scroll, page transitions, and the hybrid GSAP engine.', 'motionkit')
         : __('Unlock Pro features like smooth scroll, page transitions, and the hybrid GSAP engine on your live site.', 'motionkit');
-      $cta_label   = __('Get Extension', 'motionkit');
+      $cta_label   = __('Get Connector', 'motionkit');
       $cta_href    = $this->connector_download_url();
       $cta_new_tab = ('#' !== $cta_href);
     }
 
     $badge = ($context === 'disconnected')
-      ? __('Pro Extension', 'motionkit')
-      : __('Pro Extension', 'motionkit');
+      ? __('Pro Connector', 'motionkit')
+      : __('Pro Connector', 'motionkit');
     ?>
     <div class="motionkit-connector-cta">
       <div class="motionkit-connector-cta__glow" aria-hidden="true"></div>

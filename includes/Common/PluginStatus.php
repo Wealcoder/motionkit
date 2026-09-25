@@ -51,8 +51,8 @@ final class PluginStatus
       'version'  => 'MOTIONKIT_VERSION',
     ],
     self::CONNECTOR => [
-      'dir'      => 'motionkit-connector',
-      'basename' => 'motionkit-connector/motionkit-connector.php',
+      'dir'      => 'motionkit-with-gsap',
+      'basename' => 'motionkit-with-gsap/motionkit-with-gsap.php',
       'loaded'   => 'MOTIONKIT_CONNECTOR_LOADED',
       'version'  => 'MOTIONKIT_CONNECTOR_VERSION',
     ],
@@ -159,7 +159,7 @@ final class PluginStatus
    * One plugin's basename among installed plugins, empty when it is not installed.
    *
    * @param string $key One of the CORE / CONNECTOR constants.
-   * @return string Basename like "motionkit-connector/motionkit-connector.php".
+   * @return string Basename like "motionkit-with-gsap/motionkit-with-gsap.php".
    */
   public static function basename(string $key): string
   {

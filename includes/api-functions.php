@@ -28,7 +28,7 @@ if (!function_exists('motionkit_is_scroll_smoother_active')) {
    *
    * @since 1.0.0
    *
-   * @return bool True when MotionKit or MotionKit Extension owns the page smoother right now.
+   * @return bool True when MotionKit or MotionKit Connector owns the page smoother right now.
    */
   function motionkit_is_scroll_smoother_active(): bool
   {
