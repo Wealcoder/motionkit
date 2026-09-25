@@ -98,7 +98,10 @@ final class PluginStatus
       return self::INACTIVE;
     }
 
-    if (defined($plugin['loaded'])) {
+    if (
+      defined($plugin['loaded']) ||
+      ($key === self::CONNECTOR && (defined('MOTIONKIT_CONNECTOR_LOADED') || defined('MOTIONKIT_EXTENSION_LOADED')))
+    ) {
       return self::ACTIVE;
     }
 
@@ -125,7 +128,11 @@ final class PluginStatus
       return false;
     }
 
-    return defined($plugin['loaded']) || self::basename($key) !== '';
+    return (
+      defined($plugin['loaded']) ||
+      ($key === self::CONNECTOR && (defined('MOTIONKIT_CONNECTOR_LOADED') || defined('MOTIONKIT_EXTENSION_LOADED'))) ||
+      self::basename($key) !== ''
+    );
   }
 
   /**
@@ -143,6 +150,10 @@ final class PluginStatus
 
     if (defined($plugin['version'])) {
       return (string) constant($plugin['version']);
+    }
+
+    if ($key === self::CONNECTOR && defined('MOTIONKIT_EXTENSION_VERSION')) {
+      return (string) constant('MOTIONKIT_EXTENSION_VERSION');
     }
 
     $basename = self::basename($key);
@@ -176,9 +187,15 @@ final class PluginStatus
       return $plugin['basename'];
     }
 
-    foreach (array_keys($all) as $basename) {
-      if (strpos($basename, $plugin['dir'] . '/') === 0) {
-        return $basename;
+    $dirs = $key === self::CONNECTOR
+      ? ['motionkit-with-gsap', 'motionkit-connector', 'motionkit-extension']
+      : [$plugin['dir']];
+
+    foreach (array_keys($all) as $bname) {
+      foreach ($dirs as $dir) {
+        if (strpos($bname, $dir . '/') === 0) {
+          return $bname;
+        }
       }
     }
 
