@@ -98,7 +98,15 @@ final class OAuthHandler
     if (!is_string($stored) || $stored === '') {
       return '';
     }
-    return self::decrypt($stored);
+
+    $token = self::decrypt($stored);
+
+    // Anything this plugin can still read but did not write in the shared format is rewritten once, here rather than in decrypt() so a read path stays a read path. Without it a site connected before the formats converged would keep a token only this plugin can open, and the connector would report it as not connected forever.
+    if ($token !== '' && strpos($stored, 'v2:') !== 0) {
+      update_option(self::OPT_ACCESS_TOKEN, self::encrypt($token));
+    }
+
+    return $token;
   }
 
   public function handle_oauth_callback(): void
@@ -306,33 +314,94 @@ final class OAuthHandler
     exit;
   }
 
-  private static function encrypt(string $plain): string
+  private static function encrypt(string $value): string
   {
-    $key = hash('sha256', wp_salt('auth'), true);
-    $iv = openssl_random_pseudo_bytes(16);
-    $cipher = openssl_encrypt($plain, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
-    $hmac = hash_hmac('sha256', $iv . $cipher, $key, true);
-    return base64_encode($iv . $hmac . $cipher);
+    $key = self::get_encryption_key();
+    $iv = random_bytes(16);
+    $ciphertext = openssl_encrypt($value, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+
+    // Encrypt-then-MAC: sign IV+ciphertext so an attacker with DB-write access can't bit-flip the stored token undetected; the 'v2:' prefix keeps pre-MAC values decryptable via the legacy branch below.
+    $mac = hash_hmac('sha256', $iv . $ciphertext, $key, true);
+
+    return 'v2:' . base64_encode($mac . $iv . $ciphertext);
   }
 
-  private static function decrypt(string $encoded): string
+  // Reads every shape this option has ever held, in the same order the connector reads them, because both plugins read and write motionkit_access_token and a token either one stores has to be usable by the other.
+  private static function decrypt(string $encrypted): string
   {
-    $data = base64_decode($encoded, true);
-    if ($data === false || strlen($data) < 48) {
+    $key = self::get_encryption_key();
+
+    if (strpos($encrypted, 'v2:') === 0) {
+      // Strict mode so malformed base64 fails here instead of silently decoding garbage.
+      $data = base64_decode(substr($encrypted, 3), true);
+      // 32-byte MAC + 16-byte IV + at least one cipher block.
+      if ($data === false || strlen($data) < 49) {
+        return '';
+      }
+
+      $mac = substr($data, 0, 32);
+      $iv = substr($data, 32, 16);
+      $ciphertext = substr($data, 48);
+
+      if (!hash_equals(hash_hmac('sha256', $iv . $ciphertext, $key, true), $mac)) {
+        return '';
+      }
+
+      $decrypted = openssl_decrypt($ciphertext, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+
+      return is_string($decrypted) ? $decrypted : '';
+    }
+
+    $data = base64_decode($encrypted, true);
+
+    if ($data === false) {
       return '';
     }
 
-    $key = hash('sha256', wp_salt('auth'), true);
+    // What this plugin itself wrote before it adopted the connector's format: a different key, and the MAC after the IV rather than before it. Tried ahead of the legacy branch because that one has no integrity tag and would turn this into nonsense instead of refusing it.
+    if (strlen($data) >= 49) {
+      $own_key = hash('sha256', wp_salt('auth'), true);
+      $own_iv = substr($data, 0, 16);
+      $own_mac = substr($data, 16, 32);
+      $own_ciphertext = substr($data, 48);
+
+      if (hash_equals(hash_hmac('sha256', $own_iv . $own_ciphertext, $own_key, true), $own_mac)) {
+        $decrypted = openssl_decrypt($own_ciphertext, 'aes-256-cbc', $own_key, OPENSSL_RAW_DATA, $own_iv);
+
+        return is_string($decrypted) ? $decrypted : '';
+      }
+    }
+
+    // Legacy (pre-MAC) format: IV + ciphertext, no integrity tag. Still accepted so existing connections survive the upgrade.
+    if (strlen($data) < 17) {
+      return '';
+    }
+
     $iv = substr($data, 0, 16);
-    $hmac = substr($data, 16, 32);
-    $cipher = substr($data, 48);
+    $ciphertext = substr($data, 16);
 
-    $calculated = hash_hmac('sha256', $iv . $cipher, $key, true);
-    if (!hash_equals($hmac, $calculated)) {
-      return '';
+    $decrypted = openssl_decrypt($ciphertext, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+
+    return is_string($decrypted) ? $decrypted : '';
+  }
+
+  // Derived exactly as the connector derives it, down to the fallback option name: the two plugins share motionkit_access_token, so a key that differed by one byte would leave each unable to read what the other stored.
+  private static function get_encryption_key(): string
+  {
+    // WordPress's own salts, or a per-site random secret persisted once when a site lacks them — never a hard-coded literal, which would make every such site's stored token decryptable with a known key.
+    $auth   = defined('AUTH_KEY') && AUTH_KEY !== '' ? AUTH_KEY : '';
+    $secure = defined('SECURE_AUTH_KEY') && SECURE_AUTH_KEY !== '' ? SECURE_AUTH_KEY : '';
+
+    if ($auth === '' || $secure === '') {
+      $fallback = get_option('motionkit_enc_fallback_key', '');
+      if (!is_string($fallback) || $fallback === '') {
+        $fallback = bin2hex(random_bytes(32));
+        update_option('motionkit_enc_fallback_key', $fallback, false);
+      }
+      $auth   = $auth !== '' ? $auth : $fallback;
+      $secure = $secure !== '' ? $secure : strrev($fallback);
     }
 
-    $decrypted = openssl_decrypt($cipher, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
-    return is_string($decrypted) ? $decrypted : '';
+    return hash('sha256', $auth . $secure, true);
   }
 }
