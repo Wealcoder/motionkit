@@ -51,8 +51,8 @@ final class PluginStatus
       'version'  => 'MOTIONKIT_VERSION',
     ],
     self::CONNECTOR => [
-      'dir'      => 'motionkit-connector',
-      'basename' => 'motionkit-connector/motionkit-connector.php',
+      'dir'      => 'motionkit-with-gsap',
+      'basename' => 'motionkit-with-gsap/motionkit-with-gsap.php',
       'loaded'   => 'MOTIONKIT_CONNECTOR_LOADED',
       'version'  => 'MOTIONKIT_CONNECTOR_VERSION',
     ],
@@ -98,7 +98,10 @@ final class PluginStatus
       return self::INACTIVE;
     }
 
-    if (defined($plugin['loaded'])) {
+    if (
+      defined($plugin['loaded']) ||
+      ($key === self::CONNECTOR && (defined('MOTIONKIT_CONNECTOR_LOADED') || defined('MOTIONKIT_EXTENSION_LOADED')))
+    ) {
       return self::ACTIVE;
     }
 
@@ -125,7 +128,11 @@ final class PluginStatus
       return false;
     }
 
-    return defined($plugin['loaded']) || self::basename($key) !== '';
+    return (
+      defined($plugin['loaded']) ||
+      ($key === self::CONNECTOR && (defined('MOTIONKIT_CONNECTOR_LOADED') || defined('MOTIONKIT_EXTENSION_LOADED'))) ||
+      self::basename($key) !== ''
+    );
   }
 
   /**
@@ -145,6 +152,10 @@ final class PluginStatus
       return (string) constant($plugin['version']);
     }
 
+    if ($key === self::CONNECTOR && defined('MOTIONKIT_EXTENSION_VERSION')) {
+      return (string) constant('MOTIONKIT_EXTENSION_VERSION');
+    }
+
     $basename = self::basename($key);
     if ($basename === '') {
       return '';
@@ -159,7 +170,7 @@ final class PluginStatus
    * One plugin's basename among installed plugins, empty when it is not installed.
    *
    * @param string $key One of the CORE / CONNECTOR constants.
-   * @return string Basename like "motionkit-connector/motionkit-connector.php".
+   * @return string Basename like "motionkit-with-gsap/motionkit-with-gsap.php".
    */
   public static function basename(string $key): string
   {
@@ -176,9 +187,15 @@ final class PluginStatus
       return $plugin['basename'];
     }
 
-    foreach (array_keys($all) as $basename) {
-      if (strpos($basename, $plugin['dir'] . '/') === 0) {
-        return $basename;
+    $dirs = $key === self::CONNECTOR
+      ? ['motionkit-with-gsap', 'motionkit-connector', 'motionkit-extension']
+      : [$plugin['dir']];
+
+    foreach (array_keys($all) as $bname) {
+      foreach ($dirs as $dir) {
+        if (strpos($bname, $dir . '/') === 0) {
+          return $bname;
+        }
       }
     }
 
