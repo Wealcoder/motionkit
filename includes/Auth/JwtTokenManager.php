@@ -58,6 +58,18 @@ final class JwtTokenManager
   }
 
   /**
+   * Drop a secret synced from the editor, so the next connect fetches afresh.
+   *
+   * @return void
+   */
+  public static function forget_synced_secret(): void
+  {
+    delete_option(self::SECRET_OPTION);
+    delete_option(self::SECRET_SOURCE_OPTION);
+    delete_transient(self::SYNC_LOCK_TRANSIENT);
+  }
+
+  /**
    * The editor's own signing secret, or '' when it cannot be had right now.
    *
    * @return string

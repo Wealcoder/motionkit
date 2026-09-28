@@ -301,6 +301,9 @@ final class OAuthHandler
     delete_option(self::OPT_CONNECTED_AT);
     delete_option(self::OPT_CONNECTED_EMAIL);
 
+    // The synced secret belongs to the editor this site was attached to, so a stale one would refuse every token the next editor issues.
+    JwtTokenManager::forget_synced_secret();
+
     // The connector clears its license state, update key and launch-token secrets on this.
     do_action('motionkit/oauth/disconnected');
 
