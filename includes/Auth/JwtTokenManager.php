@@ -26,7 +26,13 @@ final class JwtTokenManager
   private const SECRET_OPTION = 'motionkit_jwt_secret';
   private const SECRET_SOURCE_OPTION = 'motionkit_jwt_secret_source';
   private const SYNC_LOCK_TRANSIENT = 'motionkit_jwt_secret_sync_lock';
+  // One lock, two durations: a call that failed is retried soon, a key the editor rejected is not asked about again for a while.
+  private const SYNC_RETRY_SECONDS = 30;
+  private const SYNC_REJECTED_SECONDS = 300;
   private const TOKEN_TTL = 86400; // 24 hours
+
+  // Set once a fetch in this request has brought the editor's current secret, so a signature that still does not match is not answered with a second call.
+  private static bool $synced_this_request = false;
 
   public static function get_secret(): string
   {
@@ -80,11 +86,11 @@ final class JwtTokenManager
       return '';
     }
 
-    // One attempt every five minutes: get_secret() runs on ordinary front-end requests, so a site whose key the editor rejects must not call out on every single one of them.
+    // get_secret() runs on ordinary front-end requests, so the editor is never asked twice in quick succession. The lock is taken for the short retry window first; only an answer saying the key itself is wrong extends it. It used to be five minutes on every attempt, so one slow or failed call cost five minutes of launches this site could not validate, with Retry unable to help.
     if (get_transient(self::SYNC_LOCK_TRANSIENT)) {
       return '';
     }
-    set_transient(self::SYNC_LOCK_TRANSIENT, 1, 5 * MINUTE_IN_SECONDS);
+    set_transient(self::SYNC_LOCK_TRANSIENT, 1, self::SYNC_RETRY_SECONDS);
 
     // The connect access token is what /connect/token-secret authenticates with: it hashes the bearer and matches it against the site's own row.
     $api_key = OAuthHandler::get_access_token();
@@ -97,14 +103,43 @@ final class JwtTokenManager
       'timeout' => 10,
     ]);
 
-    if (is_wp_error($response) || (int) wp_remote_retrieve_response_code($response) !== 200) {
+    if (is_wp_error($response)) {
+      return '';
+    }
+
+    $code = (int) wp_remote_retrieve_response_code($response);
+
+    // 401 or 403 is the editor saying this site's key is not one it knows. Asking again sooner changes nothing, and a reconnect clears the lock anyway (forget_synced_secret).
+    if ($code === 401 || $code === 403) {
+      set_transient(self::SYNC_LOCK_TRANSIENT, 1, self::SYNC_REJECTED_SECONDS);
+      return '';
+    }
+
+    if ($code !== 200) {
       return '';
     }
 
     $body = json_decode(wp_remote_retrieve_body($response), true);
     $secret = is_array($body) && !empty($body['token_secret']) ? (string) $body['token_secret'] : '';
+    if (strlen($secret) < 32) {
+      return '';
+    }
 
-    return strlen($secret) >= 32 ? $secret : '';
+    // A good answer frees the lock: the next caller that needs a fresh secret — a signature that stopped matching after the editor re-issued it — may ask at once.
+    delete_transient(self::SYNC_LOCK_TRANSIENT);
+    self::$synced_this_request = true;
+
+    return $secret;
+  }
+
+  // Whether the payload says the editor signed it: iss is motionkit-server and it has not expired. Read before the signature is trusted, so it decides only whether a re-fetch is worth making, never whether the token is valid.
+  private static function claims_editor_issuer(string $body_b64): bool
+  {
+    $payload = json_decode(self::base64url_decode($body_b64), true);
+    if (!is_array($payload) || ($payload['iss'] ?? '') !== 'motionkit-server') {
+      return false;
+    }
+    return isset($payload['exp']) && time() < (int) $payload['exp'];
   }
 
   public static function generate(string $site_url): string
@@ -144,8 +179,20 @@ final class JwtTokenManager
     }
 
     [$head_b64, $body_b64, $sig_b64] = $parts;
-    $expected_sig = hash_hmac('sha256', "{$head_b64}.{$body_b64}", self::get_secret(), true);
+    $signed = "{$head_b64}.{$body_b64}";
+    $secret = self::get_secret();
+    $expected_sig = hash_hmac('sha256', $signed, $secret, true);
     $provided_sig = self::base64url_decode($sig_b64);
+
+    // A token the editor signed with a secret this site no longer holds: the editor re-issued it, or another connection fetched it since. One lock-gated fetch settles whether the site is behind rather than the token wrong — but only for a token that claims to be the editor's, so a stray or forged one never costs an outbound call.
+    if (!hash_equals($expected_sig, $provided_sig) && !self::$synced_this_request && self::claims_editor_issuer($body_b64)) {
+      $fresh = self::fetch_editor_secret();
+      if ($fresh !== '' && $fresh !== $secret) {
+        update_option(self::SECRET_OPTION, $fresh, false);
+        update_option(self::SECRET_SOURCE_OPTION, 'editor', false);
+        $expected_sig = hash_hmac('sha256', $signed, $fresh, true);
+      }
+    }
 
     if (!hash_equals($expected_sig, $provided_sig)) {
       return false;
