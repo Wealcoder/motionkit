@@ -52,9 +52,14 @@ final class EditorBridge
     'data-jetpack-boost' => 'ignore',
   ];
 
-  // The editor-preview request by its query string only. is_editor_preview() also verifies the token, which the optimizer switches neither need nor can wait for.
+  // The editor-preview request by its query string only; is_editor_preview() verifies the token on top. `motionkit=editor` is the editor's flag, the one its other connectors always used. `action=motionkit-editor` is what it sent WordPress before the rename and what an older editor build still sends; it stays accepted, though `action` is a name other front-end plugins read and act on, which is why it was retired.
   private static function wants_editor_preview(): bool
   {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    if (isset($_GET['motionkit']) && $_GET['motionkit'] === 'editor') {
+      return true;
+    }
+
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     return isset($_GET['action']) && $_GET['action'] === 'motionkit-editor';
   }
@@ -141,8 +146,7 @@ final class EditorBridge
    */
   public static function is_editor_preview(): bool
   {
-    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-    if (!isset($_GET['action']) || $_GET['action'] !== 'motionkit-editor') {
+    if (!self::wants_editor_preview()) {
       return false;
     }
 
