@@ -34,6 +34,104 @@ final class EditorBridge
   {
     add_action('send_headers', [$this, 'send_editor_headers']);
     add_action('wp_enqueue_scripts', [$this, 'enqueue_editor_bridge'], 999);
+
+    // Optimizer plugins defer, delay or rewrite scripts; inside the editor iframe the bridge has to run on load, unprompted. Decided from the query string alone, with no token check: switching optimizers off for one request gives nothing away, and WP Rocket and LiteSpeed read the constants long before a token could be verified.
+    $this->disable_optimizers_for_preview();
+    add_filter('script_loader_tag', [$this, 'exempt_script_from_optimizers'], 20, 2);
+    add_filter('wp_inline_script_attributes', [$this, 'exempt_inline_script_from_optimizers']);
+  }
+
+  // What each optimizer looks for to leave a script alone: WP Rocket (nowprocket), LiteSpeed and FlyingPress (data-no-optimize/-defer/-minify), Autoptimize (data-noptimize), Cloudflare Rocket Loader (data-cfasync), Jetpack Boost. Mirrors the connector's list.
+  private const OPTIMIZER_EXEMPT_ATTRIBUTES = [
+    'nowprocket'         => true,
+    'data-no-optimize'   => '1',
+    'data-no-defer'      => '1',
+    'data-no-minify'     => '1',
+    'data-noptimize'     => '1',
+    'data-cfasync'       => 'false',
+    'data-jetpack-boost' => 'ignore',
+  ];
+
+  // The editor-preview request by its query string only. is_editor_preview() also verifies the token, which the optimizer switches neither need nor can wait for.
+  private static function wants_editor_preview(): bool
+  {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    return isset($_GET['action']) && $_GET['action'] === 'motionkit-editor';
+  }
+
+  /**
+   * Request-level switches the cache and optimizer plugins honour on an editor preview.
+   *
+   * Each is idempotent and a no-op when that plugin is absent; the connector sets the same ones on a site running both. A delay-until-interaction optimizer inside the preview iframe waits for a click that never comes, so the bridge never announces itself and the editor reads the silence as "plugin not detected".
+   *
+   * @return void
+   */
+  public function disable_optimizers_for_preview(): void
+  {
+    if (!self::wants_editor_preview()) {
+      return;
+    }
+
+    // Page caches, W3 Total Cache, WP Rocket (all file optimisation, delay JS included), LiteSpeed Cache.
+    foreach (['DONOTCACHEPAGE', 'DONOTMINIFY', 'DONOTROCKETOPTIMIZE', 'LITESPEED_DISABLE_ALL'] as $constant) {
+      if (!defined($constant)) {
+        define($constant, true);
+      }
+    }
+
+    // LiteSpeed's own API for the same switch, fired once its listener exists; Autoptimize and Perfmatters only offer filters.
+    add_action('wp', static function (): void {
+      do_action('litespeed_disable_all', 'MotionKit editor preview');
+    });
+    add_filter('autoptimize_filter_noptimize', '__return_true');
+    add_filter('perfmatters_delay_js', '__return_false');
+    add_filter('perfmatters_defer_js', '__return_false');
+  }
+
+  /**
+   * Mark this plugin's own script tags so no optimizer defers, delays, minifies or rewrites them on a preview.
+   *
+   * @param string $tag    The <script> tag WordPress is about to print.
+   * @param string $handle The script handle.
+   * @return string
+   */
+  public function exempt_script_from_optimizers(string $tag, string $handle): string
+  {
+    if (strpos($handle, 'motionkit') !== 0 || !self::wants_editor_preview()) {
+      return $tag;
+    }
+
+    // Already marked by the connector on a site running both.
+    if (strpos($tag, 'data-cfasync=') !== false) {
+      return $tag;
+    }
+
+    return (string) preg_replace('/<script\b/', '<script ' . self::optimizer_exempt_attribute_string(), $tag, 1);
+  }
+
+  /**
+   * The same exemption for the inline tags WordPress prints beside those handles — the localized motionkitData above all, which the bridge cannot run without.
+   *
+   * @param array $attributes Attributes of the inline <script> about to be printed.
+   * @return array
+   */
+  public function exempt_inline_script_from_optimizers(array $attributes): array
+  {
+    $id = isset($attributes['id']) && is_string($attributes['id']) ? $attributes['id'] : '';
+    if (strpos($id, 'motionkit') !== 0 || !self::wants_editor_preview()) {
+      return $attributes;
+    }
+
+    return array_merge($attributes, self::OPTIMIZER_EXEMPT_ATTRIBUTES);
+  }
+
+  private static function optimizer_exempt_attribute_string(): string
+  {
+    $parts = [];
+    foreach (self::OPTIMIZER_EXEMPT_ATTRIBUTES as $name => $value) {
+      $parts[] = $value === true ? $name : $name . '="' . esc_attr((string) $value) . '"';
+    }
+    return implode(' ', $parts);
   }
 
   /**
