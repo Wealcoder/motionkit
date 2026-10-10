@@ -8,7 +8,7 @@
     "@babel/preset-env": "^7.28.3",
     "@wordpress/browserslist-config": "^2.7.0",
     "@wordpress/scripts": "^27.9.0",
-    "@wordpress/stylelint-config": "^20.0.2",
+    "@wordpress/stylelint-config": "^26.0.0",
     "autoprefixer": "^10.4.20",
     "browserslist": "^4.13.0",
     "cli": "^1.0.1",
