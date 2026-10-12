@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Plugin Name: MotionKit – Visual Animation Connector
+ * Plugin Name: MotionKit – Visual GSAP Animation Builder for Elementor, Divi, Bricks & More
  * Plugin URI: https://motionkit.io
  * Description: Connect WordPress with MotionKit to create, preview, publish, and manage visual website animations from the MotionKit editor.
  * Version: 1.6.0
