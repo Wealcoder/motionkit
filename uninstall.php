@@ -4,12 +4,12 @@
  *
  * Runs when the plugin is deleted (not just deactivated) from WP admin.
  *
- * Secrets, auth and bookkeeping this plugin can write on its own are always
- * removed, so a reusable token or connection row never lingers in the database
- * after a delete. Animation content and the shared JWT/share secrets are
- * removed only when the sibling MotionKit Connector plugin is not also
- * installed — deleting one of a paired install must not sever a connection or
- * erase animations the other is still using.
+ * Bookkeeping only this plugin reads is always removed. The connection and
+ * signing secrets and the animation content are shared with the MotionKit
+ * Connector plugin, so they are removed only when it is not also installed —
+ * deleting one of a paired install must not sever a connection or erase
+ * animations the other is still using, and deleting the last one leaves no
+ * reusable credential or account email behind.
  *
  * @package MotionKit
  */
@@ -20,25 +20,47 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 
 global $wpdb;
 
-// Whether the sibling connector plugin is still installed. Checked on disk rather than by its loaded-constant, which is not defined during this plugin's uninstall, and rather than active_plugins, since a user may delete an inactive plugin. The connector's folder is motionkit-with-gsap.
-$motionkit_sibling_present = file_exists(WP_PLUGIN_DIR . '/motionkit-with-gsap/motionkit-with-gsap.php');
+// Whether the sibling connector plugin is still installed, in any folder. An active connector is loaded in this request (WordPress runs uninstall inside a normal admin request), so its constant settles it; an inactive one is found by its text domain, because it can live under motionkit-with-gsap/, the legacy motionkit-connector/, or a renamed zip folder, and a folder-name check that missed it would delete animations and the signing secret the connector is still using.
+$motionkit_sibling_present = defined('MOTIONKIT_CONNECTOR_LOADED');
+if (!$motionkit_sibling_present) {
+  if (!function_exists('get_plugins')) {
+    require_once ABSPATH . 'wp-admin/includes/plugin.php';
+  }
+  $motionkit_self = defined('WP_UNINSTALL_PLUGIN') ? (string) WP_UNINSTALL_PLUGIN : '';
+  foreach (get_plugins() as $motionkit_basename => $motionkit_header) {
+    if ($motionkit_basename !== $motionkit_self && ($motionkit_header['TextDomain'] ?? '') === 'motionkit-connector') {
+      $motionkit_sibling_present = true;
+      break;
+    }
+  }
+}
 
-// ── Options this plugin writes on its own: always removed ──
+// ── Options only this plugin reads: always removed ──
 $motionkit_always = [
   'motionkit_options',
   'motionkit_version',
   'motionkit_creation_date',
-  'motionkit_enc_fallback_key',
 ];
-
-// The editor-session secret this plugin mints via its own local fallback is a credential, so it goes unless the connector is still here to keep using it.
-if (!$motionkit_sibling_present) {
-  $motionkit_always[] = 'motionkit_jwt_secret';
-  $motionkit_always[] = 'motionkit_jwt_secret_source';
-}
 
 foreach ($motionkit_always as $motionkit_option) {
   delete_option($motionkit_option);
+}
+
+// ── Connection and signing secrets shared with the connector ──
+// The connector reads the same access token, JWT secret and encryption fallback key, so deleting them while it stays would disconnect it. When this is the last MotionKit plugin they all go, so no reusable credential or the connected account's email is left in the database.
+if (!$motionkit_sibling_present) {
+  $motionkit_shared_auth = [
+    'motionkit_jwt_secret',
+    'motionkit_jwt_secret_source',
+    'motionkit_oauth_state',
+    'motionkit_access_token',
+    'motionkit_connected_at',
+    'motionkit_connected_email',
+    'motionkit_enc_fallback_key',
+  ];
+  foreach ($motionkit_shared_auth as $motionkit_option) {
+    delete_option($motionkit_option);
+  }
 }
 
 // Per-user "dismissed the permalink notice" flag, across all users.
