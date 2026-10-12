@@ -32,6 +32,66 @@ final class RestApi
   {
     add_action('rest_api_init', [$this, 'register_routes']);
     add_filter('rest_pre_serve_request', [$this, 'add_cors_headers'], 10, 4);
+    // Last on purpose: it has to see what a REST lockdown plugin decided before it can undo it for our own routes.
+    add_filter('rest_authentication_errors', [$this, 'unlock_own_routes'], PHP_INT_MAX);
+  }
+
+  /**
+   * Let this plugin's own REST calls through a REST lockdown.
+   *
+   * Plugins that restrict the REST API to logged-in users (Solid Security's "Restrict REST API", Disable REST API and their kin) answer every anonymous request with a 401 from rest_authentication_errors — our save included, which the bridge sends from the editor iframe with a JWT and no cookie. This runs last, and only answers for our own namespace when the request carries a token: the handlers still verify that token, so a request that gets this far is no better off than on a site with no lockdown at all. The connector does the same on a site running both, so this plugin stands down there as it does for the routes.
+   *
+   * @param \WP_Error|null|true $result What the filters before this one decided.
+   * @return \WP_Error|null|true
+   */
+  public function unlock_own_routes($result)
+  {
+    if (!is_wp_error($result) || $this->connector_owns_rest()) {
+      return $result;
+    }
+
+    if (!self::is_own_rest_request() || !self::request_carries_token()) {
+      return $result;
+    }
+
+    return true;
+  }
+
+  // The route being served, from the ?rest_route= form or the pretty URL, matched against this plugin's namespace.
+  private static function is_own_rest_request(): bool
+  {
+    $prefix = '/' . self::NAMESPACE . '/';
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $route = isset($_GET['rest_route']) ? (string) wp_unslash($_GET['rest_route']) : '';
+    if ($route !== '') {
+      return strpos($route, $prefix) === 0;
+    }
+
+    $path = (string) wp_parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+    return strpos($path, '/' . rest_get_url_prefix() . $prefix) !== false;
+  }
+
+  // A bearer header, a ?token= query (the pages search) or a JSON body with a token key (the save, which travels as text/plain to stay a CORS simple request). Presence only: verifying it is the handler's job.
+  private static function request_carries_token(): bool
+  {
+    $auth = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
+    if (stripos($auth, 'Bearer ') === 0) {
+      return true;
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    if (!empty($_GET['token'])) {
+      return true;
+    }
+
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+      return false;
+    }
+
+    // php://input can be read again later by the REST server; only the head is needed, the bridge puts the token first.
+    $head = (string) file_get_contents('php://input', false, null, 0, 4096);
+    return strpos($head, '"token"') !== false;
   }
 
   /**
@@ -74,8 +134,9 @@ final class RestApi
       'permission_callback' => [$this, 'check_jwt_permission'],
     ]);
 
+    // POST so the editor can send the session JWT in a text/plain body (a CORS simple request, no preflight) rather than as ?token= on the URL, where a reusable 24h credential would land in access logs. GET is still accepted for an older bridge build that puts the token in the query; the handler reads it from either place.
     register_rest_route(self::NAMESPACE, '/pages', [
-      'methods'             => \WP_REST_Server::READABLE,
+      'methods'             => \WP_REST_Server::READABLE . ', ' . \WP_REST_Server::CREATABLE,
       'callback'            => [$this, 'search_pages'],
       'permission_callback' => [$this, 'check_jwt_permission'],
     ]);
@@ -123,8 +184,17 @@ final class RestApi
       return true;
     }
 
-    // Fallback: logged-in administrator with manage_options capability
-    return current_user_can('manage_options');
+    // Cookie fallback for a logged-in administrator, but only with a valid wp_rest nonce. Without the nonce check this would be a CSRF write: /save is a CORS simple POST that WordPress core does not nonce-protect on its own when no nonce is sent, so a malicious page could ride an admin's cookie to post saves. The editor itself never uses this path — it always carries a JWT — so requiring the nonce costs legitimate traffic nothing.
+    if (!current_user_can('manage_options')) {
+      return false;
+    }
+
+    $nonce = $request->get_header('X-WP-Nonce');
+    if (!$nonce) {
+      $nonce = (string) $request->get_param('_wpnonce');
+    }
+
+    return is_string($nonce) && $nonce !== '' && (bool) wp_verify_nonce($nonce, 'wp_rest');
   }
 
   public function save_data(\WP_REST_Request $request): \WP_REST_Response
@@ -344,9 +414,15 @@ final class RestApi
 
   public function search_pages(\WP_REST_Request $request): \WP_REST_Response
   {
-    $query    = sanitize_text_field((string) $request->get_param('s'));
-    $page     = max(1, (int) $request->get_param('page'));
-    $per_page = min(50, max(1, (int) ($request->get_param('per_page') ?: 10)));
+    // A text/plain POST body is not parsed into params, so fall back to the decoded body for each field; a GET request leaves the body empty and keeps using the query params.
+    $body = $this->read_body($request);
+    $raw_query = $request->get_param('s') ?? ($body['s'] ?? '');
+    $raw_page = $request->get_param('page') ?? ($body['page'] ?? 0);
+    $raw_per_page = $request->get_param('per_page') ?? ($body['per_page'] ?? 0);
+
+    $query    = sanitize_text_field((string) $raw_query);
+    $page     = max(1, (int) $raw_page);
+    $per_page = min(50, max(1, (int) ($raw_per_page ?: 10)));
 
     $query_args = [
       's'              => $query,
@@ -389,13 +465,60 @@ final class RestApi
     }
 
     $origin = get_http_origin();
-    if ($origin && (strpos($origin, 'motionkit.io') !== false || strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false)) {
+    if ($origin && self::is_allowed_origin($origin)) {
       header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
       header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
       header('Access-Control-Allow-Credentials: true');
       header('Access-Control-Allow-Headers: Authorization, Content-Type, X-WP-Nonce');
     }
     return $value;
+  }
+
+  /**
+   * Whether a request Origin may read authenticated responses.
+   *
+   * Matched on the parsed host, exactly or as a subdomain of an allowed host —
+   * never as a substring. A substring test passed motionkit.io.evil.com and
+   * evil-motionkit.io, and with Access-Control-Allow-Credentials on that let a
+   * hostile origin read a response meant for the editor. Localhost and
+   * 127.0.0.1 stay open for local development on any port.
+   *
+   * The list is filterable under the same hook name the editor repo documents,
+   * so a self-hosted editor origin can be added without editing the plugin.
+   *
+   * @param string $origin The request's Origin header.
+   * @return bool
+   */
+  private static function is_allowed_origin(string $origin): bool
+  {
+    $host = (string) wp_parse_url($origin, PHP_URL_HOST);
+    if ($host === '') {
+      return false;
+    }
+    $host = strtolower($host);
+
+    $allowed_hosts = apply_filters('motionkit/editor/allowed_origins', [
+      'editor.motionkit.io',
+      'motionkit.io',
+      'localhost',
+      '127.0.0.1',
+    ]);
+
+    foreach ((array) $allowed_hosts as $allowed) {
+      $allowed = strtolower((string) $allowed);
+      if ($allowed === '') {
+        continue;
+      }
+      // An entry that is itself a full origin (https://editor.motionkit.io) is reduced to its host so the filtered list may carry either form.
+      if (strpos($allowed, '://') !== false) {
+        $allowed = (string) wp_parse_url($allowed, PHP_URL_HOST);
+      }
+      if ($host === $allowed || substr($host, -(strlen($allowed) + 1)) === '.' . $allowed) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
