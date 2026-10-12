@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Plugin Name: Motionkit
+ * Plugin Name: MotionKit – Visual Animation Connector
  * Plugin URI: https://motionkit.io
  * Description: Connect WordPress with MotionKit to create, preview, publish, and manage visual website animations from the MotionKit editor.
- * Version: 1.3.0
+ * Version: 1.6.0
  * Author: wealcoder
  * Author URI: https://profiles.wordpress.org/wealcoder/
  * License: GPL v2 or later
@@ -29,7 +29,7 @@ if ( defined( 'MOTIONKIT_LOADED' ) ) {
 }
 
 // Define plugin constants
-define( 'MOTIONKIT_VERSION', '1.3.0' );
+define( 'MOTIONKIT_VERSION', '1.6.0' );
 define( 'MOTIONKIT_PLUGIN_FILE', __FILE__ );
 define( 'MOTIONKIT_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MOTIONKIT_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

@@ -4,7 +4,7 @@ Tags: animation, scroll animation, visual editor
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,19 +143,25 @@ This uses standard `@wordpress/scripts` and `webpack.config.js` to compile the s
 
 == Screenshots ==
 
-1. The Motionkit visual editor — build animations on a live preview of your site
-2. Connecting your WordPress site to Motionkit from the plugin's admin page
-3. The cloud preset library — search and import ready-made animations in one click
-4. The Tools tab — review and manage the animation data saved on your site
+1. MotionKit Admin Dashboard — Overview of connected pages, status, and animation controls inside WordPress admin.
+2. Seamless OAuth Connection — Fast, secure authorization connecting your WordPress site with the MotionKit visual editor.
+3. Live Visual Animation Editor — Build timeline-driven scroll, hover, and entrance animations on a live preview of your actual page.
+4. AI Assistant & MCP Support — Build, customize, and preview animations by chatting with your AI assistant (ChatGPT, Claude, Gemini) or via visual controls.
+5. Cloud Preset Library — Browse, preview, and import professionally designed animation presets and templates in one click.
+6. Animation Data & Tools Management — Review, inspect, and manage saved animation records and settings stored on your site.
 
 == Changelog ==
 
+= 1.6.0 =
+* Release on WordPress.org.
+* Zero-dependency Free Animation Engine powered by native Web Animations API (WAAPI).
+* Seamless OAuth connection with the hosted visual editor at editor.motionkit.io.
+* AI assistant integration via Model Context Protocol (MCP) server for ChatGPT, Claude, and Gemini.
+* Cloud preset library with ready-made animations and one-click import.
+* Per-page and site-wide animation management with live preview.
+
 = 1.0.0 =
-* Fix: Free animations now play on the front page, archives, search and 404 — these are stored under their own page type, and the frontend was looking them up by post type.
-* Fix: Scroll animations follow scroll position smoothly instead of stepping.
-* Fix: A scroll trigger's own element is honoured when one is set.
-* Fix: Editing a scroll trigger's Start, End, Play Once or Scrub now takes effect.
-* Improve: Free animations start at the viewport centre by default.
+* Initial release.
 
 == Support ==
 
@@ -163,5 +169,5 @@ For support, feature requests, or bug reports, please visit https://motionkit.io
 
 == Upgrade Notice ==
 
-= 1.0.0 =
-* Initial release. No upgrade needed.
+= 1.6.0 =
+* WordPress.org release version.
