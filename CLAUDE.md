@@ -346,3 +346,12 @@ npm run start    # Dev watch
 
 Webpack alias: `@` → `src/modules/animation-builder/`
 Never edit `assets/build/` files directly.
+
+## Releasing
+
+`npm run release -- 1.6.1` is the whole release. It refuses up front when the tree is dirty, the branch is behind origin, the tag exists, `gh` is not signed in, or `readme.txt` has no `= 1.6.1 =` entry under `== Changelog ==`. It then sets the version in all five places (header, `MOTIONKIT_VERSION`, `phpstan-bootstrap.php`, `Stable tag`, `package.json`), runs `build:wp`, lints every PHP file and writes `dist/motionkit-1.6.1.zip` from `.distignore`. After a confirm it commits `Chore (Release): Version 1.6.1`, tags `v1.6.1`, pushes the branch and tag atomically, and creates the GitHub release with the zip and the changelog entry as notes.
+
+- `npm run release` releases the version already in the files; `--zip-only` stops after the zip; `--yes` skips the confirm.
+- A failure or a "no" before the commit puts the version strings back.
+- The zip must carry `src/`, `webpack.config.js` and `package.json`: WordPress.org rejects built files without their source, so the script stops if `.distignore` ever drops them.
+- There is no release workflow: the script is the only thing that creates releases, so a tag push never builds a second zip in CI.
