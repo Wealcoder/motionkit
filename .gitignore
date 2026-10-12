@@ -16,3 +16,6 @@ Thumbs.db
 *.orig
 
 .env
+
+# Release zips from `npm run release`.
+dist/
