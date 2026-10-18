@@ -4,7 +4,7 @@ Tags: animation, gsap, scroll animation, elementor animation, scrolltrigger
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,6 +111,25 @@ MotionKit animates elements on the rendered page, so it is not tied to any build
 * **Avada, WPBakery, SeedProd, Breakdance, Oxygen, Beaver Builder** – full support, no extra setup.
 * **Any theme** – Astra, Kadence, GeneratePress, OceanWP, Hello Elementor, Twenty Twenty-Five and every classic or block theme.
  
+= AI animation builder for WordPress: MCP server for Claude, ChatGPT and AI assistants =
+ 
+Animate your WordPress website by describing what you want. MotionKit includes an **MCP server** (Model Context Protocol), so AI assistants such as **Claude**, **ChatGPT** and any MCP-compatible AI client can build real GSAP animations on your live pages.
+ 
+* **Animate with plain language** – ask "fade the hero heading up on scroll" or "stagger the service cards", and your AI assistant picks the element, builds the animation and plays it in the MotionKit editor.
+* **Whole-page animation in one prompt** – say "add professional scroll animations to this page" and the assistant reads the page's sections, headings and card groups, then animates each one with consistent, calm timing.
+* **Edit with words** – "make it slower", "change the easing", "scrub it with the scroll". The assistant changes the animation you already have instead of stacking new ones.
+* **Real GSAP, fully editable** – everything the AI builds is a normal MotionKit animation. See it on the timeline, fine-tune any setting by hand and save it to your library.
+* **Uses the editor's own rules** – the AI works through the same validated commands as the editor, so it can only make changes you could make yourself, and every change shows in the live preview.
+* **Works with your favourite AI** – Claude (claude.ai, Claude Desktop and Claude Code), ChatGPT and other MCP clients connect with one URL and your MotionKit sign-in.
+ 
+**Connect an AI assistant in three steps:**
+ 
+1. In Claude, open **Settings → Connectors → Add custom connector**. In another MCP client, add a remote MCP server.
+2. Enter the MotionKit MCP URL **`https://editor.motionkit.io/mcp`** and sign in with your MotionKit account.
+3. Open your page in the MotionKit editor, then ask your assistant to animate it.
+ 
+Building animations from an AI assistant is part of the all plans. On the free plan the assistant can list your sites and open the editor for you.
+ 
 = Built for agencies and freelancers =
  
 Create an animation once, save it to your cloud library or export it as JSON, and reuse it on any other client site built with any builder. Standardise your motion design system and deliver animated landing pages in a fraction of the time.
@@ -192,6 +211,10 @@ Yes. Save any animation to your library or export it as a JSON file, then import
  
 Yes, in two ways. The editor has built-in AI that adds animation to a page or element from a prompt. MotionKit also provides an MCP server, so AI assistants such as Claude and ChatGPT can connect and add professional animations across your entire website automatically.
  
+= How do I connect Claude or ChatGPT to MotionKit? =
+ 
+Add MotionKit as a remote MCP server in your AI assistant using **`https://editor.motionkit.io/mcp`**, then sign in with your MotionKit account. In Claude this is Settings → Connectors → Add custom connector. Open your page in the MotionKit editor and ask the assistant to animate it, for example "add a smooth scroll reveal to every section".
+ 
 = Will MotionKit slow down my website? =
  
 No. The runtime is lightweight, built on GSAP and the native Web Animations API, loads only on pages that contain animations and caches compiled timelines. All scripts and styles are bundled locally.
@@ -222,7 +245,7 @@ MotionKit bundles all of its JavaScript, CSS, runtime and icons locally. The plu
  
 1. **Account connection (admin only).** When you click Connect, the plugin exchanges a token with `https://editor.motionkit.io/connect/token`, validates it via `/connect/validate` and revokes it via `/connect/revoke` when you disconnect. The site URL and the signed token are sent; the token is stored encrypted on your site.
 2. **Launching the editor (admin only).** Clicking Launch Editor opens `https://editor.motionkit.io/` in your browser with your site URL and a short-lived signed token so the editor can load a live preview of your page.
-3. **AI assistants (optional).** If you connect an AI assistant, it talks to the MotionKit MCP endpoint at `https://editor.motionkit.io/mcp`.
+3. **AI assistants (optional).** If you connect an AI assistant, it talks to the MotionKit MCP endpoint at **`https://editor.motionkit.io/mcp`**.
 4. **Upgrade link (optional).** The dashboard links to `https://motionkit.io`; no site data is sent.
  
 No visitor data is sent to MotionKit and the plugin performs no tracking on your front end.
@@ -255,6 +278,10 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
  
 == Changelog ==
  
+= 1.6.1 =
+* Fixed: In the MotionKit editor, hovering or clicking a split text heading now selects the whole heading instead of a single letter.
+* Improved: Preset library links in the description.
+ 
 = 1.6.0 =
 * New: Export and import animations as JSON for reuse on other sites.
 * Improved: Runtime performance and caching of compiled timelines.
@@ -269,6 +296,9 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 * Free animations start at the viewport centre by default.
  
 == Upgrade Notice ==
+ 
+= 1.6.1 =
+Fixes selecting split text headings in the editor. Recommended for all users.
  
 = 1.6.0 =
 Adds JSON export/import and performance improvements. Recommended for all users.
