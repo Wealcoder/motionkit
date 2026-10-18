@@ -10,6 +10,11 @@
 const ORIGINAL_HTML = '__mkSplitOriginalHtml';
 // Whether the element had an aria-label of its own before the split, so revert can tell "remove the one we added" from "keep the author's".
 const HAD_OWN_LABEL = '__mkSplitHadOwnLabel';
+// Whether the element carried the overlay attribute before the split, so revert removes only the one the split added.
+const HAD_OWN_OVERLAY = '__mkSplitHadOwnOverlay';
+
+// Read by the MotionKit editor's overlay: an element carrying "false" is highlighted as a whole, so hovering one letter of a split heading picks the heading rather than the letter. The GSAP engine's split registry sets the same attribute.
+const OVERLAY_ATTR = 'data-motionkit-overlay';
 
 const PART_ATTR = 'data-mk-split';
 // Marks the word wrapper a character split puts around each word. Not a part — it carries no PART_ATTR, so the runner never staggers over it and a re-split never counts it — and it exists only so the word cannot break across a line.
@@ -119,6 +124,11 @@ export function splitText(element, kind = 'chars') {
     element.setAttribute('aria-label', originalText);
   }
 
+  element[HAD_OWN_OVERLAY] = element.hasAttribute(OVERLAY_ATTR);
+  if (!element[HAD_OWN_OVERLAY]) {
+    element.setAttribute(OVERLAY_ATTR, 'false');
+  }
+
   return collected;
 }
 
@@ -158,8 +168,14 @@ export function revertSplit(element) {
     element.removeAttribute('aria-label');
   }
 
+  // After the markup is back, so the element is whole again by the time the overlay may pick its children.
+  if (!element[HAD_OWN_OVERLAY]) {
+    element.removeAttribute(OVERLAY_ATTR);
+  }
+
   delete element[ORIGINAL_HTML];
   delete element[HAD_OWN_LABEL];
+  delete element[HAD_OWN_OVERLAY];
 }
 
 // The split kinds the runner accepts. Anything else means "do not split", which is the default for every existing animation.
