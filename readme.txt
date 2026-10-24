@@ -4,7 +4,7 @@ Tags: animation, gsap, scroll animation, elementor animation, scrolltrigger
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.6.1
+Stable tag: 1.6.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -277,7 +277,10 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 4. The Tools tab for managing saved animation data.
  
 == Changelog ==
- 
+
+= 1.6.2 =
+* Improved: The MotionKit settings screen now leads with Connect, and offers the optional MotionKit with GSAP add-on only after the site is connected.
+
 = 1.6.1 =
 * Fixed: In the MotionKit editor, hovering or clicking a split text heading now selects the whole heading instead of a single letter.
 * Improved: Preset library links in the description.
@@ -296,7 +299,10 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 * Free animations start at the viewport centre by default.
  
 == Upgrade Notice ==
- 
+
+= 1.6.2 =
+Clearer setup: connect first, add GSAP animations later if you need them.
+
 = 1.6.1 =
 Fixes selecting split text headings in the editor. Recommended for all users.
  
