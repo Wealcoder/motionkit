@@ -489,22 +489,23 @@ final class ConnectPage
   }
 
   /**
-   * Render the connector-install CTA (gradient card). Shown whenever the
-   * connector engine isn't running, in two contexts:
+   * Render the GSAP add-on CTA (gradient card) on the connected screen.
    *
-   *   - 'connected':    after connecting, before the editor can launch.
-   *   - 'disconnected': before connecting, so the engine is ready first.
+   * This plugin connects the site and runs the free (WAAPI) animations on its
+   * own; the MotionKit with GSAP add-on is only needed for GSAP animations
+   * (Most Popular presets, custom timelines, the cloud library, page
+   * transitions and smooth scroll). So the card offers the add-on once the
+   * site is connected, and never stands in front of the Connect step.
    *
    * State drives the button:
-   *   - missing  → "Download Connector" (zip URL, new tab)
-   *   - inactive → "Activate Connector"  (WP nonced activate link, same tab)
+   *   - missing  → "Download MotionKit with GSAP" (download page, new tab)
+   *   - inactive → "Activate MotionKit with GSAP" (WP nonced activate link, same tab)
    *
-   * Returns nothing and prints nothing when the connector is already active.
+   * Prints nothing when the add-on is already active.
    *
-   * @param string $context 'connected' | 'disconnected'.
    * @return void
    */
-  private function render_connector_cta(string $context): void
+  private function render_connector_cta(): void
   {
     $state = $this->connector_install_state();
     if ($state === 'active') {
@@ -514,26 +515,20 @@ final class ConnectPage
     $is_deactivated = ($state === 'deactivated');
 
     if ($is_deactivated) {
-      $cta_title = __('Activate the MotionKit Connector', 'motionkit');
-      $cta_desc  = ($context === 'disconnected')
-        ? __('The MotionKit Connector is installed but not active. Activate it to get the animation engine ready, then connect your account.', 'motionkit')
-        : __('Your account is connected and the MotionKit Connector is installed — just activate it to run your animations, page transitions, and smooth scroll on the live site.', 'motionkit');
-      $cta_label   = __('Activate Connector', 'motionkit');
+      $cta_title   = __('Activate MotionKit with GSAP', 'motionkit');
+      $cta_desc    = __('The GSAP add-on is installed but not active. Activate it to run GSAP animations on this site: Most Popular presets, custom timelines, the cloud library, page transitions and smooth scroll.', 'motionkit');
+      $cta_label   = __('Activate MotionKit with GSAP', 'motionkit');
       $cta_href    = $this->connector_activate_url();
       $cta_new_tab = false;
     } else {
-      $cta_title = __('Install the MotionKit Connector', 'motionkit');
-      $cta_desc  = ($context === 'disconnected')
-        ? __('MotionKit needs its Connector engine to run animations, page transitions, and smooth scroll on your live site. Install it now, then connect your account below.', 'motionkit')
-        : __('Your account is connected. Install the MotionKit Connector engine to run your animations, page transitions, and smooth scroll on the live site — then the editor launches from here.', 'motionkit');
-      $cta_label   = __('Download Connector', 'motionkit');
+      $cta_title   = __('Add GSAP animations', 'motionkit');
+      $cta_desc    = __('Your site is connected and already runs MotionKit animations. Install the free MotionKit with GSAP add-on to also run Most Popular presets, custom timelines, the cloud library, page transitions and smooth scroll.', 'motionkit');
+      $cta_label   = __('Download MotionKit with GSAP', 'motionkit');
       $cta_href    = $this->connector_download_url();
       $cta_new_tab = ('#' !== $cta_href);
     }
 
-    $badge = ($context === 'disconnected')
-      ? __('Recommended first step', 'motionkit')
-      : __('One step left', 'motionkit');
+    $badge = __('Optional add-on', 'motionkit');
     ?>
     <div class="motionkit-connector-cta">
       <div class="motionkit-connector-cta__glow" aria-hidden="true"></div>
@@ -1043,14 +1038,13 @@ final class ConnectPage
     </div>
     <?php
     if ($connector_state !== 'active') {
-      $this->render_connector_cta('connected');
+      $this->render_connector_cta();
     }
   }
 
   private function render_disconnected_state(): void
   {
     $authorize_url = self::authorize_url();
-    $connector_state = $this->connector_install_state();
     ?>
     <div class="motionkit-card">
       <div class="motionkit-card-header">
@@ -1102,11 +1096,7 @@ final class ConnectPage
         </p>
       </div>
     </div>
-
     <?php
-    if ($connector_state !== 'active') {
-      $this->render_connector_cta('disconnected');
-    }
   }
 
   // ─── Helpers ─────────────────────────────────────────────────
