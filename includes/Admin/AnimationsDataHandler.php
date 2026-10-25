@@ -2,6 +2,8 @@
 
 namespace MotionKit\Admin;
 
+use MotionKit\Common\AnimationResolver;
+
 /**
  * MotionKit WordPress Plugin — Active Animations & Hybrid Engine Manager.
  *
@@ -22,7 +24,8 @@ if (!defined('ABSPATH')) {
 final class AnimationsDataHandler
 {
   private const ANIMATION_OPTION_PREFIX = 'motionkit_pg_animation_';
-  private const GLOBAL_ANIMATIONS_OPTION = 'motionkit_global_animations';
+  // The page's other half: never-published animations, and the working copy of every published one under its own id.
+  private const DRAFT_OPTION_PREFIX = 'motionkit_pg_draft_';
 
   public function init(): void
   {
@@ -202,10 +205,15 @@ final class AnimationsDataHandler
       wp_send_json_error(['message' => 'Missing animation ID'], 400);
     }
 
+    // Publishing is the editor's save, which moves the record between buckets; flipping a flag inside the draft bucket would show Active for something no visitor gets.
+    if ($this->lives_only_in_drafts($anim_id)) {
+      wp_send_json_error(['message' => __('This animation has not been published yet. Publish it from the editor.', 'motionkit')], 409);
+    }
+
     $new_status = 'published';
     $updated = $this->mutate_animation_by_id($anim_id, function (&$anim) use (&$new_status) {
-      $curr = $anim['status'] ?? 'published';
-      $is_published = ($curr === 'published');
+      // Read the way the frontend reads it, so the toggle flips what a visitor actually sees.
+      $is_published = AnimationResolver::is_published($anim);
       $new_status = $is_published ? 'draft' : 'published';
       $anim['status'] = $new_status;
       $anim['disabled'] = $is_published;
@@ -257,89 +265,180 @@ final class AnimationsDataHandler
    */
   public function collect_all_animations(): array
   {
-    global $wpdb;
     $flat_list = [];
+    $seen = [];
 
-    // 1. Global animations
-    $global = get_option(self::GLOBAL_ANIMATIONS_OPTION, []);
-    $flat_list = array_merge($flat_list, $this->extract_animation_items($global, [
-      'store_type' => 'option',
-      'key'        => self::GLOBAL_ANIMATIONS_OPTION,
-      'id'         => 0,
-      'location'   => __('Global (Entire Site)', 'motionkit'),
-      'permalink'  => home_url('/'),
-    ]));
-
-    // 2. Post meta records
-    $prefix = self::ANIMATION_OPTION_PREFIX;
-    $like = $wpdb->esc_like($prefix) . '%';
-    $post_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT pm.post_id AS id, pm.meta_key AS `key`, pm.meta_value AS `value`,
-                p.post_title AS title, p.post_type AS type
-         FROM {$wpdb->postmeta} pm
-         INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-         WHERE pm.meta_key LIKE %s",
-        $like
-      )
-    );
-
-    foreach ($post_rows as $row) {
-      $permalink = get_permalink((int) $row->id) ?: home_url('/');
-      /* translators: %d: WordPress post ID */
-      $post_loc = $row->title !== '' ? $row->title : sprintf(__('Post #%d', 'motionkit'), $row->id);
-      $flat_list = array_merge($flat_list, $this->extract_animation_items($row->value, [
-        'store_type' => 'post_meta',
-        'key'        => $row->key,
-        'id'         => (int) $row->id,
-        'location'   => $post_loc,
-        'post_type'  => $row->type,
-        'permalink'  => $permalink,
-      ]));
-    }
-
-    // 3. Term meta records
-    $term_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT tm.term_id AS id, tm.meta_key AS `key`, tm.meta_value AS `value`,
-                t.name AS title, tt.taxonomy AS type
-         FROM {$wpdb->termmeta} tm
-         INNER JOIN {$wpdb->terms} t ON t.term_id = tm.term_id
-         INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_id = tm.term_id
-         WHERE tm.meta_key LIKE %s",
-        $like
-      )
-    );
-
-    foreach ($term_rows as $row) {
-      $term_link = get_term_link((int) $row->id);
-      $permalink = is_wp_error($term_link) ? home_url('/') : $term_link;
-      /* translators: %s: WordPress taxonomy term name */
-      $term_loc = sprintf(__('Term: %s', 'motionkit'), $row->title);
-      $flat_list = array_merge($flat_list, $this->extract_animation_items($row->value, [
-        'store_type' => 'term_meta',
-        'key'        => $row->key,
-        'id'         => (int) $row->id,
-        'location'   => $term_loc,
-        'post_type'  => $row->type,
-        'permalink'  => $permalink,
-      ]));
+    foreach ($this->buckets() as $bucket) {
+      foreach ($this->extract_animation_items($bucket) as $item) {
+        // Buckets come published first, so by the time a draft bucket is read the live row already stands for every id it carries a working copy of; only a never-published draft is new.
+        if (isset($seen[$item['id']])) {
+          continue;
+        }
+        $seen[$item['id']] = true;
+        $flat_list[] = $item;
+      }
     }
 
     return $flat_list;
   }
 
   /**
-   * Helper: Parse raw storage record and return list of resolved animations.
+   * Every record an animation can live in, as the database holds it.
+   *
+   * Published buckets first, so a mutation by id lands on the live copy before
+   * its working copy. Each bucket carries its own writer: the meta API
+   * unslashes what it is given, so an array going back through it is slashed
+   * first (as the connector's saveConfig() does); options are not.
+   *
+   * @return array<int, array{store_type: string, key: string, id: int, draft: bool, location: string, post_type: string, permalink: string, value: mixed, write: callable}>
    */
-  private function extract_animation_items($raw, array $meta): array
+  private function buckets(): array
+  {
+    global $wpdb;
+    $published = [];
+    $drafts = [];
+
+    $globals = [
+      [AnimationResolver::GLOBAL_PUBLISHED_OPTION, false],
+      [AnimationResolver::GLOBAL_DRAFT_OPTION, true],
+    ];
+    foreach ($globals as [$option, $is_draft]) {
+      $bucket = [
+        'store_type' => 'option',
+        'key'        => $option,
+        'id'         => 0,
+        'draft'      => $is_draft,
+        'location'   => __('Global (Entire Site)', 'motionkit'),
+        'post_type'  => '',
+        'permalink'  => home_url('/'),
+        'value'      => get_option($option, []),
+        'write'      => static function ($data) use ($option): void {
+          update_option($option, $data);
+          AnimationResolver::forget_globals();
+        },
+      ];
+      if ($is_draft) {
+        $drafts[] = $bucket;
+      } else {
+        $published[] = $bucket;
+      }
+    }
+
+    $prefixes = [
+      [self::ANIMATION_OPTION_PREFIX, false],
+      [self::DRAFT_OPTION_PREFIX, true],
+    ];
+    foreach ($prefixes as [$prefix, $is_draft]) {
+      $like = $wpdb->esc_like($prefix) . '%';
+
+      $post_rows = $wpdb->get_results(
+        $wpdb->prepare(
+          "SELECT post_id AS id, meta_key AS `key`, meta_value AS `value`
+           FROM {$wpdb->postmeta}
+           WHERE meta_key LIKE %s",
+          $like
+        )
+      );
+      foreach ($post_rows as $row) {
+        $post_id = (int) $row->id;
+        $key = (string) $row->key;
+        // Meta left behind by a deleted post has no page to list it under.
+        $post = get_post($post_id);
+        if (!$post) {
+          continue;
+        }
+        /* translators: %d: WordPress post ID */
+        $location = $post->post_title !== '' ? $post->post_title : sprintf(__('Post #%d', 'motionkit'), $post_id);
+        $bucket = [
+          'store_type' => 'post_meta',
+          'key'        => $key,
+          'id'         => $post_id,
+          'draft'      => $is_draft,
+          'location'   => $location,
+          'post_type'  => $post->post_type,
+          'permalink'  => get_permalink($post) ?: home_url('/'),
+          'value'      => $row->value,
+          'write'      => static function ($data) use ($post_id, $key): void {
+            update_post_meta($post_id, $key, wp_slash($data));
+          },
+        ];
+        if ($is_draft) {
+          $drafts[] = $bucket;
+        } else {
+          $published[] = $bucket;
+        }
+      }
+
+      $term_rows = $wpdb->get_results(
+        $wpdb->prepare(
+          "SELECT tm.term_id AS id, tm.meta_key AS `key`, tm.meta_value AS `value`,
+                  t.name AS title, tt.taxonomy AS type
+           FROM {$wpdb->termmeta} tm
+           INNER JOIN {$wpdb->terms} t ON t.term_id = tm.term_id
+           INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_id = tm.term_id
+           WHERE tm.meta_key LIKE %s",
+          $like
+        )
+      );
+      foreach ($term_rows as $row) {
+        $term_id = (int) $row->id;
+        $key = (string) $row->key;
+        $term_link = get_term_link($term_id);
+        $bucket = [
+          'store_type' => 'term_meta',
+          'key'        => $key,
+          'id'         => $term_id,
+          'draft'      => $is_draft,
+          /* translators: %s: WordPress taxonomy term name */
+          'location'   => sprintf(__('Term: %s', 'motionkit'), $row->title),
+          'post_type'  => (string) $row->type,
+          'permalink'  => is_wp_error($term_link) ? home_url('/') : $term_link,
+          'value'      => $row->value,
+          'write'      => static function ($data) use ($term_id, $key): void {
+            update_term_meta($term_id, $key, wp_slash($data));
+          },
+        ];
+        if ($is_draft) {
+          $drafts[] = $bucket;
+        } else {
+          $published[] = $bucket;
+        }
+      }
+    }
+
+    return array_merge($published, $drafts);
+  }
+
+  /**
+   * A bucket as the database holds it.
+   *
+   * The meta API serialises arrays, and this class reads meta rows straight
+   * from the table rather than through get_post_meta(), so a record came back
+   * as a serialised string that json_decode() turned into nothing — every site
+   * read as having no animations. An older build stored JSON, which is still read.
+   *
+   * @param mixed $raw Raw option or meta value.
+   * @return array
+   */
+  private function decode_record($raw): array
   {
     if (is_string($raw)) {
-      $raw = json_decode($raw, true) ?: [];
+      $raw = maybe_unserialize($raw);
     }
-    if (!is_array($raw)) {
-      return [];
+    if (is_string($raw)) {
+      $raw = json_decode($raw, true);
     }
+
+    return is_array($raw) ? $raw : [];
+  }
+
+  /**
+   * Helper: Parse one bucket and return its list of resolved animations.
+   */
+  private function extract_animation_items(array $bucket): array
+  {
+    $raw = $this->decode_record($bucket['value']);
+    $meta = $bucket;
 
     $items = [];
     if (isset($raw['published']) && is_array($raw['published'])) {
@@ -374,17 +473,20 @@ final class AnimationsDataHandler
                 : '.animated-element'));
 
       $engine = $this->resolve_animation_engine($anim);
-      $status = (!empty($anim['disabled']) || (isset($anim['status']) && $anim['status'] === 'draft')) ? 'draft' : 'published';
+      // Read the way the frontend reads it, so a row says Active only when a visitor would see it; nothing in a draft bucket is served, whatever its own flag says.
+      $status = (!$bucket['draft'] && AnimationResolver::is_published($anim)) ? 'published' : 'draft';
 
       $edit_url = $this->build_editor_url($meta['permalink']);
 
       $output[] = [
         'id'          => $id,
-        'title'       => ucwords(trim($title)),
+        'title'       => trim($title),
         'target'      => $target,
         'engine'      => $engine,
         'status'      => $status,
         'is_active'   => ($status === 'published'),
+        // A never-published draft is published from the editor, not from here.
+        'can_toggle'  => !$bucket['draft'],
         'location'    => $meta['location'],
         'permalink'   => $meta['permalink'],
         'edit_url'    => $edit_url,
@@ -440,62 +542,11 @@ final class AnimationsDataHandler
    */
   private function mutate_animation_by_id(string $target_id, callable $mutator): bool
   {
-    $found = false;
-
-    // Check global
-    $global = get_option(self::GLOBAL_ANIMATIONS_OPTION, null);
-    if ($global !== null) {
-      $modified = false;
-      $parsed = is_string($global) ? json_decode($global, true) : $global;
-      if (is_array($parsed)) {
-        $modified = $this->apply_mutation_to_envelope($parsed, $target_id, $mutator);
-        if ($modified) {
-          update_option(self::GLOBAL_ANIMATIONS_OPTION, $parsed);
-          return true;
-        }
-      }
-    }
-
-    // Check post_meta
-    global $wpdb;
-    $prefix = self::ANIMATION_OPTION_PREFIX;
-    $like = $wpdb->esc_like($prefix) . '%';
-    $post_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT pm.post_id AS id, pm.meta_key AS `key`, pm.meta_value AS `value`
-         FROM {$wpdb->postmeta} pm
-         WHERE pm.meta_key LIKE %s",
-        $like
-      )
-    );
-
-    foreach ($post_rows as $row) {
-      $parsed = is_string($row->value) ? json_decode($row->value, true) : $row->value;
-      if (is_array($parsed)) {
-        if ($this->apply_mutation_to_envelope($parsed, $target_id, $mutator)) {
-          update_post_meta((int) $row->id, $row->key, $parsed);
-          return true;
-        }
-      }
-    }
-
-    // Check term_meta
-    $term_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT tm.term_id AS id, tm.meta_key AS `key`, tm.meta_value AS `value`
-         FROM {$wpdb->termmeta} tm
-         WHERE tm.meta_key LIKE %s",
-        $like
-      )
-    );
-
-    foreach ($term_rows as $row) {
-      $parsed = is_string($row->value) ? json_decode($row->value, true) : $row->value;
-      if (is_array($parsed)) {
-        if ($this->apply_mutation_to_envelope($parsed, $target_id, $mutator)) {
-          update_term_meta((int) $row->id, $row->key, $parsed);
-          return true;
-        }
+    foreach ($this->buckets() as $bucket) {
+      $parsed = $this->decode_record($bucket['value']);
+      if ($this->apply_mutation_to_envelope($parsed, $target_id, $mutator)) {
+        $bucket['write']($parsed);
+        return true;
       }
     }
 
@@ -509,65 +560,62 @@ final class AnimationsDataHandler
   {
     $count = 0;
 
-    // 1. Global
-    $global = get_option(self::GLOBAL_ANIMATIONS_OPTION, null);
-    if ($global !== null) {
-      $parsed = is_string($global) ? json_decode($global, true) : $global;
-      if (is_array($parsed)) {
-        $c = $this->apply_mutation_to_all_in_envelope($parsed, $mutator);
-        if ($c > 0) {
-          update_option(self::GLOBAL_ANIMATIONS_OPTION, $parsed);
-          $count += $c;
-        }
-      }
-    }
-
-    // 2. Post meta
-    global $wpdb;
-    $prefix = self::ANIMATION_OPTION_PREFIX;
-    $like = $wpdb->esc_like($prefix) . '%';
-    $post_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT pm.post_id AS id, pm.meta_key AS `key`, pm.meta_value AS `value`
-         FROM {$wpdb->postmeta} pm
-         WHERE pm.meta_key LIKE %s",
-        $like
-      )
-    );
-
-    foreach ($post_rows as $row) {
-      $parsed = is_string($row->value) ? json_decode($row->value, true) : $row->value;
-      if (is_array($parsed)) {
-        $c = $this->apply_mutation_to_all_in_envelope($parsed, $mutator);
-        if ($c > 0) {
-          update_post_meta((int) $row->id, $row->key, $parsed);
-          $count += $c;
-        }
-      }
-    }
-
-    // 3. Term meta
-    $term_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT tm.term_id AS id, tm.meta_key AS `key`, tm.meta_value AS `value`
-         FROM {$wpdb->termmeta} tm
-         WHERE tm.meta_key LIKE %s",
-        $like
-      )
-    );
-
-    foreach ($term_rows as $row) {
-      $parsed = is_string($row->value) ? json_decode($row->value, true) : $row->value;
-      if (is_array($parsed)) {
-        $c = $this->apply_mutation_to_all_in_envelope($parsed, $mutator);
-        if ($c > 0) {
-          update_term_meta((int) $row->id, $row->key, $parsed);
-          $count += $c;
-        }
+    foreach ($this->buckets() as $bucket) {
+      $parsed = $this->decode_record($bucket['value']);
+      $c = $this->apply_mutation_to_all_in_envelope($parsed, $mutator);
+      if ($c > 0) {
+        $bucket['write']($parsed);
+        $count += $c;
       }
     }
 
     return $count;
+  }
+
+  /**
+   * Whether an id is found in a draft bucket and in no published one: a never-published animation.
+   */
+  private function lives_only_in_drafts(string $target_id): bool
+  {
+    $in_published = false;
+    $in_draft = false;
+
+    foreach ($this->buckets() as $bucket) {
+      if (!$this->envelope_has_id($this->decode_record($bucket['value']), $target_id)) {
+        continue;
+      }
+      if ($bucket['draft']) {
+        $in_draft = true;
+      } else {
+        $in_published = true;
+      }
+    }
+
+    return $in_draft && !$in_published;
+  }
+
+  private function envelope_has_id(array $envelope, string $target_id): bool
+  {
+    $lists = [];
+    foreach (['published', 'animations'] as $k) {
+      if (isset($envelope[$k]) && is_array($envelope[$k])) {
+        $lists[] = $envelope[$k];
+      }
+    }
+    if (isset($envelope[0]) && is_array($envelope[0])) {
+      $lists[] = $envelope;
+    }
+
+    foreach ($lists as $list) {
+      foreach ($list as $idx => $item) {
+        $id = is_array($item) && !empty($item['id']) ? (string) $item['id'] : (string) $idx;
+        if ($id === $target_id) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   private function apply_mutation_to_envelope(array &$envelope, string $target_id, callable $mutator): bool
@@ -622,58 +670,24 @@ final class AnimationsDataHandler
     return $count;
   }
 
+  /**
+   * Remove an animation from every bucket it is in, not the first match: a
+   * published animation's working copy sits in the draft bucket under the same
+   * id, and left behind it would come back in the editor as a never-published draft.
+   */
   private function delete_animation_by_id(string $target_id): bool
   {
-    // Check global
-    $global = get_option(self::GLOBAL_ANIMATIONS_OPTION, null);
-    if ($global !== null) {
-      $parsed = is_string($global) ? json_decode($global, true) : $global;
-      if (is_array($parsed) && $this->remove_item_from_envelope($parsed, $target_id)) {
-        update_option(self::GLOBAL_ANIMATIONS_OPTION, $parsed);
-        return true;
+    $removed = false;
+
+    foreach ($this->buckets() as $bucket) {
+      $parsed = $this->decode_record($bucket['value']);
+      if ($this->remove_item_from_envelope($parsed, $target_id)) {
+        $bucket['write']($parsed);
+        $removed = true;
       }
     }
 
-    // Check post_meta
-    global $wpdb;
-    $prefix = self::ANIMATION_OPTION_PREFIX;
-    $like = $wpdb->esc_like($prefix) . '%';
-    $post_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT pm.post_id AS id, pm.meta_key AS `key`, pm.meta_value AS `value`
-         FROM {$wpdb->postmeta} pm
-         WHERE pm.meta_key LIKE %s",
-        $like
-      )
-    );
-
-    foreach ($post_rows as $row) {
-      $parsed = is_string($row->value) ? json_decode($row->value, true) : $row->value;
-      if (is_array($parsed) && $this->remove_item_from_envelope($parsed, $target_id)) {
-        update_post_meta((int) $row->id, $row->key, $parsed);
-        return true;
-      }
-    }
-
-    // Check term_meta
-    $term_rows = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT tm.term_id AS id, tm.meta_key AS `key`, tm.meta_value AS `value`
-         FROM {$wpdb->termmeta} tm
-         WHERE tm.meta_key LIKE %s",
-        $like
-      )
-    );
-
-    foreach ($term_rows as $row) {
-      $parsed = is_string($row->value) ? json_decode($row->value, true) : $row->value;
-      if (is_array($parsed) && $this->remove_item_from_envelope($parsed, $target_id)) {
-        update_term_meta((int) $row->id, $row->key, $parsed);
-        return true;
-      }
-    }
-
-    return false;
+    return $removed;
   }
 
   private function remove_item_from_envelope(array &$envelope, string $target_id): bool

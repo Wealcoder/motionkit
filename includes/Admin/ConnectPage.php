@@ -164,6 +164,11 @@ final class ConnectPage
         'editorUrl'       => $this->get_editor_url(),
         'connectorActive' => AnimationsDataHandler::is_connector_active(),
         'strings'         => [
+          'onSite'        => __('Animations on this site:', 'motionkit'),
+          'live'          => __('live', 'motionkit'),
+          'draft'         => __('draft', 'motionkit'),
+          'typeFree'      => __('Free', 'motionkit'),
+          'typeGsap'      => __('GSAP', 'motionkit'),
           'noAnimations'  => __('No animations found on this site. Open MotionKit Editor to create your first animation.', 'motionkit'),
           'edit'          => __('Edit', 'motionkit'),
           'preview'       => __('Preview', 'motionkit'),
@@ -1166,7 +1171,7 @@ final class ConnectPage
               <?php esc_html_e('Active Animations', 'motionkit'); ?>
             </h2>
             <p class="motionkit-card-desc" id="motionkit-animations-stat-summary">
-              <?php esc_html_e('Scan and manage all native WAAPI and GSAP Pro animations running on your WordPress site.', 'motionkit'); ?>
+              <?php esc_html_e('Every animation MotionKit runs on this site, with where it plays and whether it is live.', 'motionkit'); ?>
             </p>
           </div>
           <div class="motionkit-animations-top-actions">
@@ -1192,7 +1197,7 @@ final class ConnectPage
               <option value=""><?php esc_html_e('Bulk Actions', 'motionkit'); ?></option>
               <?php if ($connector_active): ?>
                 <option value="upgrade_gsap"><?php esc_html_e('⚡ Upgrade to GSAP', 'motionkit'); ?></option>
-                <option value="revert_waapi"><?php esc_html_e('↺ Revert to WAAPI', 'motionkit'); ?></option>
+                <option value="revert_waapi"><?php esc_html_e('↺ Revert to Free', 'motionkit'); ?></option>
               <?php endif; ?>
               <option value="toggle_status"><?php esc_html_e('⏻ Toggle Status (Active/Draft)', 'motionkit'); ?></option>
               <option value="delete"><?php esc_html_e('🗑️ Delete', 'motionkit'); ?></option>
@@ -1203,10 +1208,10 @@ final class ConnectPage
           </div>
 
           <div class="motionkit-filter-search-wrap">
-            <select id="motionkit-engine-filter" class="motionkit-select">
-              <option value=""><?php esc_html_e('All Engines', 'motionkit'); ?></option>
-              <option value="waapi"><?php esc_html_e('Native WAAPI', 'motionkit'); ?></option>
-              <option value="gsap"><?php esc_html_e('GSAP Pro', 'motionkit'); ?></option>
+            <select id="motionkit-engine-filter" class="motionkit-select" aria-label="<?php esc_attr_e('Animation type', 'motionkit'); ?>">
+              <option value=""><?php esc_html_e('All types', 'motionkit'); ?></option>
+              <option value="waapi"><?php esc_html_e('Free (built-in)', 'motionkit'); ?></option>
+              <option value="gsap"><?php esc_html_e('GSAP add-on', 'motionkit'); ?></option>
             </select>
             <input type="search" id="motionkit-animations-search" class="motionkit-input"
                    placeholder="<?php esc_attr_e('Search animations...', 'motionkit'); ?>">
@@ -1222,7 +1227,7 @@ final class ConnectPage
                   <th><?php esc_html_e('Title', 'motionkit'); ?></th>
                   <th><?php esc_html_e('Target Element', 'motionkit'); ?></th>
                   <th><?php esc_html_e('Location', 'motionkit'); ?></th>
-                  <th><?php esc_html_e('Engine', 'motionkit'); ?></th>
+                  <th><?php esc_html_e('Type', 'motionkit'); ?></th>
                   <th><?php esc_html_e('Status', 'motionkit'); ?></th>
                   <th style="text-align:right;"><?php esc_html_e('Actions', 'motionkit'); ?></th>
                 </tr>

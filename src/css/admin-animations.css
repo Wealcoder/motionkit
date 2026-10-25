@@ -8,6 +8,16 @@
   gap: 1.25rem;
 }
 
+/* The table wrapper's scroll rule lives in admin-tools.css, which only the Tools tab loads; without it here the first real row overflowed the card. */
+.motionkit-animations-wrap .motionkit-tools-table-wrap {
+  overflow-x: auto;
+}
+
+/* Room for a title to read as one line before the row scrolls. */
+.motionkit-animations-table td:nth-child(2) {
+  min-width: 200px;
+}
+
 .motionkit-animations-header-card {
   padding: 1.5rem 1.75rem;
   background: linear-gradient(135deg, rgba(28, 126, 146, 0.04) 0%, rgba(89, 155, 253, 0.08) 100%);
@@ -171,6 +181,10 @@
   background: #fef2f2;
   color: #dc2626;
   border-color: #fecaca;
+}
+
+.motionkit-status-pill--locked {
+  cursor: default;
 }
 
 .motionkit-status-dot {

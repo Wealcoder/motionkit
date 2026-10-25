@@ -94,10 +94,11 @@
     }
     updateBulkApplyButton();
 
-    // Summary stats
+    // Summary in the words a site owner uses: how many, and how many of them visitors can see. The engine split lives in the type filter.
     const summary = document.getElementById("motionkit-animations-stat-summary");
     if (summary) {
-      summary.innerHTML = `<strong>${data.total}</strong> Total Animations &bull; <span style="color:#059669;font-weight:600;">${data.waapi_count} Native WAAPI</span> &bull; <span style="color:#7c3aed;font-weight:600;">${data.gsap_count} GSAP Pro</span>`;
+      const liveCount = list.filter((anim) => anim.is_active).length;
+      summary.innerHTML = `${esc(strings.onSite || "Animations on this site:")} <strong>${data.total}</strong> &bull; ${liveCount} ${esc(strings.live || "live")} &bull; ${list.length - liveCount} ${esc(strings.draft || "draft")}`;
     }
 
     // Top Upgrade All button
@@ -121,20 +122,23 @@
         const isSelected = state.selectedIds.has(anim.id);
         const engineBadge =
           anim.engine === "waapi"
-            ? `<span class="motionkit-badge-engine motionkit-badge-engine--waapi">WAAPI</span>`
-            : `<span class="motionkit-badge-engine motionkit-badge-engine--gsap">GSAP</span>`;
+            ? `<span class="motionkit-badge-engine motionkit-badge-engine--waapi">${esc(strings.typeFree || "Free")}</span>`
+            : `<span class="motionkit-badge-engine motionkit-badge-engine--gsap">${esc(strings.typeGsap || "GSAP")}</span>`;
 
-        const statusPill = anim.is_active
-          ? `<span class="motionkit-status-pill motionkit-status-pill--on" data-id="${esc(anim.id)}" title="Click to toggle status"><span class="motionkit-status-dot"></span>Active</span>`
-          : `<span class="motionkit-status-pill motionkit-status-pill--off" data-id="${esc(anim.id)}" title="Click to toggle status"><span class="motionkit-status-dot"></span>Draft</span>`;
+        // A never-published draft carries no data-id: publishing it is the editor's save, so the pill is a label here rather than a switch.
+        const statusPill = anim.can_toggle === false
+          ? `<span class="motionkit-status-pill motionkit-status-pill--off motionkit-status-pill--locked" title="Not published yet. Publish it from the editor."><span class="motionkit-status-dot"></span>Draft</span>`
+          : anim.is_active
+            ? `<span class="motionkit-status-pill motionkit-status-pill--on" data-id="${esc(anim.id)}" title="Click to toggle status"><span class="motionkit-status-dot"></span>Active</span>`
+            : `<span class="motionkit-status-pill motionkit-status-pill--off" data-id="${esc(anim.id)}" title="Click to toggle status"><span class="motionkit-status-dot"></span>Draft</span>`;
 
         // 1-Click quick upgrade/revert
         let quickEngineBtn = "";
         if (connectorActive) {
           if (anim.engine === "waapi") {
-            quickEngineBtn = `<button type="button" class="motionkit-btn-quick-engine motionkit-btn-quick-engine--upgrade motionkit-quick-switch" data-id="${esc(anim.id)}" data-target="gsap" title="Upgrade this animation to GSAP Pro">⚡ Upgrade</button>`;
+            quickEngineBtn = `<button type="button" class="motionkit-btn-quick-engine motionkit-btn-quick-engine--upgrade motionkit-quick-switch" data-id="${esc(anim.id)}" data-target="gsap" title="Run this animation with GSAP">⚡ Upgrade</button>`;
           } else {
-            quickEngineBtn = `<button type="button" class="motionkit-btn-quick-engine motionkit-btn-quick-engine--revert motionkit-quick-switch" data-id="${esc(anim.id)}" data-target="waapi" title="Revert this animation to Native WAAPI">↺ WAAPI</button>`;
+            quickEngineBtn = `<button type="button" class="motionkit-btn-quick-engine motionkit-btn-quick-engine--revert motionkit-quick-switch" data-id="${esc(anim.id)}" data-target="waapi" title="Run this animation with the free built-in engine">↺ Free</button>`;
           }
         }
 
@@ -320,7 +324,7 @@
   }
 
   function handleUpgradeAll() {
-    if (!confirm("Upgrade all Native WAAPI animations on this site to GSAP Pro?")) {
+    if (!confirm("Run every free animation on this site with GSAP instead?")) {
       return;
     }
 
@@ -437,7 +441,7 @@
 
         // Status pill click
         const statusPill = e.target.closest(".motionkit-status-pill");
-        if (statusPill) {
+        if (statusPill && statusPill.dataset.id) {
           e.preventDefault();
           const id = statusPill.dataset.id;
           handleToggleStatus(id);
