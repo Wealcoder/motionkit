@@ -60,23 +60,23 @@
   gap: 12px;
 }
 
+.motionkit-header-account {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.25;
+}
+
+.motionkit-header-account-label {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .motionkit-header-email {
   font-size: 13px;
   color: #6b7280;
-}
-
-.motionkit-header-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
-}
-
-.motionkit-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
 }
 
 /* ─── Layout ──────────────────────────────────── */
@@ -147,6 +147,8 @@
 /* ─── Content ─────────────────────────────────── */
 .motionkit-content {
   flex: 1;
+  /* A flex child's min-width defaults to its content width, so a wide table pushed the whole column past the card instead of scrolling inside it. */
+  min-width: 0;
   padding: 24px 28px;
 }
 
@@ -370,6 +372,40 @@
   margin-top: 16px;
 }
 
+/* ─── Consent (Connect tab, disconnected) ───────── */
+.motionkit-consent {
+  margin: 20px 0 0;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.motionkit-consent-line {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.motionkit-consent-details {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.motionkit-consent-details summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: #2563eb;
+}
+
+.motionkit-consent-details ul {
+  margin: 8px 0 0 20px;
+  padding: 0;
+  line-height: 1.6;
+}
+
 /* ─── Info Rows (Connect tab) ─────────────────── */
 .motionkit-info-row {
   display: flex;
@@ -450,6 +486,28 @@
 .motionkit-notice-icon {
   font-size: 14px;
   flex-shrink: 0;
+}
+
+/* The post-connect card: a title, a line of what happens next and the editor button, which the one-line strip had no room for. */
+.motionkit-notice--connected {
+  flex-wrap: wrap;
+  padding: 16px 44px 16px 16px;
+}
+
+.motionkit-notice-body {
+  display: flex;
+  flex: 1 1 240px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.motionkit-notice-title {
+  font-size: 14px;
+}
+
+.motionkit-notice-text {
+  font-size: 13px;
+  opacity: 0.9;
 }
 
 .motionkit-notice-close {

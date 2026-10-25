@@ -95,8 +95,11 @@ final class ConnectPage
     $default_tab = $connected ? 'animations' : 'connect';
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only tab selection; an invalid nonce falls back to the default tab rather than failing.
-    $tab_nonce_valid = isset($_GET['_wpnonce'])
-      && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'motionkit_tab_nav');
+    $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+
+    // The sidebar stamps motionkit_tab_nav; the OAuth callback and every other redirect_with_notice() redirect stamp motionkit_notice and name a tab too. That tab used to be ignored, so a site that had just connected landed on the empty Animations tab instead of the Connect tab it was sent to.
+    $tab_nonce_valid = $nonce !== ''
+      && (wp_verify_nonce($nonce, 'motionkit_tab_nav') || wp_verify_nonce($nonce, 'motionkit_notice'));
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Guarded by $tab_nonce_valid above.
     $tab = ($tab_nonce_valid && isset($_GET['tab']))
@@ -278,10 +281,10 @@ final class ConnectPage
       wp_die(esc_html__('You do not have permission to access this page.', 'motionkit'));
     }
 
-    $current_user = wp_get_current_user();
     $connection_info = self::connection_info();
     $connected = !empty($connection_info['connected']);
-    $user_email = !empty($connection_info['email']) ? $connection_info['email'] : $current_user->user_email;
+    // The header names the MotionKit account only. It used to fall back to the WordPress admin's email and avatar, which read as "already connected" on a site that was not.
+    $account_email = $connected ? (string) $connection_info['email'] : '';
 
     // Shared with enqueue_admin_styles() so the assets loaded always match the tab drawn.
     $active_tab = self::resolve_active_tab();
@@ -313,16 +316,14 @@ final class ConnectPage
           <span class="motionkit-header-title"><?php echo esc_html__('MotionKit', 'motionkit'); ?></span>
         </div>
         <div class="motionkit-header-right">
-          <span class="motionkit-header-email"><?php echo esc_html($user_email); ?></span>
-          <div class="motionkit-header-avatar">
-            <?php
-            // get_avatar() already escapes every attribute it outputs; wp_kses_post()
-            // here is defense-in-depth (keeps the <img> tag, unlike esc_html()) so the
-            // output is explicitly passed through an escaping call for reviewers/scanners
-            // that don't special-case get_avatar()'s built-in escaping.
-            echo wp_kses_post(get_avatar($current_user->ID, 32, '', '', ['class' => 'motionkit-avatar-img']));
-            ?>
-          </div>
+          <?php if ($connected): ?>
+            <span class="motionkit-header-account">
+              <span class="motionkit-header-account-label"><?php esc_html_e('MotionKit account', 'motionkit'); ?></span>
+              <span class="motionkit-header-email"><?php echo esc_html($account_email !== '' ? $account_email : __('Connected', 'motionkit')); ?></span>
+            </span>
+          <?php else: ?>
+            <span class="motionkit-badge motionkit-badge--error">&#9679; <?php esc_html_e('Not connected', 'motionkit'); ?></span>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -358,14 +359,14 @@ final class ConnectPage
               $this->render_tools_tab();
               break;
             case 'connect':
-              $this->render_connect_tab($current_user);
+              $this->render_connect_tab();
               break;
             case 'animations':
               $this->render_animations_tab();
               break;
             // $active_tab is already validated against $tabs above, so anything reaching here is a tab that was removed from the list — render the connect step rather than the animations list, which is the one tab a disconnected site must never be shown.
             default:
-              $this->render_connect_tab($current_user);
+              $this->render_connect_tab();
               break;
           }
           ?>
@@ -626,10 +627,25 @@ final class ConnectPage
       </div>
     <?php endif;
 
-    if ($just_connected): ?>
-      <div class="motionkit-notice motionkit-notice--success">
+    if ($just_connected):
+      // A card rather than a one-line strip: this is the first thing a new user sees after connecting, and it has to say who connected and what to do next.
+      $connected_email = (string) self::connection_info()['email'];
+      if ($connected_email !== '') {
+        /* translators: %s: the MotionKit account email. */
+        $connected_title = sprintf(__('Connected to MotionKit as %s', 'motionkit'), $connected_email);
+      } else {
+        $connected_title = __('Connected to MotionKit', 'motionkit');
+      }
+      ?>
+      <div class="motionkit-notice motionkit-notice--success motionkit-notice--connected">
         <span class="motionkit-notice-icon">&#10004;</span>
-        <?php esc_html_e('Connected Successfully', 'motionkit'); ?>
+        <div class="motionkit-notice-body">
+          <strong class="motionkit-notice-title"><?php echo esc_html($connected_title); ?></strong>
+          <span class="motionkit-notice-text"><?php esc_html_e('Animations you publish will play on this site. Open the editor on your homepage to build the first one.', 'motionkit'); ?></span>
+        </div>
+        <a href="<?php echo esc_url($this->get_editor_url()); ?>" class="motionkit-btn motionkit-btn--primary" target="_blank" rel="noopener">
+          <?php esc_html_e('Open the editor on your homepage', 'motionkit'); ?>
+        </a>
         <button type="button" class="motionkit-notice-close">&times;</button>
       </div>
     <?php endif;
@@ -930,19 +946,19 @@ final class ConnectPage
 
   // ─── Connect Tab ─────────────────────────────────────────────
 
-  private function render_connect_tab(\WP_User $current_user): void
+  private function render_connect_tab(): void
   {
     $info = self::connection_info();
 
     if ($info['connected']) {
-      $this->render_connected_state($info, $current_user);
+      $this->render_connected_state($info);
       $this->render_license_tab();
     } else {
       $this->render_disconnected_state();
     }
   }
 
-  private function render_connected_state(array $info, \WP_User $current_user): void
+  private function render_connected_state(array $info): void
   {
     $disconnect_url = wp_nonce_url(
       admin_url('admin.php?page=motionkit-connect&tab=connect&motionkit_disconnect=1'),
@@ -972,8 +988,11 @@ final class ConnectPage
       <div class="motionkit-card-body">
         <div class="motionkit-info-row">
           <div class="motionkit-info-content">
-            <span class="motionkit-info-label"><?php esc_html_e("You're connected as", 'motionkit'); ?></span>
-            <strong class="motionkit-info-value"><?php echo esc_html($info['email'] ?: $current_user->user_email); ?></strong>
+            <?php // A token response without an email names no account; the WordPress admin's email is not one, so nothing is shown rather than the wrong thing. ?>
+            <span class="motionkit-info-label"><?php echo esc_html($info['email'] ? __("You're connected as", 'motionkit') : __("You're connected", 'motionkit')); ?></span>
+            <?php if ($info['email']): ?>
+              <strong class="motionkit-info-value"><?php echo esc_html($info['email']); ?></strong>
+            <?php endif; ?>
           </div>
           <a href="<?php echo esc_url($verify_url); ?>" class="motionkit-btn motionkit-btn--outline">
             <?php esc_html_e('My Account', 'motionkit'); ?>
@@ -1060,31 +1079,25 @@ final class ConnectPage
           <?php esc_html_e('Connect this WordPress site with the MotionKit visual editor to create, customize, and manage high-performance animations.', 'motionkit'); ?>
         </p>
 
-        <!-- User Awareness & Consent Card -->
-        <div class="motionkit-awareness-card" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin:20px 0;">
-          <h4 style="margin:0 0 10px 0;font-size:14px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:8px;">
-            <span>ℹ️</span> <?php esc_html_e('What happens when you connect?', 'motionkit'); ?>
-          </h4>
-          <ul style="margin:0 0 12px 20px;padding:0;font-size:13px;color:#475569;line-height:1.6;">
-            <li><strong><?php esc_html_e('Animation JSON definitions:', 'motionkit'); ?></strong> <?php esc_html_e('Animations and keyframe configs created in the visual editor will be saved directly to your WordPress database (options & post meta).', 'motionkit'); ?></li>
-            <li><strong><?php esc_html_e('Page settings & preferences:', 'motionkit'); ?></strong> <?php esc_html_e('Page-specific animation triggers and configuration will sync directly with this site.', 'motionkit'); ?></li>
-            <li><strong><?php esc_html_e('Secure live preview:', 'motionkit'); ?></strong> <?php esc_html_e('A secure JWT token enables live preview in the visual editor. No admin passwords or sensitive user credentials are ever shared.', 'motionkit'); ?></li>
-          </ul>
-
-          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;font-weight:500;color:#1e293b;margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;">
-            <input type="checkbox" id="motionkit-connect-consent" style="margin-top:2px;">
-            <span><?php esc_html_e('I understand and authorize MotionKit to save animation JSON data and page settings to this site.', 'motionkit'); ?></span>
-          </label>
+        <!-- What connecting shares, in one line, with the detail a click away. The button is the consent: it says "Agree", and the editor's authorize page confirms the account before anything is stored. A checkbox used to gate a greyed-out button here without saying so, and it recorded nothing. -->
+        <div class="motionkit-consent">
+          <p class="motionkit-consent-line">
+            <?php esc_html_e("MotionKit will save your animations in this site's database. No passwords are shared.", 'motionkit'); ?>
+          </p>
+          <details class="motionkit-consent-details">
+            <summary><?php esc_html_e('What is shared?', 'motionkit'); ?></summary>
+            <ul>
+              <li><strong><?php esc_html_e('Your animations:', 'motionkit'); ?></strong> <?php esc_html_e('what you build in the editor is saved to this site, so it plays for visitors with nothing in between.', 'motionkit'); ?></li>
+              <li><strong><?php esc_html_e('Page settings:', 'motionkit'); ?></strong> <?php esc_html_e('which pages have animations, and the triggers you set for them.', 'motionkit'); ?></li>
+              <li><strong><?php esc_html_e('A preview key:', 'motionkit'); ?></strong> <?php esc_html_e('lets the editor show this site while you work. No admin password or user details are ever shared.', 'motionkit'); ?></li>
+            </ul>
+          </details>
         </div>
 
-        <div class="motionkit-form-actions" style="margin-top:16px;">
-          <a href="<?php echo esc_url($authorize_url); ?>"
-             id="motionkit-connect-btn"
-             class="motionkit-btn motionkit-btn--primary motionkit-btn--disabled"
-             aria-disabled="true"
-             style="opacity:0.5;pointer-events:none;">
+        <div class="motionkit-form-actions">
+          <a href="<?php echo esc_url($authorize_url); ?>" id="motionkit-connect-btn" class="motionkit-btn motionkit-btn--primary">
             <span>&#128279;</span>
-            <?php esc_html_e('Connect To MotionKit', 'motionkit'); ?>
+            <?php esc_html_e('Agree and connect', 'motionkit'); ?>
           </a>
         </div>
       </div>
@@ -1092,7 +1105,7 @@ final class ConnectPage
       <div class="motionkit-card-footer">
         <h4 class="motionkit-footer-title"><?php esc_html_e('Safe & Private', 'motionkit'); ?></h4>
         <p class="motionkit-footer-desc">
-          <?php esc_html_e('Authorization uses an encrypted token handshake. You can disconnect at any time from this dashboard or from your MotionKit account.', 'motionkit'); ?>
+          <?php esc_html_e('You can disconnect at any time, from this screen or from your MotionKit account.', 'motionkit'); ?>
         </p>
       </div>
     </div>
