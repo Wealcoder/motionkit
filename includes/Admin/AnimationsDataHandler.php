@@ -5,12 +5,15 @@ namespace MotionKit\Admin;
 use MotionKit\Common\AnimationResolver;
 
 /**
- * MotionKit WordPress Plugin — Active Animations & Hybrid Engine Manager.
+ * MotionKit WordPress Plugin — Active Animations manager.
  *
  * Scans, resolves, and manages animation records across global options,
  * post meta, and term meta. Provides AJAX endpoints for the Active Animations
- * dashboard tab, including 1-click lossless engine upgrade/revert (WAAPI <-> GSAP)
- * and bulk operations.
+ * dashboard tab: the list, the status toggle and delete.
+ *
+ * It never rewrites an animation's engine. The runtimes decide free vs GSAP from
+ * the record's group and preset key, so an `engine` tag written here changed the
+ * badge and nothing else — and tagging a GSAP animation `waapi` only stopped it.
  *
  * @package MotionKit
  * @since 1.2.0
@@ -30,20 +33,8 @@ final class AnimationsDataHandler
   public function init(): void
   {
     add_action('wp_ajax_motionkit_animations_list', [$this, 'ajax_animations_list']);
-    add_action('wp_ajax_motionkit_update_animation_engine', [$this, 'ajax_update_animation_engine']);
-    add_action('wp_ajax_motionkit_bulk_engine_update', [$this, 'ajax_bulk_engine_update']);
     add_action('wp_ajax_motionkit_toggle_animation_status', [$this, 'ajax_toggle_animation_status']);
     add_action('wp_ajax_motionkit_delete_single_animation', [$this, 'ajax_delete_single_animation']);
-  }
-
-  /**
-   * Check if the Pro/Connector engine is active.
-   */
-  public static function is_connector_active(): bool
-  {
-    return defined('MOTIONKIT_CONNECTOR_LOADED')
-      || (class_exists('\MotionKitConnector\Auth\OAuthHandler')
-          && \MotionKitConnector\Auth\OAuthHandler::is_connected());
   }
 
   /**
@@ -76,117 +67,9 @@ final class AnimationsDataHandler
       }));
     }
 
-    $waapi_count = 0;
-    $gsap_count = 0;
-    foreach ($animations as $anim) {
-      if ($anim['engine'] === 'waapi') {
-        $waapi_count++;
-      } else {
-        $gsap_count++;
-      }
-    }
-
     wp_send_json_success([
-      'animations'       => $animations,
-      'total'            => count($animations),
-      'waapi_count'      => $waapi_count,
-      'gsap_count'       => $gsap_count,
-      'connector_active' => self::is_connector_active(),
-    ]);
-  }
-
-  /**
-   * AJAX: 1-Click single animation engine switch.
-   */
-  public function ajax_update_animation_engine(): void
-  {
-    if (!current_user_can('manage_options')) {
-      wp_send_json_error(['message' => 'Unauthorized'], 403);
-    }
-    check_ajax_referer('motionkit_animations_ajax', 'nonce');
-
-    $anim_id = isset($_POST['animation_id']) ? sanitize_text_field(wp_unslash($_POST['animation_id'])) : '';
-    $target_engine = isset($_POST['target_engine']) ? sanitize_text_field(wp_unslash($_POST['target_engine'])) : 'gsap';
-
-    if ($anim_id === '' || !in_array($target_engine, ['waapi', 'gsap'], true)) {
-      wp_send_json_error(['message' => 'Invalid parameters'], 400);
-    }
-
-    $updated = $this->mutate_animation_by_id($anim_id, function (&$anim) use ($target_engine) {
-      $anim['engine'] = $target_engine;
-      if (isset($anim['runtime']) && is_array($anim['runtime'])) {
-        $anim['runtime']['engine'] = $target_engine;
-      }
-      return true;
-    });
-
-    if ($updated) {
-      /* translators: %s: Target animation engine (e.g. GSAP or WAAPI) */
-      $msg = sprintf(__('Switched engine to %s.', 'motionkit'), strtoupper($target_engine));
-      wp_send_json_success([
-        'message'       => $msg,
-        'animation_id'  => $anim_id,
-        'target_engine' => $target_engine,
-      ]);
-    }
-
-    wp_send_json_error(['message' => __('Animation not found.', 'motionkit')], 404);
-  }
-
-  /**
-   * AJAX: Bulk upgrade or revert animations.
-   */
-  public function ajax_bulk_engine_update(): void
-  {
-    if (!current_user_can('manage_options')) {
-      wp_send_json_error(['message' => 'Unauthorized'], 403);
-    }
-    check_ajax_referer('motionkit_animations_ajax', 'nonce');
-
-    $target_engine = isset($_POST['target_engine']) ? sanitize_text_field(wp_unslash($_POST['target_engine'])) : 'gsap';
-    if (!in_array($target_engine, ['waapi', 'gsap'], true)) {
-      wp_send_json_error(['message' => 'Invalid target engine'], 400);
-    }
-
-    $all_flag = !empty($_POST['all']);
-    $ids = isset($_POST['animation_ids']) && is_array($_POST['animation_ids'])
-      ? array_map('sanitize_text_field', wp_unslash($_POST['animation_ids']))
-      : [];
-
-    $count = 0;
-    if ($all_flag) {
-      $count = $this->mutate_all_animations(function (&$anim) use ($target_engine) {
-        if (($anim['engine'] ?? '') !== $target_engine) {
-          $anim['engine'] = $target_engine;
-          if (isset($anim['runtime']) && is_array($anim['runtime'])) {
-            $anim['runtime']['engine'] = $target_engine;
-          }
-          return true;
-        }
-        return false;
-      });
-    } else {
-      foreach ($ids as $id) {
-        $mutated = $this->mutate_animation_by_id($id, function (&$anim) use ($target_engine) {
-          $anim['engine'] = $target_engine;
-          if (isset($anim['runtime']) && is_array($anim['runtime'])) {
-            $anim['runtime']['engine'] = $target_engine;
-          }
-          return true;
-        });
-        if ($mutated) {
-          $count++;
-        }
-      }
-    }
-
-    /* translators: 1: Count of updated animations, 2: Target animation engine (e.g. GSAP or WAAPI) */
-    $bulk_msg = sprintf(__('Successfully updated %1$d animation(s) to %2$s.', 'motionkit'), $count, strtoupper($target_engine));
-
-    wp_send_json_success([
-      'updated_count' => $count,
-      'target_engine' => $target_engine,
-      'message'       => $bulk_msg,
+      'animations' => $animations,
+      'total'      => count($animations),
     ]);
   }
 
@@ -554,25 +437,6 @@ final class AnimationsDataHandler
   }
 
   /**
-   * Mutate all animations across all storage envelopes.
-   */
-  private function mutate_all_animations(callable $mutator): int
-  {
-    $count = 0;
-
-    foreach ($this->buckets() as $bucket) {
-      $parsed = $this->decode_record($bucket['value']);
-      $c = $this->apply_mutation_to_all_in_envelope($parsed, $mutator);
-      if ($c > 0) {
-        $bucket['write']($parsed);
-        $count += $c;
-      }
-    }
-
-    return $count;
-  }
-
-  /**
    * Whether an id is found in a draft bucket and in no published one: a never-published animation.
    */
   private function lives_only_in_drafts(string $target_id): bool
@@ -643,31 +507,6 @@ final class AnimationsDataHandler
     }
 
     return false;
-  }
-
-  private function apply_mutation_to_all_in_envelope(array &$envelope, callable $mutator): int
-  {
-    $count = 0;
-    $keys = ['published', 'animations'];
-    foreach ($keys as $k) {
-      if (isset($envelope[$k]) && is_array($envelope[$k])) {
-        foreach ($envelope[$k] as &$item) {
-          if ($mutator($item)) {
-            $count++;
-          }
-        }
-      }
-    }
-
-    if (isset($envelope[0]) && is_array($envelope[0])) {
-      foreach ($envelope as &$item) {
-        if ($mutator($item)) {
-          $count++;
-        }
-      }
-    }
-
-    return $count;
   }
 
   /**

@@ -159,11 +159,10 @@ final class ConnectPage
       );
 
       wp_localize_script('motionkit-admin-animations', 'motionkitAnimationsData', [
-        'ajaxUrl'         => admin_url('admin-ajax.php'),
-        'nonce'           => wp_create_nonce('motionkit_animations_ajax'),
-        'editorUrl'       => $this->get_editor_url(),
-        'connectorActive' => AnimationsDataHandler::is_connector_active(),
-        'strings'         => [
+        'ajaxUrl'   => admin_url('admin-ajax.php'),
+        'nonce'     => wp_create_nonce('motionkit_animations_ajax'),
+        'editorUrl' => $this->get_editor_url(),
+        'strings'   => [
           'onSite'        => __('Animations on this site:', 'motionkit'),
           'live'          => __('live', 'motionkit'),
           'draft'         => __('draft', 'motionkit'),
@@ -1159,7 +1158,6 @@ final class ConnectPage
   private function render_animations_tab(): void
   {
     $editor_url = $this->get_editor_url();
-    $connector_active = AnimationsDataHandler::is_connector_active();
     ?>
     <div class="motionkit-animations-wrap">
       <!-- Top Action Bar -->
@@ -1175,12 +1173,6 @@ final class ConnectPage
             </p>
           </div>
           <div class="motionkit-animations-top-actions">
-            <?php if ($connector_active): ?>
-              <button type="button" class="motionkit-btn motionkit-btn--outline motionkit-btn--upgrade-all" id="motionkit-upgrade-all-btn" style="display:none;">
-                <span class="motionkit-upgrade-icon">⚡</span>
-                <span class="motionkit-upgrade-text"><?php esc_html_e('Upgrade All to GSAP', 'motionkit'); ?></span>
-              </button>
-            <?php endif; ?>
             <a href="<?php echo esc_url($editor_url); ?>" target="_blank" rel="noopener" class="motionkit-btn motionkit-btn--primary">
               <span class="motionkit-btn-plus">+</span>
               <?php esc_html_e('Open MotionKit Editor', 'motionkit'); ?>
@@ -1195,10 +1187,6 @@ final class ConnectPage
           <div class="motionkit-bulk-actions-wrap">
             <select id="motionkit-bulk-action-select" class="motionkit-select">
               <option value=""><?php esc_html_e('Bulk Actions', 'motionkit'); ?></option>
-              <?php if ($connector_active): ?>
-                <option value="upgrade_gsap"><?php esc_html_e('⚡ Upgrade to GSAP', 'motionkit'); ?></option>
-                <option value="revert_waapi"><?php esc_html_e('↺ Revert to Free', 'motionkit'); ?></option>
-              <?php endif; ?>
               <option value="toggle_status"><?php esc_html_e('⏻ Toggle Status (Active/Draft)', 'motionkit'); ?></option>
               <option value="delete"><?php esc_html_e('🗑️ Delete', 'motionkit'); ?></option>
             </select>

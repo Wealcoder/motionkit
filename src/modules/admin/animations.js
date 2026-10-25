@@ -1,12 +1,11 @@
 /**
- * MotionKit Admin — Active Animations & Hybrid Engine Manager UI.
+ * MotionKit Admin — Active Animations UI.
  */
 (function () {
   const config = window.motionkitAnimationsData || {};
   const ajaxUrl = config.ajaxUrl || "";
   const nonce = config.nonce || "";
   const editorUrl = config.editorUrl || "";
-  const connectorActive = Boolean(config.connectorActive);
   const strings = config.strings || {};
 
   let state = {
@@ -101,17 +100,6 @@
       summary.innerHTML = `${esc(strings.onSite || "Animations on this site:")} <strong>${data.total}</strong> &bull; ${liveCount} ${esc(strings.live || "live")} &bull; ${list.length - liveCount} ${esc(strings.draft || "draft")}`;
     }
 
-    // Top Upgrade All button
-    const upgradeAllBtn = document.getElementById("motionkit-upgrade-all-btn");
-    if (upgradeAllBtn) {
-      if (connectorActive && data.waapi_count > 0) {
-        upgradeAllBtn.style.display = "inline-flex";
-        upgradeAllBtn.querySelector(".motionkit-upgrade-text").textContent = `Upgrade All to GSAP (${data.waapi_count})`;
-      } else {
-        upgradeAllBtn.style.display = "none";
-      }
-    }
-
     if (!list || list.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" class="motionkit-tools-empty">${esc(strings.noAnimations || "No animations found on this site. Open MotionKit Editor to create your first animation.")}</td></tr>`;
       return;
@@ -131,16 +119,6 @@
           : anim.is_active
             ? `<span class="motionkit-status-pill motionkit-status-pill--on" data-id="${esc(anim.id)}" title="Click to toggle status"><span class="motionkit-status-dot"></span>Active</span>`
             : `<span class="motionkit-status-pill motionkit-status-pill--off" data-id="${esc(anim.id)}" title="Click to toggle status"><span class="motionkit-status-dot"></span>Draft</span>`;
-
-        // 1-Click quick upgrade/revert
-        let quickEngineBtn = "";
-        if (connectorActive) {
-          if (anim.engine === "waapi") {
-            quickEngineBtn = `<button type="button" class="motionkit-btn-quick-engine motionkit-btn-quick-engine--upgrade motionkit-quick-switch" data-id="${esc(anim.id)}" data-target="gsap" title="Run this animation with GSAP">⚡ Upgrade</button>`;
-          } else {
-            quickEngineBtn = `<button type="button" class="motionkit-btn-quick-engine motionkit-btn-quick-engine--revert motionkit-quick-switch" data-id="${esc(anim.id)}" data-target="waapi" title="Run this animation with the free built-in engine">↺ Free</button>`;
-          }
-        }
 
         const editLink = anim.edit_url
           ? `<a href="${esc(anim.edit_url)}" target="_blank" rel="noopener" class="motionkit-btn motionkit-btn--primary motionkit-btn--sm">${esc(strings.edit || "Edit")}</a>`
@@ -168,7 +146,6 @@
             <td>${statusPill}</td>
             <td>
               <div class="motionkit-actions-group">
-                ${quickEngineBtn}
                 ${editLink}
                 ${delBtn}
               </div>
@@ -192,26 +169,6 @@
     } else {
       btn.textContent = "Apply";
     }
-  }
-
-  function handleQuickSwitch(animId, targetEngine) {
-    const formData = new FormData();
-    formData.append("action", "motionkit_update_animation_engine");
-    formData.append("nonce", nonce);
-    formData.append("animation_id", animId);
-    formData.append("target_engine", targetEngine);
-
-    fetch(ajaxUrl, { method: "POST", body: formData })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          showToast(res.data.message || strings.done, "success");
-          fetchAnimations();
-        } else {
-          showToast(res.data?.message || strings.failed, "error");
-        }
-      })
-      .catch((err) => showToast("Error: " + err.message, "error"));
   }
 
   function handleToggleStatus(animId) {
@@ -264,27 +221,7 @@
 
     if (!action || ids.length === 0) return;
 
-    if (action === "upgrade_gsap" || action === "revert_waapi") {
-      const targetEngine = action === "upgrade_gsap" ? "gsap" : "waapi";
-      const formData = new FormData();
-      formData.append("action", "motionkit_bulk_engine_update");
-      formData.append("nonce", nonce);
-      formData.append("target_engine", targetEngine);
-      ids.forEach((id) => formData.append("animation_ids[]", id));
-
-      fetch(ajaxUrl, { method: "POST", body: formData })
-        .then((res) => res.json())
-        .then((res) => {
-          if (res.success) {
-            showToast(res.data.message || strings.done, "success");
-            actionSelect.value = "";
-            fetchAnimations();
-          } else {
-            showToast(res.data?.message || strings.failed, "error");
-          }
-        })
-        .catch((err) => showToast("Error: " + err.message, "error"));
-    } else if (action === "delete") {
+    if (action === "delete") {
       if (!confirm(`Are you sure you want to delete ${ids.length} selected animation(s)?`)) {
         return;
       }
@@ -313,38 +250,23 @@
           formData.append("action", "motionkit_toggle_animation_status");
           formData.append("nonce", nonce);
           formData.append("animation_id", id);
-          return fetch(ajaxUrl, { method: "POST", body: formData });
+          return fetch(ajaxUrl, { method: "POST", body: formData })
+            .then((r) => r.json())
+            .catch(() => ({ success: false }));
         })
-      ).then(() => {
-        showToast(`Updated status for ${ids.length} animation(s).`, "success");
+      ).then((results) => {
+        // A never-published draft answers 409 with its reason; one blanket "updated" toast hid that while the row stayed as it was.
+        const updated = results.filter((r) => r && r.success).length;
+        const failed = results.find((r) => !r || !r.success);
+        if (updated === ids.length) {
+          showToast(`Updated status for ${updated} animation(s).`, "success");
+        } else {
+          showToast(`Updated ${updated} of ${ids.length}. ${failed?.data?.message || strings.failed}`, "error");
+        }
         actionSelect.value = "";
         fetchAnimations();
       });
     }
-  }
-
-  function handleUpgradeAll() {
-    if (!confirm("Run every free animation on this site with GSAP instead?")) {
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("action", "motionkit_bulk_engine_update");
-    formData.append("nonce", nonce);
-    formData.append("all", "1");
-    formData.append("target_engine", "gsap");
-
-    fetch(ajaxUrl, { method: "POST", body: formData })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          showToast(res.data.message || strings.done, "success");
-          fetchAnimations();
-        } else {
-          showToast(res.data?.message || strings.failed, "error");
-        }
-      })
-      .catch((err) => showToast("Error: " + err.message, "error"));
   }
 
   // Bind Events
@@ -385,12 +307,6 @@
       bulkApply.addEventListener("click", handleBulkAction);
     }
 
-    // Top Upgrade All
-    const upgradeAllBtn = document.getElementById("motionkit-upgrade-all-btn");
-    if (upgradeAllBtn) {
-      upgradeAllBtn.addEventListener("click", handleUpgradeAll);
-    }
-
     // Select all checkbox
     const selectAll = document.getElementById("motionkit-select-all");
     if (selectAll) {
@@ -426,16 +342,6 @@
             selectAll.indeterminate = state.selectedIds.size > 0 && state.selectedIds.size < state.animations.length;
           }
           updateBulkApplyButton();
-          return;
-        }
-
-        // Quick engine switch button click
-        const quickSwitch = e.target.closest(".motionkit-quick-switch");
-        if (quickSwitch) {
-          e.preventDefault();
-          const id = quickSwitch.dataset.id;
-          const target = quickSwitch.dataset.target;
-          handleQuickSwitch(id, target);
           return;
         }
 

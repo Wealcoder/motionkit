@@ -1,5 +1,5 @@
 /**
- * MotionKit Admin — Active Animations & Hybrid Engine Styles
+ * MotionKit Admin — Active Animations styles
  */
 
 .motionkit-animations-wrap {
@@ -52,21 +52,6 @@
   font-weight: 800;
   font-size: 1.1rem;
   line-height: 1;
-}
-
-.motionkit-btn--upgrade-all {
-  border-color: #f59e0b !important;
-  color: #d97706 !important;
-  background: #fffbeb;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.motionkit-btn--upgrade-all:hover {
-  background: #fef3c7;
-  border-color: #d97706 !important;
-  color: #b45309 !important;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
 }
 
 .motionkit-animations-controls-header {
@@ -192,43 +177,6 @@
   height: 6px;
   border-radius: 50%;
   background: currentColor;
-}
-
-/* 1-Click Upgrade Quick Action Button */
-.motionkit-btn-quick-engine {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 600;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.motionkit-btn-quick-engine--upgrade {
-  background: #fffbeb;
-  color: #d97706;
-  border-color: #fde68a;
-}
-
-.motionkit-btn-quick-engine--upgrade:hover {
-  background: #fef3c7;
-  color: #b45309;
-  border-color: #fcd34d;
-}
-
-.motionkit-btn-quick-engine--revert {
-  background: #f0fdfa;
-  color: #0d9488;
-  border-color: #99f6e4;
-}
-
-.motionkit-btn-quick-engine--revert:hover {
-  background: #ccfbf1;
-  color: #0f766e;
 }
 
 /* Row Action Group */
