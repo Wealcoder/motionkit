@@ -298,8 +298,9 @@ final class ConnectPage
           'actions'   => __('Actions', 'motionkit'),
           'never'     => __('Not recorded', 'motionkit'),
           /* translators: 1: rows on the page, 2: rows in total */
-          'showing'   => __('Showing %1$s of %2$s', 'motionkit'),
-          'confirm'   => __('Delete this animation data?', 'motionkit'),
+          'showing'     => __('Showing %1$s of %2$s', 'motionkit'),
+          'loadingMore' => __('Loading more...', 'motionkit'),
+          'confirm'     => __('Delete this animation data?', 'motionkit'),
           'deleting'  => __('Deleting...', 'motionkit'),
           'done'      => __('Done!', 'motionkit'),
         ],
@@ -481,6 +482,11 @@ final class ConnectPage
         </div>
 
       </div>
+
+      <!-- Back to top: shown by admin.js once the page is scrolled past the first screen; the lists load as they are scrolled, so the top gets far away. -->
+      <button type="button" class="motionkit-to-top" id="motionkit-to-top" aria-label="<?php esc_attr_e('Back to top', 'motionkit'); ?>" title="<?php esc_attr_e('Back to top', 'motionkit'); ?>">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
 
     <?php

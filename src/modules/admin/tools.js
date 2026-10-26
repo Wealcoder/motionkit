@@ -1,3 +1,5 @@
+import { watchListEnd } from "./scroll-more.js";
+
 (function () {
   const config = window.motionkitToolsData || {};
   const ajaxUrl = config.ajaxUrl || "";
@@ -6,6 +8,9 @@
   const redirectUrl = config.redirectUrl || "";
   const animationsUrl = config.animationsUrl || "";
   const strings = config.strings || {};
+
+  // Re-arms the end-of-list watcher after a render (see scroll-more.js); null when the browser cannot watch, and the Load more button shows instead.
+  let rewatchEnd = null;
 
   // The key the Animations tab filters a page by; the same shape AnimationsDataHandler::page_identity() stamps on each animation, so a row here lands on its own animations there.
   function pageKey(row) {
@@ -25,8 +30,8 @@
     return url.toString();
   }
 
-  // rows is every page fetched so far (Load more appends the next one); openRow is the index whose details popup is open.
-  let state = { page: 1, totalPages: 1, total: 0, search: "", debounce: null, rows: [], openRow: null };
+  // rows is every page fetched so far (the next one is appended as the list is scrolled to its end); openRow is the index whose details popup is open; loading stops a second request while one is out.
+  let state = { page: 1, totalPages: 1, total: 0, search: "", debounce: null, rows: [], openRow: null, loading: false };
 
   function esc(s) {
     return String(s == null ? "" : s).replace(
@@ -65,7 +70,7 @@
       tbody.innerHTML = state.rows
         .map(
           (r, i) => `
-            <tr>
+            <tr data-row="${i}">
               <td class="motionkit-tools-col-title">
                 <strong>${esc(r.title)}</strong>
                 <small class="motionkit-tools-row-key">${esc(r.option)}</small>
@@ -80,7 +85,7 @@
         .join("");
     }
 
-    // "Showing 20 of 46" and a Load more button while the server has pages left.
+    // "Showing 20 of 46"; the Load more button only where scrolling cannot load the rest.
     const footer = document.getElementById("motionkit-tools-footer");
     if (!footer) return;
     footer.hidden = state.rows.length === 0;
@@ -90,21 +95,25 @@
     }
     const more = document.getElementById("motionkit-tools-more");
     if (more) {
-      more.hidden = state.page >= state.totalPages;
+      more.hidden = state.page >= state.totalPages || rewatchEnd !== null;
       more.disabled = false;
     }
 
-    // The list scrolls inside the card, so an appended page is brought to the top of the scroll area; a fresh list starts at the top.
-    const scroller = document.getElementById("motionkit-tools-scroll");
-    if (scroller) {
-      const row = scroller.querySelectorAll("#motionkit-tools-tbody tr")[firstNew];
-      const headHeight = scroller.querySelector("thead") ? scroller.querySelector("thead").offsetHeight : 0;
-      scroller.scrollTo({ top: row && append ? Math.max(0, row.offsetTop - headHeight) : 0, behavior: append ? "smooth" : "auto" });
+    // A page appended by the Load more button is brought into view; one appended by scrolling is left where the user is.
+    if (append && rewatchEnd === null) {
+      const row = document.querySelectorAll("#motionkit-tools-tbody tr")[firstNew];
+      if (row) row.scrollIntoView({ block: "start", behavior: "smooth" });
     }
+    if (rewatchEnd) rewatchEnd();
   }
 
-  // The server pages at 20; a fresh list fetches page 1, Load more fetches the next page and appends it.
+  // The server pages at 20; a fresh list fetches page 1, the next page is fetched and appended as the list is scrolled to its end (or from the button).
   function fetchList(append) {
+    state.loading = true;
+    if (append) {
+      const count = document.getElementById("motionkit-tools-count");
+      if (count) count.textContent = strings.loadingMore || "Loading more...";
+    }
     const fd = new FormData();
     fd.append("action", "motionkit_tools_list");
     fd.append("nonce", nonce);
@@ -113,8 +122,20 @@
     fetch(ajaxUrl, { method: "POST", credentials: "same-origin", body: fd })
       .then((r) => r.json())
       .then((j) => {
+        state.loading = false;
         if (j && j.success) render(j.data, append);
+      })
+      .catch(() => {
+        state.loading = false;
       });
+  }
+
+  // The next page, when the server has one and none is on its way.
+  function fetchMore() {
+    if (state.loading || state.page >= state.totalPages) return false;
+    state.page += 1;
+    fetchList(true);
+    return true;
   }
 
   // The per-row delete is a real POST through the hidden form, which the connector answers with a redirect back to the tab.
@@ -219,13 +240,12 @@
       }
     });
 
+    // More rows as the list is scrolled to its end; the button is the fallback.
+    rewatchEnd = watchListEnd(document.getElementById("motionkit-tools-scroll"), "#motionkit-tools-tbody tr[data-row]", fetchMore);
     const moreBtn = document.getElementById("motionkit-tools-more");
     if (moreBtn) {
       moreBtn.addEventListener("click", () => {
-        if (state.page >= state.totalPages) return;
-        moreBtn.disabled = true;
-        state.page += 1;
-        fetchList(true);
+        if (fetchMore()) moreBtn.disabled = true;
       });
     }
 

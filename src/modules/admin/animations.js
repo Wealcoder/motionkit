@@ -1,6 +1,8 @@
 /**
  * MotionKit Admin — Active Animations UI.
  */
+import { watchListEnd } from "./scroll-more.js";
+
 (function () {
   const config = window.motionkitAnimationsData || {};
   const ajaxUrl = config.ajaxUrl || "";
@@ -8,8 +10,10 @@
   const editorUrl = config.editorUrl || "";
   const strings = config.strings || {};
 
-  // Rows rendered per Load more step; the list itself arrives whole, so paging is a rendering choice, not a request.
+  // Rows rendered per step; the list itself arrives whole, so paging is a rendering choice, not a request. The next step comes when the list is scrolled to its end (see scroll-more.js); the Load more button is the fallback.
   const PAGE_SIZE = 20;
+  // Re-arms the end-of-list watcher after a render; null when the browser cannot watch, and the button shows instead.
+  let rewatchEnd = null;
 
   let state = {
     animations: [],
@@ -173,6 +177,7 @@
       tbody.innerHTML = `<tr><td colspan="4" class="motionkit-animations-empty">${esc(empty)}</td></tr>`;
       renderFooter(0, 0);
       syncSelectAll();
+      if (rewatchEnd) rewatchEnd();
       return;
     }
 
@@ -202,9 +207,10 @@
 
     renderFooter(shown.length, list.length);
     syncSelectAll();
+    if (rewatchEnd) rewatchEnd();
   }
 
-  // "Showing 20 of 93" and a Load more button until every fetched row is on the page.
+  // "Showing 20 of 93"; the Load more button only where scrolling cannot load the rest.
   function renderFooter(shown, total) {
     const footer = document.getElementById("motionkit-animations-footer");
     if (!footer) return;
@@ -214,16 +220,21 @@
       count.textContent = (strings.showing || "Showing %1$s of %2$s").replace("%1$s", shown).replace("%2$s", total);
     }
     const more = document.getElementById("motionkit-animations-more");
-    if (more) more.hidden = shown >= total;
+    if (more) more.hidden = shown >= total || rewatchEnd !== null;
   }
 
-  // The list scrolls inside the card, so after Load more the first new row is brought to the top of the scroll area; scrolling the container itself leaves the page where it is.
+  // The next step of rows, when there is one. Scrolling to the end asks for it; so does the button.
+  function showMore() {
+    if (state.loading || state.visible >= state.animations.length) return false;
+    state.visible += PAGE_SIZE;
+    renderTable();
+    return true;
+  }
+
+  // After the Load more button, the first new row is brought into view; the sticky header's own height is what scroll-margin keeps clear.
   function revealRow(index) {
-    const scroller = document.getElementById("motionkit-animations-scroll");
-    const row = scroller && scroller.querySelectorAll("#motionkit-animations-tbody tr")[index];
-    if (!row) return;
-    const headHeight = scroller.querySelector("thead") ? scroller.querySelector("thead").offsetHeight : 0;
-    scroller.scrollTo({ top: Math.max(0, row.offsetTop - headHeight), behavior: "smooth" });
+    const row = document.querySelectorAll("#motionkit-animations-tbody tr")[index];
+    if (row) row.scrollIntoView({ block: "start", behavior: "smooth" });
   }
 
   // The header checkbox reflects the rendered rows: all of them, some, or none. Rows not yet loaded are not part of a selection.
@@ -516,14 +527,13 @@
       });
     }
 
-    // Load more
+    // More rows as the list is scrolled to its end; the button is the fallback and brings the first new row into view.
+    rewatchEnd = watchListEnd(document.getElementById("motionkit-animations-scroll"), "#motionkit-animations-tbody tr[data-row-id]", showMore);
     const moreBtn = document.getElementById("motionkit-animations-more");
     if (moreBtn) {
       moreBtn.addEventListener("click", () => {
         const firstNew = state.visible;
-        state.visible += PAGE_SIZE;
-        renderTable();
-        revealRow(firstNew);
+        if (showMore()) revealRow(firstNew);
       });
     }
 

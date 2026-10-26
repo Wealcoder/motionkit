@@ -91,6 +91,7 @@
 }
 
 /* ─── Layout ──────────────────────────────────── */
+/* No overflow clipping here: a clipped ancestor is what a sticky table header sticks to, and the list headers must stick to the viewport. Nothing inside reaches the rounded corners, so nothing needs clipping. */
 .motionkit-layout {
   display: flex;
   width: 100%;
@@ -98,7 +99,6 @@
   background: #fff;
   border-radius: 0 0 12px 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
 }
 
 /* ─── Sidebar ─────────────────────────────────── */
@@ -111,10 +111,13 @@
   min-height: 360px;
 }
 
+/* The tab list stays in view while a long list scrolls. Sticky on the nav rather than the column: the column is stretched to the layout's height, so it has nowhere to move. 52px is the admin bar plus the column's own top padding. */
 .motionkit-sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  position: sticky;
+  top: 52px;
 }
 
 .motionkit-sidebar-link {
@@ -834,20 +837,103 @@
   padding: 0 !important;
 }
 
-/* ─── Scrolling table ─────────────────────────── */
-/* The list scrolls inside the card instead of growing the page: its height follows the viewport (minus the chrome above and below it), with a floor so a short screen still shows a few rows, and the Load more footer stays in view. The header row stays put while the rows scroll under it. */
-.motionkit-table-scroll {
-  overflow: auto;
-  max-height: max(320px, calc(100vh - var(--motionkit-table-chrome, 500px)));
-  overscroll-behavior: contain;
-}
-
+/* ─── Long table ──────────────────────────────── */
+/* The list grows with the page and the next rows load as the page is scrolled to its end, so there is no inner scroll box to run out of; the header row sticks under the admin bar while the rows pass beneath it. */
 .motionkit-table-scroll thead th {
   position: sticky;
-  top: 0;
+  top: 32px;
   z-index: 1;
   /* A collapsed border does not travel with a sticky cell, so the line under the header is drawn as a shadow. */
   box-shadow: inset 0 -1px 0 #e5e7eb;
+}
+
+@media screen and (max-width: 782px) {
+  .motionkit-table-scroll thead th {
+    top: 46px;
+  }
+
+  /* wp-admin grows every checkbox to 25px on a narrow screen; with the two fixed columns beside it that left the title a third of the row. The desktop box, and the desktop check mark inside it. */
+  .motionkit-table-scroll input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    min-width: 1rem;
+    margin: 0;
+  }
+
+  .motionkit-table-scroll input[type="checkbox"]:checked::before {
+    width: 1.3125rem;
+    height: 1.3125rem;
+    margin: -0.1875rem 0 0 -0.25rem;
+  }
+}
+
+/* Below 600px the admin bar scrolls away with the page, so the header sticks to the top edge. */
+@media screen and (max-width: 600px) {
+  .motionkit-table-scroll thead th {
+    top: 0;
+  }
+}
+
+/* ─── Back to top ─────────────────────────────── */
+/* Fixed in the lower right, out of the way of the rows; kept in the tree but invisible until admin.js adds the show class past the first screen, so it fades in rather than popping. */
+.motionkit-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 50%;
+  background: #fff;
+  color: #374151;
+  box-shadow: 0 4px 14px -4px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.motionkit-to-top--show {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.motionkit-to-top:hover,
+.motionkit-to-top:focus-visible {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+  outline: none;
+}
+
+.motionkit-to-top:focus-visible {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+@media screen and (max-width: 782px) {
+  .motionkit-to-top {
+    right: 14px;
+    bottom: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motionkit-to-top {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* A row scrolled into view (the Load more fallback) lands under the sticky header and the admin bar, not behind them. */
+.motionkit-table-scroll tbody tr {
+  scroll-margin-top: 90px;
 }
 
 /* ─── Table footer ────────────────────────────── */
@@ -908,7 +994,9 @@
     padding: 8px 0;
   }
 
+  /* A strip across the top here, scrolled away with the page: stuck under the admin bar it would sit on the table header, which sticks there too. */
   .motionkit-sidebar-nav {
+    position: static;
     flex-direction: row;
     gap: 0;
     overflow-x: auto;

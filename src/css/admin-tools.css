@@ -51,8 +51,7 @@
 }
 
 /* ─── Table ─── */
-/* Three columns (title, type, actions) fit the card, so the row never scrolls sideways; the modified time and the storage live in the popup. Vertically it is a .motionkit-table-scroll: this tab has no summary card above the list, so less chrome than the Animations tab. */
-.motionkit-tools-table-wrap { --motionkit-table-chrome: 436px; }
+/* Three columns (title, type, actions) fit the card, so the row never scrolls sideways; the modified time and the storage live in the popup. The list grows with the page, loading as it is scrolled (admin.css, .motionkit-table-scroll). */
 .motionkit-tools-table { width: 100%; border-collapse: collapse; }
 .motionkit-tools-table th,
 .motionkit-tools-table td { padding: 10px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: left; vertical-align: middle; }
@@ -75,6 +74,16 @@
 }
 
 .motionkit-tools-empty { text-align: center; color: #6b7280; padding: 32px 12px; }
+
+/* Tighter cells on a narrow screen, so the title keeps most of the row beside the two fixed columns. */
+@media screen and (max-width: 782px) {
+  .motionkit-tools-table th,
+  .motionkit-tools-table td { padding: 10px 8px; }
+  .motionkit-tools-table th:first-child,
+  .motionkit-tools-table td:first-child { padding-left: 12px; }
+  .motionkit-tools-table th:last-child,
+  .motionkit-tools-table td:last-child { padding-right: 12px; }
+}
 
 .motionkit-tools-type {
   display: inline-block;
