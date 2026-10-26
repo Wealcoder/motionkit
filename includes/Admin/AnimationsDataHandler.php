@@ -35,6 +35,7 @@ final class AnimationsDataHandler
     add_action('wp_ajax_motionkit_animations_list', [$this, 'ajax_animations_list']);
     add_action('wp_ajax_motionkit_toggle_animation_status', [$this, 'ajax_toggle_animation_status']);
     add_action('wp_ajax_motionkit_delete_single_animation', [$this, 'ajax_delete_single_animation']);
+    add_action('wp_ajax_motionkit_animations_bulk', [$this, 'ajax_animations_bulk']);
   }
 
   /**
@@ -88,22 +89,9 @@ final class AnimationsDataHandler
       wp_send_json_error(['message' => 'Missing animation ID'], 400);
     }
 
-    // Publishing is the editor's save, which moves the record between buckets; flipping a flag inside the draft bucket would show Active for something no visitor gets.
-    if ($this->lives_only_in_drafts($anim_id)) {
-      wp_send_json_error(['message' => __('This animation has not been published yet. Publish it from the editor.', 'motionkit')], 409);
-    }
-
-    $new_status = 'published';
-    $updated = $this->mutate_animation_by_id($anim_id, function (&$anim) use (&$new_status) {
-      // Read the way the frontend reads it, so the toggle flips what a visitor actually sees.
-      $is_published = AnimationResolver::is_published($anim);
-      $new_status = $is_published ? 'draft' : 'published';
-      $anim['status'] = $new_status;
-      $anim['disabled'] = $is_published;
-      return true;
-    });
-
-    if ($updated) {
+    $new_status = '';
+    $error = $this->toggle_one($anim_id, $new_status);
+    if ($error === null) {
       wp_send_json_success([
         'animation_id' => $anim_id,
         'new_status'   => $new_status,
@@ -111,7 +99,120 @@ final class AnimationsDataHandler
       ]);
     }
 
-    wp_send_json_error(['message' => __('Animation not found.', 'motionkit')], 404);
+    wp_send_json_error(['message' => $error], $new_status === '' ? 409 : 404);
+  }
+
+  /**
+   * AJAX: Toggle or delete several animations in one request, one after another.
+   *
+   * The dashboard used to fire one request per selected row at the same time.
+   * Every toggle or delete rewrites the whole bucket the id lives in, so two
+   * rows on the same page raced: the last request to write put back the status
+   * the others had just changed, while each answer still said success.
+   */
+  public function ajax_animations_bulk(): void
+  {
+    if (!current_user_can('manage_options')) {
+      wp_send_json_error(['message' => 'Unauthorized'], 403);
+    }
+    check_ajax_referer('motionkit_animations_ajax', 'nonce');
+
+    $bulk_action = isset($_POST['bulk_action']) ? sanitize_key(wp_unslash($_POST['bulk_action'])) : '';
+    $ids = isset($_POST['animation_ids']) && is_array($_POST['animation_ids'])
+      ? array_map('sanitize_text_field', wp_unslash($_POST['animation_ids']))
+      : [];
+    $ids = array_values(array_unique(array_filter($ids, static function ($id) {
+      return $id !== '';
+    })));
+
+    if (!in_array($bulk_action, ['publish', 'draft', 'toggle_status', 'delete'], true) || [] === $ids) {
+      wp_send_json_error(['message' => 'Missing animation IDs or bulk action'], 400);
+    }
+
+    // Publish and Set as Draft set one status on every row; Toggle flips each row from wherever it is.
+    $targets = ['publish' => 'published', 'draft' => 'draft', 'toggle_status' => null];
+
+    $done = 0;
+    $failed = [];
+    foreach ($ids as $anim_id) {
+      $error = $bulk_action === 'delete'
+        ? $this->delete_one($anim_id)
+        : $this->set_status_one($anim_id, $targets[$bulk_action]);
+      if ($error === null) {
+        ++$done;
+      } else {
+        $failed[] = ['id' => $anim_id, 'message' => $error];
+      }
+    }
+
+    wp_send_json_success([
+      'action' => $bulk_action,
+      'done'   => $done,
+      'total'  => count($ids),
+      'failed' => $failed,
+    ]);
+  }
+
+  /**
+   * One status toggle, shared by the single and the bulk endpoint.
+   *
+   * @param string $anim_id    The animation id.
+   * @param string $new_status Set to the status the animation now has; left '' when it could not be toggled.
+   * @return string|null Null on success, otherwise the message for the user.
+   */
+  private function toggle_one(string $anim_id, string &$new_status = ''): ?string
+  {
+    return $this->set_status_one($anim_id, null, $new_status);
+  }
+
+  /**
+   * Set one animation's status, or flip it.
+   *
+   * @param string      $anim_id    The animation id.
+   * @param string|null $target     'published', 'draft', or null to flip whatever it is now.
+   * @param string      $new_status Set to the status the animation now has; left '' when it could not be changed.
+   * @return string|null Null on success, otherwise the message for the user.
+   */
+  private function set_status_one(string $anim_id, ?string $target, string &$new_status = ''): ?string
+  {
+    $new_status = '';
+
+    // Publishing is the editor's save, which moves the record between buckets; flipping a flag inside the draft bucket would show Active for something no visitor gets. Asking for draft is the one thing such a record already is, so that is a no-op rather than a refusal.
+    if ($this->lives_only_in_drafts($anim_id)) {
+      if ($target === 'draft') {
+        $new_status = 'draft';
+        return null;
+      }
+      return __('This animation has not been published yet. Publish it from the editor.', 'motionkit');
+    }
+
+    $status = 'published';
+    $updated = $this->mutate_animation_by_id($anim_id, function (&$anim) use (&$status, $target) {
+      // Read the way the frontend reads it, so the change lands on what a visitor actually sees.
+      $is_published = AnimationResolver::is_published($anim);
+      $status = $target ?? ($is_published ? 'draft' : 'published');
+      $anim['status'] = $status;
+      $anim['disabled'] = ($status === 'draft');
+      return true;
+    });
+
+    if (!$updated) {
+      return __('Animation not found.', 'motionkit');
+    }
+
+    $new_status = $status;
+    return null;
+  }
+
+  /**
+   * One delete, shared by the single and the bulk endpoint.
+   *
+   * @param string $anim_id The animation id.
+   * @return string|null Null on success, otherwise the message for the user.
+   */
+  private function delete_one(string $anim_id): ?string
+  {
+    return $this->delete_animation_by_id($anim_id) ? null : __('Animation not found.', 'motionkit');
   }
 
   /**
@@ -129,16 +230,16 @@ final class AnimationsDataHandler
       wp_send_json_error(['message' => 'Missing animation ID'], 400);
     }
 
-    $deleted = $this->delete_animation_by_id($anim_id);
+    $error = $this->delete_one($anim_id);
 
-    if ($deleted) {
+    if ($error === null) {
       wp_send_json_success([
         'animation_id' => $anim_id,
         'message'      => __('Animation removed.', 'motionkit'),
       ]);
     }
 
-    wp_send_json_error(['message' => __('Animation not found.', 'motionkit')], 404);
+    wp_send_json_error(['message' => $error], 404);
   }
 
   /**
