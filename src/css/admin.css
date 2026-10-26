@@ -1,16 +1,27 @@
 /* MotionKit Admin Dashboard */
 
 /* Reset WP admin defaults inside our page */
+/* The left margin cancels #wpcontent's padding so the grey background reaches the admin menu. No top margin: a -20px one pulled the header under the fixed admin bar, which the old vertical centring hid while the content was shorter than the viewport and the first long list exposed. The dashboard starts at the top like every other wp-admin screen. */
 .motionkit-page {
-  margin: -20px 0 0 -20px;
+  margin: 0 0 0 -20px;
+  padding: 80px 20px 48px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: #1a1a2e;
   background: #f4f5f7;
-  min-height: 100vh;
+  min-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+}
+
+/* The footer's text is removed by ConnectPage::remove_admin_footer(); this collapses the empty bar and the room #wpbody-content keeps for it, so the page ends with its own bottom padding. This stylesheet loads on the MotionKit page only. */
+#wpfooter {
+  display: none;
+}
+
+#wpbody-content {
+  padding-bottom: 0;
 }
 
 .motionkit-license_key::placeholder {
@@ -823,6 +834,22 @@
   padding: 0 !important;
 }
 
+/* ─── Scrolling table ─────────────────────────── */
+/* The list scrolls inside the card instead of growing the page: its height follows the viewport (minus the chrome above and below it), with a floor so a short screen still shows a few rows, and the Load more footer stays in view. The header row stays put while the rows scroll under it. */
+.motionkit-table-scroll {
+  overflow: auto;
+  max-height: max(320px, calc(100vh - var(--motionkit-table-chrome, 500px)));
+  overscroll-behavior: contain;
+}
+
+.motionkit-table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  /* A collapsed border does not travel with a sticky cell, so the line under the header is drawn as a shadow. */
+  box-shadow: inset 0 -1px 0 #e5e7eb;
+}
+
 /* ─── Table footer ────────────────────────────── */
 /* "Showing 20 of 93" over a centred Load more, under a list that renders in steps. */
 .motionkit-table-footer {
@@ -861,6 +888,13 @@
 
 /* ─── Responsive ─────────────────────────────── */
 @media (max-width: 782px) {
+  /* wp-admin narrows #wpcontent's padding to 10px and raises the admin bar to 46px here. */
+  .motionkit-page {
+    margin-left: -10px;
+    padding: 40px 12px 40px;
+    min-height: calc(100vh - 46px);
+  }
+
   .motionkit-layout {
     flex-direction: column;
     border-radius: 12px;

@@ -17,13 +17,37 @@
     // How many of the fetched rows are rendered; Load more raises it, a refetch resets it.
     visible: PAGE_SIZE,
     selectedIds: new Set(),
-    search: "",
-    engineFilter: "",
-    debounceTimer: null,
+    // The page key the list is narrowed to ('' is every page); the Animated Pages tab opens this tab with one preselected.
+    pageFilter: "",
+    // The preselected page's title, shown in the dropdown while the page has no animations to be listed under.
+    pageFilterTitle: "",
+    // Every page that carries an animation, from the last response, so the dropdown keeps them all while a page is selected.
+    pages: [],
     loading: false,
     // The id whose details popup is open, so a refetch can refresh or close it.
     openId: null,
   };
+
+  // The Animated Pages tab links here with ?mk_page=<key>&mk_page_title=<title>; read once and dropped from the address bar, so a reload or a shared link does not pin the filter.
+  function readPageFromUrl() {
+    let params;
+    try {
+      params = new URL(window.location.href).searchParams;
+    } catch (e) {
+      return;
+    }
+    const key = params.get("mk_page");
+    if (!key) return;
+    state.pageFilter = key;
+    state.pageFilterTitle = params.get("mk_page_title") || "";
+    params.delete("mk_page");
+    params.delete("mk_page_title");
+    if (window.history && history.replaceState) {
+      const url = new URL(window.location.href);
+      url.search = params.toString();
+      history.replaceState(null, "", url.toString());
+    }
+  }
 
   function esc(s) {
     return String(s == null ? "" : s).replace(
@@ -68,8 +92,7 @@
     const formData = new FormData();
     formData.append("action", "motionkit_animations_list");
     formData.append("nonce", nonce);
-    formData.append("search", state.search);
-    formData.append("engine", state.engineFilter);
+    formData.append("page_key", state.pageFilter);
 
     fetch(ajaxUrl, { method: "POST", body: formData })
       .then((res) => res.json())
@@ -78,8 +101,10 @@
         if (res.success && res.data) {
           state.animations = res.data.animations || [];
           state.total = typeof res.data.total === "number" ? res.data.total : state.animations.length;
+          state.pages = Array.isArray(res.data.pages) ? res.data.pages : [];
           state.visible = PAGE_SIZE;
           state.selectedIds.clear();
+          renderPageFilter();
           renderTable();
           syncDetails();
         } else {
@@ -92,6 +117,39 @@
       });
   }
 
+  // The page dropdown: every page that carries an animation, grouped by what it is (site-wide, pages, posts, terms...), with its count. Rebuilt from each response and kept on the selected page.
+  function renderPageFilter() {
+    const select = document.getElementById("motionkit-page-filter");
+    if (!select) return;
+
+    const groups = new Map();
+    state.pages.forEach((page) => {
+      if (!groups.has(page.group)) groups.set(page.group, []);
+      groups.get(page.group).push(page);
+    });
+
+    let html = `<option value="">${esc(strings.allPages || "All pages")}</option>`;
+    // A page linked from the Animated Pages tab that carries no animation is still shown as the selection, so the empty list reads as that page's, not as a broken filter.
+    const known = state.pages.some((page) => page.key === state.pageFilter);
+    if (state.pageFilter && !known) {
+      html += `<option value="${esc(state.pageFilter)}">${esc(state.pageFilterTitle || state.pageFilter)} (0)</option>`;
+    }
+    groups.forEach((pages, group) => {
+      html += `<optgroup label="${esc(group)}">`;
+      pages.forEach((page) => {
+        html += `<option value="${esc(page.key)}">${esc(page.label)} (${page.count})</option>`;
+      });
+      html += `</optgroup>`;
+    });
+
+    select.innerHTML = html;
+    select.value = state.pageFilter;
+    if (select.value !== state.pageFilter) {
+      state.pageFilter = "";
+      select.value = "";
+    }
+  }
+
   function renderTable() {
     const tbody = document.getElementById("motionkit-animations-tbody");
     if (!tbody) return;
@@ -99,15 +157,20 @@
     const list = state.animations;
     updateBulkApplyButton();
 
-    // Summary in the words a site owner uses: how many, and how many of them visitors can see. The engine split lives in the type filter.
+    // Summary in the words a site owner uses: how many, and how many of them visitors can see; "on this page" once the list is narrowed to one.
     const summary = document.getElementById("motionkit-animations-stat-summary");
     if (summary) {
       const liveCount = list.filter((anim) => anim.is_active).length;
-      summary.innerHTML = `${esc(strings.onSite || "Animations on this site:")} <strong>${state.total}</strong> &bull; ${liveCount} ${esc(strings.live || "live")} &bull; ${list.length - liveCount} ${esc(strings.draft || "draft")}`;
+      const scope = state.pageFilter ? strings.onPage || "Animations on this page:" : strings.onSite || "Animations on this site:";
+      summary.innerHTML = `${esc(scope)} <strong>${state.total}</strong> &bull; ${liveCount} ${esc(strings.live || "live")} &bull; ${list.length - liveCount} ${esc(strings.draft || "draft")}`;
     }
 
     if (!list || list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="motionkit-animations-empty">${esc(strings.noAnimations || "No animations found on this site. Open MotionKit Editor to create your first animation.")}</td></tr>`;
+      // An empty list under a page filter is that page having none, not an empty site.
+      const empty = state.pageFilter
+        ? strings.noMatches || "No animations match this filter."
+        : strings.noAnimations || "No animations found on this site. Open MotionKit Editor to create your first animation.";
+      tbody.innerHTML = `<tr><td colspan="4" class="motionkit-animations-empty">${esc(empty)}</td></tr>`;
       renderFooter(0, 0);
       syncSelectAll();
       return;
@@ -115,7 +178,7 @@
 
     const shown = list.slice(0, state.visible);
 
-    // Title, status and one Actions button per row: four columns fit the card, so the row never scrolls sideways. Everything else about the animation is in the details popup.
+    // Title with its engine badge, status and one Actions button per row: four columns fit the card, so the row never scrolls sideways. Everything else about the animation is in the details popup.
     tbody.innerHTML = shown
       .map((anim) => {
         const isSelected = state.selectedIds.has(anim.id);
@@ -125,7 +188,7 @@
               <input type="checkbox" class="motionkit-row-check" data-id="${esc(anim.id)}" ${isSelected ? "checked" : ""}>
             </td>
             <td class="motionkit-animations-col-title">
-              <strong>${esc(anim.title)}</strong>
+              <strong>${esc(anim.title)}</strong> ${engineBadgeHtml(anim)}
               ${anim.id ? `<small class="motionkit-animations-row-id">${esc(anim.id)}</small>` : ""}
             </td>
             <td class="motionkit-animations-col-status">${statusPillHtml(anim, true)}</td>
@@ -154,6 +217,15 @@
     if (more) more.hidden = shown >= total;
   }
 
+  // The list scrolls inside the card, so after Load more the first new row is brought to the top of the scroll area; scrolling the container itself leaves the page where it is.
+  function revealRow(index) {
+    const scroller = document.getElementById("motionkit-animations-scroll");
+    const row = scroller && scroller.querySelectorAll("#motionkit-animations-tbody tr")[index];
+    if (!row) return;
+    const headHeight = scroller.querySelector("thead") ? scroller.querySelector("thead").offsetHeight : 0;
+    scroller.scrollTo({ top: Math.max(0, row.offsetTop - headHeight), behavior: "smooth" });
+  }
+
   // The header checkbox reflects the rendered rows: all of them, some, or none. Rows not yet loaded are not part of a selection.
   function syncSelectAll() {
     const selectAll = document.getElementById("motionkit-select-all");
@@ -170,20 +242,14 @@
       : `<span class="motionkit-badge-engine motionkit-badge-engine--gsap">${esc(strings.typeGsap || "GSAP")}</span>`;
   }
 
-  // A never-published draft carries no data-id: publishing it is the editor's save, so the pill is a label rather than a switch; the popup's copy is a label too, since its Publish button does the toggling there.
+  // In a row the pill is the switch; the popup's copy is a label, since its Publish button does the toggling there.
   function statusPillHtml(anim, clickable) {
-    const locked = anim.can_toggle === false;
     const on = !!anim.is_active;
     const label = on ? strings.statusActive || "Active" : strings.statusDraft || "Draft";
     const classes = ["motionkit-status-pill", on ? "motionkit-status-pill--on" : "motionkit-status-pill--off"];
-    if (locked || !clickable) classes.push("motionkit-status-pill--locked");
+    if (!clickable) classes.push("motionkit-status-pill--locked");
 
-    let attrs = "";
-    if (locked) {
-      attrs = ` title="${esc(strings.notPublished || "Not published yet. Publish it from the editor.")}"`;
-    } else if (clickable) {
-      attrs = ` data-id="${esc(anim.id)}" title="${esc(strings.toggleHint || "Click to toggle status")}"`;
-    }
+    const attrs = clickable ? ` data-id="${esc(anim.id)}" title="${esc(strings.toggleHint || "Click to toggle status")}"` : "";
 
     return `<span class="${classes.join(" ")}"${attrs}><span class="motionkit-status-dot"></span>${esc(label)}</span>`;
   }
@@ -209,10 +275,7 @@
     idEl.textContent = anim.id || "";
     idEl.hidden = !anim.id;
 
-    const locked = anim.can_toggle === false;
-    field("status").innerHTML =
-      statusPillHtml(anim, false) +
-      (locked ? `<span class="motionkit-details-hint">${esc(strings.notPublished || "Not published yet. Publish it from the editor.")}</span>` : "");
+    field("status").innerHTML = statusPillHtml(anim, false);
 
     field("type").innerHTML = engineBadgeHtml(anim);
     field("target").textContent = anim.target || "";
@@ -224,7 +287,6 @@
         : "");
 
     const toggleBtn = field("toggle");
-    toggleBtn.hidden = locked;
     toggleBtn.textContent = anim.is_active ? strings.setDraft || "Set as draft" : strings.publish || "Publish";
 
     const editLink = field("edit");
@@ -351,7 +413,7 @@
           return;
         }
         const { done, total, failed } = res.data;
-        // A never-published draft refuses to be published from here, with its reason; one blanket "updated" toast hid that while the row stayed as it was.
+        // A row that could not be changed is named with its reason; one blanket "updated" toast hid that while the row stayed as it was.
         const reason = failed && failed[0] ? failed[0].message : strings.failed;
         const all = done === total;
         const doneText = {
@@ -378,23 +440,12 @@
     const tableWrap = document.querySelector(".motionkit-animations-wrap");
     if (!tableWrap) return;
 
-    // Search input
-    const searchInput = document.getElementById("motionkit-animations-search");
-    if (searchInput) {
-      searchInput.addEventListener("input", (e) => {
-        clearTimeout(state.debounceTimer);
-        state.search = e.target.value.trim();
-        state.debounceTimer = setTimeout(() => {
-          fetchAnimations();
-        }, 250);
-      });
-    }
-
-    // Engine filter
-    const engineFilter = document.getElementById("motionkit-engine-filter");
-    if (engineFilter) {
-      engineFilter.addEventListener("change", (e) => {
-        state.engineFilter = e.target.value;
+    // Page filter
+    const pageFilter = document.getElementById("motionkit-page-filter");
+    if (pageFilter) {
+      pageFilter.addEventListener("change", (e) => {
+        state.pageFilter = e.target.value;
+        state.pageFilterTitle = "";
         fetchAnimations();
       });
     }
@@ -469,8 +520,10 @@
     const moreBtn = document.getElementById("motionkit-animations-more");
     if (moreBtn) {
       moreBtn.addEventListener("click", () => {
+        const firstNew = state.visible;
         state.visible += PAGE_SIZE;
         renderTable();
+        revealRow(firstNew);
       });
     }
 
@@ -504,7 +557,8 @@
       }
     }
 
-    // Initial load
+    // Initial load, on the page the Animated Pages tab asked for when it linked here.
+    readPageFromUrl();
     fetchAnimations();
   });
 })();

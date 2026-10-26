@@ -9,9 +9,9 @@
 }
 
 /* ─── Table ─── */
-/* Four columns (check, title, status, actions) fit the card, so the row never scrolls sideways; the per-animation details live in the popup. The wrap still scrolls as a net for very narrow screens. */
+/* Four columns (check, title, status, actions) fit the card, so the row never scrolls sideways; the per-animation details live in the popup. Vertically it is a .motionkit-table-scroll: the chrome above and below it on this tab (admin bar, page padding, header card, summary card, toolbar, footer) is about 500px. */
 .motionkit-animations-table-wrap {
-  overflow-x: auto;
+  --motionkit-table-chrome: 556px;
 }
 
 .motionkit-animations-table {
@@ -112,14 +112,14 @@
 }
 
 /* ─── Controls row ─── */
-/* Every control in the row (both selects, Apply, the search box) shares one 36px height, border and radius, so the row reads as one toolbar whether it fits on one line or wraps. */
+/* Every control in the row (the bulk select, Apply, the page select) shares one 36px height, border and radius, so the row reads as one toolbar whether it fits on one line or wraps. */
 .motionkit-animations-controls-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 0.85rem 1.25rem;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
   background: #fafbfc;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -131,15 +131,16 @@
   gap: 0.5rem;
 }
 
-/* The search side takes the room that is left and pushes to the right; on a narrow card it wraps under the bulk controls as a full-width line. */
+/* The page filter takes the room that is left and pushes to the right; on a narrow card it wraps under the bulk controls as a full-width line. */
+/* The basis is the select's smallest useful size, so the bulk side can grow with its count ("Apply (100)") before anything wraps; min-width 0 because the group's automatic minimum is its content width, and the longest page title made that wider than the basis, so the row wrapped while the basis still fit. */
 .motionkit-filter-search-wrap {
-  flex: 1 1 280px;
+  flex: 1 1 140px;
+  min-width: 0;
   justify-content: flex-end;
 }
 
-/* Scoped under the row on purpose: wp-admin's own `.wp-core-ui select` and `input[type="search"]` rules set a 40px min-height and their own padding, and a bare class loses to them. */
+/* Scoped under the row on purpose: wp-admin's own `.wp-core-ui select` rule sets a 40px min-height and its own padding, and a bare class loses to it. */
 .motionkit-animations-controls-header .motionkit-select,
-.motionkit-animations-controls-header .motionkit-input,
 .motionkit-animations-controls-header .motionkit-btn {
   box-sizing: border-box;
   height: 36px;
@@ -163,16 +164,15 @@
 
 /* A fixed width rather than the content width: the longest option made the closed select 230px, which alone pushed the search side onto a second line inside the admin card. */
 #motionkit-bulk-action-select {
-  width: 180px;
+  width: 170px;
 }
 
-/* An explicit width: an input's own intrinsic width (about 20 characters) is what the search group's wrapping was measured by, so the group broke onto a second line while there was still room for it. */
-.motionkit-animations-controls-header .motionkit-input {
-  display: block;
+/* The page select lists page titles, so it grows into the room the row has, up to a width that shows a long title whole; a fixed small width would clip every title at the closed select. */
+#motionkit-page-filter {
   flex: 1 1 140px;
   width: 140px;
   min-width: 0;
-  max-width: 300px;
+  max-width: 280px;
 }
 
 .motionkit-animations-controls-header .motionkit-btn {
@@ -194,7 +194,6 @@
 }
 
 .motionkit-animations-controls-header .motionkit-select:focus,
-.motionkit-animations-controls-header .motionkit-input:focus,
 .motionkit-animations-controls-header .motionkit-btn:focus-visible {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
@@ -211,7 +210,7 @@
     min-width: 0;
   }
 
-  .motionkit-animations-controls-header .motionkit-input {
+  #motionkit-page-filter {
     max-width: none;
   }
 }
@@ -227,6 +226,14 @@
   border-radius: 9999px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+}
+
+/* Beside the title in a row the badge is a small tag after the text, not the pill the popup's Type line shows. */
+.motionkit-animations-col-title .motionkit-badge-engine {
+  margin-left: 4px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.62rem;
+  vertical-align: 1px;
 }
 
 .motionkit-badge-engine--waapi {

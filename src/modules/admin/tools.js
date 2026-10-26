@@ -4,7 +4,26 @@
   const nonce = config.nonce || "";
   const noticeNonce = config.noticeNonce || "";
   const redirectUrl = config.redirectUrl || "";
+  const animationsUrl = config.animationsUrl || "";
   const strings = config.strings || {};
+
+  // The key the Animations tab filters a page by; the same shape AnimationsDataHandler::page_identity() stamps on each animation, so a row here lands on its own animations there.
+  function pageKey(row) {
+    if (row.store_type === "post_meta") return "post-" + row.id;
+    if (row.store_type === "term_meta") return "term-" + row.id;
+    const option = String(row.option || "");
+    if (option.indexOf("motionkit_global_animations") === 0) return "global";
+    return "option-" + option.replace(/^motionkit_pg_(animation|draft)_/, "");
+  }
+
+  // The Animations tab, narrowed to this row's page; the title rides along so the dropdown can name a page that has no animations yet.
+  function animationsLink(row) {
+    if (!animationsUrl) return "";
+    const url = new URL(animationsUrl, window.location.href);
+    url.searchParams.set("mk_page", pageKey(row));
+    url.searchParams.set("mk_page_title", row.title || "");
+    return url.toString();
+  }
 
   // rows is every page fetched so far (Load more appends the next one); openRow is the index whose details popup is open.
   let state = { page: 1, totalPages: 1, total: 0, search: "", debounce: null, rows: [], openRow: null };
@@ -32,6 +51,7 @@
     if (!tbody) return;
 
     const incoming = Array.isArray(data.rows) ? data.rows : [];
+    const firstNew = append ? state.rows.length : 0;
     state.rows = append ? state.rows.concat(incoming) : incoming;
     state.page = data.page || state.page;
     state.totalPages = data.total_pages || 1;
@@ -72,6 +92,14 @@
     if (more) {
       more.hidden = state.page >= state.totalPages;
       more.disabled = false;
+    }
+
+    // The list scrolls inside the card, so an appended page is brought to the top of the scroll area; a fresh list starts at the top.
+    const scroller = document.getElementById("motionkit-tools-scroll");
+    if (scroller) {
+      const row = scroller.querySelectorAll("#motionkit-tools-tbody tr")[firstNew];
+      const headHeight = scroller.querySelector("thead") ? scroller.querySelector("thead").offsetHeight : 0;
+      scroller.scrollTo({ top: row && append ? Math.max(0, row.offsetTop - headHeight) : 0, behavior: append ? "smooth" : "auto" });
     }
   }
 
@@ -117,6 +145,11 @@
     field("type").innerHTML = typePill(row);
     field("modified").textContent = row.modified || strings.never || "Not recorded";
     field("store").textContent = row.id ? `${row.store_type} #${row.id}` : String(row.store_type || "");
+
+    const animations = field("animations");
+    const link = animationsLink(row);
+    animations.hidden = !link;
+    animations.href = link || "#";
 
     const preview = field("preview");
     preview.hidden = !row.permalink;

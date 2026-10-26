@@ -51,8 +51,8 @@
 }
 
 /* ─── Table ─── */
-/* Three columns (title, type, actions) fit the card, so the row never scrolls sideways; the modified time and the storage live in the popup. The wrap still scrolls as a net for very narrow screens. */
-.motionkit-tools-table-wrap { overflow-x: auto; }
+/* Three columns (title, type, actions) fit the card, so the row never scrolls sideways; the modified time and the storage live in the popup. Vertically it is a .motionkit-table-scroll: this tab has no summary card above the list, so less chrome than the Animations tab. */
+.motionkit-tools-table-wrap { --motionkit-table-chrome: 436px; }
 .motionkit-tools-table { width: 100%; border-collapse: collapse; }
 .motionkit-tools-table th,
 .motionkit-tools-table td { padding: 10px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: left; vertical-align: middle; }
