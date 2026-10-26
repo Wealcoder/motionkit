@@ -3,7 +3,7 @@
  * Loaded only on the Tools tab of the MotionKit admin page.
  */
 
-.motionkit-btn--sm { padding: 4px 10px !important; font-size: 12px !important; }
+/* .motionkit-btn--sm, the .motionkit-modal shell and the .motionkit-details-* popup are in admin.css, shared with the Animations tab. */
 
 /* Solid danger button — wins over motionkit-btn--primary's blue background. */
 .motionkit-btn.motionkit-btn--primary.motionkit-btn--danger {
@@ -17,14 +17,62 @@
   color: #fff;
 }
 
-.motionkit-tools-search { max-width: 280px; margin-left: auto; }
+/* ─── Animation Pages card header ─── */
+/* The title and the search box wrap on a narrow card instead of the title breaking into two lines beside the box. */
+.motionkit-tools-card-header {
+  flex-wrap: wrap;
+  gap: 12px;
+}
 
+.motionkit-tools-card-header .motionkit-card-header-left {
+  flex: 1 1 auto;
+}
+
+/* Same 36px control as the Animations tab's toolbar; scoped under the header because wp-admin's own input[type="search"] rule sets a 40px min-height and its own padding. */
+.motionkit-tools-card-header .motionkit-tools-search {
+  box-sizing: border-box;
+  flex: 0 1 300px;
+  width: auto;
+  min-width: 0;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+  line-height: 34px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+}
+
+.motionkit-tools-card-header .motionkit-tools-search:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* ─── Table ─── */
+/* Three columns (title, type, actions) fit the card, so the row never scrolls sideways; the modified time and the storage live in the popup. The wrap still scrolls as a net for very narrow screens. */
 .motionkit-tools-table-wrap { overflow-x: auto; }
 .motionkit-tools-table { width: 100%; border-collapse: collapse; }
 .motionkit-tools-table th,
-.motionkit-tools-table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; vertical-align: middle; }
-.motionkit-tools-table th { text-align: left; font-weight: 600; background: #f9fafb; color: #374151; }
+.motionkit-tools-table td { padding: 10px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: left; vertical-align: middle; }
+.motionkit-tools-table th { font-weight: 600; background: #f9fafb; color: #374151; }
 .motionkit-tools-table tbody tr:hover { background: #f9fafb; }
+.motionkit-tools-table tbody tr:last-child td { border-bottom: none; }
+
+/* A long title or key wraps inside its cell instead of widening the table. */
+.motionkit-tools-col-title { overflow-wrap: anywhere; }
+.motionkit-tools-col-type,
+.motionkit-tools-col-actions { width: 1%; white-space: nowrap; }
+.motionkit-tools-col-actions { text-align: right; }
+
+.motionkit-tools-row-key {
+  display: block;
+  margin-top: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
 
 .motionkit-tools-empty { text-align: center; color: #6b7280; padding: 32px 12px; }
 
@@ -39,45 +87,6 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
-
-.motionkit-tools-actions { display: flex; gap: 6px; justify-content: flex-end; }
-
-.motionkit-tools-pagination { display: flex; gap: 6px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
-.motionkit-page-btn {
-  min-width: 32px;
-  padding: 6px 10px;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-}
-.motionkit-page-btn:hover { background: #f3f4f6; }
-.motionkit-page-btn--active { background: #2563eb; color: #fff; border-color: #2563eb; }
-.motionkit-page-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
-
-.motionkit-modal[hidden] { display: none; }
-.motionkit-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.motionkit-modal-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); }
-.motionkit-modal-box {
-  position: relative;
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  max-width: 480px;
-  width: 90%;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-}
-.motionkit-modal-title { margin: 0 0 8px; font-size: 18px; font-weight: 600; color: #111827; }
-.motionkit-modal-desc { margin: 0 0 16px; color: #4b5563; font-size: 14px; line-height: 1.5; }
-.motionkit-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 
 .motionkit-modal-progress { margin: 16px 0; }
 .motionkit-progress-bar { height: 10px; background: #e5e7eb; border-radius: 5px; overflow: hidden; }

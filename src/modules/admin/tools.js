@@ -6,7 +6,8 @@
   const redirectUrl = config.redirectUrl || "";
   const strings = config.strings || {};
 
-  let state = { page: 1, search: "", debounce: null };
+  // rows is every page fetched so far (Load more appends the next one); openRow is the index whose details popup is open.
+  let state = { page: 1, totalPages: 1, total: 0, search: "", debounce: null, rows: [], openRow: null };
 
   function esc(s) {
     return String(s == null ? "" : s).replace(
@@ -22,109 +23,60 @@
     );
   }
 
-  function render(data) {
+  function typePill(row) {
+    return `<span class="motionkit-tools-type">${esc(row.type_label)}</span>`;
+  }
+
+  function render(data, append) {
     const tbody = document.getElementById("motionkit-tools-tbody");
     if (!tbody) return;
 
-    if (!data.rows || !data.rows.length) {
-      tbody.innerHTML =
-        '<tr><td colspan="4" class="motionkit-tools-empty">' +
-        esc(strings.noResults || "No animation data found.") +
-        "</td></tr>";
+    const incoming = Array.isArray(data.rows) ? data.rows : [];
+    state.rows = append ? state.rows.concat(incoming) : incoming;
+    state.page = data.page || state.page;
+    state.totalPages = data.total_pages || 1;
+    state.total = typeof data.total === "number" ? data.total : state.rows.length;
+    syncDetails();
+
+    if (!state.rows.length) {
+      tbody.innerHTML = `<tr><td colspan="3" class="motionkit-tools-empty">${esc(strings.noResults || "No animation data found.")}</td></tr>`;
     } else {
-      tbody.innerHTML = data.rows
-        .map((r) => {
-          const edit = r.edit_url
-            ? '<a href="' +
-              esc(r.edit_url) +
-              '" target="_blank" class="motionkit-btn motionkit-btn--primary motionkit-btn--sm">' +
-              esc(strings.edit || "Edit") +
-              "</a>"
-            : "";
-          const preview = r.permalink
-            ? '<a href="' +
-              esc(r.permalink) +
-              '" target="_blank" rel="noopener" class="motionkit-btn motionkit-btn--outline motionkit-btn--sm">' +
-              esc(strings.preview || "Preview") +
-              "</a>"
-            : "";
-          const del =
-            '<button type="button" class="motionkit-btn motionkit-btn--outline motionkit-btn--danger motionkit-btn--sm motionkit-del-row" data-store="' +
-            esc(r.store_type) +
-            '" data-option="' +
-            esc(r.option) +
-            '" data-id="' +
-            esc(r.id) +
-            '">' +
-            esc(strings.del || "Delete") +
-            "</button>";
-          return (
-            "<tr>" +
-            "<td><strong>" +
-            esc(r.title) +
-            '</strong><br><small style="color:#6b7280;">' +
-            esc(r.option) +
-            "</small></td>" +
-            '<td><span class="motionkit-tools-type">' +
-            esc(r.type_label) +
-            "</span></td>" +
-            "<td>" +
-            esc(r.modified || "—") +
-            "</td>" +
-            '<td><div class="motionkit-tools-actions">' +
-            edit +
-            preview +
-            del +
-            "</div></td>" +
-            "</tr>"
-          );
-        })
+      // Title, type and one Actions button per row: three columns fit the card, so the row never scrolls sideways. The modified time, the storage and the links are in the details popup.
+      tbody.innerHTML = state.rows
+        .map(
+          (r, i) => `
+            <tr>
+              <td class="motionkit-tools-col-title">
+                <strong>${esc(r.title)}</strong>
+                <small class="motionkit-tools-row-key">${esc(r.option)}</small>
+              </td>
+              <td class="motionkit-tools-col-type">${typePill(r)}</td>
+              <td class="motionkit-tools-col-actions">
+                <button type="button" class="motionkit-btn motionkit-btn--outline motionkit-btn--sm motionkit-tools-row-actions" data-row="${i}" aria-haspopup="dialog">${esc(strings.actions || "Actions")}</button>
+              </td>
+            </tr>
+          `
+        )
         .join("");
     }
 
-    // pagination
-    const pg = document.getElementById("motionkit-tools-pagination");
-    if (!pg) return;
-    if (data.total_pages <= 1) {
-      pg.innerHTML = "";
-      return;
+    // "Showing 20 of 46" and a Load more button while the server has pages left.
+    const footer = document.getElementById("motionkit-tools-footer");
+    if (!footer) return;
+    footer.hidden = state.rows.length === 0;
+    const count = document.getElementById("motionkit-tools-count");
+    if (count) {
+      count.textContent = (strings.showing || "Showing %1$s of %2$s").replace("%1$s", state.rows.length).replace("%2$s", state.total);
     }
-    let html = "";
-    html +=
-      '<button class="motionkit-page-btn" ' +
-      (data.page <= 1 ? "disabled" : "") +
-      ' data-page="' +
-      (data.page - 1) +
-      '">' +
-      esc(strings.prev || "Prev") +
-      "</button>";
-    for (let i = 1; i <= data.total_pages; i++) {
-      if (i === 1 || i === data.total_pages || Math.abs(i - data.page) <= 2) {
-        html +=
-          '<button class="motionkit-page-btn ' +
-          (i === data.page ? "motionkit-page-btn--active" : "") +
-          '" data-page="' +
-          i +
-          '">' +
-          i +
-          "</button>";
-      } else if (Math.abs(i - data.page) === 3) {
-        html +=
-          '<span class="motionkit-page-btn" style="border:0;background:transparent;">…</span>';
-      }
+    const more = document.getElementById("motionkit-tools-more");
+    if (more) {
+      more.hidden = state.page >= state.totalPages;
+      more.disabled = false;
     }
-    html +=
-      '<button class="motionkit-page-btn" ' +
-      (data.page >= data.total_pages ? "disabled" : "") +
-      ' data-page="' +
-      (data.page + 1) +
-      '">' +
-      esc(strings.next || "Next") +
-      "</button>";
-    pg.innerHTML = html;
   }
 
-  function fetchList() {
+  // The server pages at 20; a fresh list fetches page 1, Load more fetches the next page and appends it.
+  function fetchList(append) {
     const fd = new FormData();
     fd.append("action", "motionkit_tools_list");
     fd.append("nonce", nonce);
@@ -133,8 +85,77 @@
     fetch(ajaxUrl, { method: "POST", credentials: "same-origin", body: fd })
       .then((r) => r.json())
       .then((j) => {
-        if (j && j.success) render(j.data);
+        if (j && j.success) render(j.data, append);
       });
+  }
+
+  // The per-row delete is a real POST through the hidden form, which the connector answers with a redirect back to the tab.
+  function deleteRow(row) {
+    if (!row) return;
+    if (!confirm(strings.confirm || "Delete this animation data?")) return;
+    const f = document.getElementById("motionkit-tools-delete-form");
+    if (!f) return;
+    f.querySelector("[name=store_type]").value = row.store_type;
+    f.querySelector("[name=option_key]").value = row.option;
+    f.querySelector("[name=object_id]").value = row.id;
+    f.submit();
+  }
+
+  // ─── Details popup ───
+
+  function detailsModal() {
+    return document.getElementById("motionkit-tools-modal");
+  }
+
+  function fillDetails(row) {
+    const modal = detailsModal();
+    if (!modal) return;
+    const field = (id) => modal.querySelector(`#motionkit-tools-modal-${id}`);
+
+    field("title").textContent = row.title || "";
+    field("key").textContent = row.option || "";
+    field("type").innerHTML = typePill(row);
+    field("modified").textContent = row.modified || strings.never || "Not recorded";
+    field("store").textContent = row.id ? `${row.store_type} #${row.id}` : String(row.store_type || "");
+
+    const preview = field("preview");
+    preview.hidden = !row.permalink;
+    preview.href = row.permalink || "#";
+
+    const edit = field("edit");
+    edit.hidden = !row.edit_url;
+    edit.href = row.edit_url || "#";
+  }
+
+  function openDetails(index) {
+    const row = state.rows[index];
+    const modal = detailsModal();
+    if (!row || !modal) return;
+    state.openRow = index;
+    fillDetails(row);
+    modal.hidden = false;
+    const closeBtn = modal.querySelector(".motionkit-details-close");
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function closeDetails() {
+    const modal = detailsModal();
+    if (!modal || modal.hidden) return;
+    modal.hidden = true;
+    const rowBtn = state.openRow === null ? null : document.querySelector(`.motionkit-tools-row-actions[data-row="${state.openRow}"]`);
+    state.openRow = null;
+    if (rowBtn) rowBtn.focus();
+  }
+
+  // After a refetch the open popup follows its row: refreshed while the row is still listed, closed once it is gone.
+  function syncDetails() {
+    if (state.openRow === null) return;
+    const row = state.rows[state.openRow];
+    if (row) {
+      fillDetails(row);
+    } else {
+      closeDetails();
+    }
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -165,29 +186,49 @@
       }
     });
 
-    document.addEventListener("click", (e) => {
-      const pbtn = e.target.closest(".motionkit-page-btn[data-page]");
-      if (pbtn && !pbtn.disabled) {
-        state.page = parseInt(pbtn.dataset.page, 10) || 1;
-        fetchList();
-        return;
-      }
+    const moreBtn = document.getElementById("motionkit-tools-more");
+    if (moreBtn) {
+      moreBtn.addEventListener("click", () => {
+        if (state.page >= state.totalPages) return;
+        moreBtn.disabled = true;
+        state.page += 1;
+        fetchList(true);
+      });
+    }
 
-      const drow = e.target.closest(".motionkit-del-row");
-      if (drow) {
-        if (!confirm(strings.confirm || "Delete this animation data?")) return;
-        const f = document.getElementById("motionkit-tools-delete-form");
-        if (f) {
-          f.querySelector("[name=store_type]").value = drow.dataset.store;
-          f.querySelector("[name=option_key]").value = drow.dataset.option;
-          f.querySelector("[name=object_id]").value = drow.dataset.id;
-          f.submit();
-        }
+    document.addEventListener("click", (e) => {
+      const actionsBtn = e.target.closest(".motionkit-tools-row-actions");
+      if (actionsBtn) {
+        e.preventDefault();
+        openDetails(parseInt(actionsBtn.dataset.row, 10));
       }
     });
 
+    // Details popup
+    const modal = detailsModal();
+    if (modal) {
+      modal.addEventListener("click", (e) => {
+        if (e.target.closest("[data-details-close]")) {
+          closeDetails();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !modal.hidden) {
+          closeDetails();
+        }
+      });
+
+      const deleteBtn = document.getElementById("motionkit-tools-modal-delete");
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", () => {
+          if (state.openRow !== null) deleteRow(state.rows[state.openRow]);
+        });
+      }
+    }
+
     // delete all flow
-    const modal = document.getElementById("motionkit-tools-confirm");
+    const confirmModal = document.getElementById("motionkit-tools-confirm");
     const progress = document.getElementById("motionkit-tools-progress");
     const fill = document.getElementById("motionkit-progress-fill");
     const label = document.getElementById("motionkit-progress-label");
@@ -195,20 +236,20 @@
     const cancelBtn = document.getElementById("motionkit-tools-cancel");
     const deleteAllBtn = document.getElementById("motionkit-tools-delete-all");
 
-    if (deleteAllBtn && modal) {
+    if (deleteAllBtn && confirmModal) {
       deleteAllBtn.addEventListener("click", () => {
         if (progress) progress.hidden = true;
         if (fill) fill.style.width = "0%";
         if (label) label.textContent = "0 / 0";
         if (confirmBtn) confirmBtn.disabled = false;
         if (cancelBtn) cancelBtn.disabled = false;
-        modal.hidden = false;
+        confirmModal.hidden = false;
       });
     }
 
-    if (cancelBtn && modal) {
+    if (cancelBtn && confirmModal) {
       cancelBtn.addEventListener("click", () => {
-        modal.hidden = true;
+        confirmModal.hidden = true;
       });
     }
 

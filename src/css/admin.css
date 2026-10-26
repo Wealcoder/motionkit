@@ -91,8 +91,9 @@
 }
 
 /* ─── Sidebar ─────────────────────────────────── */
+/* Wide enough for "Animated Pages" on one line; at 160px it broke into two. */
 .motionkit-sidebar {
-  width: 160px;
+  width: 184px;
   flex-shrink: 0;
   border-right: 1px solid #e5e7eb;
   padding: 20px 0;
@@ -117,6 +118,7 @@
   transition: background 0.2s, color 0.2s, border-color 0.2s;
   border-left: 3px solid transparent;
   outline: none;
+  white-space: nowrap;
 }
 
 .motionkit-sidebar-link:focus {
@@ -336,6 +338,11 @@
   background: #fef2f2;
   border-color: #ef4444;
   color: #dc2626;
+}
+
+.motionkit-btn--sm {
+  padding: 4px 10px;
+  font-size: 12px;
 }
 
 /* ─── Forms ───────────────────────────────────── */
@@ -636,6 +643,220 @@
 .motionkit-license_key:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ─── Modal ───────────────────────────────────── */
+/* Shared by the Tools tab's delete-all confirm and the Animations tab's details popup; each tab's own stylesheet adds its specifics. */
+.motionkit-modal[hidden] {
+  display: none;
+}
+
+.motionkit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.motionkit-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.motionkit-modal-box {
+  position: relative;
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.motionkit-modal-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.motionkit-modal-desc {
+  margin: 0 0 16px;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.motionkit-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* ─── Details popup ───────────────────────────── */
+/* One row's details and its actions, opened from an Actions button: the Animations tab's animation popup and the Tools tab's record popup are both this. */
+.motionkit-details-modal-box {
+  max-width: 540px;
+  padding: 24px 28px 22px;
+}
+
+.motionkit-details-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.motionkit-details-close:hover,
+.motionkit-details-close:focus {
+  background: #f3f4f6;
+  color: #111827;
+  outline: none;
+}
+
+.motionkit-details-modal .motionkit-modal-title {
+  margin-bottom: 2px;
+  padding-right: 36px;
+  overflow-wrap: anywhere;
+}
+
+/* wp-admin gives every code element a grey background and padding, which on a block-level id read as a full-width bar under the title. */
+.motionkit-details-id {
+  display: block;
+  margin-bottom: 16px;
+  padding: 0;
+  background: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  overflow-wrap: anywhere;
+}
+
+.motionkit-details {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  row-gap: 12px;
+  column-gap: 16px;
+  margin: 0;
+  padding: 16px 0;
+  border-top: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.motionkit-details dt {
+  margin: 0;
+  align-self: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.motionkit-details dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 13px;
+  color: #1a1a2e;
+}
+
+/* A value read whole, wrapped: a selector or a storage key that the table could only clip. */
+.motionkit-details-code {
+  display: block;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.motionkit-details-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.motionkit-details-link {
+  margin-left: 6px;
+  font-size: 12px;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.motionkit-details-link:hover {
+  text-decoration: underline;
+}
+
+.motionkit-details-actions {
+  flex-wrap: wrap;
+}
+
+/* The destructive action sits alone on the left, away from the buttons that keep the record. */
+.motionkit-details-actions .motionkit-details-destructive {
+  margin-right: auto;
+}
+
+/* .motionkit-btn sets display, which would beat the browser's own [hidden] rule and show a button the row has no link for. */
+.motionkit-details-modal [hidden] {
+  display: none !important;
+}
+
+.motionkit-card-body--flush {
+  padding: 0 !important;
+}
+
+/* ─── Table footer ────────────────────────────── */
+/* "Showing 20 of 93" over a centred Load more, under a list that renders in steps. */
+.motionkit-table-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-top: 1px solid #f3f4f6;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.motionkit-table-footer .motionkit-btn {
+  padding-left: 22px;
+  padding-right: 22px;
+}
+
+.motionkit-table-footer[hidden],
+.motionkit-table-footer .motionkit-btn[hidden] {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .motionkit-details {
+    grid-template-columns: 1fr;
+    row-gap: 4px;
+  }
+
+  .motionkit-details dd {
+    margin-bottom: 10px;
+  }
 }
 
 /* ─── Responsive ─────────────────────────────── */

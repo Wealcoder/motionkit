@@ -47,7 +47,7 @@ final class ConnectPage
     return \MotionKit\Auth\OAuthHandler::get_authorize_url($switch_account);
   }
 
-  // The Tools tab is UI-only here: its data layer (list/delete AJAX + delete_one POST) is registered by the connector's AnimationDataTools, so the tab only renders when that class is present.
+  // The Data tab (key `tools`) is UI-only here: its data layer (list/delete AJAX + delete_one POST) is registered by the connector's AnimationDataTools, so the tab only renders when that class is present.
   private static function tools_available(): bool
   {
     return class_exists('\MotionKitConnector\Admin\AnimationDataTools');
@@ -169,9 +169,17 @@ final class ConnectPage
           'typeFree'      => __('Free', 'motionkit'),
           'typeGsap'      => __('GSAP', 'motionkit'),
           'noAnimations'  => __('No animations found on this site. Open MotionKit Editor to create your first animation.', 'motionkit'),
-          'edit'          => __('Edit', 'motionkit'),
-          'preview'       => __('Preview', 'motionkit'),
-          'delete'        => __('Delete', 'motionkit'),
+          'loading'       => __('Loading animations...', 'motionkit'),
+          'actions'       => __('Actions', 'motionkit'),
+          'statusActive'  => __('Active', 'motionkit'),
+          'statusDraft'   => __('Draft', 'motionkit'),
+          'toggleHint'    => __('Click to toggle status', 'motionkit'),
+          'notPublished'  => __('Not published yet. Publish it from the editor.', 'motionkit'),
+          'publish'       => __('Publish', 'motionkit'),
+          'setDraft'      => __('Set as draft', 'motionkit'),
+          'viewPage'      => __('View page', 'motionkit'),
+          /* translators: 1: rows on the page, 2: rows in total */
+          'showing'       => __('Showing %1$s of %2$s', 'motionkit'),
           'confirmDelete' => __('Are you sure you want to delete this animation?', 'motionkit'),
           'done'          => __('Done!', 'motionkit'),
           'failed'        => __('Action failed. Please try again.', 'motionkit'),
@@ -202,12 +210,11 @@ final class ConnectPage
         'redirectUrl' => admin_url('admin.php?page=motionkit-connect&tab=tools'),
         'strings'     => [
           'noResults' => __('No animation data found.', 'motionkit'),
-          'edit'      => __('Edit', 'motionkit'),
-          'preview'   => __('Preview', 'motionkit'),
-          'del'       => __('Delete', 'motionkit'),
+          'actions'   => __('Actions', 'motionkit'),
+          'never'     => __('Not recorded', 'motionkit'),
+          /* translators: 1: rows on the page, 2: rows in total */
+          'showing'   => __('Showing %1$s of %2$s', 'motionkit'),
           'confirm'   => __('Delete this animation data?', 'motionkit'),
-          'prev'      => __('Prev', 'motionkit'),
-          'next'      => __('Next', 'motionkit'),
           'deleting'  => __('Deleting...', 'motionkit'),
           'done'      => __('Done!', 'motionkit'),
         ],
@@ -298,9 +305,14 @@ final class ConnectPage
     if ($connected) {
       $tabs['animations'] = ['label' => __('Animations', 'motionkit'), 'icon' => '&#10024;'];
     }
-    $tabs['connect'] = ['label' => __('Connected Site', 'motionkit'), 'icon' => '&#128279;'];
+    // The tab holds the account connection, the editor launch and the license, so it is named for the account; before a connection exists its one job is the connect step.
+    $tabs['connect'] = [
+      'label' => $connected ? __('Account', 'motionkit') : __('Connect', 'motionkit'),
+      'icon'  => '&#128279;',
+    ];
     if (self::tools_available()) {
-      $tabs['tools'] = ['label' => __('Tools', 'motionkit'), 'icon' => '&#128295;'];
+      // Named for what the tab holds: the pages (and terms and site-wide records) that carry animation data, and how to remove it. "Tools" said nothing about either.
+      $tabs['tools'] = ['label' => __('Animated Pages', 'motionkit'), 'icon' => '&#128295;'];
     }
 
     ?>
@@ -984,7 +996,7 @@ final class ConnectPage
       <div class="motionkit-card-header">
         <div class="motionkit-card-header-left">
           <span class="motionkit-title-icon">&#128279;</span>
-          <h3 class="motionkit-card-title"><?php esc_html_e('Connect your MotionKit Account', 'motionkit'); ?></h3>
+          <h3 class="motionkit-card-title"><?php esc_html_e('Your MotionKit Account', 'motionkit'); ?></h3>
         </div>
         <span class="motionkit-badge motionkit-badge--success">&#9679; <?php esc_html_e('Connected', 'motionkit'); ?></span>
       </div>
@@ -1187,6 +1199,8 @@ final class ConnectPage
           <div class="motionkit-bulk-actions-wrap">
             <select id="motionkit-bulk-action-select" class="motionkit-select">
               <option value=""><?php esc_html_e('Bulk Actions', 'motionkit'); ?></option>
+              <option value="publish"><?php esc_html_e('● Publish (Active)', 'motionkit'); ?></option>
+              <option value="draft"><?php esc_html_e('○ Set as Draft', 'motionkit'); ?></option>
               <option value="toggle_status"><?php esc_html_e('⏻ Toggle Status (Active/Draft)', 'motionkit'); ?></option>
               <option value="delete"><?php esc_html_e('🗑️ Delete', 'motionkit'); ?></option>
             </select>
@@ -1207,25 +1221,51 @@ final class ConnectPage
         </div>
 
         <div class="motionkit-card-body motionkit-card-body--flush">
-          <div class="motionkit-tools-table-wrap">
-            <table class="motionkit-tools-table motionkit-animations-table">
+          <div class="motionkit-animations-table-wrap">
+            <table class="motionkit-animations-table">
               <thead>
                 <tr>
-                  <th style="width: 40px;"><input type="checkbox" id="motionkit-select-all" aria-label="<?php esc_attr_e('Select All', 'motionkit'); ?>"></th>
+                  <th class="motionkit-animations-col-check"><input type="checkbox" id="motionkit-select-all" aria-label="<?php esc_attr_e('Select All', 'motionkit'); ?>"></th>
                   <th><?php esc_html_e('Title', 'motionkit'); ?></th>
-                  <th><?php esc_html_e('Target Element', 'motionkit'); ?></th>
-                  <th><?php esc_html_e('Location', 'motionkit'); ?></th>
-                  <th><?php esc_html_e('Type', 'motionkit'); ?></th>
-                  <th><?php esc_html_e('Status', 'motionkit'); ?></th>
-                  <th style="text-align:right;"><?php esc_html_e('Actions', 'motionkit'); ?></th>
+                  <th class="motionkit-animations-col-status"><?php esc_html_e('Status', 'motionkit'); ?></th>
+                  <th class="motionkit-animations-col-actions"><?php esc_html_e('Actions', 'motionkit'); ?></th>
                 </tr>
               </thead>
               <tbody id="motionkit-animations-tbody">
                 <tr>
-                  <td colspan="7" class="motionkit-tools-empty"><?php esc_html_e('Loading animations...', 'motionkit'); ?></td>
+                  <td colspan="4" class="motionkit-animations-empty"><?php esc_html_e('Loading animations...', 'motionkit'); ?></td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div class="motionkit-table-footer" id="motionkit-animations-footer" hidden>
+            <span id="motionkit-animations-count"></span>
+            <button type="button" class="motionkit-btn motionkit-btn--outline motionkit-btn--sm" id="motionkit-animations-more" hidden><?php esc_html_e('Load more', 'motionkit'); ?></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details popup: one row's target, page and type, with its actions. Filled by admin-animations.js. -->
+      <div class="motionkit-modal motionkit-details-modal" id="motionkit-anim-modal" hidden role="dialog" aria-modal="true" aria-labelledby="motionkit-anim-modal-title">
+        <div class="motionkit-modal-backdrop" data-details-close></div>
+        <div class="motionkit-modal-box motionkit-details-modal-box">
+          <button type="button" class="motionkit-details-close" data-details-close aria-label="<?php esc_attr_e('Close', 'motionkit'); ?>">&times;</button>
+          <h3 class="motionkit-modal-title" id="motionkit-anim-modal-title"></h3>
+          <code class="motionkit-details-id" id="motionkit-anim-modal-id"></code>
+          <dl class="motionkit-details">
+            <dt><?php esc_html_e('Status', 'motionkit'); ?></dt>
+            <dd id="motionkit-anim-modal-status"></dd>
+            <dt><?php esc_html_e('Type', 'motionkit'); ?></dt>
+            <dd id="motionkit-anim-modal-type"></dd>
+            <dt><?php esc_html_e('Target element', 'motionkit'); ?></dt>
+            <dd><code class="motionkit-details-code" id="motionkit-anim-modal-target"></code></dd>
+            <dt><?php esc_html_e('Location', 'motionkit'); ?></dt>
+            <dd id="motionkit-anim-modal-location"></dd>
+          </dl>
+          <div class="motionkit-modal-actions motionkit-details-actions">
+            <button type="button" class="motionkit-btn motionkit-btn--outline motionkit-btn--danger motionkit-details-destructive" id="motionkit-anim-modal-delete"><?php esc_html_e('Delete', 'motionkit'); ?></button>
+            <button type="button" class="motionkit-btn motionkit-btn--outline" id="motionkit-anim-modal-toggle"></button>
+            <a class="motionkit-btn motionkit-btn--primary" id="motionkit-anim-modal-edit" href="#" target="_blank" rel="noopener"><?php esc_html_e('Edit in editor', 'motionkit'); ?></a>
           </div>
         </div>
       </div>
@@ -1238,7 +1278,40 @@ final class ConnectPage
   private function render_tools_tab(): void
   {
     ?>
-    <!-- Danger Zone -->
+    <!-- Animated pages: one row per page, term or option that carries a bucket -->
+    <div class="motionkit-card">
+      <div class="motionkit-card-header motionkit-tools-card-header">
+        <div class="motionkit-card-header-left">
+          <span class="motionkit-title-icon">&#128196;</span>
+          <h3 class="motionkit-card-title"><?php esc_html_e('Animated Pages', 'motionkit'); ?></h3>
+        </div>
+        <input type="search" class="motionkit-input motionkit-tools-search" id="motionkit-tools-search"
+               placeholder="<?php esc_attr_e('Search by title or key...', 'motionkit'); ?>"
+               aria-label="<?php esc_attr_e('Search by title or key', 'motionkit'); ?>">
+      </div>
+      <div class="motionkit-card-body motionkit-card-body--flush">
+        <div class="motionkit-tools-table-wrap">
+          <table class="motionkit-tools-table">
+            <thead>
+              <tr>
+                <th><?php esc_html_e('Title', 'motionkit'); ?></th>
+                <th class="motionkit-tools-col-type"><?php esc_html_e('Type', 'motionkit'); ?></th>
+                <th class="motionkit-tools-col-actions"><?php esc_html_e('Actions', 'motionkit'); ?></th>
+              </tr>
+            </thead>
+            <tbody id="motionkit-tools-tbody">
+              <tr><td colspan="3" class="motionkit-tools-empty"><?php esc_html_e('Loading...', 'motionkit'); ?></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="motionkit-table-footer" id="motionkit-tools-footer" hidden>
+          <span id="motionkit-tools-count"></span>
+          <button type="button" class="motionkit-btn motionkit-btn--outline motionkit-btn--sm" id="motionkit-tools-more" hidden><?php esc_html_e('Load more', 'motionkit'); ?></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone: last, under the list, where a destructive action belongs -->
     <div class="motionkit-card">
       <div class="motionkit-card-header">
         <div class="motionkit-card-header-left">
@@ -1256,33 +1329,26 @@ final class ConnectPage
       </div>
     </div>
 
-    <!-- Animation Pages Table -->
-    <div class="motionkit-card">
-      <div class="motionkit-card-header">
-        <div class="motionkit-card-header-left">
-          <span class="motionkit-title-icon">&#128196;</span>
-          <h3 class="motionkit-card-title"><?php esc_html_e('Animation Pages', 'motionkit'); ?></h3>
+    <!-- Details popup: one record's type, modified time and storage, with its actions. Filled by admin-tools.js. -->
+    <div class="motionkit-modal motionkit-details-modal" id="motionkit-tools-modal" hidden role="dialog" aria-modal="true" aria-labelledby="motionkit-tools-modal-title">
+      <div class="motionkit-modal-backdrop" data-details-close></div>
+      <div class="motionkit-modal-box motionkit-details-modal-box">
+        <button type="button" class="motionkit-details-close" data-details-close aria-label="<?php esc_attr_e('Close', 'motionkit'); ?>">&times;</button>
+        <h3 class="motionkit-modal-title" id="motionkit-tools-modal-title"></h3>
+        <code class="motionkit-details-id" id="motionkit-tools-modal-key"></code>
+        <dl class="motionkit-details">
+          <dt><?php esc_html_e('Type', 'motionkit'); ?></dt>
+          <dd id="motionkit-tools-modal-type"></dd>
+          <dt><?php esc_html_e('Modified', 'motionkit'); ?></dt>
+          <dd id="motionkit-tools-modal-modified"></dd>
+          <dt><?php esc_html_e('Stored as', 'motionkit'); ?></dt>
+          <dd><code class="motionkit-details-code" id="motionkit-tools-modal-store"></code></dd>
+        </dl>
+        <div class="motionkit-modal-actions motionkit-details-actions">
+          <button type="button" class="motionkit-btn motionkit-btn--outline motionkit-btn--danger motionkit-details-destructive" id="motionkit-tools-modal-delete"><?php esc_html_e('Delete data', 'motionkit'); ?></button>
+          <a class="motionkit-btn motionkit-btn--outline" id="motionkit-tools-modal-preview" href="#" target="_blank" rel="noopener"><?php esc_html_e('Preview', 'motionkit'); ?></a>
+          <a class="motionkit-btn motionkit-btn--primary" id="motionkit-tools-modal-edit" href="#" target="_blank" rel="noopener"><?php esc_html_e('Edit in editor', 'motionkit'); ?></a>
         </div>
-        <input type="search" class="motionkit-input motionkit-tools-search" id="motionkit-tools-search"
-               placeholder="<?php esc_attr_e('Search by title or key...', 'motionkit'); ?>">
-      </div>
-      <div class="motionkit-card-body">
-        <div class="motionkit-tools-table-wrap">
-          <table class="motionkit-tools-table">
-            <thead>
-              <tr>
-                <th><?php esc_html_e('Title', 'motionkit'); ?></th>
-                <th><?php esc_html_e('Type', 'motionkit'); ?></th>
-                <th><?php esc_html_e('Modified', 'motionkit'); ?></th>
-                <th style="text-align:right;"><?php esc_html_e('Actions', 'motionkit'); ?></th>
-              </tr>
-            </thead>
-            <tbody id="motionkit-tools-tbody">
-              <tr><td colspan="4" class="motionkit-tools-empty"><?php esc_html_e('Loading...', 'motionkit'); ?></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="motionkit-tools-pagination" id="motionkit-tools-pagination"></div>
       </div>
     </div>
 
