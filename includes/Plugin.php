@@ -303,11 +303,15 @@ final class Plugin
             return;
         }
 
-        // Resolve current page URL for all page types
+        // Resolve current page URL for all page types. The URL must come back to a request of the same kind, because the editor saves under whatever PageType::current() sees there.
         if (is_singular()) {
             $page_url = get_permalink();
-        } elseif (is_front_page() || is_home()) {
+        } elseif (is_front_page()) {
             $page_url = home_url('/');
+        } elseif (is_home()) {
+            // The posts page is a page of its own when one is set ("Blog"); sending it home put the editor, and the save, on the front page.
+            $posts_page = (int) get_option('page_for_posts');
+            $page_url = ($posts_page > 0 ? get_permalink($posts_page) : '') ?: home_url('/');
         } elseif (is_category() || is_tag() || is_tax()) {
             $page_url = get_term_link(get_queried_object());
             if (is_wp_error($page_url)) {
@@ -322,7 +326,8 @@ final class Plugin
         } elseif (is_search()) {
             $page_url = home_url('/?s=' . rawurlencode(get_search_query()));
         } elseif (is_404()) {
-            $page_url = home_url('/404');
+            // The same address the editor's page list and the dashboard use for the 404 page, so every door opens the same slot.
+            $page_url = home_url('/404-preview/');
         } else {
             $page_url = home_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? '/')));
         }

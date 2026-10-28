@@ -3,6 +3,7 @@
 namespace MotionKit\Admin;
 
 use MotionKit\Common\AnimationResolver;
+use MotionKit\Common\PageType;
 
 /**
  * MotionKit WordPress Plugin — Active Animations manager.
@@ -35,6 +36,7 @@ final class AnimationsDataHandler
     add_action('wp_ajax_motionkit_animations_list', [$this, 'ajax_animations_list']);
     add_action('wp_ajax_motionkit_toggle_animation_status', [$this, 'ajax_toggle_animation_status']);
     add_action('wp_ajax_motionkit_delete_single_animation', [$this, 'ajax_delete_single_animation']);
+    add_action('wp_ajax_motionkit_animations_bulk', [$this, 'ajax_animations_bulk']);
   }
 
   /**
@@ -47,30 +49,138 @@ final class AnimationsDataHandler
     }
     check_ajax_referer('motionkit_animations_ajax', 'nonce');
 
-    $search = isset($_POST['search']) ? sanitize_text_field(wp_unslash($_POST['search'])) : '';
-    $engine_filter = isset($_POST['engine']) ? sanitize_text_field(wp_unslash($_POST['engine'])) : '';
+    $page_filter = isset($_POST['page_key']) ? sanitize_text_field(wp_unslash($_POST['page_key'])) : '';
 
     $animations = $this->collect_all_animations();
+    // The page list is built before the filter runs, so the dropdown keeps every page while one is selected.
+    $pages = $this->page_options($animations);
 
-    if ($search !== '') {
-      $needle = mb_strtolower($search);
-      $animations = array_values(array_filter($animations, function ($anim) use ($needle) {
-        return strpos(mb_strtolower($anim['title']), $needle) !== false
-          || strpos(mb_strtolower($anim['target']), $needle) !== false
-          || strpos(mb_strtolower($anim['location']), $needle) !== false;
-      }));
-    }
-
-    if ($engine_filter !== '' && in_array($engine_filter, ['waapi', 'gsap'], true)) {
-      $animations = array_values(array_filter($animations, function ($anim) use ($engine_filter) {
-        return $anim['engine'] === $engine_filter;
+    if ($page_filter !== '') {
+      $animations = array_values(array_filter($animations, function ($anim) use ($page_filter) {
+        return $anim['page_key'] === $page_filter;
       }));
     }
 
     wp_send_json_success([
       'animations' => $animations,
       'total'      => count($animations),
+      'pages'      => $pages,
     ]);
+  }
+
+  /**
+   * The pages the list can be narrowed to, grouped the way the dropdown shows them.
+   *
+   * One entry per page key, in the order the buckets were read (site-wide
+   * first, then posts, then terms, then the option-stored pages), each with
+   * the group it belongs to and how many animations it carries.
+   *
+   * @param array<int, array> $animations The unfiltered list.
+   * @return array<int, array{key: string, label: string, group: string, count: int}>
+   */
+  private function page_options(array $animations): array
+  {
+    $pages = [];
+    foreach ($animations as $anim) {
+      $key = $anim['page_key'];
+      if (!isset($pages[$key])) {
+        $pages[$key] = [
+          'key'   => $key,
+          'label' => $anim['location'],
+          'group' => $anim['page_group'],
+          'count' => 0,
+        ];
+      }
+      ++$pages[$key]['count'];
+    }
+
+    return array_values($pages);
+  }
+
+  /**
+   * The key the dashboard filters a page by, and the group it is listed under.
+   *
+   * A page's published and draft buckets are two records with one page behind
+   * them, so the key names the page rather than the record: the post, the
+   * term, the site-wide bucket, or the option slot without its prefix.
+   *
+   * @return array{0: string, 1: string} The page key and its group label.
+   */
+  private function page_identity(string $store_type, int $id, string $key, string $post_type): array
+  {
+    if ($store_type === 'post_meta') {
+      $type = get_post_type_object($post_type);
+      $group = $type && isset($type->labels->name) ? (string) $type->labels->name : ucfirst($post_type);
+      return ['post-' . $id, $group];
+    }
+    if ($store_type === 'term_meta') {
+      $taxonomy = get_taxonomy($post_type);
+      $group = $taxonomy && isset($taxonomy->labels->name) ? (string) $taxonomy->labels->name : ucfirst($post_type);
+      return ['term-' . $id, $group];
+    }
+    if (strpos($key, 'motionkit_global_animations') === 0) {
+      return ['global', __('Site-wide', 'motionkit')];
+    }
+
+    return ['option-' . $this->option_slot($key), __('Other pages', 'motionkit')];
+  }
+
+  /**
+   * The slot an option-stored page is saved under, without the published or draft prefix: `front_page`, `search`, `404`, `archive`, `home`.
+   */
+  private function option_slot(string $key): string
+  {
+    foreach ([self::ANIMATION_OPTION_PREFIX, self::DRAFT_OPTION_PREFIX] as $prefix) {
+      if (strpos($key, $prefix) === 0) {
+        return substr($key, strlen($prefix));
+      }
+    }
+
+    return $key;
+  }
+
+  /**
+   * What an option-stored page is called and where it is, from its slot.
+   *
+   * The URL must resolve to a request of that slot's kind, since both View
+   * page and the editor open it and the editor saves under whatever
+   * PageType::current() sees there; the home URL sent the 404 page's
+   * animation to the front page. The 404 and search URLs are the ones the
+   * editor's own page list uses (the connector's search_pages()).
+   *
+   * @return array{0: string, 1: string} The label and the page's URL.
+   */
+  private function option_page(string $slot): array
+  {
+    switch ($slot) {
+      case 'front_page':
+        return [__('Front page', 'motionkit'), home_url('/')];
+      case 'home':
+        return [__('Blog (latest posts)', 'motionkit'), home_url('/')];
+      case 'search':
+        return [__('Search results', 'motionkit'), home_url('/?s=blog')];
+      case '404':
+        return [__('404 page', 'motionkit'), home_url('/404-preview/')];
+      case 'archive':
+        // Any archive shares the slot; the site's first author archive is one that exists on every site and never 404s.
+        return [__('Archives', 'motionkit'), get_author_posts_url($this->first_author_id())];
+    }
+
+    /* translators: %s: the storage slot an option-stored page is saved under */
+    return [sprintf(__('Page slot: %s', 'motionkit'), $slot), home_url('/')];
+  }
+
+  /**
+   * The lowest user id with published posts, or the first user when nobody has any.
+   */
+  private function first_author_id(): int
+  {
+    $authors = get_users(['has_published_posts' => true, 'orderby' => 'ID', 'number' => 1, 'fields' => 'ID']);
+    if ($authors === []) {
+      $authors = get_users(['orderby' => 'ID', 'number' => 1, 'fields' => 'ID']);
+    }
+
+    return $authors === [] ? 1 : (int) $authors[0];
   }
 
   /**
@@ -88,22 +198,9 @@ final class AnimationsDataHandler
       wp_send_json_error(['message' => 'Missing animation ID'], 400);
     }
 
-    // Publishing is the editor's save, which moves the record between buckets; flipping a flag inside the draft bucket would show Active for something no visitor gets.
-    if ($this->lives_only_in_drafts($anim_id)) {
-      wp_send_json_error(['message' => __('This animation has not been published yet. Publish it from the editor.', 'motionkit')], 409);
-    }
-
-    $new_status = 'published';
-    $updated = $this->mutate_animation_by_id($anim_id, function (&$anim) use (&$new_status) {
-      // Read the way the frontend reads it, so the toggle flips what a visitor actually sees.
-      $is_published = AnimationResolver::is_published($anim);
-      $new_status = $is_published ? 'draft' : 'published';
-      $anim['status'] = $new_status;
-      $anim['disabled'] = $is_published;
-      return true;
-    });
-
-    if ($updated) {
+    $new_status = '';
+    $error = $this->toggle_one($anim_id, $new_status);
+    if ($error === null) {
       wp_send_json_success([
         'animation_id' => $anim_id,
         'new_status'   => $new_status,
@@ -111,7 +208,205 @@ final class AnimationsDataHandler
       ]);
     }
 
-    wp_send_json_error(['message' => __('Animation not found.', 'motionkit')], 404);
+    wp_send_json_error(['message' => $error], $new_status === '' ? 409 : 404);
+  }
+
+  /**
+   * AJAX: Toggle or delete several animations in one request, one after another.
+   *
+   * The dashboard used to fire one request per selected row at the same time.
+   * Every toggle or delete rewrites the whole bucket the id lives in, so two
+   * rows on the same page raced: the last request to write put back the status
+   * the others had just changed, while each answer still said success.
+   */
+  public function ajax_animations_bulk(): void
+  {
+    if (!current_user_can('manage_options')) {
+      wp_send_json_error(['message' => 'Unauthorized'], 403);
+    }
+    check_ajax_referer('motionkit_animations_ajax', 'nonce');
+
+    $bulk_action = isset($_POST['bulk_action']) ? sanitize_key(wp_unslash($_POST['bulk_action'])) : '';
+    $ids = isset($_POST['animation_ids']) && is_array($_POST['animation_ids'])
+      ? array_map('sanitize_text_field', wp_unslash($_POST['animation_ids']))
+      : [];
+    $ids = array_values(array_unique(array_filter($ids, static function ($id) {
+      return $id !== '';
+    })));
+
+    if (!in_array($bulk_action, ['publish', 'draft', 'toggle_status', 'delete'], true) || [] === $ids) {
+      wp_send_json_error(['message' => 'Missing animation IDs or bulk action'], 400);
+    }
+
+    // Publish and Set as Draft set one status on every row; Toggle flips each row from wherever it is.
+    $targets = ['publish' => 'published', 'draft' => 'draft', 'toggle_status' => null];
+
+    $done = 0;
+    $failed = [];
+    foreach ($ids as $anim_id) {
+      $error = $bulk_action === 'delete'
+        ? $this->delete_one($anim_id)
+        : $this->set_status_one($anim_id, $targets[$bulk_action]);
+      if ($error === null) {
+        ++$done;
+      } else {
+        $failed[] = ['id' => $anim_id, 'message' => $error];
+      }
+    }
+
+    wp_send_json_success([
+      'action' => $bulk_action,
+      'done'   => $done,
+      'total'  => count($ids),
+      'failed' => $failed,
+    ]);
+  }
+
+  /**
+   * One status toggle, shared by the single and the bulk endpoint.
+   *
+   * @param string $anim_id    The animation id.
+   * @param string $new_status Set to the status the animation now has; left '' when it could not be toggled.
+   * @return string|null Null on success, otherwise the message for the user.
+   */
+  private function toggle_one(string $anim_id, string &$new_status = ''): ?string
+  {
+    return $this->set_status_one($anim_id, null, $new_status);
+  }
+
+  /**
+   * Set one animation's status, or flip it.
+   *
+   * @param string      $anim_id    The animation id.
+   * @param string|null $target     'published', 'draft', or null to flip whatever it is now.
+   * @param string      $new_status Set to the status the animation now has; left '' when it could not be changed.
+   * @return string|null Null on success, otherwise the message for the user.
+   */
+  private function set_status_one(string $anim_id, ?string $target, string &$new_status = ''): ?string
+  {
+    $new_status = '';
+
+    // A never-published animation lives only in the draft bucket, which no visitor is served, so flipping its flag there would show Active for nothing; publishing it is the move the editor's save makes, into the page's published bucket. Asking for draft is the one thing such a record already is, so that is a no-op rather than a refusal.
+    if ($this->lives_only_in_drafts($anim_id)) {
+      if ($target === 'draft') {
+        $new_status = 'draft';
+        return null;
+      }
+      if (!$this->publish_from_drafts($anim_id)) {
+        return __('Animation not found.', 'motionkit');
+      }
+      $new_status = 'published';
+      return null;
+    }
+
+    $status = 'published';
+    $updated = $this->mutate_animation_by_id($anim_id, function (&$anim) use (&$status, $target) {
+      // Read the way the frontend reads it, so the change lands on what a visitor actually sees.
+      $is_published = AnimationResolver::is_published($anim);
+      $status = $target ?? ($is_published ? 'draft' : 'published');
+      $anim['status'] = $status;
+      $anim['disabled'] = ($status === 'draft');
+      return true;
+    });
+
+    if (!$updated) {
+      return __('Animation not found.', 'motionkit');
+    }
+
+    $new_status = $status;
+    return null;
+  }
+
+  /**
+   * Move a never-published record out of its draft bucket into the page's
+   * published bucket, stamped published — what the editor's save does when a
+   * draft is published there (AnimationResolver::partition_for_storage()).
+   * An emptied draft bucket is deleted rather than written back empty, as the
+   * editor's save does too.
+   *
+   * @return bool False when no draft bucket holds the id.
+   */
+  private function publish_from_drafts(string $anim_id): bool
+  {
+    foreach ($this->buckets() as $bucket) {
+      if (!$bucket['draft']) {
+        continue;
+      }
+      $drafts = $this->decode_record($bucket['value']);
+      $entry = $this->take_item_from_envelope($drafts, $anim_id);
+      if ($entry === null) {
+        continue;
+      }
+
+      $draft_config = [
+        'store_type' => $bucket['store_type'],
+        'option'     => $bucket['key'],
+        'id'         => (int) $bucket['id'],
+      ];
+      $published_config = $draft_config;
+      $published_config['option'] = $this->published_key_for($bucket['key']);
+
+      // The published bucket as the editor writes it: a flat list (PageType::read() unwraps an older envelope).
+      $list = PageType::read($published_config);
+      $list[] = AnimationResolver::with_status($entry, AnimationResolver::STATUS_PUBLISHED);
+      $this->write_bucket($published_config, $list);
+
+      if ($this->envelope_list($drafts) === []) {
+        PageType::delete($draft_config);
+      } else {
+        $bucket['write']($drafts);
+      }
+      AnimationResolver::forget_globals();
+
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * The published key a draft key pairs with: the global draft option's live option, or the page prefix swapped.
+   */
+  private function published_key_for(string $draft_key): string
+  {
+    if ($draft_key === AnimationResolver::GLOBAL_DRAFT_OPTION) {
+      return AnimationResolver::GLOBAL_PUBLISHED_OPTION;
+    }
+    if (strpos($draft_key, self::DRAFT_OPTION_PREFIX) === 0) {
+      return self::ANIMATION_OPTION_PREFIX . substr($draft_key, strlen(self::DRAFT_OPTION_PREFIX));
+    }
+
+    return $draft_key;
+  }
+
+  /**
+   * Write a bucket by its descriptor, the way this class's bucket writers do: meta is slashed first because the meta API unslashes what it is given; options are not.
+   */
+  private function write_bucket(array $config, array $data): void
+  {
+    $id = (int) $config['id'];
+    switch ($config['store_type']) {
+      case 'post_meta':
+        update_post_meta($id, $config['option'], wp_slash($data));
+        break;
+      case 'term_meta':
+        update_term_meta($id, $config['option'], wp_slash($data));
+        break;
+      default:
+        update_option($config['option'], $data);
+        break;
+    }
+  }
+
+  /**
+   * One delete, shared by the single and the bulk endpoint.
+   *
+   * @param string $anim_id The animation id.
+   * @return string|null Null on success, otherwise the message for the user.
+   */
+  private function delete_one(string $anim_id): ?string
+  {
+    return $this->delete_animation_by_id($anim_id) ? null : __('Animation not found.', 'motionkit');
   }
 
   /**
@@ -129,16 +424,16 @@ final class AnimationsDataHandler
       wp_send_json_error(['message' => 'Missing animation ID'], 400);
     }
 
-    $deleted = $this->delete_animation_by_id($anim_id);
+    $error = $this->delete_one($anim_id);
 
-    if ($deleted) {
+    if ($error === null) {
       wp_send_json_success([
         'animation_id' => $anim_id,
         'message'      => __('Animation removed.', 'motionkit'),
       ]);
     }
 
-    wp_send_json_error(['message' => __('Animation not found.', 'motionkit')], 404);
+    wp_send_json_error(['message' => $error], 404);
   }
 
   /**
@@ -287,6 +582,38 @@ final class AnimationsDataHandler
           $published[] = $bucket;
         }
       }
+
+      // Pages with no post behind them (a latest-posts front page, search, 404, archives) are saved as options under the same prefixes; they were never listed here, so an animation on the front page of a blog was missing from the dashboard.
+      $option_rows = $wpdb->get_results(
+        $wpdb->prepare(
+          "SELECT option_name AS `key`, option_value AS `value`
+           FROM {$wpdb->options}
+           WHERE option_name LIKE %s",
+          $like
+        )
+      );
+      foreach ($option_rows as $row) {
+        $key = (string) $row->key;
+        [$location, $permalink] = $this->option_page($this->option_slot($key));
+        $bucket = [
+          'store_type' => 'option',
+          'key'        => $key,
+          'id'         => 0,
+          'draft'      => $is_draft,
+          'location'   => $location,
+          'post_type'  => '',
+          'permalink'  => $permalink,
+          'value'      => $row->value,
+          'write'      => static function ($data) use ($key): void {
+            update_option($key, $data);
+          },
+        ];
+        if ($is_draft) {
+          $drafts[] = $bucket;
+        } else {
+          $published[] = $bucket;
+        }
+      }
     }
 
     return array_merge($published, $drafts);
@@ -360,6 +687,7 @@ final class AnimationsDataHandler
       $status = (!$bucket['draft'] && AnimationResolver::is_published($anim)) ? 'published' : 'draft';
 
       $edit_url = $this->build_editor_url($meta['permalink']);
+      [$page_key, $page_group] = $this->page_identity($meta['store_type'], (int) $meta['id'], $meta['key'], $meta['post_type']);
 
       $output[] = [
         'id'          => $id,
@@ -368,14 +696,14 @@ final class AnimationsDataHandler
         'engine'      => $engine,
         'status'      => $status,
         'is_active'   => ($status === 'published'),
-        // A never-published draft is published from the editor, not from here.
-        'can_toggle'  => !$bucket['draft'],
         'location'    => $meta['location'],
         'permalink'   => $meta['permalink'],
         'edit_url'    => $edit_url,
         'store_type'  => $meta['store_type'],
         'store_key'   => $meta['key'],
         'store_id'    => $meta['id'],
+        'page_key'    => $page_key,
+        'page_group'  => $page_group,
       ];
     }
 
@@ -480,6 +808,64 @@ final class AnimationsDataHandler
     }
 
     return false;
+  }
+
+  /**
+   * The list an envelope holds: under `published` or `animations` in an older shape, or the envelope itself when flat.
+   *
+   * @return array<int, mixed>
+   */
+  private function envelope_list(array $envelope): array
+  {
+    foreach (['published', 'animations'] as $k) {
+      if (isset($envelope[$k]) && is_array($envelope[$k])) {
+        return array_values($envelope[$k]);
+      }
+    }
+
+    return isset($envelope[0]) && is_array($envelope[0]) ? array_values($envelope) : [];
+  }
+
+  /**
+   * Remove one item from an envelope by id and hand it back, whatever shape the envelope has.
+   *
+   * @return array|null The item, or null when the envelope does not hold the id.
+   */
+  private function take_item_from_envelope(array &$envelope, string $target_id): ?array
+  {
+    $list_key = null;
+    foreach (['published', 'animations'] as $k) {
+      if (isset($envelope[$k]) && is_array($envelope[$k])) {
+        $list_key = $k;
+        break;
+      }
+    }
+    $list = $list_key === null ? $envelope : $envelope[$list_key];
+    if ($list_key === null && !(isset($list[0]) && is_array($list[0]))) {
+      return null;
+    }
+
+    $taken = null;
+    $kept = [];
+    foreach ($list as $idx => $item) {
+      $id = is_array($item) && !empty($item['id']) ? (string) $item['id'] : (string) $idx;
+      if ($taken === null && is_array($item) && $id === $target_id) {
+        $taken = $item;
+        continue;
+      }
+      $kept[] = $item;
+    }
+    if ($taken === null) {
+      return null;
+    }
+
+    if ($list_key === null) {
+      $envelope = $kept;
+    } else {
+      $envelope[$list_key] = $kept;
+    }
+
+    return $taken;
   }
 
   private function apply_mutation_to_envelope(array &$envelope, string $target_id, callable $mutator): bool
