@@ -295,7 +295,7 @@ final class Plugin
     }
 
     /**
-     * Add "Build Animation" link to the admin bar on all frontend pages.
+     * Add "Animate with MotionKit" link to the admin bar on all frontend pages.
      */
     public function add_admin_bar_build_animation($wp_admin_bar): void
     {
@@ -332,7 +332,7 @@ final class Plugin
         $editor_url = Helper::editor_launch_url($page_url);
 
         $icon = '<span class="motionkit-ab-icon"></span>';
-        $title = $icon . '<span class="motionkit-ab-label">' . esc_html__('Build Animation', 'motionkit') . '</span>';
+        $title = $icon . '<span class="motionkit-ab-label">' . esc_html__('Animate with MotionKit', 'motionkit') . '</span>';
 
         $wp_admin_bar->add_node(array(
             'id'    => 'motionkit-build-animation',

@@ -73,7 +73,7 @@ final class Backend
   }
 
   /**
-   * Add "Build Animation" quick link to post/page row actions.
+   * Add "Animate with MotionKit" quick link to post/page row actions.
    *
    * @param array    $actions Row actions.
    * @param \WP_Post $post    Current post object.
@@ -99,7 +99,7 @@ final class Backend
   }
 
   /**
-   * The "Build Animation" anchor for one row.
+   * The "Animate with MotionKit" anchor for one row.
    *
    * An unconnected site goes to the Connect page rather than the editor, and in
    * the same tab — a new window for an internal admin screen reads as a
@@ -116,15 +116,15 @@ final class Backend
     if (!Helper::is_editor_reachable()) {
       return '<a href="' . esc_url($url) . '" title="'
         . esc_attr__('Connect this site to MotionKit first', 'motionkit') . '">'
-        . esc_html__('Build Animation', 'motionkit') . '</a>';
+        . esc_html__('Animate with MotionKit', 'motionkit') . '</a>';
     }
 
     return '<a target="_blank" rel="noopener" href="' . esc_url($url) . '">'
-      . esc_html__('Build Animation', 'motionkit') . '</a>';
+      . esc_html__('Animate with MotionKit', 'motionkit') . '</a>';
   }
 
   /**
-   * Add "Build Animation" quick link to taxonomy term row actions.
+   * Add "Animate with MotionKit" quick link to taxonomy term row actions.
    *
    * @param array    $actions Row actions.
    * @param \WP_Term $term    Current term object.

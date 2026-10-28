@@ -670,7 +670,7 @@ msgstr ""
 #: includes/Backend/Backend.php:119
 #: includes/Backend/Backend.php:123
 #: includes/Plugin.php:335
-msgid "Build Animation"
+msgid "Animate with MotionKit"
 msgstr ""
 
 #: includes/Plugin.php:344

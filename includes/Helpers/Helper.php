@@ -173,7 +173,7 @@ final class Helper
     }
 
     /**
-     * Where a "Build Animation" click should land.
+     * Where an "Animate with MotionKit" click should land.
      *
      * An unconnected site has no account behind its session token, so opening
      * the editor put the user on a screen with nothing to edit and no way to
