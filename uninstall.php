@@ -40,11 +40,15 @@ $motionkit_always = [
   'motionkit_options',
   'motionkit_version',
   'motionkit_creation_date',
+  'motionkit_connection_removed',
 ];
 
 foreach ($motionkit_always as $motionkit_option) {
   delete_option($motionkit_option);
 }
+
+// The Connect tab's one-minute back-off after the editor gave no answer to "is this connection still alive".
+delete_transient('motionkit_connection_check');
 
 // ── Connection and signing secrets shared with the connector ──
 // The connector reads the same access token, JWT secret and encryption fallback key, so deleting them while it stays would disconnect it. When this is the last MotionKit plugin they all go, so no reusable credential or the connected account's email is left in the database.

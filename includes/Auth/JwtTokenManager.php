@@ -112,6 +112,8 @@ final class JwtTokenManager
     // 401 or 403 is the editor saying this site's key is not one it knows. Asking again sooner changes nothing, and a reconnect clears the lock anyway (forget_synced_secret).
     if ($code === 401 || $code === 403) {
       set_transient(self::SYNC_LOCK_TRANSIENT, 1, self::SYNC_REJECTED_SECONDS);
+      // A key the editor does not know is what a site deleted from the MotionKit dashboard looks like from here. Asked once per lock window, and only /connect/validate's "no connection for this site" clears it, so the Connect tab offers Connect again rather than a "Connected" no launch can use.
+      OAuthHandler::forget_if_removed();
       return '';
     }
 

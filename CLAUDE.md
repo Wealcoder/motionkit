@@ -287,6 +287,7 @@ Filter hook: `motionkit/editor/allowed_origins`
 | `motionkit_access_token`              | `OAuthHandler::handle_oauth_callback()` | Encrypted OAuth token                        |
 | `motionkit_connected_at`              | `OAuthHandler`                          | Connect timestamp                            |
 | `motionkit_connected_email`           | `OAuthHandler`                          | Connected user email                         |
+| `motionkit_connection_removed`        | `OAuthHandler::forget_if_removed()`     | One-shot flag: the editor reported this site's connection gone (site deleted from the dashboard) and the local token was cleared; the Connect tab shows a notice and clears it |
 | `motionkit_options`                   | `Plugin::set_default_options()`         | General plugin options                       |
 | `motionkit_version`                   | `Plugin::activate()`                    | Last activated version                       |
 | `motionkit_creation_date`             | `Plugin::activate()`                    | First-activation timestamp                   |

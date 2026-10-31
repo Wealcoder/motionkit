@@ -708,6 +708,19 @@ final class ConnectPage
 
     $error = isset($_GET['error']) ? sanitize_text_field(wp_unslash($_GET['error'])) : '';
 
+    // Read once and cleared: the editor reported this site's connection gone (deleted from the MotionKit dashboard, or disconnected there), so the local one was cleared to match. It is stored state rather than a URL flag, so it needs no nonce, and it has to come before the return below: a visit from the admin menu carries no nonce, and that is the visit that must say why the site shows Connect again.
+    // The same card as "Connected to MotionKit", without its editor button: there is no connection to open the editor with, and Agree and connect sits right below.
+    if (\MotionKit\Auth\OAuthHandler::take_removed_notice()): ?>
+      <div class="motionkit-notice motionkit-notice--success motionkit-notice--connected">
+        <span class="motionkit-notice-icon">&#10004;</span>
+        <div class="motionkit-notice-body">
+          <strong class="motionkit-notice-title"><?php esc_html_e('This site was removed from your MotionKit dashboard', 'motionkit'); ?></strong>
+          <span class="motionkit-notice-text"><?php esc_html_e('Connect again below to keep building animations.', 'motionkit'); ?></span>
+        </div>
+        <button type="button" class="motionkit-notice-close">&times;</button>
+      </div>
+    <?php endif;
+
     // Error notices render regardless of the nonce. They are display-only and
     // non-destructive, and suppressing one leaves the user on a page that
     // still reads "Not Connected" with no stated reason — which is how a
@@ -724,13 +737,15 @@ final class ConnectPage
     // Every flag below asserts that an action succeeded, so all of them stay
     // behind the nonce — reaching this point with an invalid nonce means we
     // are here solely to render $error above.
-    $just_connected = $notice_nonce_valid && isset($_GET['connected']) && is_string(sanitize_text_field(wp_unslash($_GET['connected'])));
+    // A redirect's URL stays valid as long as its nonce, up to a day, so a refresh replays its flags. "Connected" and "Token verified" describe the connection as it stands, so they show only while it still does: a site deleted from the dashboard is cleared on that same refresh, and the "Connected to MotionKit" card used to sit above the Connect button.
+    $still_connected = !empty(self::connection_info()['connected']);
+    $just_connected = $still_connected && $notice_nonce_valid && isset($_GET['connected']) && is_string(sanitize_text_field(wp_unslash($_GET['connected'])));
     $just_disconnected = $notice_nonce_valid && isset($_GET['disconnected']) && is_string(sanitize_text_field(wp_unslash($_GET['disconnected'])));
     $license_refresh = $notice_nonce_valid && isset($_GET['license_refresh']) ? sanitize_key(wp_unslash($_GET['license_refresh'])) : '';
     $refresh_reason = $notice_nonce_valid && isset($_GET['reason']) ? sanitize_text_field(wp_unslash($_GET['reason'])) : '';
     $tools_deleted = $notice_nonce_valid && isset($_GET['tools_deleted']) ? (int) $_GET['tools_deleted'] : 0;
     $tools_all_deleted = $notice_nonce_valid && isset($_GET['tools_all_deleted']) ? (int) $_GET['tools_all_deleted'] : 0;
-    $verify = $notice_nonce_valid && isset($_GET['verify']) ? sanitize_text_field(wp_unslash($_GET['verify'])) : '';
+    $verify = $still_connected && $notice_nonce_valid && isset($_GET['verify']) ? sanitize_text_field(wp_unslash($_GET['verify'])) : '';
     $verify_reason = $notice_nonce_valid && isset($_GET['reason']) ? sanitize_text_field(wp_unslash($_GET['reason'])) : '';
 
     if ($error): ?>

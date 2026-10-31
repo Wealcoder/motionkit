@@ -31,6 +31,11 @@ final class OAuthHandler
   private const OPT_CONNECTED_AT = 'motionkit_connected_at';
   private const OPT_CONNECTED_EMAIL = 'motionkit_connected_email';
   private const OPT_STATE_TOKEN = 'motionkit_oauth_state';
+  // Set when the editor said this site's connection no longer exists and the local one was cleared to match; the Connect tab reads it once to say why the site shows Connect again.
+  private const OPT_REMOVED_NOTICE = 'motionkit_connection_removed';
+  private const CHECK_TRANSIENT = 'motionkit_connection_check';
+  // How long the Connect tab waits to ask again after the editor gave no answer, so an outage does not add the request timeout to every view. A live answer is never cached: it goes stale the moment the site is deleted in the dashboard.
+  private const CHECK_INTERVAL = MINUTE_IN_SECONDS;
 
   public function init(): void
   {
@@ -38,6 +43,7 @@ final class OAuthHandler
     add_action('admin_init', [$this, 'handle_oauth_callback'], 1);
     add_action('admin_init', [$this, 'handle_oauth_disconnect'], 5);
     add_action('admin_init', [$this, 'handle_verify'], 5);
+    add_action('admin_init', [$this, 'check_connection_on_connect_page'], 6);
   }
 
   public static function is_connected(): bool
@@ -173,6 +179,8 @@ final class OAuthHandler
     $encrypted = self::encrypt((string) $body['access_token']);
     update_option(self::OPT_ACCESS_TOKEN, $encrypted);
     update_option(self::OPT_CONNECTED_AT, gmdate('Y-m-d H:i:s'));
+    delete_option(self::OPT_REMOVED_NOTICE);
+    delete_transient(self::CHECK_TRANSIENT);
     if (!empty($body['email'])) {
       update_option(self::OPT_CONNECTED_EMAIL, sanitize_email((string) $body['email']));
     }
@@ -206,22 +214,125 @@ final class OAuthHandler
       return;
     }
 
-    $response = wp_remote_post(EditorEndpoint::url('connect/validate'), [
-      'timeout' => 15,
-      'headers' => ['Content-Type' => 'application/json'],
-      'body'    => wp_json_encode([
-        'site'       => home_url(),
-        'token_hash' => hash('sha256', $token),
-      ]),
-    ]);
+    $response = self::request_validation($token, 15);
 
     if (is_wp_error($response)) {
       $this->redirect_with_notice(['verify' => 'error', 'reason' => 'server_unreachable']);
       return;
     }
 
+    // Removed on the editor's side: the Connect tab then shows Connect and the removal notice, which says more than "Token mismatch".
+    if (self::says_removed($response)) {
+      self::forget_removed_connection();
+      $this->redirect_with_notice([]);
+      return;
+    }
+
     $body = json_decode(wp_remote_retrieve_body($response), true);
     $this->redirect_with_notice(['verify' => !empty($body['valid']) ? 'valid' : 'invalid']);
+  }
+
+  // Opening the Connect tab asks the editor whether this site's connection still exists, so a site removed from the MotionKit dashboard shows Connect again instead of a "Connected" that nothing on the editor answers to.
+  public function check_connection_on_connect_page(): void
+  {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page check
+    if (!isset($_GET['page']) || $_GET['page'] !== 'motionkit-connect') {
+      return;
+    }
+    // The callback, disconnect and verify requests settle the connection themselves and redirect.
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only flag checks
+    if (isset($_GET['motionkit_disconnect']) || isset($_GET['motionkit_verify']) || self::read_callback_param('code') !== '') {
+      return;
+    }
+    if (!current_user_can('manage_options') || !self::is_connected()) {
+      return;
+    }
+    // Set only after an unanswered check. It used to be set on every check, so a site viewed, deleted in the dashboard and viewed again within the minute kept reading "Connected".
+    if (get_transient(self::CHECK_TRANSIENT)) {
+      return;
+    }
+
+    if (self::forget_if_removed() === null) {
+      set_transient(self::CHECK_TRANSIENT, 1, self::CHECK_INTERVAL);
+    }
+  }
+
+  // Asks the editor whether it still holds a connection for this site and, when it says it holds none, clears the local one to match. Only that explicit answer clears anything: unreachable, a 5xx, or a live connection whose token drifted all leave the stored connection alone. Returns true when it was cleared, false when the editor answered that it stands (or there is no token to ask about), null when no answer came back.
+  public static function forget_if_removed(): ?bool
+  {
+    $token = self::readable_token();
+    if ($token === '') {
+      return false;
+    }
+
+    $response = self::request_validation($token, 5);
+    if (is_wp_error($response)) {
+      return null;
+    }
+    if (!self::says_removed($response)) {
+      $code = (int) wp_remote_retrieve_response_code($response);
+      return ($code >= 200 && $code < 300) ? false : null;
+    }
+
+    self::forget_removed_connection();
+    return true;
+  }
+
+  // The Connect tab's one-time read of the removal flag.
+  public static function take_removed_notice(): bool
+  {
+    $removed = (bool) get_option(self::OPT_REMOVED_NOTICE, false);
+    if ($removed) {
+      delete_option(self::OPT_REMOVED_NOTICE);
+    }
+    return $removed;
+  }
+
+  /**
+   * @return array|\WP_Error
+   */
+  private static function request_validation(string $token, int $timeout)
+  {
+    return wp_remote_post(EditorEndpoint::url('connect/validate'), [
+      'timeout' => $timeout,
+      'headers' => ['Content-Type' => 'application/json'],
+      'body'    => wp_json_encode([
+        'site'       => home_url(),
+        'token_hash' => hash('sha256', $token),
+      ]),
+    ]);
+  }
+
+  // /connect/validate answers 404 with valid:false only when no live row exists for this host at all — the site was deleted from the dashboard or disconnected there — never for an outage or a token that merely drifted.
+  private static function says_removed(array $response): bool
+  {
+    if ((int) wp_remote_retrieve_response_code($response) !== 404) {
+      return false;
+    }
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+    return is_array($body) && array_key_exists('valid', $body) && $body['valid'] === false;
+  }
+
+  // Nothing to revoke: the editor already holds no connection for this site, so only the local half goes.
+  private static function forget_removed_connection(): void
+  {
+    self::clear_local_connection();
+    update_option(self::OPT_REMOVED_NOTICE, 1, false);
+  }
+
+  // The local half of a connection, and everything that hangs off it.
+  private static function clear_local_connection(): void
+  {
+    delete_option(self::OPT_ACCESS_TOKEN);
+    delete_option(self::OPT_CONNECTED_AT);
+    delete_option(self::OPT_CONNECTED_EMAIL);
+    delete_transient(self::CHECK_TRANSIENT);
+
+    // The synced secret belongs to the editor this site was attached to, so a stale one would refuse every token the next editor issues.
+    JwtTokenManager::forget_synced_secret();
+
+    // The connector clears its license state, update key and launch-token secrets on this.
+    do_action('motionkit/oauth/disconnected');
   }
 
   // Namespaced spelling first, bare as the fallback an editor build without the rename still sends. CSRF for this callback is the server-issued state compared with hash_equals(), not a nonce.
@@ -297,15 +408,8 @@ final class OAuthHandler
       ]);
     }
 
-    delete_option(self::OPT_ACCESS_TOKEN);
-    delete_option(self::OPT_CONNECTED_AT);
-    delete_option(self::OPT_CONNECTED_EMAIL);
-
-    // The synced secret belongs to the editor this site was attached to, so a stale one would refuse every token the next editor issues.
-    JwtTokenManager::forget_synced_secret();
-
-    // The connector clears its license state, update key and launch-token secrets on this.
-    do_action('motionkit/oauth/disconnected');
+    self::clear_local_connection();
+    delete_option(self::OPT_REMOVED_NOTICE);
 
     $this->redirect_with_notice(['disconnected' => '1']);
   }
