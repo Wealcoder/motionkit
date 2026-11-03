@@ -278,6 +278,17 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
  
 == Changelog ==
 
+= 2.0.0 =
+* Improved: The Animations dashboard loads more rows as you scroll, keeps its headers and tabs in view, and adds a Back to top button.
+* Improved: Filter animations by page, publish drafts straight from the dashboard, and open every kind of page at its own URL.
+* Improved: Row details open in a popup, with bulk Publish and Set as Draft, Load more, and tabs named for what they hold.
+* Improved: The Connect screen names only your MotionKit account, the Connect button itself is the consent, and you land on the Connect tab with a what-next card.
+* Improved: "Build Animation" is now "Animate with MotionKit".
+* Fixed: Bulk actions run as one request, in order, so rows on the same page no longer undo each other.
+* Fixed: The Animations tab no longer lists an empty site when animations exist.
+* Fixed: Connect shows again after the site is removed from the MotionKit dashboard.
+* Removed: The Upgrade to GSAP and Revert to Free actions, which never changed what played.
+
 = 1.6.2 =
 * Improved: The MotionKit settings screen now leads with Connect, and offers the optional MotionKit with GSAP add-on only after the site is connected.
 
@@ -299,6 +310,9 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 * Free animations start at the viewport centre by default.
  
 == Upgrade Notice ==
+
+= 2.0.0 =
+A faster Animations dashboard with bulk publishing, and a clearer Connect screen.
 
 = 1.6.2 =
 Clearer setup: connect first, add GSAP animations later if you need them.
