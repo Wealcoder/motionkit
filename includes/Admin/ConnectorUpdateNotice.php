@@ -29,6 +29,7 @@ final class ConnectorUpdateNotice
   private const LATEST_TRANSIENT = 'motionkit_connector_latest_version';
   private const UNKNOWN = 'unknown';
   private const OFFER_ENDS = '2026-11-12 00:00:00 UTC';
+  private const UPDATES_ITSELF_FROM = '2.0.2';
   private const LATEST_RELEASE_URL = 'https://github.com/Wealcoder/motionkit-with-gsap/releases/latest';
   private const PACKAGE_URL = 'https://github.com/Wealcoder/motionkit-with-gsap/releases/latest/download/motionkit-with-gsap.zip';
   private const STORE_URL = 'https://my.motionkit.io/';
@@ -43,17 +44,24 @@ final class ConnectorUpdateNotice
 
     $current = PluginStatus::version(PluginStatus::CONNECTOR);
     ?>
-    <div class="motionkit-notice motionkit-notice--info">
-      <p>
-        <?php
-        /* translators: 1: latest version of the add-on, 2: version this site runs. */
-        echo esc_html(sprintf(__('MotionKit with GSAP %1$s is available. This site runs %2$s. Download the file, then upload it on the Upload Plugin screen and choose Replace current with uploaded.', 'motionkit'), $latest, $current));
-        ?>
-      </p>
-      <p>
-        <a class="motionkit-btn motionkit-btn--primary" href="<?php echo esc_url(self::PACKAGE_URL); ?>"><?php esc_html_e('Download the update', 'motionkit'); ?></a>
-        <a class="motionkit-btn" href="<?php echo esc_url(admin_url('plugin-install.php?tab=upload')); ?>"><?php esc_html_e('Open Upload Plugin', 'motionkit'); ?></a>
-      </p>
+    <div class="motionkit-notice motionkit-notice--info motionkit-notice--connected">
+      <div class="motionkit-notice-body">
+        <strong class="motionkit-notice-title">
+          <?php
+          /* translators: %s: latest version of the add-on. */
+          echo esc_html(sprintf(__('MotionKit with GSAP %s is available', 'motionkit'), $latest));
+          ?>
+        </strong>
+        <span class="motionkit-notice-text">
+          <?php
+          /* translators: %s: version of the add-on this site runs. */
+          echo esc_html(sprintf(__('This site runs %s. Download the file, then upload it on the Upload Plugin screen. If WordPress asks, choose Replace current with uploaded.', 'motionkit'), $current));
+          ?>
+        </span>
+      </div>
+      <a class="motionkit-btn motionkit-btn--primary" href="<?php echo esc_url(self::PACKAGE_URL); ?>"><?php esc_html_e('Download the update', 'motionkit'); ?></a>
+      <?php // network_admin_url() is admin_url() on a single site; on a multisite the upload screen exists only in the network admin, and a subsite's copy redirects there without the tab. ?>
+      <a class="motionkit-btn motionkit-btn--outline" href="<?php echo esc_url(network_admin_url('plugin-install.php?tab=upload')); ?>"><?php esc_html_e('Open Upload Plugin', 'motionkit'); ?></a>
     </div>
     <?php
   }
@@ -71,9 +79,15 @@ final class ConnectorUpdateNotice
     }
 
     $current = PluginStatus::version(PluginStatus::CONNECTOR);
+
+    // A site already on a version that updates itself gets the update on its Plugins page, so it is not told to do this by hand and makes no request.
+    if ($current === '' || version_compare($current, self::UPDATES_ITSELF_FROM, '>=')) {
+      return '';
+    }
+
     $latest = self::latest_version();
 
-    return ($current !== '' && $latest !== '' && version_compare($current, $latest, '<')) ? $latest : '';
+    return ($latest !== '' && version_compare($current, $latest, '<')) ? $latest : '';
   }
 
   // A failed lookup is remembered too, for less time, so an outage does not slow every visit to this page.
