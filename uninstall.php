@@ -20,7 +20,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 
 global $wpdb;
 
-// Whether the sibling connector plugin is still installed, in any folder. An active connector is loaded in this request (WordPress runs uninstall inside a normal admin request), so its constant settles it; an inactive one is found by its text domain, because it can live under motionkit-with-gsap/, the legacy motionkit-connector/, or a renamed zip folder, and a folder-name check that missed it would delete animations and the signing secret the connector is still using.
+// Whether the sibling connector plugin is still installed, in any folder. An active connector is loaded in this request (WordPress runs uninstall inside a normal admin request), so its constant settles it; an inactive one is found by its text domain (motionkit-with-gsap since 1.7.3, motionkit-connector before), because it can live under motionkit-with-gsap/, the legacy motionkit-connector/, or a renamed zip folder, and a folder-name check that missed it would delete animations and the signing secret the connector is still using.
 $motionkit_sibling_present = defined('MOTIONKIT_CONNECTOR_LOADED');
 if (!$motionkit_sibling_present) {
   if (!function_exists('get_plugins')) {
@@ -28,7 +28,7 @@ if (!$motionkit_sibling_present) {
   }
   $motionkit_self = defined('WP_UNINSTALL_PLUGIN') ? (string) WP_UNINSTALL_PLUGIN : '';
   foreach (get_plugins() as $motionkit_basename => $motionkit_header) {
-    if ($motionkit_basename !== $motionkit_self && ($motionkit_header['TextDomain'] ?? '') === 'motionkit-connector') {
+    if ($motionkit_basename !== $motionkit_self && in_array($motionkit_header['TextDomain'] ?? '', ['motionkit-with-gsap', 'motionkit-connector'], true)) {
       $motionkit_sibling_present = true;
       break;
     }
@@ -49,6 +49,9 @@ foreach ($motionkit_always as $motionkit_option) {
 
 // The Connect tab's one-minute back-off after the editor gave no answer to "is this connection still alive".
 delete_transient('motionkit_connection_check');
+
+// The add-on update notice's cached latest version; stays here after that notice is removed, for a site that deletes the plugin later.
+delete_transient('motionkit_connector_latest_version');
 
 // ── Connection and signing secrets shared with the connector ──
 // The connector reads the same access token, JWT secret and encryption fallback key, so deleting them while it stays would disconnect it. When this is the last MotionKit plugin they all go, so no reusable credential or the connected account's email is left in the database.
