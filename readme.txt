@@ -4,7 +4,7 @@ Tags: animation, gsap, scroll animation, elementor animation, scrolltrigger
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.6.2
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,21 +76,21 @@ Every preset is one click to apply and fully editable afterwards. Live demos for
 **Text animations (30)**
 [Text Reveal](https://demo.motionkit.io/text-reveal-animation/) · [Typewriter](https://demo.motionkit.io/text-typewritter-animation/) · [Scramble Text](https://demo.motionkit.io/scramble-text-animation/) · [Word Split](https://demo.motionkit.io/text-word-split-animation/) · [Character Split](https://demo.motionkit.io/text-character-split-animation/) · [Text Wave](https://demo.motionkit.io/text-wave-animation/) · [Text Scale](https://demo.motionkit.io/text-scale-animation/) · [Text Move](https://demo.motionkit.io/text-move-animation/) · [Text Rotate](https://demo.motionkit.io/text-rotate-animation/) · [Text Spin](https://demo.motionkit.io/text-spin-animation/) · [Text Skew-In](https://demo.motionkit.io/text-skew-in-animation/) · [Text Curtain Reveal](https://demo.motionkit.io/text-curtain-reveal-animation/) · [Text Spotlight Reveal](https://demo.motionkit.io/text-spotlight-reveal-animation/) · [Text Vertical Blinds](https://demo.motionkit.io/text-vertical-blinds-animation/) · [Text Unfold](https://demo.motionkit.io/text-unfold-animation/) · [Text Origami Fold](https://demo.motionkit.io/text-origami-fold-animation/) · [Text Domino Effect](https://demo.motionkit.io/text-domino-effect/) · [Text Pendulum Swing](https://demo.motionkit.io/text-pendulum-swing-animation/) · [Text Gravity Fall](https://demo.motionkit.io/text-gravity-fall-animation/) · [Character Rain Fall](https://demo.motionkit.io/text-character-rain-fall/) · [Text Popcorn Pop](https://demo.motionkit.io/text-popcorn-pop-animation/) · [Text Scatter Reassemble](https://demo.motionkit.io/text-scatter-reassemble-animation/) · [Character Shuffle](https://demo.motionkit.io/text-character-shuffle-animation/) · [Text Magnet Pull](https://demo.motionkit.io/text-magnet-pull-animation/) · [Text Ink Drop Spread](https://demo.motionkit.io/text-ink-drop-spread-animation/) · [Text Invert](https://demo.motionkit.io/text-invert-animation/) · [Matrix Reveal](https://demo.motionkit.io/text-matrix-reveal/) · [Text Cyber Phantom](https://demo.motionkit.io/text-cyber-phantom-animation/) · [Quantum Snap](https://demo.motionkit.io/text-quantum-snap/) · [Vortex](https://demo.motionkit.io/text-vortex-unwind-animation/)
  
-**Image animations (14)**
-[Image Reveal](https://demo.motionkit.io/imge-reveal-animation/) · [Image Fade](https://demo.motionkit.io/image-fade-animation/) · [Image Scale-In](https://demo.motionkit.io/image-scale-in-animation/) · [Image Skew In](https://demo.motionkit.io/image-skew-in-animation/) · [Image Flip](https://demo.motionkit.io/image-flip-animation/) · [Image Polygon Reveal](https://demo.motionkit.io/image-polygon-reveal-animation/) · [Image Aperture Reveal](https://demo.motionkit.io/image-aperture-reveal/) · [Image Zoom Tunnel Reveal](https://demo.motionkit.io/image-zoom-tunnel-reveal-animation/) · [Image 3D Move X-Axis](https://demo.motionkit.io/image-3d-move-x-axis-animation/) · [Image 3D Move Y-Axis](https://demo.motionkit.io/image-3d-move-y-axis-animation/) · [Image Scale With Scroll](https://demo.motionkit.io/image-scale-with-scroll/) · [Image Stretch With Scroll](https://demo.motionkit.io/image-stretch-with-scroll/) · [Stagger Diagonal Reveal](https://demo.motionkit.io/stagger-diagonal-reveal-2/)
+**Image animations (23)**
+[Image Reveal](https://demo.motionkit.io/imge-reveal-animation/) · [Image Fade](https://demo.motionkit.io/image-fade-animation/) · [Image Scale-In](https://demo.motionkit.io/image-scale-in-animation/) · [Image Skew In](https://demo.motionkit.io/image-skew-in-animation/) · [Image Flip](https://demo.motionkit.io/image-flip-animation/) · [Image Polygon Reveal](https://demo.motionkit.io/image-polygon-reveal-animation/) · [Image Aperture Reveal](https://demo.motionkit.io/image-aperture-reveal/) · [Image Zoom Tunnel Reveal](https://demo.motionkit.io/image-zoom-tunnel-reveal-animation/) · [Image 3D Move X-Axis](https://demo.motionkit.io/image-3d-move-x-axis-animation/) · [Image 3D Move Y-Axis](https://demo.motionkit.io/image-3d-move-y-axis-animation/) · [Image Scale With Scroll](https://demo.motionkit.io/image-scale-with-scroll/) · [Image Stretch With Scroll](https://demo.motionkit.io/image-stretch-with-scroll/) · [Image Stack Wipe](https://demo.motionkit.io/image-stack-wipe/) · [Image Inner Parallax](https://demo.motionkit.io/image-inner-parallax/) · [Image Skew Slide](https://demo.motionkit.io/image-skew-slide/) · [Image Polaroid Drop](https://demo.motionkit.io/image-polaroid-drop/) · [Image Collage Parallax](https://demo.motionkit.io/image-collage-parallax/) · [Image Clip Expand](https://demo.motionkit.io/image-clip-expand/) · [Image Text Mask](https://demo.motionkit.io/image-text-mask/) · [Image Hover Zoom In](https://demo.motionkit.io/image-hover-zoom-in/) · [Image Focus Pull](https://demo.motionkit.io/image-focus-pull/) · [Image Blinds Reveal](https://demo.motionkit.io/image-blinds-reveal/) · [Image Grid Zoom](https://demo.motionkit.io/image-grid-zoom/)
  
-**Scroll and interaction effects (14)**
+**Scroll and interaction effects (15)**
 [Horizontal Scroll](https://demo.motionkit.io/horizontal-scroll-animation/) · [Header Sticky](https://demo.motionkit.io/header-sticky/) · [Hover Reveal](https://demo.motionkit.io/image-reveal-on-hover/) · [Hover Magnifier](https://demo.motionkit.io/hover-magnifier-animation/) · [3D Tilt](https://demo.motionkit.io/3d-tilt-animation/) · [Cursor Move](https://demo.motionkit.io/cursor-move-animation/) · [Cursor Reveal](https://demo.motionkit.io/cursor-reveal-animation/) ·  [Cinematic Mask](https://demo.motionkit.io/image-cinematic-mask/) · [Spotlight Reveal](https://demo.motionkit.io/spotlight-reveal/) · [Color Swipe Reveal](https://demo.motionkit.io/text-color-swipe-reveal/) · [Cube Reveal](https://demo.motionkit.io/cube-reveal/) · [Slice Shutter](https://demo.motionkit.io/image-slice-shutter/) · [Mosaic Depth](https://demo.motionkit.io/image-mosaic-depth/) · [Video Frame](https://demo.motionkit.io/video-frame-animation/) · [Media Popup](https://demo.motionkit.io/media-popup-animation/)
  
-**Container and stagger animations (7)**
-[Stagger Fade Up](https://demo.motionkit.io/stagger-fade-up/) · [Stagger Grid Reveal](https://demo.motionkit.io/stagger-grid-reveal/) · [Stagger Blur In](https://demo.motionkit.io/stagger-blur-in/) · [Stagger Clip Reveal](https://demo.motionkit.io/stagger-clip-reveal/) · [Stagger Unfold](https://demo.motionkit.io/stagger-unfold/) · [Stagger Tilt Drop](https://demo.motionkit.io/stagger-tilt-drop/) · [Stagger Scale Pop](https://demo.motionkit.io/stagger-scale-pop/)
+**Container and stagger animations (16)**
+[Stagger Fade Up](https://demo.motionkit.io/stagger-fade-up/) · [Stagger Grid Reveal](https://demo.motionkit.io/stagger-grid-reveal/) · [Stagger Blur In](https://demo.motionkit.io/stagger-blur-in/) · [Stagger Clip Reveal](https://demo.motionkit.io/stagger-clip-reveal/) · [Stagger Unfold](https://demo.motionkit.io/stagger-unfold/) · [Stagger Tilt Drop](https://demo.motionkit.io/stagger-tilt-drop/) · [Stagger Scale Pop](https://demo.motionkit.io/stagger-scale-pop/) · [Stagger Diagonal Reveal](https://demo.motionkit.io/stagger-diagonal-reveal-2/) · [Bento Assemble](https://demo.motionkit.io/bento-assemble/) · [Testimonial Wall](https://demo.motionkit.io/testimonial-wall/) · [Feature List Reveal](https://demo.motionkit.io/feature-list-reveal/) · [Stat Counter](https://demo.motionkit.io/stat-counter/) · [Sections Color Shifts](https://demo.motionkit.io/sections-color-shifts/) · [Momentum Marquee](https://demo.motionkit.io/momentum-marquee/) · [Flip Cards](https://demo.motionkit.io/flip-cards/) · [Card Exit Shrink](https://demo.motionkit.io/card-exit-shrink/)
  
 **Pin, sticky and stacked card scroll effects (6)**
 [Pin Sticky Sections](https://demo.motionkit.io/pin-sticky-animation/)
 [Stacked Card Scroll](https://demo.motionkit.io/stacked-card/) 
  
 **GSAP plugin presets (25)**
-[DrawSVG](https://demo.motionkit.io/drawsvg-demo-1/) – draw logos, icons and illustrations stroke by stroke
+[DrawSVG](https://demo.motionkit.io/drawsvg-demo-4/) – draw logos, icons and illustrations stroke by stroke
 [MorphSVG](https://demo.motionkit.io/morphsvg-demo-1/) – morph one shape into another
 [MotionPath](https://demo.motionkit.io/motionpath-demo-1/) – move elements along a custom path
 [Flip](https://demo.motionkit.io/flip-demo-1/) – seamless layout and state transitions 
@@ -247,6 +247,7 @@ MotionKit bundles all of its JavaScript, CSS, runtime and icons locally. The plu
 2. **Launching the editor (admin only).** Clicking Launch Editor opens `https://editor.motionkit.io/` in your browser with your site URL and a short-lived signed token so the editor can load a live preview of your page.
 3. **AI assistants (optional).** If you connect an AI assistant, it talks to the MotionKit MCP endpoint at **`https://editor.motionkit.io/mcp`**.
 4. **Upgrade link (optional).** The dashboard links to `https://motionkit.io`; no site data is sent.
+5. **MotionKit with GSAP version check (connected sites with the add-on installed, until November 12, 2026).** When an administrator opens the MotionKit page, the plugin asks `https://github.com/Wealcoder/motionkit-with-gsap/releases/latest` for the add-on's latest version, or `https://my.motionkit.io/` if GitHub does not answer. No site data is sent to either beyond what any web request carries. [GitHub Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) | [GitHub Privacy](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
  
 No visitor data is sent to MotionKit and the plugin performs no tracking on your front end.
  
@@ -278,6 +279,26 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
  
 == Changelog ==
 
+= 2.0.1 =
+* New: Live demos for 19 more presets in the preset library: 11 image animations and 8 container animations.
+* New: On connected sites, the MotionKit page tells you when a newer MotionKit with GSAP is available, with a link to download it. This notice runs until November 12, 2026.
+* Fixed: The DrawSVG demo link in the plugin description.
+
+= 2.0.0 =
+* New: Motion AI chat in the MotionKit editor. Describe the animation you want in plain words and it builds it on your page, ready to fine-tune on the timeline.
+* New: Filter the Animations list by page.
+* New: Publish a draft animation straight from the MotionKit dashboard.
+* New: Bulk Publish and Set as Draft for selected animations.
+* Improved: Animation details open in a popup, so the list stays readable on any screen.
+* Improved: Lists load more rows as you scroll, headers and tabs stay in view, and a Back to top button.
+* Improved: View page and Edit in editor open the right URL for every page type, including the blog page, 404, search and archives.
+* Improved: A simpler Connect screen that shows only your MotionKit account and tells you what to do next.
+* Tweak: Build Animation is now called Animate with MotionKit.
+* Fixed: The Animations tab showed "No animations found" on sites that had animations.
+* Fixed: Bulk actions on several animations of the same page no longer undo each other.
+* Fixed: Connect appears again when the site was removed from the MotionKit dashboard.
+* Removed: The Upgrade to GSAP and Revert to Free actions, which did not change how an animation played.
+
 = 1.6.2 =
 * Improved: The MotionKit settings screen now leads with Connect, and offers the optional MotionKit with GSAP add-on only after the site is connected.
 
@@ -299,6 +320,12 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 * Free animations start at the viewport centre by default.
  
 == Upgrade Notice ==
+
+= 2.0.1 =
+Live demos for 19 more presets, and a notice on the MotionKit page when a newer MotionKit with GSAP is available.
+
+= 2.0.0 =
+Motion AI chat in the editor, a redesigned dashboard with page filters, draft publishing and bulk actions, and fixes for animations not showing in the list.
 
 = 1.6.2 =
 Clearer setup: connect first, add GSAP animations later if you need them.
