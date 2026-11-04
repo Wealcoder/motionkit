@@ -90,11 +90,11 @@ Every preset is one click to apply and fully editable afterwards. Live demos for
 [Stacked Card Scroll](https://demo.motionkit.io/stacked-card/) 
  
 **GSAP plugin presets (25)**
-[DrawSVG](https://demo.motionkit.io/drawsvg-demo-4/) – draw logos, icons and illustrations stroke by stroke
-[MorphSVG](https://demo.motionkit.io/morphsvg-demo-1/) – morph one shape into another
-[MotionPath](https://demo.motionkit.io/motionpath-demo-1/) – move elements along a custom path
-[Flip](https://demo.motionkit.io/flip-demo-1/) – seamless layout and state transitions 
-[Physics2D](https://demo.motionkit.io/physics2d-demo-1/) – gravity, velocity and bounce
+[DrawSVG](https://demo.motionkit.io/drawsvg-path-draw/) – draw logos, icons and illustrations stroke by stroke
+[MorphSVG](https://demo.motionkit.io/liquid-image-blob/) – morph one shape into another
+[MotionPath](https://demo.motionkit.io/curved-path-arrow/) – move elements along a custom path
+[Flip](https://demo.motionkit.io/portfolio-filter/) – seamless layout and state transitions 
+[Physics2D](https://demo.motionkit.io/offer-card-dismiss/) – gravity, velocity and bounce
  
 Browse everything with live previews at [motionkit.io/presets](https://motionkit.io/presets/).
 
@@ -247,7 +247,7 @@ MotionKit bundles all of its JavaScript, CSS, runtime and icons locally. The plu
 2. **Launching the editor (admin only).** Clicking Launch Editor opens `https://editor.motionkit.io/` in your browser with your site URL and a short-lived signed token so the editor can load a live preview of your page.
 3. **AI assistants (optional).** If you connect an AI assistant, it talks to the MotionKit MCP endpoint at **`https://editor.motionkit.io/mcp`**.
 4. **Upgrade link (optional).** The dashboard links to `https://motionkit.io`; no site data is sent.
-5. **MotionKit with GSAP version check (connected sites with the add-on installed, until November 12, 2026).** When an administrator opens the MotionKit page, the plugin asks `https://github.com/Wealcoder/motionkit-with-gsap/releases/latest` for the add-on's latest version, or `https://my.motionkit.io/` if GitHub does not answer. No site data is sent to either beyond what any web request carries. [GitHub Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) | [GitHub Privacy](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
+5. **MotionKit with GSAP version check (connected sites running an add-on older than 2.0.2, until November 12, 2026).** When an administrator opens the MotionKit page, the plugin asks `https://github.com/Wealcoder/motionkit-with-gsap/releases/latest` for the add-on's latest version, or `https://my.motionkit.io/` if GitHub does not answer. No site data is sent to either beyond what any web request carries. [GitHub Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) | [GitHub Privacy](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
  
 No visitor data is sent to MotionKit and the plugin performs no tracking on your front end.
  
@@ -281,7 +281,8 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 
 = 2.0.1 =
 * New: Live demos for 19 more presets in the preset library: 11 image animations and 8 container animations.
-* New: On connected sites, the MotionKit page tells you when a newer MotionKit with GSAP is available, with a link to download it. This notice runs until November 12, 2026.
+* New: On connected sites running MotionKit with GSAP older than 2.0.2, the MotionKit page says a newer version is available, with a link to download it. This notice runs until November 12, 2026.
+* Fixed: Deleting MotionKit no longer removes your animations and connection while MotionKit with GSAP is installed but inactive.
 * Fixed: The DrawSVG demo link in the plugin description.
 
 = 2.0.0 =
@@ -322,7 +323,7 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 == Upgrade Notice ==
 
 = 2.0.1 =
-Live demos for 19 more presets, and a notice on the MotionKit page when a newer MotionKit with GSAP is available.
+Keeps your animations when MotionKit is deleted while MotionKit with GSAP is inactive, adds live demos for 19 more presets, and shows a notice on the MotionKit page when MotionKit with GSAP needs updating by hand.
 
 = 2.0.0 =
 Motion AI chat in the editor, a redesigned dashboard with page filters, draft publishing and bulk actions, and fixes for animations not showing in the list.

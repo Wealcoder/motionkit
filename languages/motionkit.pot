@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-04T06:16:26+00:00\n"
+"POT-Creation-Date: 2026-11-04T07:00:39+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: motionkit\n"
@@ -105,17 +105,23 @@ msgstr ""
 msgid "Animation #%d"
 msgstr ""
 
-#. translators: 1: latest version of the add-on, 2: version this site runs.
-#: includes/Admin/ConnectorUpdateNotice.php:50
+#. translators: %s: latest version of the add-on.
+#: includes/Admin/ConnectorUpdateNotice.php:52
 #, php-format
-msgid "MotionKit with GSAP %1$s is available. This site runs %2$s. Download the file, then upload it on the Upload Plugin screen and choose Replace current with uploaded."
+msgid "MotionKit with GSAP %s is available"
 msgstr ""
 
-#: includes/Admin/ConnectorUpdateNotice.php:54
+#. translators: %s: version of the add-on this site runs.
+#: includes/Admin/ConnectorUpdateNotice.php:58
+#, php-format
+msgid "This site runs %s. Download the file, then upload it on the Upload Plugin screen. If WordPress asks, choose Replace current with uploaded."
+msgstr ""
+
+#: includes/Admin/ConnectorUpdateNotice.php:62
 msgid "Download the update"
 msgstr ""
 
-#: includes/Admin/ConnectorUpdateNotice.php:55
+#: includes/Admin/ConnectorUpdateNotice.php:64
 msgid "Open Upload Plugin"
 msgstr ""
 
