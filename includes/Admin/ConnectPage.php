@@ -461,6 +461,7 @@ final class ConnectPage
         <!-- Content -->
         <div class="motionkit-content">
           <?php $this->render_notices(); ?>
+          <?php ConnectorUpdateNotice::render(); ?>
 
           <?php
           switch ($active_tab) {
