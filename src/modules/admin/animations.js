@@ -196,7 +196,7 @@ import { watchListEnd } from "./scroll-more.js";
               <strong>${esc(anim.title)}</strong> ${engineBadgeHtml(anim)}
               ${anim.id ? `<small class="motionkit-animations-row-id">${esc(anim.id)}</small>` : ""}
             </td>
-            <td class="motionkit-animations-col-status">${statusPillHtml(anim, true)}</td>
+            <td class="motionkit-animations-col-status">${statusPillHtml(anim)}</td>
             <td class="motionkit-animations-col-actions">
               <button type="button" class="motionkit-btn motionkit-btn--outline motionkit-btn--sm motionkit-anim-actions" data-id="${esc(anim.id)}" aria-haspopup="dialog">${esc(strings.actions || "Actions")}</button>
             </td>
@@ -253,16 +253,13 @@ import { watchListEnd } from "./scroll-more.js";
       : `<span class="motionkit-badge-engine motionkit-badge-engine--gsap">${esc(strings.typeGsap || "GSAP")}</span>`;
   }
 
-  // In a row the pill is the switch; the popup's copy is a label, since its Publish button does the toggling there.
-  function statusPillHtml(anim, clickable) {
+  // A label only: status is changed in the editor, never from this page.
+  function statusPillHtml(anim) {
     const on = !!anim.is_active;
     const label = on ? strings.statusActive || "Active" : strings.statusDraft || "Draft";
-    const classes = ["motionkit-status-pill", on ? "motionkit-status-pill--on" : "motionkit-status-pill--off"];
-    if (!clickable) classes.push("motionkit-status-pill--locked");
+    const modifier = on ? "motionkit-status-pill--on" : "motionkit-status-pill--off";
 
-    const attrs = clickable ? ` data-id="${esc(anim.id)}" title="${esc(strings.toggleHint || "Click to toggle status")}"` : "";
-
-    return `<span class="${classes.join(" ")}"${attrs}><span class="motionkit-status-dot"></span>${esc(label)}</span>`;
+    return `<span class="motionkit-status-pill ${modifier}"><span class="motionkit-status-dot"></span>${esc(label)}</span>`;
   }
 
   // ─── Details popup ───
@@ -286,7 +283,7 @@ import { watchListEnd } from "./scroll-more.js";
     idEl.textContent = anim.id || "";
     idEl.hidden = !anim.id;
 
-    field("status").innerHTML = statusPillHtml(anim, false);
+    field("status").innerHTML = statusPillHtml(anim);
 
     field("type").innerHTML = engineBadgeHtml(anim);
     field("target").textContent = anim.target || "";
@@ -296,9 +293,6 @@ import { watchListEnd } from "./scroll-more.js";
       (anim.permalink
         ? ` <a href="${esc(anim.permalink)}" target="_blank" rel="noopener" class="motionkit-details-link">${esc(strings.viewPage || "View page")} &rarr;</a>`
         : "");
-
-    const toggleBtn = field("toggle");
-    toggleBtn.textContent = anim.is_active ? strings.setDraft || "Set as draft" : strings.publish || "Publish";
 
     const editLink = field("edit");
     editLink.hidden = !anim.edit_url;
@@ -354,25 +348,6 @@ import { watchListEnd } from "./scroll-more.js";
     }
   }
 
-  function handleToggleStatus(animId) {
-    const formData = new FormData();
-    formData.append("action", "motionkit_toggle_animation_status");
-    formData.append("nonce", nonce);
-    formData.append("animation_id", animId);
-
-    fetch(ajaxUrl, { method: "POST", body: formData })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          showToast(`Animation status updated to ${res.data.new_status}.`, "success");
-          fetchAnimations();
-        } else {
-          showToast(res.data?.message || strings.failed, "error");
-        }
-      })
-      .catch((err) => showToast("Error: " + err.message, "error"));
-  }
-
   function handleDeleteAnimation(animId) {
     if (!confirm(strings.confirmDelete || "Are you sure you want to delete this animation?")) {
       return;
@@ -403,9 +378,9 @@ import { watchListEnd } from "./scroll-more.js";
     const ids = Array.from(state.selectedIds);
 
     if (!action || ids.length === 0) return;
-    if (!["publish", "draft", "toggle_status", "delete"].includes(action)) return;
+    if (action !== "delete") return;
 
-    if (action === "delete" && !confirm(`Are you sure you want to delete ${ids.length} selected animation(s)?`)) {
+    if (!confirm(`Are you sure you want to delete ${ids.length} selected animation(s)?`)) {
       return;
     }
 
@@ -427,18 +402,8 @@ import { watchListEnd } from "./scroll-more.js";
         // A row that could not be changed is named with its reason; one blanket "updated" toast hid that while the row stayed as it was.
         const reason = failed && failed[0] ? failed[0].message : strings.failed;
         const all = done === total;
-        const doneText = {
-          publish: `Published ${done} animation(s).`,
-          draft: `Set ${done} animation(s) as draft.`,
-          toggle_status: `Updated status for ${done} animation(s).`,
-          delete: `Deleted ${done} animation(s).`,
-        }[action];
-        const partialText = {
-          publish: `Published ${done} of ${total}.`,
-          draft: `Set ${done} of ${total} as draft.`,
-          toggle_status: `Updated ${done} of ${total}.`,
-          delete: `Deleted ${done} of ${total}.`,
-        }[action];
+        const doneText = `Deleted ${done} animation(s).`;
+        const partialText = `Deleted ${done} of ${total}.`;
         showToast(all ? doneText : `${partialText} ${reason}`, all ? "success" : "error");
         actionSelect.value = "";
         fetchAnimations();
@@ -508,15 +473,6 @@ import { watchListEnd } from "./scroll-more.js";
           return;
         }
 
-        // Status pill click
-        const statusPill = e.target.closest(".motionkit-status-pill");
-        if (statusPill && statusPill.dataset.id) {
-          e.preventDefault();
-          const id = statusPill.dataset.id;
-          handleToggleStatus(id);
-          return;
-        }
-
         // Actions button click
         const actionsBtn = e.target.closest(".motionkit-anim-actions");
         if (actionsBtn && actionsBtn.dataset.id) {
@@ -551,13 +507,6 @@ import { watchListEnd } from "./scroll-more.js";
           closeDetails();
         }
       });
-
-      const toggleBtn = document.getElementById("motionkit-anim-modal-toggle");
-      if (toggleBtn) {
-        toggleBtn.addEventListener("click", () => {
-          if (state.openId) handleToggleStatus(state.openId);
-        });
-      }
 
       const deleteBtn = document.getElementById("motionkit-anim-modal-delete");
       if (deleteBtn) {

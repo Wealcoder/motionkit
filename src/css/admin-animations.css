@@ -275,10 +275,7 @@
   font-weight: 600;
   padding: 0.18rem 0.5rem;
   border-radius: 6px;
-  cursor: pointer;
-  user-select: none;
   border: 1px solid transparent;
-  transition: all 0.15s ease;
 }
 
 .motionkit-status-pill--on {
@@ -291,10 +288,6 @@
   background: #fef2f2;
   color: #dc2626;
   border-color: #fecaca;
-}
-
-.motionkit-status-pill--locked {
-  cursor: default;
 }
 
 .motionkit-status-dot {

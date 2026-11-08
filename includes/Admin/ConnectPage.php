@@ -137,45 +137,14 @@ final class ConnectPage
   /**
    * The tab the page opens on when the link names none.
    *
-   * A site with nothing animated yet has only its account to look at, so it
-   * opens there; once a page carries animation data, the pages are what the
-   * owner comes for. The Animations tab is the fallback only when the
-   * connector that provides the pages tab is missing.
+   * A disconnected site can only connect, so it opens on the account. A
+   * connected one opens on Animations whether or not anything is animated
+   * yet: that tab carries the Open MotionKit Editor button, which the
+   * Animated Pages tab does not.
    */
   private static function default_tab(bool $connected): string
   {
-    if (!$connected || !self::has_animation_data()) {
-      return 'connect';
-    }
-
-    return self::tools_available() ? 'tools' : 'animations';
-  }
-
-  /**
-   * Whether any page, term or the site itself carries an animation record.
-   *
-   * An existence check rather than the full scan the Animations tab runs:
-   * that scan signs an editor URL per animation, which is too much for a
-   * question asked twice on every load of this page. Cached per request.
-   */
-  private static function has_animation_data(): bool
-  {
-    static $found = null;
-    if ($found !== null) {
-      return $found;
-    }
-
-    global $wpdb;
-    $like = $wpdb->esc_like('motionkit_pg_animation_') . '%';
-
-    // phpcs:disable WordPress.DB.DirectDatabaseQuery -- A LIKE on a meta key has no API; one row is enough, and the answer is cached above.
-    $found = !empty(get_option('motionkit_global_animations'))
-      || (bool) $wpdb->get_var($wpdb->prepare("SELECT 1 FROM {$wpdb->postmeta} WHERE meta_key LIKE %s LIMIT 1", $like))
-      || (bool) $wpdb->get_var($wpdb->prepare("SELECT 1 FROM {$wpdb->termmeta} WHERE meta_key LIKE %s LIMIT 1", $like))
-      || (bool) $wpdb->get_var($wpdb->prepare("SELECT 1 FROM {$wpdb->options} WHERE option_name LIKE %s LIMIT 1", $like));
-    // phpcs:enable
-
-    return $found;
+    return $connected ? 'animations' : 'connect';
   }
 
   /**
@@ -253,9 +222,6 @@ final class ConnectPage
           'actions'       => __('Actions', 'motionkit'),
           'statusActive'  => __('Active', 'motionkit'),
           'statusDraft'   => __('Draft', 'motionkit'),
-          'toggleHint'    => __('Click to toggle status', 'motionkit'),
-          'publish'       => __('Publish', 'motionkit'),
-          'setDraft'      => __('Set as draft', 'motionkit'),
           'viewPage'      => __('View page', 'motionkit'),
           /* translators: 1: rows on the page, 2: rows in total */
           'showing'       => __('Showing %1$s of %2$s', 'motionkit'),
@@ -1312,9 +1278,6 @@ final class ConnectPage
           <div class="motionkit-bulk-actions-wrap">
             <select id="motionkit-bulk-action-select" class="motionkit-select">
               <option value=""><?php esc_html_e('Bulk Actions', 'motionkit'); ?></option>
-              <option value="publish"><?php esc_html_e('● Publish (Active)', 'motionkit'); ?></option>
-              <option value="draft"><?php esc_html_e('○ Set as Draft', 'motionkit'); ?></option>
-              <option value="toggle_status"><?php esc_html_e('⏻ Toggle Status (Active/Draft)', 'motionkit'); ?></option>
               <option value="delete"><?php esc_html_e('🗑️ Delete', 'motionkit'); ?></option>
             </select>
             <button type="button" id="motionkit-bulk-apply-btn" class="motionkit-btn motionkit-btn--outline motionkit-btn--sm" disabled>
@@ -1374,7 +1337,6 @@ final class ConnectPage
           </dl>
           <div class="motionkit-modal-actions motionkit-details-actions">
             <button type="button" class="motionkit-btn motionkit-btn--outline motionkit-btn--danger motionkit-details-destructive" id="motionkit-anim-modal-delete"><?php esc_html_e('Delete', 'motionkit'); ?></button>
-            <button type="button" class="motionkit-btn motionkit-btn--outline" id="motionkit-anim-modal-toggle"></button>
             <a class="motionkit-btn motionkit-btn--primary" id="motionkit-anim-modal-edit" href="#" target="_blank" rel="noopener"><?php esc_html_e('Edit in editor', 'motionkit'); ?></a>
           </div>
         </div>

@@ -398,6 +398,11 @@ final class Plugin
             return;
         }
 
+        // Published animations play only while the site is connected to a MotionKit account; disconnecting pauses them without touching the saved records, and reconnecting brings them back. A stored-token check, never a remote one, so no page load waits on the editor.
+        if (!\MotionKit\Auth\OAuthHandler::is_connected()) {
+            return;
+        }
+
         $file_path = $this->plugin_dir . 'assets/build/motionkit-waapi.js';
         if (!file_exists($file_path)) {
             return;

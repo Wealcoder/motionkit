@@ -3,14 +3,14 @@
 namespace MotionKit\Admin;
 
 use MotionKit\Common\AnimationResolver;
-use MotionKit\Common\PageType;
 
 /**
  * MotionKit WordPress Plugin — Active Animations manager.
  *
  * Scans, resolves, and manages animation records across global options,
  * post meta, and term meta. Provides AJAX endpoints for the Active Animations
- * dashboard tab: the list, the status toggle and delete.
+ * dashboard tab: the list and delete. Publishing and drafting happen only in
+ * the editor.
  *
  * It never rewrites an animation's engine. The runtimes decide free vs GSAP from
  * the record's group and preset key, so an `engine` tag written here changed the
@@ -34,7 +34,6 @@ final class AnimationsDataHandler
   public function init(): void
   {
     add_action('wp_ajax_motionkit_animations_list', [$this, 'ajax_animations_list']);
-    add_action('wp_ajax_motionkit_toggle_animation_status', [$this, 'ajax_toggle_animation_status']);
     add_action('wp_ajax_motionkit_delete_single_animation', [$this, 'ajax_delete_single_animation']);
     add_action('wp_ajax_motionkit_animations_bulk', [$this, 'ajax_animations_bulk']);
   }
@@ -184,40 +183,12 @@ final class AnimationsDataHandler
   }
 
   /**
-   * AJAX: Toggle status between enabled/disabled (published/draft).
-   */
-  public function ajax_toggle_animation_status(): void
-  {
-    if (!current_user_can('manage_options')) {
-      wp_send_json_error(['message' => 'Unauthorized'], 403);
-    }
-    check_ajax_referer('motionkit_animations_ajax', 'nonce');
-
-    $anim_id = isset($_POST['animation_id']) ? sanitize_text_field(wp_unslash($_POST['animation_id'])) : '';
-    if ($anim_id === '') {
-      wp_send_json_error(['message' => 'Missing animation ID'], 400);
-    }
-
-    $new_status = '';
-    $error = $this->toggle_one($anim_id, $new_status);
-    if ($error === null) {
-      wp_send_json_success([
-        'animation_id' => $anim_id,
-        'new_status'   => $new_status,
-        'is_active'    => ($new_status === 'published'),
-      ]);
-    }
-
-    wp_send_json_error(['message' => $error], $new_status === '' ? 409 : 404);
-  }
-
-  /**
-   * AJAX: Toggle or delete several animations in one request, one after another.
+   * AJAX: Delete several animations in one request, one after another.
    *
    * The dashboard used to fire one request per selected row at the same time.
-   * Every toggle or delete rewrites the whole bucket the id lives in, so two
-   * rows on the same page raced: the last request to write put back the status
-   * the others had just changed, while each answer still said success.
+   * Every delete rewrites the whole bucket the id lives in, so two rows on the
+   * same page raced: the last request to write put back what the others had
+   * just removed, while each answer still said success.
    */
   public function ajax_animations_bulk(): void
   {
@@ -234,19 +205,15 @@ final class AnimationsDataHandler
       return $id !== '';
     })));
 
-    if (!in_array($bulk_action, ['publish', 'draft', 'toggle_status', 'delete'], true) || [] === $ids) {
+    // Status is the editor's to change: this page only deletes.
+    if ($bulk_action !== 'delete' || [] === $ids) {
       wp_send_json_error(['message' => 'Missing animation IDs or bulk action'], 400);
     }
-
-    // Publish and Set as Draft set one status on every row; Toggle flips each row from wherever it is.
-    $targets = ['publish' => 'published', 'draft' => 'draft', 'toggle_status' => null];
 
     $done = 0;
     $failed = [];
     foreach ($ids as $anim_id) {
-      $error = $bulk_action === 'delete'
-        ? $this->delete_one($anim_id)
-        : $this->set_status_one($anim_id, $targets[$bulk_action]);
+      $error = $this->delete_one($anim_id);
       if ($error === null) {
         ++$done;
       } else {
@@ -260,142 +227,6 @@ final class AnimationsDataHandler
       'total'  => count($ids),
       'failed' => $failed,
     ]);
-  }
-
-  /**
-   * One status toggle, shared by the single and the bulk endpoint.
-   *
-   * @param string $anim_id    The animation id.
-   * @param string $new_status Set to the status the animation now has; left '' when it could not be toggled.
-   * @return string|null Null on success, otherwise the message for the user.
-   */
-  private function toggle_one(string $anim_id, string &$new_status = ''): ?string
-  {
-    return $this->set_status_one($anim_id, null, $new_status);
-  }
-
-  /**
-   * Set one animation's status, or flip it.
-   *
-   * @param string      $anim_id    The animation id.
-   * @param string|null $target     'published', 'draft', or null to flip whatever it is now.
-   * @param string      $new_status Set to the status the animation now has; left '' when it could not be changed.
-   * @return string|null Null on success, otherwise the message for the user.
-   */
-  private function set_status_one(string $anim_id, ?string $target, string &$new_status = ''): ?string
-  {
-    $new_status = '';
-
-    // A never-published animation lives only in the draft bucket, which no visitor is served, so flipping its flag there would show Active for nothing; publishing it is the move the editor's save makes, into the page's published bucket. Asking for draft is the one thing such a record already is, so that is a no-op rather than a refusal.
-    if ($this->lives_only_in_drafts($anim_id)) {
-      if ($target === 'draft') {
-        $new_status = 'draft';
-        return null;
-      }
-      if (!$this->publish_from_drafts($anim_id)) {
-        return __('Animation not found.', 'motionkit');
-      }
-      $new_status = 'published';
-      return null;
-    }
-
-    $status = 'published';
-    $updated = $this->mutate_animation_by_id($anim_id, function (&$anim) use (&$status, $target) {
-      // Read the way the frontend reads it, so the change lands on what a visitor actually sees.
-      $is_published = AnimationResolver::is_published($anim);
-      $status = $target ?? ($is_published ? 'draft' : 'published');
-      $anim['status'] = $status;
-      $anim['disabled'] = ($status === 'draft');
-      return true;
-    });
-
-    if (!$updated) {
-      return __('Animation not found.', 'motionkit');
-    }
-
-    $new_status = $status;
-    return null;
-  }
-
-  /**
-   * Move a never-published record out of its draft bucket into the page's
-   * published bucket, stamped published — what the editor's save does when a
-   * draft is published there (AnimationResolver::partition_for_storage()).
-   * An emptied draft bucket is deleted rather than written back empty, as the
-   * editor's save does too.
-   *
-   * @return bool False when no draft bucket holds the id.
-   */
-  private function publish_from_drafts(string $anim_id): bool
-  {
-    foreach ($this->buckets() as $bucket) {
-      if (!$bucket['draft']) {
-        continue;
-      }
-      $drafts = $this->decode_record($bucket['value']);
-      $entry = $this->take_item_from_envelope($drafts, $anim_id);
-      if ($entry === null) {
-        continue;
-      }
-
-      $draft_config = [
-        'store_type' => $bucket['store_type'],
-        'option'     => $bucket['key'],
-        'id'         => (int) $bucket['id'],
-      ];
-      $published_config = $draft_config;
-      $published_config['option'] = $this->published_key_for($bucket['key']);
-
-      // The published bucket as the editor writes it: a flat list (PageType::read() unwraps an older envelope).
-      $list = PageType::read($published_config);
-      $list[] = AnimationResolver::with_status($entry, AnimationResolver::STATUS_PUBLISHED);
-      $this->write_bucket($published_config, $list);
-
-      if ($this->envelope_list($drafts) === []) {
-        PageType::delete($draft_config);
-      } else {
-        $bucket['write']($drafts);
-      }
-      AnimationResolver::forget_globals();
-
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * The published key a draft key pairs with: the global draft option's live option, or the page prefix swapped.
-   */
-  private function published_key_for(string $draft_key): string
-  {
-    if ($draft_key === AnimationResolver::GLOBAL_DRAFT_OPTION) {
-      return AnimationResolver::GLOBAL_PUBLISHED_OPTION;
-    }
-    if (strpos($draft_key, self::DRAFT_OPTION_PREFIX) === 0) {
-      return self::ANIMATION_OPTION_PREFIX . substr($draft_key, strlen(self::DRAFT_OPTION_PREFIX));
-    }
-
-    return $draft_key;
-  }
-
-  /**
-   * Write a bucket by its descriptor, the way this class's bucket writers do: meta is slashed first because the meta API unslashes what it is given; options are not.
-   */
-  private function write_bucket(array $config, array $data): void
-  {
-    $id = (int) $config['id'];
-    switch ($config['store_type']) {
-      case 'post_meta':
-        update_post_meta($id, $config['option'], wp_slash($data));
-        break;
-      case 'term_meta':
-        update_term_meta($id, $config['option'], wp_slash($data));
-        break;
-      default:
-        update_option($config['option'], $data);
-        break;
-    }
   }
 
   /**
@@ -746,153 +577,6 @@ final class AnimationsDataHandler
     ];
     $base_url = apply_filters('motionkit/editor/url', 'https://editor.motionkit.io/');
     return add_query_arg($query_args, $base_url);
-  }
-
-  /**
-   * Apply a mutator callback to an animation by ID and persist back to database.
-   */
-  private function mutate_animation_by_id(string $target_id, callable $mutator): bool
-  {
-    foreach ($this->buckets() as $bucket) {
-      $parsed = $this->decode_record($bucket['value']);
-      if ($this->apply_mutation_to_envelope($parsed, $target_id, $mutator)) {
-        $bucket['write']($parsed);
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Whether an id is found in a draft bucket and in no published one: a never-published animation.
-   */
-  private function lives_only_in_drafts(string $target_id): bool
-  {
-    $in_published = false;
-    $in_draft = false;
-
-    foreach ($this->buckets() as $bucket) {
-      if (!$this->envelope_has_id($this->decode_record($bucket['value']), $target_id)) {
-        continue;
-      }
-      if ($bucket['draft']) {
-        $in_draft = true;
-      } else {
-        $in_published = true;
-      }
-    }
-
-    return $in_draft && !$in_published;
-  }
-
-  private function envelope_has_id(array $envelope, string $target_id): bool
-  {
-    $lists = [];
-    foreach (['published', 'animations'] as $k) {
-      if (isset($envelope[$k]) && is_array($envelope[$k])) {
-        $lists[] = $envelope[$k];
-      }
-    }
-    if (isset($envelope[0]) && is_array($envelope[0])) {
-      $lists[] = $envelope;
-    }
-
-    foreach ($lists as $list) {
-      foreach ($list as $idx => $item) {
-        $id = is_array($item) && !empty($item['id']) ? (string) $item['id'] : (string) $idx;
-        if ($id === $target_id) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * The list an envelope holds: under `published` or `animations` in an older shape, or the envelope itself when flat.
-   *
-   * @return array<int, mixed>
-   */
-  private function envelope_list(array $envelope): array
-  {
-    foreach (['published', 'animations'] as $k) {
-      if (isset($envelope[$k]) && is_array($envelope[$k])) {
-        return array_values($envelope[$k]);
-      }
-    }
-
-    return isset($envelope[0]) && is_array($envelope[0]) ? array_values($envelope) : [];
-  }
-
-  /**
-   * Remove one item from an envelope by id and hand it back, whatever shape the envelope has.
-   *
-   * @return array|null The item, or null when the envelope does not hold the id.
-   */
-  private function take_item_from_envelope(array &$envelope, string $target_id): ?array
-  {
-    $list_key = null;
-    foreach (['published', 'animations'] as $k) {
-      if (isset($envelope[$k]) && is_array($envelope[$k])) {
-        $list_key = $k;
-        break;
-      }
-    }
-    $list = $list_key === null ? $envelope : $envelope[$list_key];
-    if ($list_key === null && !(isset($list[0]) && is_array($list[0]))) {
-      return null;
-    }
-
-    $taken = null;
-    $kept = [];
-    foreach ($list as $idx => $item) {
-      $id = is_array($item) && !empty($item['id']) ? (string) $item['id'] : (string) $idx;
-      if ($taken === null && is_array($item) && $id === $target_id) {
-        $taken = $item;
-        continue;
-      }
-      $kept[] = $item;
-    }
-    if ($taken === null) {
-      return null;
-    }
-
-    if ($list_key === null) {
-      $envelope = $kept;
-    } else {
-      $envelope[$list_key] = $kept;
-    }
-
-    return $taken;
-  }
-
-  private function apply_mutation_to_envelope(array &$envelope, string $target_id, callable $mutator): bool
-  {
-    $keys = ['published', 'animations'];
-    foreach ($keys as $k) {
-      if (isset($envelope[$k]) && is_array($envelope[$k])) {
-        foreach ($envelope[$k] as $idx => &$item) {
-          $id = !empty($item['id']) ? (string) $item['id'] : (string) $idx;
-          if ($id === $target_id) {
-            return (bool) $mutator($item);
-          }
-        }
-      }
-    }
-
-    // Flat array
-    if (isset($envelope[0]) && is_array($envelope[0])) {
-      foreach ($envelope as $idx => &$item) {
-        $id = !empty($item['id']) ? (string) $item['id'] : (string) $idx;
-        if ($id === $target_id) {
-          return (bool) $mutator($item);
-        }
-      }
-    }
-
-    return false;
   }
 
   /**
