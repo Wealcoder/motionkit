@@ -2,14 +2,14 @@
 # This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: MotionKit – Visual GSAP Animation Builder for Elementor, Divi, Bricks & More 2.0.1\n"
+"Project-Id-Version: MotionKit – Visual GSAP Animation Builder for Elementor, Divi, Bricks & More 2.0.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/motionkit\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-04T07:00:39+00:00\n"
+"POT-Creation-Date: 2026-11-10T09:18:31+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: motionkit\n"
@@ -105,26 +105,6 @@ msgstr ""
 msgid "Animation #%d"
 msgstr ""
 
-#. translators: %s: latest version of the add-on.
-#: includes/Admin/ConnectorUpdateNotice.php:52
-#, php-format
-msgid "MotionKit with GSAP %s is available"
-msgstr ""
-
-#. translators: %s: version of the add-on this site runs.
-#: includes/Admin/ConnectorUpdateNotice.php:58
-#, php-format
-msgid "This site runs %s. Download the file, then upload it on the Upload Plugin screen. If WordPress asks, choose Replace current with uploaded."
-msgstr ""
-
-#: includes/Admin/ConnectorUpdateNotice.php:62
-msgid "Download the update"
-msgstr ""
-
-#: includes/Admin/ConnectorUpdateNotice.php:64
-msgid "Open Upload Plugin"
-msgstr ""
-
 #: includes/Admin/ConnectPage.php:243
 msgid "Animations on this site:"
 msgstr ""
@@ -150,7 +130,7 @@ msgid "GSAP"
 msgstr ""
 
 #: includes/Admin/ConnectPage.php:249
-#: includes/Admin/ConnectPage.php:1329
+#: includes/Admin/ConnectPage.php:1328
 msgid "All pages"
 msgstr ""
 
@@ -163,19 +143,19 @@ msgid "No animations match this filter."
 msgstr ""
 
 #: includes/Admin/ConnectPage.php:252
-#: includes/Admin/ConnectPage.php:1347
+#: includes/Admin/ConnectPage.php:1346
 msgid "Loading animations..."
 msgstr ""
 
 #: includes/Admin/ConnectPage.php:253
 #: includes/Admin/ConnectPage.php:298
-#: includes/Admin/ConnectPage.php:1342
-#: includes/Admin/ConnectPage.php:1410
+#: includes/Admin/ConnectPage.php:1341
+#: includes/Admin/ConnectPage.php:1409
 msgid "Actions"
 msgstr ""
 
 #: includes/Admin/ConnectPage.php:254
-#: includes/Admin/ConnectPage.php:1043
+#: includes/Admin/ConnectPage.php:1042
 msgid "Active"
 msgstr ""
 
@@ -267,12 +247,12 @@ msgid "Connect"
 msgstr ""
 
 #: includes/Admin/ConnectPage.php:397
-#: includes/Admin/ConnectPage.php:1460
+#: includes/Admin/ConnectPage.php:1459
 msgid "Animations"
 msgstr ""
 
 #: includes/Admin/ConnectPage.php:404
-#: includes/Admin/ConnectPage.php:1397
+#: includes/Admin/ConnectPage.php:1396
 msgid "Animated Pages"
 msgstr ""
 
@@ -281,7 +261,7 @@ msgid "MotionKit account"
 msgstr ""
 
 #: includes/Admin/ConnectPage.php:431
-#: includes/Admin/ConnectPage.php:1115
+#: includes/Admin/ConnectPage.php:1114
 msgid "Connected"
 msgstr ""
 
@@ -289,486 +269,486 @@ msgstr ""
 msgid "Not connected"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:488
+#: includes/Admin/ConnectPage.php:487
 msgid "Back to top"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:573
+#: includes/Admin/ConnectPage.php:572
 msgid "You do not have permission to activate plugins."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:578
-#: includes/Admin/ConnectPage.php:1258
+#: includes/Admin/ConnectPage.php:577
+#: includes/Admin/ConnectPage.php:1257
 msgid "Security check failed. Please try again."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:634
-#: includes/Admin/ConnectPage.php:636
+#: includes/Admin/ConnectPage.php:633
+#: includes/Admin/ConnectPage.php:635
 msgid "Activate MotionKit with GSAP"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:635
+#: includes/Admin/ConnectPage.php:634
 msgid "The GSAP add-on is installed but not active. Activate it to run GSAP animations on this site: Most Popular presets, custom timelines, the cloud library, page transitions and smooth scroll."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:640
+#: includes/Admin/ConnectPage.php:639
 msgid "Add GSAP animations"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:641
+#: includes/Admin/ConnectPage.php:640
 msgid "Your site is connected and already runs MotionKit animations. Install the free MotionKit with GSAP add-on to also run Most Popular presets, custom timelines, the cloud library, page transitions and smooth scroll."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:642
+#: includes/Admin/ConnectPage.php:641
 msgid "Download MotionKit with GSAP"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:647
+#: includes/Admin/ConnectPage.php:646
 msgid "Optional add-on"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:718
+#: includes/Admin/ConnectPage.php:717
 msgid "This site was removed from your MotionKit dashboard"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:719
+#: includes/Admin/ConnectPage.php:718
 msgid "Connect again below to keep building animations."
 msgstr ""
 
 #. translators: %s: the MotionKit account email.
-#: includes/Admin/ConnectPage.php:765
+#: includes/Admin/ConnectPage.php:764
 #, php-format
 msgid "Connected to MotionKit as %s"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:767
+#: includes/Admin/ConnectPage.php:766
 msgid "Connected to MotionKit"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:774
+#: includes/Admin/ConnectPage.php:773
 msgid "Animations you publish will play on this site. Open the editor on your homepage to build the first one."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:777
+#: includes/Admin/ConnectPage.php:776
 msgid "Open the editor on your homepage"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:786
+#: includes/Admin/ConnectPage.php:785
 msgid "Disconnected from MotionKit."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:794
+#: includes/Admin/ConnectPage.php:793
 msgid "License status updated from your MotionKit account."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:800
+#: includes/Admin/ConnectPage.php:799
 msgid "This site has not launched the MotionKit editor yet, so there is no license to check yet. Open the editor once (via \"Launch MotionKit\" or \"Edit with MotionKit\" on any page) to finish connecting this site."
 msgstr ""
 
 #. translators: %s: machine-readable error code from the license check.
-#: includes/Admin/ConnectPage.php:809
+#: includes/Admin/ConnectPage.php:808
 #, php-format
 msgid "Could not check your license: %s. Your current status is unchanged."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:820
+#: includes/Admin/ConnectPage.php:819
 msgid "Animation data deleted."
 msgstr ""
 
 #. translators: %d is the number of animation records deleted.
-#: includes/Admin/ConnectPage.php:830
+#: includes/Admin/ConnectPage.php:829
 #, php-format
 msgid "Deleted %d animation record."
 msgid_plural "Deleted %d animation records."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/Admin/ConnectPage.php:839
+#: includes/Admin/ConnectPage.php:838
 msgid "Token verified — your local token matches the MotionKit server."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:845
+#: includes/Admin/ConnectPage.php:844
 msgid "Token mismatch — try disconnecting and reconnecting."
 msgstr ""
 
 #. translators: %s is the reason the verification check failed.
-#: includes/Admin/ConnectPage.php:853
+#: includes/Admin/ConnectPage.php:852
 #, php-format
 msgid "Verification failed: %s"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:883
+#: includes/Admin/ConnectPage.php:882
 msgid "License"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:888
+#: includes/Admin/ConnectPage.php:887
 msgid "We could not reach the MotionKit server recently enough to confirm your license. Premium features stay available while we retry; use \"Check again\" to retry now."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:892
+#: includes/Admin/ConnectPage.php:891
 msgid "Your license is active on this site. You have access to all pro features."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:896
+#: includes/Admin/ConnectPage.php:895
 msgid "Your plan's site limit is full, so this site does not currently hold a slot. Remove another site from your MotionKit account, or upgrade your plan."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:900
+#: includes/Admin/ConnectPage.php:899
 msgid "Your license has expired. Renew it to keep using premium features."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:904
+#: includes/Admin/ConnectPage.php:903
 msgid "Your license has been disabled. Please contact support."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:908
+#: includes/Admin/ConnectPage.php:907
 msgid "Your license is not activated on this site yet. Reconnect the site, or activate it from your MotionKit account, to unlock premium features here."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:912
+#: includes/Admin/ConnectPage.php:911
 msgid "You're on the Free plan. Upgrade anytime from your MotionKit account to unlock premium presets and pro features."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:916
+#: includes/Admin/ConnectPage.php:915
 msgid "The connected account does not have an active MotionKit license."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:923
-#: includes/Admin/ConnectPage.php:1341
-#: includes/Admin/ConnectPage.php:1367
+#: includes/Admin/ConnectPage.php:922
+#: includes/Admin/ConnectPage.php:1340
+#: includes/Admin/ConnectPage.php:1366
 msgid "Status"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:933
+#: includes/Admin/ConnectPage.php:932
 msgid "Plan"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:940
+#: includes/Admin/ConnectPage.php:939
 msgid "Sites"
 msgstr ""
 
 #. translators: 1: sites in use, 2: sites allowed by the plan.
-#: includes/Admin/ConnectPage.php:946
+#: includes/Admin/ConnectPage.php:945
 #, php-format
 msgid "%1$d of %2$d used"
 msgstr ""
 
 #. translators: %d: number of sites in use on an unlimited plan.
-#: includes/Admin/ConnectPage.php:953
+#: includes/Admin/ConnectPage.php:952
 #, php-format
 msgid "%d used (unlimited)"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:964
+#: includes/Admin/ConnectPage.php:963
 msgid "Expires"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:975
+#: includes/Admin/ConnectPage.php:974
 msgid "Last checked"
 msgstr ""
 
 #. translators: %s: human-readable time difference, e.g. "5 mins".
-#: includes/Admin/ConnectPage.php:981
+#: includes/Admin/ConnectPage.php:980
 #, php-format
 msgid "%s ago"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:985
+#: includes/Admin/ConnectPage.php:984
 msgid "Never"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:997
+#: includes/Admin/ConnectPage.php:996
 msgid "Could not reach the MotionKit server recently — showing the last known status. Your features stay active in the meantime."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1010
+#: includes/Admin/ConnectPage.php:1009
 msgid "Check again"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1030
+#: includes/Admin/ConnectPage.php:1029
 msgid "Unable to verify"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1034
+#: includes/Admin/ConnectPage.php:1033
 msgid "Free plan"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1038
+#: includes/Admin/ConnectPage.php:1037
 msgid "Site limit reached"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1045
+#: includes/Admin/ConnectPage.php:1044
 msgid "Expired"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1047
+#: includes/Admin/ConnectPage.php:1046
 msgid "Disabled"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1049
+#: includes/Admin/ConnectPage.php:1048
 msgid "Inactive"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1113
+#: includes/Admin/ConnectPage.php:1112
 msgid "Your MotionKit Account"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1122
+#: includes/Admin/ConnectPage.php:1121
 msgid "You're connected as"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1122
+#: includes/Admin/ConnectPage.php:1121
 msgid "You're connected"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1128
+#: includes/Admin/ConnectPage.php:1127
 msgid "My Account"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1134
+#: includes/Admin/ConnectPage.php:1133
 msgid "Connected to the wrong account?"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1137
+#: includes/Admin/ConnectPage.php:1136
 msgid "Switch Account"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1143
+#: includes/Admin/ConnectPage.php:1142
 msgid "Want to disconnect for any reason?"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1147
+#: includes/Admin/ConnectPage.php:1146
 msgid "Are you sure you want to disconnect?"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1148
+#: includes/Admin/ConnectPage.php:1147
 msgid "Disconnect"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1162
+#: includes/Admin/ConnectPage.php:1161
 msgid "Open The Editor"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1167
+#: includes/Admin/ConnectPage.php:1166
 msgid "Your site is connected. Open any post or page and click \"Edit with MotionKit\" - or use the button below to launch the editor directly."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1172
-#: includes/Admin/ConnectPage.php:1174
+#: includes/Admin/ConnectPage.php:1171
+#: includes/Admin/ConnectPage.php:1173
 msgid "Launch Motionkit"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1202
+#: includes/Admin/ConnectPage.php:1201
 msgid "Connect your MotionKit Account"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1204
+#: includes/Admin/ConnectPage.php:1203
 msgid "Not Connected"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1209
+#: includes/Admin/ConnectPage.php:1208
 msgid "Connect this WordPress site with the MotionKit visual editor to create, customize, and manage high-performance animations."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1215
+#: includes/Admin/ConnectPage.php:1214
 msgid "MotionKit will save your animations in this site's database. No passwords are shared."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1218
+#: includes/Admin/ConnectPage.php:1217
 msgid "What is shared?"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1220
+#: includes/Admin/ConnectPage.php:1219
 msgid "Your animations:"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1220
+#: includes/Admin/ConnectPage.php:1219
 msgid "what you build in the editor is saved to this site, so it plays for visitors with nothing in between."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1221
+#: includes/Admin/ConnectPage.php:1220
 msgid "Page settings:"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1221
+#: includes/Admin/ConnectPage.php:1220
 msgid "which pages have animations, and the triggers you set for them."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1222
+#: includes/Admin/ConnectPage.php:1221
 msgid "A preview key:"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1222
+#: includes/Admin/ConnectPage.php:1221
 msgid "lets the editor show this site while you work. No admin password or user details are ever shared."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1230
+#: includes/Admin/ConnectPage.php:1229
 msgid "Agree and connect"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1236
+#: includes/Admin/ConnectPage.php:1235
 msgid "Safe & Private"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1238
+#: includes/Admin/ConnectPage.php:1237
 msgid "You can disconnect at any time, from this screen or from your MotionKit account."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1254
+#: includes/Admin/ConnectPage.php:1253
 msgid "Security verification failed. Please try again."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1255
+#: includes/Admin/ConnectPage.php:1254
 msgid "Could not complete the connection. Please try again."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1256
+#: includes/Admin/ConnectPage.php:1255
 msgid "Site limit reached. Upgrade your plan to connect more sites."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1257
+#: includes/Admin/ConnectPage.php:1256
 msgid "You do not have permission to perform this action."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1278
+#: includes/Admin/ConnectPage.php:1277
 msgid "An unknown error occurred. Please try again."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1295
+#: includes/Admin/ConnectPage.php:1294
 msgid "Active Animations"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1298
+#: includes/Admin/ConnectPage.php:1297
 msgid "Every animation MotionKit runs on this site, with where it plays and whether it is live."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1304
+#: includes/Admin/ConnectPage.php:1303
 msgid "Open MotionKit Editor"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1315
+#: includes/Admin/ConnectPage.php:1314
 msgid "Bulk Actions"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1316
+#: includes/Admin/ConnectPage.php:1315
 msgid "● Publish (Active)"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1317
+#: includes/Admin/ConnectPage.php:1316
 msgid "○ Set as Draft"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1318
+#: includes/Admin/ConnectPage.php:1317
 msgid "⏻ Toggle Status (Active/Draft)"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1319
+#: includes/Admin/ConnectPage.php:1318
 msgid "🗑️ Delete"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1322
+#: includes/Admin/ConnectPage.php:1321
 msgid "Apply"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1328
+#: includes/Admin/ConnectPage.php:1327
 msgid "Page"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1339
+#: includes/Admin/ConnectPage.php:1338
 msgid "Select All"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1340
-#: includes/Admin/ConnectPage.php:1408
+#: includes/Admin/ConnectPage.php:1339
+#: includes/Admin/ConnectPage.php:1407
 msgid "Title"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1354
-#: includes/Admin/ConnectPage.php:1420
+#: includes/Admin/ConnectPage.php:1353
+#: includes/Admin/ConnectPage.php:1419
 msgid "Load more"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1363
-#: includes/Admin/ConnectPage.php:1447
+#: includes/Admin/ConnectPage.php:1362
+#: includes/Admin/ConnectPage.php:1446
 msgid "Close"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1369
-#: includes/Admin/ConnectPage.php:1409
-#: includes/Admin/ConnectPage.php:1451
+#: includes/Admin/ConnectPage.php:1368
+#: includes/Admin/ConnectPage.php:1408
+#: includes/Admin/ConnectPage.php:1450
 msgid "Type"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1371
+#: includes/Admin/ConnectPage.php:1370
 msgid "Target element"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1373
+#: includes/Admin/ConnectPage.php:1372
 msgid "Location"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1377
+#: includes/Admin/ConnectPage.php:1376
 msgid "Delete"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1379
-#: includes/Admin/ConnectPage.php:1462
+#: includes/Admin/ConnectPage.php:1378
+#: includes/Admin/ConnectPage.php:1461
 msgid "Edit in editor"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1400
+#: includes/Admin/ConnectPage.php:1399
 msgid "Search by title or key..."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1401
+#: includes/Admin/ConnectPage.php:1400
 msgid "Search by title or key"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1414
+#: includes/Admin/ConnectPage.php:1413
 msgid "Loading..."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1430
+#: includes/Admin/ConnectPage.php:1429
 msgid "Danger Zone"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1435
+#: includes/Admin/ConnectPage.php:1434
 msgid "Delete ALL MotionKit animation data on this site — per-page configs, taxonomy configs, and global settings. This cannot be undone."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1438
+#: includes/Admin/ConnectPage.php:1437
 msgid "Delete All Animation Data"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1453
+#: includes/Admin/ConnectPage.php:1452
 msgid "Modified"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1455
+#: includes/Admin/ConnectPage.php:1454
 msgid "Stored as"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1459
+#: includes/Admin/ConnectPage.php:1458
 msgid "Delete data"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1461
+#: includes/Admin/ConnectPage.php:1460
 msgid "Preview"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1480
+#: includes/Admin/ConnectPage.php:1479
 msgid "Delete ALL animation data?"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1482
+#: includes/Admin/ConnectPage.php:1481
 msgid "This will permanently remove every MotionKit animation config on this site (pages, posts, terms, global settings). This action cannot be undone."
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1489
+#: includes/Admin/ConnectPage.php:1488
 msgid "Cancel"
 msgstr ""
 
-#: includes/Admin/ConnectPage.php:1490
+#: includes/Admin/ConnectPage.php:1489
 msgid "Yes, Delete Everything"
 msgstr ""
 

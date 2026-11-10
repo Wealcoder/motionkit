@@ -4,7 +4,7 @@ Tags: animation, gsap, scroll animation, elementor animation, scrolltrigger
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -247,7 +247,6 @@ MotionKit bundles all of its JavaScript, CSS, runtime and icons locally. The plu
 2. **Launching the editor (admin only).** Clicking Launch Editor opens `https://editor.motionkit.io/` in your browser with your site URL and a short-lived signed token so the editor can load a live preview of your page.
 3. **AI assistants (optional).** If you connect an AI assistant, it talks to the MotionKit MCP endpoint at **`https://editor.motionkit.io/mcp`**.
 4. **Upgrade link (optional).** The dashboard links to `https://motionkit.io`; no site data is sent.
-5. **MotionKit with GSAP version check (connected sites running an add-on older than 2.0.2, until November 12, 2026).** When an administrator opens the MotionKit page, the plugin asks `https://github.com/Wealcoder/motionkit-with-gsap/releases/latest` for the add-on's latest version, or `https://my.motionkit.io/` if GitHub does not answer. No site data is sent to either beyond what any web request carries. [GitHub Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) | [GitHub Privacy](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
  
 No visitor data is sent to MotionKit and the plugin performs no tracking on your front end.
  
@@ -278,6 +277,9 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 4. The Tools tab for managing saved animation data.
  
 == Changelog ==
+
+= 2.0.2 =
+* Removed: The notice on the MotionKit page about updating MotionKit with GSAP, and its version check. The plugin no longer contacts GitHub or my.motionkit.io.
 
 = 2.0.1 =
 * New: Live demos for 19 more presets in the preset library: 11 image animations and 8 container animations.
@@ -321,6 +323,9 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 * Free animations start at the viewport centre by default.
  
 == Upgrade Notice ==
+
+= 2.0.2 =
+Removes the temporary MotionKit with GSAP update notice and its version check.
 
 = 2.0.1 =
 Keeps your animations when MotionKit is deleted while MotionKit with GSAP is inactive, adds live demos for 19 more presets, and shows a notice on the MotionKit page when MotionKit with GSAP needs updating by hand.
