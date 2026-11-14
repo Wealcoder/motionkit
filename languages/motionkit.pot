@@ -2,14 +2,14 @@
 # This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: MotionKit – Visual GSAP Animation Builder for Elementor, Divi, Bricks & More 2.0.3\n"
+"Project-Id-Version: MotionKit – Visual GSAP Animation Builder for Elementor, Divi, Bricks & More 2.0.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/motionkit\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-14T10:34:40+00:00\n"
+"POT-Creation-Date: 2026-11-14T11:22:39+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: motionkit\n"
@@ -670,7 +670,7 @@ msgstr ""
 
 #: includes/Admin/ConnectPage.php:1365
 #: includes/Admin/ConnectPage.php:1449
-#: includes/Admin/OfferBanner.php:280
+#: includes/Admin/OfferBanner.php:288
 msgid "Close"
 msgstr ""
 
@@ -753,15 +753,15 @@ msgstr ""
 msgid "Yes, Delete Everything"
 msgstr ""
 
-#: includes/Admin/OfferBanner.php:64
+#: includes/Admin/OfferBanner.php:66
 msgid "Black Friday: MotionKit lifetime plans from $53.40. Pay once, no renewals."
 msgstr ""
 
-#: includes/Admin/OfferBanner.php:73
+#: includes/Admin/OfferBanner.php:75
 msgid "Agency Bundle lifetime at 70 percent off: Animation Addons Pro, MotionKit, BricksFly, Arolax and Axtra themes."
 msgstr ""
 
-#: includes/Admin/OfferBanner.php:137
+#: includes/Admin/OfferBanner.php:139
 msgid "Don't show again"
 msgstr ""
 
