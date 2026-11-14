@@ -4,7 +4,7 @@ Tags: animation, gsap, scroll animation, elementor animation, scrolltrigger
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.0.3
+Stable tag: 2.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -278,6 +278,9 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
  
 == Changelog ==
 
+= 2.0.4 =
+* Improve: The Black Friday offer shows on every visit to the Plugins screen until "Don't show again" is clicked. The WordPress Dashboard still shows it at most twice per administrator, at least 10 minutes apart.
+
 = 2.0.3 =
 * New: Black Friday offers until December 10, 2026. Sites without an active MotionKit license see the lifetime plan offer; licensed sites see the Agency Bundle offer.
 * New: The offer shows on the WordPress Dashboard and Plugins screens at most twice per administrator, at least 10 minutes apart. Its close button hides it for 10 minutes; "Don't show again" hides it for good.
@@ -328,6 +331,9 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 * Free animations start at the viewport centre by default.
  
 == Upgrade Notice ==
+
+= 2.0.4 =
+The Black Friday offer stays on the Plugins screen until you dismiss it.
 
 = 2.0.3 =
 Black Friday offers until December 10, 2026, for sites with and without an active MotionKit license.

@@ -9,9 +9,10 @@ namespace MotionKit\Admin;
  * MotionKit license see the lifetime plan offer, licensed sites see the
  * Agency Bundle offer. It shows in two places:
  *
- * - as a notice on the WordPress Dashboard and Plugins screens, at most twice
- *   per administrator and at least 10 minutes apart. The X drawn in the
- *   artwork hides it for 10 minutes, "Don't show again" for good;
+ * - as a notice on the WordPress Dashboard screen at most twice per
+ *   administrator, at least 10 minutes apart, and on the Plugins screen on
+ *   every visit. On both, the X drawn in the artwork hides it for 10 minutes,
+ *   "Don't show again" for good;
  * - at the top of the MotionKit page (which removes every admin notice) on
  *   every visit while the campaign runs, dismissed or not. Its X only hides
  *   it until the page is opened again.
@@ -32,6 +33,7 @@ final class OfferBanner
   private const META = 'motionkit_offer_notice';
   private const AJAX_ACTION = 'motionkit_offer_notice';
   private const SCREENS = ['dashboard', 'plugins'];
+  private const LIMITED_SCREEN = 'dashboard';
   private const MAX_VIEWS = 2;
   private const VIEW_GAP = 10 * MINUTE_IN_SECONDS;
   private const SNOOZE = 10 * MINUTE_IN_SECONDS;
@@ -139,7 +141,10 @@ final class OfferBanner
     </div>
     <?php
 
-    $this->count_view($campaign['id']);
+    $screen = get_current_screen();
+    if ($screen && $screen->id === self::LIMITED_SCREEN) {
+      $this->count_view($campaign['id']);
+    }
   }
 
   public function enqueue_notice_assets(): void
@@ -218,10 +223,13 @@ final class OfferBanner
 
     $state = $this->get_state($campaign['id']);
     $now = time();
-    if (!empty($state['dismissed'])
-      || $state['views'] >= self::MAX_VIEWS
-      || ($state['last'] && $now - $state['last'] < self::VIEW_GAP)
-      || $state['snoozed_until'] > $now) {
+    if (!empty($state['dismissed']) || $state['snoozed_until'] > $now) {
+      return null;
+    }
+
+    // The view limit and gap apply on the Dashboard only; the Plugins screen shows it until it is dismissed.
+    if ($screen->id === self::LIMITED_SCREEN
+      && ($state['views'] >= self::MAX_VIEWS || ($state['last'] && $now - $state['last'] < self::VIEW_GAP))) {
       return null;
     }
 
