@@ -73,6 +73,9 @@ if (!$motionkit_sibling_present) {
 // Per-user "dismissed the permalink notice" flag, across all users.
 delete_metadata('user', 0, 'motionkit_dismissed_permalink_notice', '', true);
 
+// Per-user views, snooze and dismissal of the seasonal offer banner.
+delete_metadata('user', 0, 'motionkit_offer_notice', '', true);
+
 // ── Animation content: removed only when no sibling plugin shares it ──
 // The settings/animation options and every motionkit_pg_* meta and option row are the user's actual work, written through this plugin's own /save handler. They go when this is the last MotionKit plugin on the site.
 if (!$motionkit_sibling_present) {

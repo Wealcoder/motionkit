@@ -4,7 +4,7 @@ Tags: animation, gsap, scroll animation, elementor animation, scrolltrigger
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -278,6 +278,11 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
  
 == Changelog ==
 
+= 2.0.3 =
+* New: Black Friday offers until December 10, 2026. Sites without an active MotionKit license see the lifetime plan offer; licensed sites see the Agency Bundle offer.
+* New: The offer shows on the WordPress Dashboard and Plugins screens at most twice per administrator, at least 10 minutes apart. Its close button hides it for 10 minutes; "Don't show again" hides it for good.
+* New: The offer also shows at the top of the MotionKit page while it runs. Its close button hides it until the page is opened again.
+
 = 2.0.2 =
 * Removed: The notice on the MotionKit page about updating MotionKit with GSAP, and its version check. The plugin no longer contacts GitHub or my.motionkit.io.
 
@@ -323,6 +328,9 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 * Free animations start at the viewport centre by default.
  
 == Upgrade Notice ==
+
+= 2.0.3 =
+Black Friday offers until December 10, 2026, for sites with and without an active MotionKit license.
 
 = 2.0.2 =
 Removes the temporary MotionKit with GSAP update notice and its version check.
