@@ -20,6 +20,7 @@ use MotionKit\Common\PageType;
 use MotionKit\Common\ShareContext;
 use MotionKit\Common\ShareLinks;
 use MotionKit\Admin\PermalinkNotice;
+use MotionKit\Admin\OfferBanner;
 use MotionKit\Admin\ConnectPage;
 use MotionKit\Includes\Autoloader;
 use MotionKit\Factory\ComponentFactory;
@@ -225,6 +226,7 @@ final class Plugin
     {
         if (is_admin()) {
             (new PermalinkNotice())->init();
+            (new OfferBanner())->init();
         }
     }
 

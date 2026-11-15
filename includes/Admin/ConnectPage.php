@@ -411,6 +411,9 @@ final class ConnectPage
     ?>
     <div class="motionkit-page">
 
+      <?php // Seasonal offer: on every visit while it runs; admin.js removes it on its X until the next page load. ?>
+      <?php OfferBanner::render_page_banner(); ?>
+
       <!-- Header -->
       <div class="motionkit-header">
         <div class="motionkit-header-left">

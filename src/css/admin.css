@@ -36,6 +36,48 @@
   box-sizing: border-box;
 }
 
+/* ─── Seasonal offer (OfferBanner.php) ────────── */
+/* Above the card, as wide as it. The invisible button sits on the X drawn into the 1504x150 artwork. */
+.motionkit-offer--page {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  margin-bottom: 16px;
+}
+
+.motionkit-offer--page .motionkit-offer__link {
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.motionkit-offer--page .motionkit-offer__link img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.motionkit-offer--page .motionkit-offer__close {
+  position: absolute;
+  left: 97.6%;
+  top: 20%;
+  width: 3.2%;
+  min-width: 24px;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.motionkit-offer--page .motionkit-offer__close:focus-visible {
+  outline: 2px solid #5ea1ec;
+  outline-offset: 2px;
+}
+
 /* ─── Header ──────────────────────────────────── */
 .motionkit-header {
   display: flex;
