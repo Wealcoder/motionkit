@@ -32,6 +32,13 @@
       return;
     }
 
+    // Seasonal offer: hidden until the next page load only, nothing is saved (OfferBanner.php).
+    const offerClose = e.target.closest(".motionkit-offer--page .motionkit-offer__close");
+    if (offerClose) {
+      offerClose.closest(".motionkit-offer--page").remove();
+      return;
+    }
+
     const confirmLink = e.target.closest("[data-motionkit-confirm]");
     if (confirmLink) {
       const message = confirmLink.getAttribute("data-motionkit-confirm");
