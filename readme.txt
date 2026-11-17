@@ -278,6 +278,11 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
  
 == Changelog ==
 
+= 2.1.0 =
+* Tweak: Animations play on your site only while it is connected to a MotionKit account. Disconnecting pauses them without deleting anything, and connecting again brings them back.
+* Tweak: Publishing an animation or setting it as a draft now happens only in the MotionKit editor. The Animations tab keeps Delete.
+* Tweak: A connected site opens the MotionKit page on the Animations tab, where the Open MotionKit Editor button is.
+
 = 2.0.4 =
 * Improve: The Black Friday offer shows on every visit to the Plugins screen until "Don't show again" is clicked. The WordPress Dashboard still shows it at most twice per administrator, at least 10 minutes apart.
 
@@ -331,6 +336,9 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 * Free animations start at the viewport centre by default.
  
 == Upgrade Notice ==
+
+= 2.1.0 =
+Animations now play only while your site is connected to MotionKit. Publishing or drafting an animation happens in the MotionKit editor.
 
 = 2.0.4 =
 The Black Friday offer stays on the Plugins screen until you dismiss it.
