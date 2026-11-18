@@ -289,55 +289,8 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 = 2.0.4 =
 * Improve: The Black Friday offer shows on every visit to the Plugins screen until "Don't show again" is clicked. The WordPress Dashboard still shows it at most twice per administrator, at least 10 minutes apart.
 
-= 2.0.3 =
-* New: Black Friday offers until December 10, 2026. Sites without an active MotionKit license see the lifetime plan offer; licensed sites see the Agency Bundle offer.
-* New: The offer shows on the WordPress Dashboard and Plugins screens at most twice per administrator, at least 10 minutes apart. Its close button hides it for 10 minutes; "Don't show again" hides it for good.
-* New: The offer also shows at the top of the MotionKit page while it runs. Its close button hides it until the page is opened again.
+[See the full changelog](https://plugins.trac.wordpress.org/browser/motionkit/trunk/changelog.txt) for every earlier version.
 
-= 2.0.2 =
-* Removed: The notice on the MotionKit page about updating MotionKit with GSAP, and its version check. The plugin no longer contacts GitHub or my.motionkit.io.
-
-= 2.0.1 =
-* New: Live demos for 19 more presets in the preset library: 11 image animations and 8 container animations.
-* New: On connected sites running MotionKit with GSAP older than 2.0.2, the MotionKit page says a newer version is available, with a link to download it. This notice runs until November 12, 2026.
-* Fixed: Deleting MotionKit no longer removes your animations and connection while MotionKit with GSAP is installed but inactive.
-* Fixed: The DrawSVG demo link in the plugin description.
-
-= 2.0.0 =
-* New: Motion AI chat in the MotionKit editor. Describe the animation you want in plain words and it builds it on your page, ready to fine-tune on the timeline.
-* New: Filter the Animations list by page.
-* New: Publish a draft animation straight from the MotionKit dashboard.
-* New: Bulk Publish and Set as Draft for selected animations.
-* Improved: Animation details open in a popup, so the list stays readable on any screen.
-* Improved: Lists load more rows as you scroll, headers and tabs stay in view, and a Back to top button.
-* Improved: View page and Edit in editor open the right URL for every page type, including the blog page, 404, search and archives.
-* Improved: A simpler Connect screen that shows only your MotionKit account and tells you what to do next.
-* Tweak: Build Animation is now called Animate with MotionKit.
-* Fixed: The Animations tab showed "No animations found" on sites that had animations.
-* Fixed: Bulk actions on several animations of the same page no longer undo each other.
-* Fixed: Connect appears again when the site was removed from the MotionKit dashboard.
-* Removed: The Upgrade to GSAP and Revert to Free actions, which did not change how an animation played.
-
-= 1.6.2 =
-* Improved: The MotionKit settings screen now leads with Connect, and offers the optional MotionKit with GSAP add-on only after the site is connected.
-
-= 1.6.1 =
-* Fixed: In the MotionKit editor, hovering or clicking a split text heading now selects the whole heading instead of a single letter.
-* Improved: Preset library links in the description.
- 
-= 1.6.0 =
-* New: Export and import animations as JSON for reuse on other sites.
-* Improved: Runtime performance and caching of compiled timelines.
-* Improved: Compatibility with Elementor V4, Divi 5 and Bricks.
-* Fixed: Editor connection edge cases.
- 
-= 1.0.0 =
-* Initial release.
-* Free animations now load on the front page, archives, search and 404 pages.
-* Scroll animations follow scroll position smoothly.
-* Scroll trigger element settings and edits to Start, End, Play Once and Scrub take effect immediately.
-* Free animations start at the viewport centre by default.
- 
 == Upgrade Notice ==
 
 = 2.1.1 =
