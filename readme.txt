@@ -18,7 +18,7 @@ MotionKit works with **every WordPress page builder and theme**: Elementor, Divi
 
 Under the hood MotionKit is powered by **GSAP (GreenSock Animation Platform)** and the browser-native **Web Animations API (WAAPI)**. You get the full power of GSAP and its plugins (ScrollTrigger, SplitText, Flip, DrawSVG, MorphSVG and more) with a fast, lightweight runtime that uses the browser's own animation engine. MotionKit writes the GSAP code for you.
 
-**Free forever for 1 website & 15 active animations.** No credit card, no trial clock. Upgrade only when you need more.
+**Free forever for 1 website, 1 page & 10 active animations.** No credit card, no trial clock. Upgrade only when you need more.
  
 [Website](https://motionkit.io/) | [Live Demos](https://motionkit.io/presets/) | [Page Builder Support](https://motionkit.io/wordpress-page-builder-for-animation/) | [Documentation](https://motionkit.io/docs/) | [Video Tutorials](https://motionkit.io/video-tutorials/) 
 
@@ -47,7 +47,7 @@ Your animations are stored on your own WordPress site and rendered by a bundled 
 * **MCP server for AI assistants** – connect Claude, ChatGPT or any MCP-compatible AI, say "add professional animations to my whole website", and MotionKit does it automatically.
 * **Fast and lightweight** – GSAP + WAAPI runtime loaded only on pages that use animations, compiled timelines cached, all assets bundled locally. Nothing loads from third-party CDNs on your front end.
 * **Accessible by default** – respects the visitor's reduced-motion preference.
-* **Beyond WordPress** – MotionKit currently supports WordPress only, with Webflow, Shopify, Wix, Framer, and an SDK for AI-built and custom-coded sites on the roadmap.
+* **Beyond WordPress** – MotionKit currently supports WordPress only, with Shopify, Webflow, Framer, Wix and Squarespace on the roadmap.
  
 = Scroll animations and ScrollTrigger =
  
@@ -85,11 +85,11 @@ Every preset is one click to apply and fully editable afterwards. Live demos for
 **Container and stagger animations (16)**
 [Stagger Fade Up](https://demo.motionkit.io/stagger-fade-up/) · [Stagger Grid Reveal](https://demo.motionkit.io/stagger-grid-reveal/) · [Stagger Blur In](https://demo.motionkit.io/stagger-blur-in/) · [Stagger Clip Reveal](https://demo.motionkit.io/stagger-clip-reveal/) · [Stagger Unfold](https://demo.motionkit.io/stagger-unfold/) · [Stagger Tilt Drop](https://demo.motionkit.io/stagger-tilt-drop/) · [Stagger Scale Pop](https://demo.motionkit.io/stagger-scale-pop/) · [Stagger Diagonal Reveal](https://demo.motionkit.io/stagger-diagonal-reveal-2/) · [Bento Assemble](https://demo.motionkit.io/bento-assemble/) · [Testimonial Wall](https://demo.motionkit.io/testimonial-wall/) · [Feature List Reveal](https://demo.motionkit.io/feature-list-reveal/) · [Stat Counter](https://demo.motionkit.io/stat-counter/) · [Sections Color Shifts](https://demo.motionkit.io/sections-color-shifts/) · [Momentum Marquee](https://demo.motionkit.io/momentum-marquee/) · [Flip Cards](https://demo.motionkit.io/flip-cards/) · [Card Exit Shrink](https://demo.motionkit.io/card-exit-shrink/)
  
-**Pin, sticky and stacked card scroll effects (6)**
+**Pin, sticky and stacked card scroll effects (6)**, one demo per group:
 [Pin Sticky Sections](https://demo.motionkit.io/pin-sticky-animation/)
 [Stacked Card Scroll](https://demo.motionkit.io/stacked-card/) 
  
-**GSAP plugin presets (25)**
+**GSAP plugin presets (25)**, five per plugin, one demo each:
 [DrawSVG](https://demo.motionkit.io/drawsvg-path-draw/) – draw logos, icons and illustrations stroke by stroke
 [MorphSVG](https://demo.motionkit.io/liquid-image-blob/) – morph one shape into another
 [MotionPath](https://demo.motionkit.io/curved-path-arrow/) – move elements along a custom path
@@ -136,7 +136,7 @@ Create an animation once, save it to your cloud library or export it as JSON, an
  
 = Free vs Pro =
  
-**Free:** visual editor, presets, ScrollTrigger controls, responsive settings, 1 website, 2 pages, 15 active animations. **Pro:** unlimited pages and animations, premium presets, full cloud library, AI features and agency tools. [Compare plans](https://motionkit.io/pricing/)
+**Free:** visual editor, presets, ScrollTrigger controls, responsive settings, 1 website, 1 page, 10 active animations. **Paid plans:** more sites, pages and animations (unlimited pages and animations on Agency), every preset and GSAP plugin, page transitions, building animations from an AI chat, and agency tools. [Compare plans](https://motionkit.io/pricing/)
  
 MotionKit uses a hosted visual editor at editor.motionkit.io; a free account is required. Published animations live on your WordPress site and keep running even if you disconnect.
  
@@ -157,11 +157,11 @@ MotionKit is a visual GSAP animation builder for WordPress. You design your site
  
 = Who makes MotionKit? =
  
-MotionKit is built by Wealcoder, the team behind Animation Addons for Elementor and other WordPress plugins and themes used on more than 30,000 websites.
+MotionKit is built by Wealcoder, the team behind Animation Addons for Elementor (10,000+ active installs, rated 4.6/5 on WordPress.org) and other WordPress plugins and themes.
  
 = Is MotionKit free? =
  
-Yes. The plugin is free and the free plan covers 1 website, 2 pages and 15 active animations with no time limit. Paid plans add unlimited pages and animations, premium presets and AI features.
+Yes. The plugin is free and the free plan covers 1 website, 1 page and 10 active animations with no time limit. Paid plans add more sites, pages and animations (unlimited on Agency), every preset and AI features.
  
 = Why use MotionKit instead of Elementor Pro Motion Effects or Divi's built-in animations? =
  
@@ -229,7 +229,7 @@ MotionKit respects the visitor's "prefers-reduced-motion" setting, so animations
  
 = Does MotionKit work outside WordPress? =
  
-Not yet. MotionKit currently supports WordPress only. Webflow, Shopify and Framer are planned for future releases.
+Not yet. MotionKit currently supports WordPress only. Shopify, Webflow, Framer, Wix and Squarespace are on the roadmap.
  
 = Do I need a MotionKit account? =
  
