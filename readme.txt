@@ -4,7 +4,7 @@ Tags: animation, gsap, scroll animation, elementor animation, scrolltrigger
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -29,14 +29,14 @@ https://youtu.be/IS3746Wjojc
 1. **Design your website** with any page builder or theme.
 2. **Install this connector plugin** and create a free MotionKit account.
 3. **Connect your website** with one click.
-4. **Animate without coding.** Open the visual editor, click an element, pick one of 95+ presets or build a custom GSAP timeline, preview on every device and publish.
+4. **Animate without coding.** Open the visual editor, click an element, pick one of 110+ presets or build a custom GSAP timeline, preview on every device and publish.
  
 Your animations are stored on your own WordPress site and rendered by a bundled runtime built on **GSAP (GreenSock Animation Platform)** and the browser-native **Web Animations API (WAAPI)**. You get the full power of GSAP and its plugins with the speed of the browser's own animation engine, and MotionKit writes the code for you.
  
 = Why designers and agencies choose MotionKit =
  
 * **Visual GSAP animation builder** – point, click and animate on a live preview of your real page. No code snippets, no enqueuing scripts.
-* **95+ ready-made animation presets** – text, image, scroll, horizontal scroll, smooth scrolling, flip, split text, parallax, SVG, physics and more. Select an element, apply a preset, done. See the full [preset library](https://motionkit.io/presets/) below.
+* **110+ ready-made animation presets** – text, image, scroll, horizontal scroll, smooth scrolling, flip, split text, parallax, SVG, physics and more. Select an element, apply a preset, done. See the full [preset library](https://motionkit.io/presets/) below.
 * **One plugin for every builder** – animate Elementor, Divi, Gutenberg, Avada, Bricks, WPBakery, SeedProd, Breakdance, Oxygen, Beaver Builder and any theme with the same tool and the same saved animations.
 * **Full GSAP plugin support** – ScrollTrigger, ScrollSmoother, ScrollToPlugin, Observer, SplitText, ScrambleText, DrawSVG, MorphSVG, MotionPathPlugin, MotionPathHelper, Flip, Draggable, InertiaPlugin, CustomEase, EasePack, GSDevTools and Physics2D.
 * **Visual timeline editor** – sequence multiple elements, overlap tweens, stagger cards and grids, fine-tune easing.
@@ -47,7 +47,7 @@ Your animations are stored on your own WordPress site and rendered by a bundled 
 * **MCP server for AI assistants** – connect Claude, ChatGPT or any MCP-compatible AI, say "add professional animations to my whole website", and MotionKit does it automatically.
 * **Fast and lightweight** – GSAP + WAAPI runtime loaded only on pages that use animations, compiled timelines cached, all assets bundled locally. Nothing loads from third-party CDNs on your front end.
 * **Accessible by default** – respects the visitor's reduced-motion preference.
-* **Beyond WordPress** – the same editor supports Webflow, Shopify, Wix and Framer, plus an SDK for AI-built and custom-coded sites, so your animation library travels with you.
+* **Beyond WordPress** – MotionKit currently supports WordPress only, with Webflow, Shopify, Wix, Framer, and an SDK for AI-built and custom-coded sites on the roadmap.
  
 = Scroll animations and ScrollTrigger =
  
@@ -229,7 +229,7 @@ MotionKit respects the visitor's "prefers-reduced-motion" setting, so animations
  
 = Does MotionKit work outside WordPress? =
  
-Yes. The MotionKit editor also supports Webflow, Shopify, Wix, Framer and other platforms, and an SDK is available for AI-built and custom-coded websites. This plugin is the WordPress connector.
+Not yet. MotionKit currently supports WordPress only. Webflow, Shopify and Framer are planned for future releases.
  
 = Do I need a MotionKit account? =
  
@@ -273,10 +273,13 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
  
 1. The MotionKit visual editor animating a live preview of a WordPress page.
 2. Connecting your site to MotionKit from the WordPress dashboard.
-3. The preset library with 95+ text, image, scroll, flip, SVG and physics animations.
+3. The preset library with 110+ text, image, scroll, flip, SVG and physics animations.
 4. The Tools tab for managing saved animation data.
  
 == Changelog ==
+
+= 2.1.1 =
+* Tweak: The plugin description lists 110+ animation presets and says MotionKit supports WordPress only for now, with other platforms on the roadmap.
 
 = 2.1.0 =
 * Tweak: Animations play on your site only while it is connected to a MotionKit account. Disconnecting pauses them without deleting anything, and connecting again brings them back.
@@ -336,6 +339,9 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 * Free animations start at the viewport centre by default.
  
 == Upgrade Notice ==
+
+= 2.1.1 =
+An updated plugin description; no change to how the plugin works.
 
 = 2.1.0 =
 Animations now play only while your site is connected to MotionKit. Publishing or drafting an animation happens in the MotionKit editor.
