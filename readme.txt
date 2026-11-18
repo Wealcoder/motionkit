@@ -294,32 +294,4 @@ The build runs `@wordpress/scripts` (webpack) with `webpack.config.js` and write
 == Upgrade Notice ==
 
 = 2.1.1 =
-An updated plugin description; no change to how the plugin works.
-
-= 2.1.0 =
-Animations now play only while your site is connected to MotionKit. Publishing or drafting an animation happens in the MotionKit editor.
-
-= 2.0.4 =
-The Black Friday offer stays on the Plugins screen until you dismiss it.
-
-= 2.0.3 =
-Black Friday offers until December 10, 2026, for sites with and without an active MotionKit license.
-
-= 2.0.2 =
-Removes the temporary MotionKit with GSAP update notice and its version check.
-
-= 2.0.1 =
-Keeps your animations when MotionKit is deleted while MotionKit with GSAP is inactive, adds live demos for 19 more presets, and shows a notice on the MotionKit page when MotionKit with GSAP needs updating by hand.
-
-= 2.0.0 =
-Motion AI chat in the editor, a redesigned dashboard with page filters, draft publishing and bulk actions, and fixes for animations not showing in the list.
-
-= 1.6.2 =
-Clearer setup: connect first, add GSAP animations later if you need them.
-
-= 1.6.1 =
-Fixes selecting split text headings in the editor. Recommended for all users.
- 
-= 1.6.0 =
-Adds JSON export/import and performance improvements. Recommended for all users.
- 
+Updated plugin description. Updating from 2.0.x? Animations now play only while your site is connected to MotionKit, and publishing or drafting an animation happens in the MotionKit editor.
